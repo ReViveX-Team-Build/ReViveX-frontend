@@ -74,4 +74,70 @@ export class Background {
         this.sandHeight = 50; 
         this.targetSandHeight = 50;
     }
+
+    update(gameTime) {
+        // --- Day/Night Cycle Logic ---
+        // 3 Minutes = 180,000ms
+        const CYCLE_DURATION = 180000; 
+        const cyclePosition = (gameTime % CYCLE_DURATION) / CYCLE_DURATION;
+        
+        let nightFactor = 0;
+        
+        // Calculate how "dark" it is based on time (0.0 = Day, 1.0 = Night)
+        if (cyclePosition < 0.25) nightFactor = 0; // Day
+        else if (cyclePosition < 0.35) nightFactor = (cyclePosition - 0.25) * 10; // Sunset
+        else if (cyclePosition < 0.75) nightFactor = 1; // Night
+        else if (cyclePosition < 0.85) nightFactor = 1 - ((cyclePosition - 0.75) * 10); // Sunrise
+        else nightFactor = 0; // Day
+
+        // --- Sand Rising Mechanic (Difficulty) ---
+        // Every 10 seconds, sand target moves
+        if (Math.floor(gameTime / 10000) % 3 === 0) {
+            this.targetSandHeight = Math.min(220, 50 + (gameTime / 2000));
+        } else {
+            this.targetSandHeight = Math.max(50, this.targetSandHeight - 0.2);
+        }
+        // Smoothly animate sand height
+        this.sandHeight += (this.targetSandHeight - this.sandHeight) * 0.01;
+
+        const difficulty = (this.sandHeight - 50) / 150; 
+        this.layers.forEach(layer => layer.update(difficulty));
+        
+        return nightFactor; 
+    }
+
+    draw(ctx, nightFactor) {
+        const time = Date.now();
+
+        // 1. Draw Sky (Gradient based on Night Factor)
+        const skyGradient = ctx.createLinearGradient(0, 0, 0, this.gameHeight);
+        if (nightFactor < 1) {
+            // Day/Sunset Mix
+            skyGradient.addColorStop(0, lerpColor("#87CEEB", "#050510", nightFactor)); 
+            skyGradient.addColorStop(1, "#020c1b");
+        } else {
+            // Full Night
+            skyGradient.addColorStop(0, "#050510"); 
+            skyGradient.addColorStop(1, "#020c1b");
+        }
+        ctx.fillStyle = skyGradient;
+        ctx.fillRect(0, 0, this.gameWidth, this.gameHeight);
+
+        // 2. Draw Water Layers
+        this.layers.forEach(layer => layer.draw(ctx, time, nightFactor));
+
+        // 3. Draw Sand
+        this.drawSand(ctx, nightFactor);
+    }
+
+    drawSand(ctx, nightFactor) {
+        const sandColor = lerpColor("#E6D09E", "#3e3221", nightFactor);
+        ctx.fillStyle = sandColor;
+        ctx.beginPath();
+        ctx.moveTo(0, this.gameHeight);
+        ctx.lineTo(0, this.gameHeight - this.sandHeight);
+        ctx.lineTo(this.gameWidth, this.gameHeight - this.sandHeight);
+        ctx.lineTo(this.gameWidth, this.gameHeight);
+        ctx.fill();
+    }
 }
