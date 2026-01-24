@@ -3,6 +3,7 @@
 import React, { useRef, useEffect } from 'react';
 import { Player } from "../game-core/Player";
 import { Background } from "../game-core/Background";
+import { SeaGrass } from "../game-core/SeaGrass";
 
 const GameCanvas = () => {
     const canvasRef = useRef(null);
@@ -10,6 +11,7 @@ const GameCanvas = () => {
 
     const playerRef = useRef(null);
     const bgRef = useRef(null);
+    const grassRef = useRef(null);
     const startTimeRef = useRef(Date.now());
 
     // Input State
@@ -39,6 +41,12 @@ const GameCanvas = () => {
             bgRef.current.draw(ctx, nightFactor);
         }
 
+        // 3. Update & Draw Sea Grass
+        if (grassRef.current) {
+            grassRef.current.update();
+            grassRef.current.draw(ctx);
+        }
+
 
         //update and draw player
         if (playerRef.current) {
@@ -59,6 +67,7 @@ const GameCanvas = () => {
         // Initialize Classes
         playerRef.current = new Player(canvas.width, canvas.height);
         bgRef.current = new Background(canvas.width, canvas.height);
+        grassRef.current = new SeaGrass(canvas.width, canvas.height);
         
         // Start Loop
         requestRef.current = requestAnimationFrame(animate);
