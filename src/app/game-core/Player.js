@@ -18,17 +18,39 @@ export class Player {
         this.buoyancy = -2.0;    // Strong burst for swimming up
         this.maxUpwardSpeed = -6; 
 
+         this.airTime = 0;       
+        this.floorTime = 0;     
+        this.maxTime = 3000;  
+
         // State Management
         this.isDead = false;
         this.deathReason = "";  
         this.status = "swimming"; 
         
-        // Safety Timers (prevent instant death at start)
-        this.airTime = 0;       
-        this.floorTime = 0;     
-        this.maxTime = 5000;    
+  
+   
     }
+      checkCollision(obstacles) {
+        if (!obstacles) return false;
 
+        for (let i = 0; i < obstacles.length; i++) {
+            const obs = obstacles[i];
+            
+            // Calculate distance between Player Center and Jellyfish Center
+            const dx = this.x - obs.x;
+            const dy = this.y - obs.y;
+            const distance = Math.sqrt(dx * dx + dy * dy);
+
+            // If circles touch (Hitbox overlap)
+            // We use * 0.8 to make the hitbox slightly smaller than the image (Fairness)
+            if (distance < (this.radius + obs.radius) * 0.8) {
+                this.isDead = true;
+                this.deathReason = "stung"; 
+                return true;
+            }
+        }
+        return false;
+    }
 
     update(inputActive, deltaTime = 16.6, currentSandHeight = 50) {
         if (this.isDead) return; 
