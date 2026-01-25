@@ -2,9 +2,9 @@
 import React, { useRef, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Player } from "../game-core/Player";
-import { Background } from "../game-core/Background";
-import { SeaGrass } from "../game-core/SeaGrass";
-import { Particle } from "../game-core/Particles"; 
+import { Background } from "../game-core/SynapseBackground";
+import { SeaGrass } from "../game-core/SynapseSeaGrass";
+import { Particle } from "../game-core/SynapseParticles"; 
 
 const GameCanvas = () => {
     const canvasRef = useRef(null);
