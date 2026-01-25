@@ -27,14 +27,14 @@ export class SynapseCorals {
         
         const newCoral = {
             x: xPosition,
-            y: this.gameHeight - 10, // Slightly buried in sand
+            y: this.gameHeight - 10, 
             type: type,
-            // Natural Palette (Deep Purples, Corals, Teals) with gradients
-            colorBase: Math.random() > 0.5 ? '#8A2BE2' : (Math.random() > 0.5 ? '#FF7F50' : '#00CED1'), 
-            colorTip: '#FFFFFF', // Tips glow white
+            // 2. ASSIGN THEM CORRECTLY HERE
+            colorBase: colorBase, 
+            colorHighlight: colorHighlight, // <--- This was missing!
             branches: [],
-            swayOffset: Math.random() * 100, // Random starting phase
-            scale: 0.8 + Math.random() * 0.4 // Size variation
+            swayOffset: Math.random() * 100, 
+            scale: 0.8 + Math.random() * 0.4 
         };
 
         // GENERATE STRUCTURE
