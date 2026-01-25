@@ -104,7 +104,7 @@ class Layer {
     }
 }
 
-export class Background {
+export class SynapseBackground {
     constructor(gameWidth, gameHeight) {
         this.gameWidth = gameWidth;
         this.gameHeight = gameHeight;
@@ -120,6 +120,27 @@ export class Background {
 
         this.sandHeight = 50; 
         this.targetSandHeight = 50;
+
+        this.sandTextureCanvas = this.createSandTexture();
+    }
+
+    createSandTexture() {
+        if (typeof document === 'undefined') return null; 
+
+        const canvas = document.createElement('canvas');
+        canvas.width = 100;
+        canvas.height = 100;
+        const ctx = canvas.getContext('2d');
+
+        // Draw 500 random specks
+        for (let i = 0; i < 500; i++) {
+            ctx.fillStyle = `rgba(0, 0, 0, ${Math.random() * 0.15})`; // Dark specks
+            ctx.fillRect(Math.random() * 100, Math.random() * 100, 2, 2);
+
+            ctx.fillStyle = `rgba(255, 255, 255, ${Math.random() * 0.1})`; // Light specks
+            ctx.fillRect(Math.random() * 100, Math.random() * 100, 2, 2);
+        }
+        return canvas;
     }
 
     update(gameTime) {
@@ -242,24 +263,50 @@ export class Background {
         ctx.restore();
     }
 
-    drawSand(ctx, nightFactor) {
-        const sandColorTop = lerpColor("#E6D09E", "#3e3221", nightFactor);
-        const sandColorBot = lerpColor("#8B4513", "#110e0a", nightFactor);
+   drawSand(ctx, nightFactor) {
+    const sandColorTop = lerpColor("#E6D09E", "#3e3221", nightFactor);
+    const sandColorBot = lerpColor("#8B4513", "#110e0a", nightFactor);
 
-        const gradient = ctx.createLinearGradient(0, this.gameHeight - this.sandHeight, 0, this.gameHeight);
-        gradient.addColorStop(0, sandColorTop);
-        gradient.addColorStop(1, sandColorBot);
+    // 1. Draw the Shape
+    ctx.beginPath();
+    ctx.moveTo(0, this.gameHeight);
+    ctx.lineTo(0, this.gameHeight - this.sandHeight);
 
-        ctx.fillStyle = gradient;
-        ctx.beginPath();
-        ctx.moveTo(0, this.gameHeight);
-        ctx.lineTo(0, this.gameHeight - this.sandHeight);
-        
-        for (let i = 0; i <= this.gameWidth; i += 50) {
-            const bump = Math.sin(i * 0.01) * 10 + Math.cos(i * 0.03) * 5;
-            ctx.lineTo(i, this.gameHeight - this.sandHeight + bump);
-        }
-        ctx.lineTo(this.gameWidth, this.gameHeight);
-        ctx.fill();
+    // High resolution bumps for better look
+    for (let i = 0; i <= this.gameWidth; i += 10) {
+        const bump = Math.sin(i * 0.015) * 15 + Math.cos(i * 0.05) * 5;
+        ctx.lineTo(i, this.gameHeight - this.sandHeight + bump);
     }
+    ctx.lineTo(this.gameWidth, this.gameHeight);
+    ctx.lineTo(0, this.gameHeight); // Close the loop
+
+    // 2. Base Gradient
+    const gradient = ctx.createLinearGradient(0, this.gameHeight - this.sandHeight, 0, this.gameHeight);
+    gradient.addColorStop(0, sandColorTop);
+    gradient.addColorStop(1, sandColorBot);
+    ctx.fillStyle = gradient;
+    ctx.fill();
+
+    // 3. Apply Grain Texture
+    if (this.sandTextureCanvas) {
+        ctx.save();
+        ctx.clip(); // Only draw inside the sand
+        const pattern = ctx.createPattern(this.sandTextureCanvas, 'repeat');
+        ctx.fillStyle = pattern;
+        ctx.globalCompositeOperation = 'overlay'; // Blend mode for realism
+        ctx.fillRect(0, 0, this.gameWidth, this.gameHeight);
+        ctx.restore();
+    }
+
+    // 4. Top Rim Highlight (The "Pop")
+    ctx.beginPath();
+    ctx.moveTo(0, this.gameHeight - this.sandHeight);
+    for (let i = 0; i <= this.gameWidth; i += 10) {
+        const bump = Math.sin(i * 0.015) * 15 + Math.cos(i * 0.05) * 5;
+        ctx.lineTo(i, this.gameHeight - this.sandHeight + bump);
+    }
+    ctx.strokeStyle = `rgba(255, 255, 255, ${0.3 - (nightFactor * 0.2)})`;
+    ctx.lineWidth = 3;
+    ctx.stroke();
+  }
 }
