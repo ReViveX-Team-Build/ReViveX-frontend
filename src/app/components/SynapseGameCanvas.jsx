@@ -2,7 +2,7 @@
 import React, { useRef, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Player } from "../game-core/SynapsePlayer";
-import { Background } from "../game-core/SynapseBackground";
+import { SynapseBackground } from "../game-core/SynapseBackground";
 import { SeaGrass } from "../game-core/SynapseSeaGrass";
 import { Particle } from "../game-core/SynapseParticles"; 
 
@@ -43,7 +43,7 @@ const GameCanvas = () => {
 
         // 1. Reset Entities
         playerRef.current = new Player(width, height);
-        bgRef.current = new Background(width, height);
+        bgRef.current = new SynapseBackground(width, height);
         grassRef.current = new SeaGrass(width, height);
         particlesRef.current = [];
         
