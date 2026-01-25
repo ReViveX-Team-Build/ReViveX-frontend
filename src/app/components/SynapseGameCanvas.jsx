@@ -5,6 +5,7 @@ import { Player } from "../game-core/SynapsePlayer";
 import { SynapseBackground } from "../game-core/SynapseBackground";
 import { SeaGrass } from "../game-core/SynapseSeaGrass";
 import { Particle } from "../game-core/SynapseParticles"; 
+import { SynapseCorals } from "../game-core/SynapseCorals";
 
 const GameCanvas = () => {
     const canvasRef = useRef(null);
@@ -15,6 +16,7 @@ const GameCanvas = () => {
     const playerRef = useRef(null);
     const bgRef = useRef(null);
     const grassRef = useRef(null);
+    const coralsRef = useRef(null);
     const particlesRef = useRef([]);
     const inputRef = useRef(false);
     
@@ -44,6 +46,7 @@ const GameCanvas = () => {
         // 1. Reset Entities
         playerRef.current = new Player(width, height);
         bgRef.current = new SynapseBackground(width, height);
+        coralsRef.current = new SynapseCorals(width, height);
         grassRef.current = new SeaGrass(width, height);
         particlesRef.current = [];
         
@@ -104,6 +107,11 @@ const GameCanvas = () => {
                 nightFactor = bgRef.current.update(elapsedTime); 
                 bgRef.current.draw(ctx, nightFactor);
                 currentSandHeight = bgRef.current.sandHeight;
+            }
+
+            if (coralsRef.current) {
+                coralsRef.current.update();
+                coralsRef.current.draw(ctx, nightFactor); 
             }
 
            // 2. Draw Sea Grass
