@@ -4,26 +4,44 @@ export class SeaGrass {
         this.gameHeight = gameHeight;
         this.grassBlades = [];
 
-        for (let i = 0; i < 20; i++) {
+        for (let i = 0; i < 40; i++) {
             this.grassBlades.push({
                 x: Math.random() * gameWidth,
-                height: 50 + Math.random() * 100, // Random height
-                width: 10 + Math.random() * 10,
-                color: Math.random() > 0.5 ? "#2E8B57" : "#3CB371",
+                // Taller, varied heights for realism
+                height: 100 + Math.random() * 150, 
+                width: 12 + Math.random() * 8,
+                // Slight transparency for "watery" look
+                colorBase: Math.random() > 0.5 ? "rgba(46, 139, 87," : "rgba(60, 179, 113,", 
                 swaySpeed: 0.002 + Math.random() * 0.003,
-                swayOffset: Math.random() * Math.PI * 2
+                swayOffset: Math.random() * Math.PI * 2,
+                lean: 0 // Physics interaction value
             });
         }
     }
 
-    update() {
-        // Move grass left to match the player swimming forward
+    update(playerX, playerY, speed) {
         this.grassBlades.forEach(blade => {
-            blade.x -= 2; // Match background speed
+            // 1. Move Left (Scroll with background)
+            blade.x -= 2; 
 
-            //Loop it back to the right side if it goes off screen 
+            // 2. Loop around
             if (blade.x < -20) {
                 blade.x = this.gameWidth + 20;
+                blade.lean = 0; // Reset lean when respawning
+            }
+
+            // 3. INTERACTION: Check distance to player
+            // If player is close (within 100px) and low enough (near the grass)
+            const dist = (playerX - blade.x);
+            const heightCheck = (playerY > this.gameHeight - blade.height - 50);
+
+            if (Math.abs(dist) < 80 && heightCheck) {
+                // Push grass away from player (Right if player is left, etc.)
+                // The '0.2' is the strength of the push
+                blade.lean = Math.max(-40, Math.min(40, blade.lean - (dist * 0.2)));
+            } else {
+                // Elasticity: Slowly return to 0 lean
+                blade.lean *= 0.90; 
             }
         });
     }
@@ -32,22 +50,32 @@ export class SeaGrass {
         const time = Date.now();
         
         this.grassBlades.forEach(blade => {
-            //calculate swaying - top moves bottom fixed
-            const tipSway = Math.sin(time * blade.swaySpeed + blade.swayOffset) * 20;
+            // Natural sway (Sine wave) + Player Interaction (Lean)
+            const naturalSway = Math.sin(time * blade.swaySpeed + blade.swayOffset) * 15;
+            const totalTipX = blade.x + naturalSway + blade.lean;
 
-            ctx.fillStyle = blade.color;
+            // GRADIENT: Dark bottom, light top (Fake lighting)
+            // We create it on the fly for each blade (a bit expensive but looks great)
+            const gradient = ctx.createLinearGradient(blade.x, this.gameHeight, totalTipX, this.gameHeight - blade.height);
+            gradient.addColorStop(0, `${blade.colorBase} 0.2)`); // Dark/Transparent Bottom
+            gradient.addColorStop(1, `${blade.colorBase} 0.9)`); // Bright Top
+
+            ctx.fillStyle = gradient;
             ctx.beginPath();
 
-            // Draw a curved blade using Bezier curves
-
-            ctx.moveTo(blade.x, this.gameHeight); // Bottom Center
+            // Draw Curved Blade (Kelp Shape)
+            ctx.moveTo(blade.x - (blade.width/2), this.gameHeight); // Bottom Left
+            
+            // Curve to the top tip
             ctx.quadraticCurveTo(
-                blade.x - 10, this.gameHeight - (blade.height / 2), // Control Point
-                blade.x + tipSway, this.gameHeight - blade.height   // Top Tip (Moving)
+                blade.x + blade.lean, this.gameHeight - (blade.height / 2), // Control Point (Bends with lean)
+                totalTipX, this.gameHeight - blade.height                   // Top Tip
             );
+
+            // Curve back to bottom right
             ctx.quadraticCurveTo(
-                blade.x + 10, this.gameHeight - (blade.height / 2), // Control Point
-                blade.x + blade.width, this.gameHeight              // Bottom Right
+                blade.x + blade.lean, this.gameHeight - (blade.height / 2), // Control Point
+                blade.x + (blade.width/2), this.gameHeight                  // Bottom Right
             );
             
             ctx.fill();

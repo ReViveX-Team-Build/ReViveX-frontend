@@ -106,9 +106,14 @@ const GameCanvas = () => {
                 currentSandHeight = bgRef.current.sandHeight;
             }
 
-            // 2. Draw Sea Grass
+           // 2. Draw Sea Grass
             if (grassRef.current) { 
-                grassRef.current.update(); 
+                // A. Get Player Position (Safety check in case player isn't loaded)
+                const px = playerRef.current ? playerRef.current.x : 0;
+                const py = playerRef.current ? playerRef.current.y : 0;
+
+                // B. Send Position to Grass so it can react
+                grassRef.current.update(px, py); 
                 grassRef.current.draw(ctx); 
             }
 
