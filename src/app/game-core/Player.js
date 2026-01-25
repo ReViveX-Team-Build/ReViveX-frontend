@@ -25,7 +25,7 @@ export class Player {
         // TIMERS
         this.airTime = 0;       
         this.floorTime = 0;     
-        this.maxTime = 5000;    
+        this.maxTime = 3000;    
         
         this.isDead = false;
         this.deathReason = "";  

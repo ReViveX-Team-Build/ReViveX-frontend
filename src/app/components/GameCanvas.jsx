@@ -1,14 +1,15 @@
+"use client";
 import React, { useRef, useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom'; 
-import { Player } from "../game/Player";
-import { Background } from "../game/Background";
-import { Particle } from "../game/Particle";
-import { SeaGrass } from "../game/SeaGrass"; 
+import { useRouter } from 'next/navigation';
+import { Player } from "../game-core/Player";
+import { Background } from "../game-core/Background";
+import { SeaGrass } from "../game-core/SeaGrass";
+import { Particle } from "../game-core/Particles"; 
 
 const GameCanvas = () => {
     const canvasRef = useRef(null);
     const requestRef = useRef();
-    const navigate = useNavigate(); 
+    const router = useRouter();
     
     // Game Entities
     const playerRef = useRef(null);
@@ -161,7 +162,7 @@ const GameCanvas = () => {
     };
 
     const confirmExit = () => {
-        navigate('/patient'); 
+        router.push('/patient-home'); 
     };
 
     const cancelExit = () => {
@@ -396,12 +397,13 @@ const styles = {
 };
 
 // --- INJECT ANIMATIONS ---
-const animStyle = document.createElement("style");
-animStyle.innerText = `
-  @keyframes slideDown { from { opacity: 0; transform: translate(-50%, -20px); } to { opacity: 1; transform: translate(-50%, 0); } }
-  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-  .hover-scale:hover { transform: scale(1.05); box-shadow: 0 0 30px rgba(0, 255, 255, 0.6) !important; }
-`;
-document.head.appendChild(animStyle);
-
+if (typeof window !== "undefined") {
+    const animStyle = document.createElement("style");
+    animStyle.innerText = `
+      @keyframes slideDown { from { opacity: 0; transform: translate(-50%, -20px); } to { opacity: 1; transform: translate(-50%, 0); } }
+      @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+      .hover-scale:hover { transform: scale(1.05); box-shadow: 0 0 30px rgba(0, 255, 255, 0.6) !important; }
+    `;
+    document.head.appendChild(animStyle);
+}
 export default GameCanvas;
