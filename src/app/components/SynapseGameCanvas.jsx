@@ -1,7 +1,7 @@
 "use client";
 import React, { useRef, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Player } from "../game-core/Player";
+import { Player } from "../game-core/SynapsePlayer";
 import { Background } from "../game-core/SynapseBackground";
 import { SeaGrass } from "../game-core/SynapseSeaGrass";
 import { Particle } from "../game-core/SynapseParticles"; 
