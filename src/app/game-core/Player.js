@@ -3,81 +3,46 @@ export class Player {
         this.gameWidth = gameWidth;
         this.gameHeight = gameHeight;
         
-        // Position: Start slightly to the left, middle height
         this.x = 100;
         this.y = gameHeight / 2;
         
-        // Visuals
         this.radius = 30; 
         this.image = new Image();
         this.image.src = "/images/fish.png"; 
 
-        // Physics: "Rhythmic Pumping" Mechanics
         this.velocity = 0;
-        this.weight = 0.15;      // Light gravity for floaty feel
-        this.buoyancy = -2.0;    // Strong burst for swimming up
+        this.weight = 0.15;      
+        this.buoyancy = -2.0;    
         this.maxUpwardSpeed = -6; 
 
-         this.airTime = 0;       
+        // TIMERS FIXED HERE
+        this.airTime = 0;       
         this.floorTime = 0;     
-        this.maxTime = 3000;  
-
-        // State Management
+        this.maxTime = 3000; // Fixed to 3 seconds for instant feedback
+        
         this.isDead = false;
         this.deathReason = "";  
         this.status = "swimming"; 
-        
-  
-   
-    }
-      checkCollision(obstacles) {
-        if (!obstacles) return false;
-
-        for (let i = 0; i < obstacles.length; i++) {
-            const obs = obstacles[i];
-            
-            // Calculate distance between Player Center and Jellyfish Center
-            const dx = this.x - obs.x;
-            const dy = this.y - obs.y;
-            const distance = Math.sqrt(dx * dx + dy * dy);
-
-            // If circles touch (Hitbox overlap)
-            // We use * 0.8 to make the hitbox slightly smaller than the image (Fairness)
-            if (distance < (this.radius + obs.radius) * 0.8) {
-                this.isDead = true;
-                this.deathReason = "stung"; 
-                return true;
-            }
-        }
-        return false;
     }
 
     update(inputActive, deltaTime = 16.6, currentSandHeight = 50) {
         if (this.isDead) return; 
 
-        // 1. Apply Forces
         this.status = "swimming"; 
 
         if (inputActive) {
-            // Burst swim
             this.velocity += this.buoyancy; 
-            if (this.velocity < this.maxUpwardSpeed) {
-                this.velocity = this.maxUpwardSpeed;
-            }
+            if (this.velocity < this.maxUpwardSpeed) this.velocity = this.maxUpwardSpeed;
         } else {
-            // Gravity sink
             this.velocity += this.weight;   
         }
 
-        // Drag (Air resistance)
         this.velocity *= 0.95; 
         this.y += this.velocity;
 
-        // 2. Boundary Checks
         const waterSurface = this.gameHeight * 0.42; 
         const floorLevel = this.gameHeight - currentSandHeight - this.radius;
 
-        // Check Ceiling (Air)
         if (this.y < waterSurface) {
             this.airTime += deltaTime;
             this.status = "hit_ceiling"; 
@@ -89,7 +54,6 @@ export class Player {
             this.airTime = 0; 
         }
 
-        // Check Floor (Sand)
         if (this.y > floorLevel) { 
             this.y = floorLevel; 
             this.velocity = 0;
@@ -103,7 +67,6 @@ export class Player {
             this.floorTime = 0; 
         }
 
-        // Absolute Ceiling Cap
         if (this.y < this.radius) {
             this.y = this.radius;
             this.velocity = 0;
@@ -114,17 +77,14 @@ export class Player {
         ctx.save();
         ctx.translate(this.x, this.y);
 
-        // Tilt based on speed
         const angle = this.velocity / 10; 
         ctx.rotate(angle);
 
-        // Visual warnings
         if (this.airTime > 2000 || this.floorTime > 2000 || this.isDead) {
             ctx.shadowBlur = 30;
             ctx.shadowColor = "#FF4500";
         }
 
-        // Draw Image or Fallback Circle
         if (this.image.complete) {
             const size = this.radius * 2.8; 
             ctx.drawImage(this.image, -size / 2, -size / 2, size, size);
