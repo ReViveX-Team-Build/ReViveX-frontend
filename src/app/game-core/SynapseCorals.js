@@ -12,39 +12,69 @@ export class SynapseCorals {
             this.spawnCluster(i * (this.gameWidth / 2.5) + 150);
         }
     }
+   generateBoulderPile(rockGroup) {
+        
+    
+    const numBoulders = 3 + Math.floor(Math.random() * 3);
+        for(let i=0; i<numBoulders; i++) {
+        rockGroup.boulders.push({
+            relX: (Math.random() - 0.5) * 120, // Spread width
+            relY: (Math.random() * 30) - 10,   // Height variation
+            r: 30 + Math.random() * 25,        // Radius size
+            color: Math.random() > 0.5 ? '#708090' : '#5F9EA0' // SlateGray or CadetBlue
+        });
+    }
+    // Sort by Y so lower boulders draw in front
+    rockGroup.boulders.sort((a, b) => a.relY - b.relY);
+}
 
     spawnCluster(centerX) {
         // 1. Create the Anchor Rock
-        const rockWidth = 100 + Math.random() * 60;
-        const rockHeight = 40 + Math.random() * 30;
+        const isRockPile = Math.random() > 0.4; // 60% chance of rocks
         
-        const rock = {
-            type: 'rock',
+        if (isRockPile) {
+            const rockGroup = {
+            type: 'rock_pile',
             x: centerX,
-            y: this.gameHeight - 15, // Buried in sand
-            width: rockWidth,
-            height: rockHeight,
-            color: Math.random() > 0.5 ? '#2F4F4F' : '#4a4036', // Dark Slate or Muddy Brown
-            points: [] // For jagged shape
+            y: this.gameHeight - 15,
+            boulders: [],
+            scale: 0.0 + Math.random() * 0.5
         };
-        this.generateRockShape(rock);
-        this.corals.push(rock);
+        
+        this.generateBoulderPile(rockGroup); 
+        this.corals.push(rockGroup);
          
         //GROW A "BUSH" OF CORALS ON TOP OF THE ROCK
-        const numCorals = 3 + Math.floor(Math.random() * 3); // 3 to 5 corals per rock
-        
+        const numCorals = 2 + Math.floor(Math.random() * 3);
         for (let i = 0; i < numCorals; i++) {
-            // Randomize position ON the rock
-            const offsetX = (Math.random() - 0.5) * (rockWidth * 0.8);
-            const offsetY = (Math.random() * 20) + 20; // Elevation on top of rock
-            
-            this.createSingleCoral(centerX + offsetX, this.gameHeight - offsetY);
+            // Find a random boulder to sit on
+            const hostBoulder = rockGroup.boulders[Math.floor(Math.random() * rockGroup.boulders.length)];
+        
+           // Calculate position relative to the group center
+            const coralX = centerX + hostBoulder.relX; 
+            const coralY = (this.gameHeight - 15) + hostBoulder.relY - (hostBoulder.r * 0.8); // Sit on top
+
+            this.createSingleCoral(coralX, coralY, 'rock_dweller');
+        }
+
+        } else {
+        // --- OPTION B: TUBES ON SAND (No Rocks) ---
+        const numTubes = 3 + Math.floor(Math.random() * 4);
+        for (let i = 0; i < numTubes; i++) {
+            const offsetX = (Math.random() - 0.5) * 80;
+            this.createSingleCoral(centerX + offsetX, this.gameHeight - 10, 'sand_dweller');
         }
     }
+}
     
-createSingleCoral(x, y) {
-        const types = ['fan', 'staghorn', 'tubes'];
-        const type = types[Math.floor(Math.random() * types.length)];
+createSingleCoral(x, y, habitat) {
+        let type;
+    if (habitat === 'sand_dweller') {
+        type = 'tubes'; // Tubes ONLY on sand
+    } else {
+        // Fans and Staghorns on rocks
+        type = Math.random() > 0.5 ? 'fan' : 'staghorn';
+    }
 
         // Colors
         const isPurple = Math.random() > 0.5;
@@ -62,14 +92,9 @@ createSingleCoral(x, y) {
             scale: 1.0 + Math.random() * 0.5 // Bigger scale for "Bush" look
         };
 
-        if (type === 'fan') {
-            this.generateFan(coral);
-        } else if (type === 'staghorn') {
-            // Start with 3 branches for bushiness
-            this.generateBranching(coral, 0, 0, -Math.PI/2, 5, 20); 
-        } else {
-            this.generateTubes(coral);
-        }
+        if (type === 'fan') this.generateFan(coral);
+        else if (type === 'staghorn') this.generateBranching(coral, 0, 0, -Math.PI/2, 5, 20);
+        else this.generateTubes(coral);
 
         this.corals.push(coral);
     }
