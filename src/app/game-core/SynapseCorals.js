@@ -183,20 +183,33 @@ createSingleCoral(x, y, habitat) {
             ctx.translate(item.x, item.y);
 
             // --- DRAW ROCK ---
-            if (item.type === 'rock') {
-                ctx.fillStyle = item.color;
-                ctx.beginPath();
-                if (item.points.length > 0) {
-                    ctx.moveTo(item.points[0].x, item.points[0].y);
-                    for (let p of item.points) ctx.lineTo(p.x, p.y);
-                }
-                ctx.fill();
+            if (item.type === 'rock_pile') {
+                ctx.save();
+                ctx.scale(item.scale, item.scale);
                 
-                // Rock Highlight (Mossy top)
-                ctx.strokeStyle = "rgba(0,0,0,0.3)";
-                ctx.lineWidth = 4;
-                ctx.stroke();
-            } 
+                item.boulders.forEach(boulder => {
+                    ctx.beginPath();
+                    ctx.arc(boulder.relX, boulder.relY, boulder.r, 0, Math.PI * 2);
+                    
+                    // RADIAL GRADIENT for 3D Round Look
+                    // Light comes from top-left (-10, -10)
+                    const grad = ctx.createRadialGradient(
+                        boulder.relX - 10, boulder.relY - 10, 5, 
+                        boulder.relX, boulder.relY, boulder.r
+                
+                );
+                    grad.addColorStop(0, "#8daab9");
+                    grad.addColorStop(1, "#2f4f4f");
+
+                    ctx.fillStyle = grad;
+                    ctx.fill();
+
+                    ctx.strokeStyle = "rgba(0,0,0,0.3)";
+                    ctx.lineWidth = 2;
+                    ctx.stroke();
+                });
+                ctx.restore();
+            }
             
             // --- DRAW CORAL ---
             else {
