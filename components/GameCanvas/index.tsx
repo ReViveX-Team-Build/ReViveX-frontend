@@ -1,42 +1,46 @@
 "use client";
 import React, { useRef, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Player } from "../game-core/SynapsePlayer";
-import { SynapseBackground } from "../game-core/SynapseBackground";
-import { SeaGrass } from "../game-core/SynapseSeaGrass";
-import { Particle } from "../game-core/SynapseParticles"; 
-import { SynapseCorals } from "../game-core/SynapseCorals";
+import { Player } from "../../util/game-core/SynapsePlayer";
+import { SynapseBackground } from "../../util/game-core/SyanpseBackground";
+import { SeaGrass } from "../../util/game-core/SynapseSeaGrass";
+import { Particle } from "../../util/game-core/SynapseParticles"; 
+import { SynapseCorals } from "../../util/game-core/SynapseCorals";
 
-const GameCanvas = () => {
-    const canvasRef = useRef(null);
-    const requestRef = useRef();
+type CountdownValue = number | "GO!" | null;
+
+const GameCanvas: React.FC = () => {
+    const canvasRef = useRef<HTMLCanvasElement | null>(null);
+    const requestRef = useRef<number | null>(null);
     const router = useRouter();
     
     // Game Entities
-    const playerRef = useRef(null);
-    const bgRef = useRef(null);
-    const grassRef = useRef(null);
-    const coralsRef = useRef(null);
-    const particlesRef = useRef([]);
-    const inputRef = useRef(false);
+    const playerRef = useRef<Player | null>(null);
+    const bgRef = useRef<SynapseBackground | null>(null);
+    const grassRef = useRef<SeaGrass | null>(null);
+    const coralsRef = useRef<SynapseCorals | null>(null);
+    const particlesRef = useRef<Particle[]>([]);
+    const inputRef = useRef<boolean>(false);
     
     // Time & Pausing
-    const startTimeRef = useRef(Date.now());
-    const [isPaused, setIsPaused] = useState(false);
-    const countdownIntervalRef = useRef(null); 
+    const startTimeRef = useRef<number>(Date.now());
+    const [isPaused, setIsPaused] = useState<boolean>(false);
+    const countdownIntervalRef = useRef<NodeJS.Timeout | null>(null); 
 
     // UI States
-    const [gameOver, setGameOver] = useState(false);
-    const [gameOverMsg, setGameOverMsg] = useState("");
-    const [warningMsg, setWarningMsg] = useState(""); 
-    const [showExitConfirm, setShowExitConfirm] = useState(false);
+    const [gameOver, setGameOver] = useState<boolean>(false);
+    const [gameOverMsg, setGameOverMsg] = useState<string>("");
+    const [warningMsg, setWarningMsg] = useState<string>(""); 
+    const [showExitConfirm, setShowExitConfirm] = useState<boolean>(false);
     
     // Countdown State
-    const [countdown, setCountdown] = useState(null); 
+    const [countdown, setCountdown] = useState<CountdownValue>(null); 
 
     // --- RESTART FUNCTION ---
-    const startGame = () => {
+    const startGame = (): void => {
         const canvas = canvasRef.current;
+        if (!canvas) return;
+        
         const width = 1024;
         const height = 600;
 
@@ -62,6 +66,8 @@ const GameCanvas = () => {
 
         // 2. Draw ONE Static Frame (So user sees the fish while waiting)
         const ctx = canvas.getContext('2d');
+        if (!ctx) return;
+        
         ctx.clearRect(0, 0, width, height);
         if (bgRef.current) bgRef.current.draw(ctx, 0); // Day mode
         if (grassRef.current) grassRef.current.draw(ctx);
@@ -79,19 +85,22 @@ const GameCanvas = () => {
                 setCountdown("GO!");
             } else {
                 // 4. Launch Game
-                clearInterval(countdownIntervalRef.current);
+                if (countdownIntervalRef.current) {
+                    clearInterval(countdownIntervalRef.current);
+                }
                 setCountdown(null); // Hide Overlay
                 animate(); // Start Physics Loop
             }
         }, 1000);
     };
 
-    const animate = () => {
+    const animate = (): void => {
         if (isPaused) return; 
 
         const canvas = canvasRef.current;
         if (!canvas) return;
         const ctx = canvas.getContext('2d');
+        if (!ctx) return;
         
         const currentTime = Date.now();
         const elapsedTime = currentTime - startTimeRef.current;
@@ -121,7 +130,7 @@ const GameCanvas = () => {
                 const py = playerRef.current ? playerRef.current.y : 0;
 
                 // B. Send Position to Grass so it can react
-                grassRef.current.update(px, py); 
+                grassRef.current.update(px, py, 0); 
                 grassRef.current.draw(ctx); 
             }
 
@@ -170,16 +179,16 @@ const GameCanvas = () => {
     };
 
     // --- HANDLERS ---
-    const handleBackClick = () => {
+    const handleBackClick = (): void => {
         setIsPaused(true); 
         setShowExitConfirm(true); 
     };
 
-    const confirmExit = () => {
+    const confirmExit = (): void => {
         router.push('/patient-home'); 
     };
 
-    const cancelExit = () => {
+    const cancelExit = (): void => {
         setShowExitConfirm(false);
         setIsPaused(false); 
         requestRef.current = requestAnimationFrame(animate);
@@ -188,17 +197,31 @@ const GameCanvas = () => {
     useEffect(() => {
         startGame();
         return () => {
-            cancelAnimationFrame(requestRef.current);
-            clearInterval(countdownIntervalRef.current);
+            if (requestRef.current) {
+                cancelAnimationFrame(requestRef.current);
+            }
+            if (countdownIntervalRef.current) {
+                clearInterval(countdownIntervalRef.current);
+            }
         };
     }, []);
 
     useEffect(() => {
-        const handleKeyDown = (e) => { if (e.code === "Space") { e.preventDefault(); inputRef.current = true; } };
-        const handleKeyUp = (e) => { if (e.code === "Space") inputRef.current = false; };
+        const handleKeyDown = (e: KeyboardEvent): void => { 
+            if (e.code === "Space") { 
+                e.preventDefault(); 
+                inputRef.current = true; 
+            } 
+        };
+        const handleKeyUp = (e: KeyboardEvent): void => { 
+            if (e.code === "Space") inputRef.current = false; 
+        };
         window.addEventListener("keydown", handleKeyDown);
         window.addEventListener("keyup", handleKeyUp);
-        return () => { window.removeEventListener("keydown", handleKeyDown); window.removeEventListener("keyup", handleKeyUp); };
+        return () => { 
+            window.removeEventListener("keydown", handleKeyDown); 
+            window.removeEventListener("keyup", handleKeyUp); 
+        };
     }, []);
 
     return (
@@ -290,7 +313,7 @@ const GameCanvas = () => {
 };
 
 // --- PREMIUM UI STYLES ---
-const styles = {
+const styles: { [key: string]: React.CSSProperties } = {
     container: {
         display: 'flex',
         flexDirection: 'column',
@@ -420,4 +443,5 @@ if (typeof window !== "undefined") {
     `;
     document.head.appendChild(animStyle);
 }
+
 export default GameCanvas;

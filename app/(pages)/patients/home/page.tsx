@@ -7,6 +7,25 @@ import {
   Bot
 } from "lucide-react";
 
+interface NavButtonProps {
+  icon: React.ReactNode;
+  label: string;
+  active?: boolean;
+}
+
+const NavButton: React.FC<NavButtonProps> = ({ icon, label, active = false }) => {
+  const baseClasses = "w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-colors";
+  const activeClasses = active 
+    ? "bg-teal-500 text-[#0B1E33] font-semibold shadow-lg shadow-teal-900/20"
+    : "hover:bg-white/10 text-gray-300";
+
+  return (
+    <button className={`${baseClasses} ${activeClasses}`}>
+      {icon}
+      {label}
+    </button>
+  );
+};
 
 export default function PatientDashboard() {
   return (
@@ -22,30 +41,11 @@ export default function PatientDashboard() {
           </div>
         </div>
         <nav className="space-y-2">
-          <button className="w-full flex items-center gap-3 px-4 py-3 bg-teal-500 text-[#0B1E33] rounded-xl font-semibold shadow-lg shadow-teal-900/20">
-            <Home size={18} />
-            Home
-          </button>
-
-          <button className="w-full flex items-center gap-3 px-4 py-3 hover:bg-white/10 rounded-xl transition-colors text-gray-300">
-            <Gamepad2 size={18} />
-            Therapy Games
-          </button>
-
-          <button className="w-full flex items-center gap-3 px-4 py-3 hover:bg-white/10 rounded-xl transition-colors text-gray-300">
-            <BarChart3 size={18} />
-            My Progress
-          </button>
-
-          <button className="w-full flex items-center gap-3 px-4 py-3 hover:bg-white/10 rounded-xl transition-colors text-gray-300">
-            <Calendar size={18} />
-            Schedule
-          </button>
-
-          <button className="w-full flex items-center gap-3 px-4 py-3 hover:bg-white/10 rounded-xl transition-colors text-gray-300">
-            <Bot size={18} />
-            AI Companion
-          </button>
+          <NavButton icon={<Home size={18} />} label="Home" active />
+          <NavButton icon={<Gamepad2 size={18} />} label="Therapy Games" />
+          <NavButton icon={<BarChart3 size={18} />} label="My Progress" />
+          <NavButton icon={<Calendar size={18} />} label="Schedule" />
+          <NavButton icon={<Bot size={18} />} label="AI Companion" />
         </nav>
       </aside>
 

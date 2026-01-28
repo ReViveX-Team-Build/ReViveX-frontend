@@ -1,5 +1,19 @@
+interface GrassBlade {
+    x: number;
+    height: number;
+    width: number;
+    colorBase: string;
+    swaySpeed: number;
+    swayOffset: number;
+    lean: number;
+}
+
 export class SeaGrass {
-    constructor(gameWidth, gameHeight) {
+    gameWidth: number;
+    gameHeight: number;
+    grassBlades: GrassBlade[];
+
+    constructor(gameWidth: number, gameHeight: number) {
         this.gameWidth = gameWidth;
         this.gameHeight = gameHeight;
         this.grassBlades = [];
@@ -19,7 +33,7 @@ export class SeaGrass {
         }
     }
 
-    update(playerX, playerY, speed) {
+    update(playerX: number, playerY: number, speed: number): void {
         this.grassBlades.forEach(blade => {
             // 1. Move Left (Scroll with background)
             blade.x -= 2; 
@@ -46,7 +60,7 @@ export class SeaGrass {
         });
     }
 
-    draw(ctx) {
+    draw(ctx: CanvasRenderingContext2D): void {
         const time = Date.now();
         
         this.grassBlades.forEach(blade => {
@@ -64,7 +78,7 @@ export class SeaGrass {
             ctx.beginPath();
 
             // Draw Curved Blade (Kelp Shape)
-            ctx.moveTo(blade.x - (blade.width/2), this.gameHeight); // Bottom Left
+            ctx.moveTo(blade.x - (blade.width / 2), this.gameHeight); // Bottom Left
             
             // Curve to the top tip
             ctx.quadraticCurveTo(
@@ -75,7 +89,7 @@ export class SeaGrass {
             // Curve back to bottom right
             ctx.quadraticCurveTo(
                 blade.x + blade.lean, this.gameHeight - (blade.height / 2), // Control Point
-                blade.x + (blade.width/2), this.gameHeight                  // Bottom Right
+                blade.x + (blade.width / 2), this.gameHeight                  // Bottom Right
             );
             
             ctx.fill();

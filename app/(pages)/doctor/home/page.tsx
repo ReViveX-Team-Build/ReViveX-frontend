@@ -7,6 +7,19 @@ import {
   Settings
 } from "lucide-react";
 
+interface StatCardProps {
+  title: string;
+  value: string;
+  alert?: boolean;
+}
+
+interface PatientRowProps {
+  name: string;
+  grip: string;
+  adherence: string;
+  status: string;
+  warning?: boolean;
+}
 
 export default function DoctorDashboard() {
   return (
@@ -140,7 +153,7 @@ export default function DoctorDashboard() {
 
 /* ---------- Components ---------- */
 
-function StatCard({ title, value, alert }) {
+function StatCard({ title, value, alert }: StatCardProps) {
   return (
     <div
       className={`rounded-2xl p-5 shadow-sm text-white ${
@@ -153,7 +166,7 @@ function StatCard({ title, value, alert }) {
   );
 }
 
-function PatientRow({ name, grip, adherence, status, warning }) {
+function PatientRow({ name, grip, adherence, status, warning }: PatientRowProps) {
   return (
     <div
       className={`flex justify-between items-center p-4 rounded-xl mb-3 ${

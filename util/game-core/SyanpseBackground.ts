@@ -1,5 +1,5 @@
 // HELPER: Color Blending
-function lerpColor(a, b, amount) {
+function lerpColor(a: string, b: string, amount: number): string {
     const ah = parseInt(a.replace(/#/g, ''), 16),
         ar = ah >> 16, ag = ah >> 8 & 0xff, ab = ah & 0xff,
         bh = parseInt(b.replace(/#/g, ''), 16),
@@ -11,14 +11,19 @@ function lerpColor(a, b, amount) {
 }
 
 class Star {
-    constructor(gameWidth, gameHeight) {
+    x: number;
+    y: number;
+    size: number;
+    offset: number;
+
+    constructor(gameWidth: number, gameHeight: number) {
         this.x = Math.random() * gameWidth;
         this.y = Math.random() * (gameHeight * 0.6); // Stars stay in upper sky
         this.size = Math.random() * 1.5; // Smaller, subtler stars
         this.offset = Math.random() * Math.PI * 2;
     }
 
-    draw(ctx, nightFactor) {
+    draw(ctx: CanvasRenderingContext2D, nightFactor: number): void {
         // Only visible at night
         if (nightFactor < 0.3) return;
 
@@ -34,7 +39,13 @@ class Star {
 }
 
 class Firefly {
-    constructor(gameWidth, gameHeight) {
+    x: number;
+    y: number;
+    vx: number;
+    vy: number;
+    size: number;
+
+    constructor(gameWidth: number, gameHeight: number) {
         this.x = Math.random() * gameWidth;
         this.y = Math.random() * gameHeight;
         this.vx = (Math.random() - 0.5) * 0.5; 
@@ -42,7 +53,7 @@ class Firefly {
         this.size = 1 + Math.random() * 2;
     }
 
-    update(gameWidth, gameHeight) {
+    update(gameWidth: number, gameHeight: number): void {
         this.x += this.vx;
         this.y += this.vy;
         if(this.x < 0) this.x = gameWidth;
@@ -51,7 +62,7 @@ class Firefly {
         if(this.y > gameHeight) this.y = 0;
     }
 
-    draw(ctx, nightFactor) {
+    draw(ctx: CanvasRenderingContext2D, nightFactor: number): void {
         if (nightFactor < 0.2) return; 
         ctx.fillStyle = `rgba(200, 255, 100, ${nightFactor * 0.6})`;
         ctx.beginPath();
@@ -61,7 +72,16 @@ class Firefly {
 }
 
 class Layer {
-    constructor(gameWidth, gameHeight, speedModifier, color, yOffset) {
+    gameWidth: number;
+    gameHeight: number;
+    speedModifier: number;
+    color: string;
+    x: number;
+    speed: number;
+    baseY: number;
+    waveHeightModifier: number;
+
+    constructor(gameWidth: number, gameHeight: number, speedModifier: number, color: string, yOffset: number) {
         this.gameWidth = gameWidth;
         this.gameHeight = gameHeight;
         this.speedModifier = speedModifier;
@@ -72,13 +92,13 @@ class Layer {
         this.waveHeightModifier = 1.0; 
     }
 
-    update(difficulty) {
+    update(difficulty: number): void {
         this.x -= this.speed * this.speedModifier;
         if (this.x <= -this.gameWidth) this.x = 0;
         this.waveHeightModifier = Math.max(0.3, 1.0 - (difficulty * 0.5));
     }
 
-    draw(ctx, time, nightFactor) {
+    draw(ctx: CanvasRenderingContext2D, time: number, nightFactor: number): void {
         // Darken water at night
         const nightColor = lerpColor(this.color, "#000510", nightFactor * 0.6);
         ctx.fillStyle = nightColor;
@@ -89,7 +109,7 @@ class Layer {
         ctx.fill();
     }
 
-    drawWave(ctx, offsetX, time) {
+    drawWave(ctx: CanvasRenderingContext2D, offsetX: number, time: number): void {
         const wobble = Math.sin(time * 0.002 + this.speedModifier) * (20 * this.waveHeightModifier);
         const surfaceY = this.baseY + wobble;
 
@@ -105,7 +125,16 @@ class Layer {
 }
 
 export class SynapseBackground {
-    constructor(gameWidth, gameHeight) {
+    gameWidth: number;
+    gameHeight: number;
+    layers: Layer[];
+    stars: Star[];
+    fireflies: Firefly[];
+    sandHeight: number;
+    targetSandHeight: number;
+    sandTextureCanvas: HTMLCanvasElement | null;
+
+    constructor(gameWidth: number, gameHeight: number) {
         this.gameWidth = gameWidth;
         this.gameHeight = gameHeight;
         
@@ -124,13 +153,15 @@ export class SynapseBackground {
         this.sandTextureCanvas = this.createSandTexture();
     }
 
-    createSandTexture() {
+    createSandTexture(): HTMLCanvasElement | null {
         if (typeof document === 'undefined') return null; 
 
         const canvas = document.createElement('canvas');
         canvas.width = 100;
         canvas.height = 100;
         const ctx = canvas.getContext('2d');
+        
+        if (!ctx) return null;
 
         // Draw 500 random specks
         for (let i = 0; i < 500; i++) {
@@ -143,7 +174,7 @@ export class SynapseBackground {
         return canvas;
     }
 
-    update(gameTime) {
+    update(gameTime: number): number {
         // --- 1. THE LOOPING DAY/NIGHT CYCLE ---
         // 3 Minutes = 180,000ms
         const CYCLE_DURATION = 180000; 
@@ -188,7 +219,7 @@ export class SynapseBackground {
         return nightFactor; 
     }
 
-    draw(ctx, nightFactor) {
+    draw(ctx: CanvasRenderingContext2D, nightFactor: number): void {
         const time = Date.now();
 
         // 1. SKY
@@ -222,7 +253,7 @@ export class SynapseBackground {
         this.drawSand(ctx, nightFactor);
     }
 
-    drawSun(ctx, nightFactor) {
+    drawSun(ctx: CanvasRenderingContext2D, nightFactor: number): void {
         // Sun moves down and fades out
         if (nightFactor >= 1) return;
         
@@ -239,7 +270,7 @@ export class SynapseBackground {
         ctx.restore();
     }
 
-    drawMoon(ctx, nightFactor) {
+    drawMoon(ctx: CanvasRenderingContext2D, nightFactor: number): void {
         // Moon moves up and fades in
         if (nightFactor <= 0) return;
 
@@ -263,50 +294,52 @@ export class SynapseBackground {
         ctx.restore();
     }
 
-   drawSand(ctx, nightFactor) {
-    const sandColorTop = lerpColor("#E6D09E", "#3e3221", nightFactor);
-    const sandColorBot = lerpColor("#8B4513", "#110e0a", nightFactor);
+    drawSand(ctx: CanvasRenderingContext2D, nightFactor: number): void {
+        const sandColorTop = lerpColor("#E6D09E", "#3e3221", nightFactor);
+        const sandColorBot = lerpColor("#8B4513", "#110e0a", nightFactor);
 
-    // 1. Draw the Shape
-    ctx.beginPath();
-    ctx.moveTo(0, this.gameHeight);
-    ctx.lineTo(0, this.gameHeight - this.sandHeight);
+        // 1. Draw the Shape
+        ctx.beginPath();
+        ctx.moveTo(0, this.gameHeight);
+        ctx.lineTo(0, this.gameHeight - this.sandHeight);
 
-    // High resolution bumps for better look
-    for (let i = 0; i <= this.gameWidth; i += 10) {
-        const bump = Math.sin(i * 0.015) * 15 + Math.cos(i * 0.05) * 5;
-        ctx.lineTo(i, this.gameHeight - this.sandHeight + bump);
+        // High resolution bumps for better look
+        for (let i = 0; i <= this.gameWidth; i += 10) {
+            const bump = Math.sin(i * 0.015) * 15 + Math.cos(i * 0.05) * 5;
+            ctx.lineTo(i, this.gameHeight - this.sandHeight + bump);
+        }
+        ctx.lineTo(this.gameWidth, this.gameHeight);
+        ctx.lineTo(0, this.gameHeight); // Close the loop
+
+        // 2. Base Gradient
+        const gradient = ctx.createLinearGradient(0, this.gameHeight - this.sandHeight, 0, this.gameHeight);
+        gradient.addColorStop(0, sandColorTop);
+        gradient.addColorStop(1, sandColorBot);
+        ctx.fillStyle = gradient;
+        ctx.fill();
+
+        // 3. Apply Grain Texture
+        if (this.sandTextureCanvas) {
+            ctx.save();
+            ctx.clip(); // Only draw inside the sand
+            const pattern = ctx.createPattern(this.sandTextureCanvas, 'repeat');
+            if (pattern) {
+                ctx.fillStyle = pattern;
+                ctx.globalCompositeOperation = 'overlay'; // Blend mode for realism
+                ctx.fillRect(0, 0, this.gameWidth, this.gameHeight);
+            }
+            ctx.restore();
+        }
+
+        // 4. Top Rim Highlight (The "Pop")
+        ctx.beginPath();
+        ctx.moveTo(0, this.gameHeight - this.sandHeight);
+        for (let i = 0; i <= this.gameWidth; i += 10) {
+            const bump = Math.sin(i * 0.015) * 15 + Math.cos(i * 0.05) * 5;
+            ctx.lineTo(i, this.gameHeight - this.sandHeight + bump);
+        }
+        ctx.strokeStyle = `rgba(255, 255, 255, ${0.3 - (nightFactor * 0.2)})`;
+        ctx.lineWidth = 3;
+        ctx.stroke();
     }
-    ctx.lineTo(this.gameWidth, this.gameHeight);
-    ctx.lineTo(0, this.gameHeight); // Close the loop
-
-    // 2. Base Gradient
-    const gradient = ctx.createLinearGradient(0, this.gameHeight - this.sandHeight, 0, this.gameHeight);
-    gradient.addColorStop(0, sandColorTop);
-    gradient.addColorStop(1, sandColorBot);
-    ctx.fillStyle = gradient;
-    ctx.fill();
-
-    // 3. Apply Grain Texture
-    if (this.sandTextureCanvas) {
-        ctx.save();
-        ctx.clip(); // Only draw inside the sand
-        const pattern = ctx.createPattern(this.sandTextureCanvas, 'repeat');
-        ctx.fillStyle = pattern;
-        ctx.globalCompositeOperation = 'overlay'; // Blend mode for realism
-        ctx.fillRect(0, 0, this.gameWidth, this.gameHeight);
-        ctx.restore();
-    }
-
-    // 4. Top Rim Highlight (The "Pop")
-    ctx.beginPath();
-    ctx.moveTo(0, this.gameHeight - this.sandHeight);
-    for (let i = 0; i <= this.gameWidth; i += 10) {
-        const bump = Math.sin(i * 0.015) * 15 + Math.cos(i * 0.05) * 5;
-        ctx.lineTo(i, this.gameHeight - this.sandHeight + bump);
-    }
-    ctx.strokeStyle = `rgba(255, 255, 255, ${0.3 - (nightFactor * 0.2)})`;
-    ctx.lineWidth = 3;
-    ctx.stroke();
-  }
 }
