@@ -1,10 +1,11 @@
 "use client";
 import React, { useRef, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Player } from "../game-core/Player";
-import { Background } from "../game-core/Background";
-import { SeaGrass } from "../game-core/SeaGrass";
-import { Particle } from "../game-core/Particles"; 
+import { Player } from "../game-core/SynapsePlayer";
+import { SynapseBackground } from "../game-core/SynapseBackground";
+import { SeaGrass } from "../game-core/SynapseSeaGrass";
+import { Particle } from "../game-core/SynapseParticles"; 
+import { SynapseCorals } from "../game-core/SynapseCorals";
 
 const GameCanvas = () => {
     const canvasRef = useRef(null);
@@ -15,6 +16,7 @@ const GameCanvas = () => {
     const playerRef = useRef(null);
     const bgRef = useRef(null);
     const grassRef = useRef(null);
+    const coralsRef = useRef(null);
     const particlesRef = useRef([]);
     const inputRef = useRef(false);
     
@@ -43,7 +45,8 @@ const GameCanvas = () => {
 
         // 1. Reset Entities
         playerRef.current = new Player(width, height);
-        bgRef.current = new Background(width, height);
+        bgRef.current = new SynapseBackground(width, height);
+        coralsRef.current = new SynapseCorals(width, height);
         grassRef.current = new SeaGrass(width, height);
         particlesRef.current = [];
         
@@ -87,6 +90,7 @@ const GameCanvas = () => {
         if (isPaused) return; 
 
         const canvas = canvasRef.current;
+        if (!canvas) return;
         const ctx = canvas.getContext('2d');
         
         const currentTime = Date.now();
@@ -105,9 +109,19 @@ const GameCanvas = () => {
                 currentSandHeight = bgRef.current.sandHeight;
             }
 
-            // 2. Draw Sea Grass
+            if (coralsRef.current) {
+                coralsRef.current.update();
+                coralsRef.current.draw(ctx, nightFactor); 
+            }
+
+           // 2. Draw Sea Grass
             if (grassRef.current) { 
-                grassRef.current.update(); 
+                // A. Get Player Position (Safety check in case player isn't loaded)
+                const px = playerRef.current ? playerRef.current.x : 0;
+                const py = playerRef.current ? playerRef.current.y : 0;
+
+                // B. Send Position to Grass so it can react
+                grassRef.current.update(px, py); 
                 grassRef.current.draw(ctx); 
             }
 

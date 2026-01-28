@@ -1,4 +1,13 @@
 import Link from 'next/link';
+import {
+  Home,
+  Gamepad2,
+  BarChart3,
+  Calendar,
+  Bot
+} from "lucide-react";
+
+
 export default function PatientDashboard() {
   return (
     <div className="flex min-h-screen bg-gray-50">
@@ -9,25 +18,33 @@ export default function PatientDashboard() {
           <div className="w-8 h-8 bg-teal-500 rounded-lg flex items-center justify-center font-bold text-lg">R</div>
           <div>
             <h1 className="text-xl font-bold">ReViveX</h1>
-            <p className="text-xs text-gray-400">Neuro-Rehab</p>
+            <p className="text-xs text-gray-400">Patient Portal</p>
           </div>
         </div>
-        
         <nav className="space-y-2">
-          <button className="w-full text-left px-4 py-3 bg-teal-500 rounded-xl font-semibold shadow-lg shadow-teal-900/20">
-            🏠 Home
+          <button className="w-full flex items-center gap-3 px-4 py-3 bg-teal-500 text-[#0B1E33] rounded-xl font-semibold shadow-lg shadow-teal-900/20">
+            <Home size={18} />
+            Home
           </button>
-          <button className="w-full text-left px-4 py-3 hover:bg-white/10 rounded-xl transition-colors text-gray-300">
-            🎮 Therapy Games
+
+          <button className="w-full flex items-center gap-3 px-4 py-3 hover:bg-white/10 rounded-xl transition-colors text-gray-300">
+            <Gamepad2 size={18} />
+            Therapy Games
           </button>
-          <button className="w-full text-left px-4 py-3 hover:bg-white/10 rounded-xl transition-colors text-gray-300">
-            📈 My Progress
+
+          <button className="w-full flex items-center gap-3 px-4 py-3 hover:bg-white/10 rounded-xl transition-colors text-gray-300">
+            <BarChart3 size={18} />
+            My Progress
           </button>
-          <button className="w-full text-left px-4 py-3 hover:bg-white/10 rounded-xl transition-colors text-gray-300">
-            📅 Schedule
+
+          <button className="w-full flex items-center gap-3 px-4 py-3 hover:bg-white/10 rounded-xl transition-colors text-gray-300">
+            <Calendar size={18} />
+            Schedule
           </button>
-          <button className="w-full text-left px-4 py-3 hover:bg-white/10 rounded-xl transition-colors text-gray-300">
-            🤖 AI Companion
+
+          <button className="w-full flex items-center gap-3 px-4 py-3 hover:bg-white/10 rounded-xl transition-colors text-gray-300">
+            <Bot size={18} />
+            AI Companion
           </button>
         </nav>
       </aside>

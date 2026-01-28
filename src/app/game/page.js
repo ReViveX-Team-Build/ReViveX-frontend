@@ -1,4 +1,4 @@
-import GameCanvas from "../components/GameCanvas";
+import GameCanvas from "../components/SynapseGameCanvas";
 
 export default function GamePage() {
   return (
