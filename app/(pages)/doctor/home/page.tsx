@@ -1,10 +1,12 @@
 import Link from "next/link";
+
 import {
   Home,
   Users,
   MessageCircle,
   BarChart3,
-  Settings
+  Settings,
+    Bot
 } from "lucide-react";
 
 interface StatCardProps {
@@ -61,6 +63,11 @@ export default function DoctorDashboard() {
           <button className="flex items-center gap-3 w-full px-4 py-3 hover:bg-white/10 rounded-xl text-gray-300">
             <Settings size={18} />
             Settings
+          </button>
+
+          <button className="flex items-center gap-3 w-full px-4 py-3 hover:bg-white/10 rounded-xl text-gray-300">
+            <Bot size={18} />
+            AI Companion
           </button>
         </nav>
       </aside>
