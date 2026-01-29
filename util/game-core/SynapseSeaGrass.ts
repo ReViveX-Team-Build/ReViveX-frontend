@@ -1,98 +1,147 @@
 interface GrassBlade {
     x: number;
+    baseX: number;
     height: number;
     width: number;
-    colorBase: string;
     swaySpeed: number;
     swayOffset: number;
     lean: number;
+    depth: number; // depth layer (parallax + color)
+}
+
+interface GrassCluster {
+    x: number;
+    blades: GrassBlade[];
+    baseWidth: number;
 }
 
 export class SeaGrass {
     gameWidth: number;
     gameHeight: number;
-    grassBlades: GrassBlade[];
+    clusters: GrassCluster[] = [];
 
     constructor(gameWidth: number, gameHeight: number) {
         this.gameWidth = gameWidth;
         this.gameHeight = gameHeight;
-        this.grassBlades = [];
 
-        for (let i = 0; i < 40; i++) {
-            this.grassBlades.push({
-                x: Math.random() * gameWidth,
-                // Taller, varied heights for realism
-                height: 100 + Math.random() * 150, 
-                width: 12 + Math.random() * 8,
-                // Slight transparency for "watery" look
-                colorBase: Math.random() > 0.5 ? "rgba(46, 139, 87," : "rgba(60, 179, 113,", 
-                swaySpeed: 0.002 + Math.random() * 0.003,
-                swayOffset: Math.random() * Math.PI * 2,
-                lean: 0 // Physics interaction value
+        const CLUSTER_COUNT = 8;
+
+        for (let i = 0; i < CLUSTER_COUNT; i++) {
+            const clusterX = Math.random() * gameWidth;
+            const bladeCount = 6 + Math.floor(Math.random() * 6);
+
+            const blades: GrassBlade[] = [];
+
+            for (let j = 0; j < bladeCount; j++) {
+                blades.push({
+                    baseX: clusterX + (Math.random() * 40 - 20),
+                    x: clusterX,
+                    height: 120 + Math.random() * 140,
+                    width: 10 + Math.random() * 6,
+                    swaySpeed: 0.0015 + Math.random() * 0.002,
+                    swayOffset: Math.random() * Math.PI * 2,
+                    lean: 0,
+                    depth: Math.random() // for color & parallax
+                });
+            }
+
+            this.clusters.push({
+                x: clusterX,
+                blades,
+                baseWidth: 50 + Math.random() * 40
             });
         }
     }
 
     update(playerX: number, playerY: number, speed: number): void {
-        this.grassBlades.forEach(blade => {
-            // 1. Move Left (Scroll with background)
-            blade.x -= 2; 
+        this.clusters.forEach(cluster => {
+            cluster.x -= 2;
 
-            // 2. Loop around
-            if (blade.x < -20) {
-                blade.x = this.gameWidth + 20;
-                blade.lean = 0; // Reset lean when respawning
+            if (cluster.x < -100) {
+                cluster.x = this.gameWidth + 100;
             }
 
-            // 3. INTERACTION: Check distance to player
-            // If player is close (within 100px) and low enough (near the grass)
-            const dist = (playerX - blade.x);
-            const heightCheck = (playerY > this.gameHeight - blade.height - 50);
+            cluster.blades.forEach(blade => {
+                blade.x = cluster.x + (blade.baseX - cluster.x);
 
-            if (Math.abs(dist) < 80 && heightCheck) {
-                // Push grass away from player (Right if player is left, etc.)
-                // The '0.2' is the strength of the push
-                blade.lean = Math.max(-40, Math.min(40, blade.lean - (dist * 0.2)));
-            } else {
-                // Elasticity: Slowly return to 0 lean
-                blade.lean *= 0.90; 
-            }
+                const dist = playerX - blade.x;
+                const nearBottom = playerY > this.gameHeight - blade.height - 40;
+
+                if (Math.abs(dist) < 80 && nearBottom) {
+                    blade.lean = Math.max(-50, Math.min(50, blade.lean - dist * 0.25));
+                } else {
+                    blade.lean *= 0.88;
+                }
+            });
         });
     }
 
     draw(ctx: CanvasRenderingContext2D): void {
         const time = Date.now();
-        
-        this.grassBlades.forEach(blade => {
-            // Natural sway (Sine wave) + Player Interaction (Lean)
-            const naturalSway = Math.sin(time * blade.swaySpeed + blade.swayOffset) * 15;
-            const totalTipX = blade.x + naturalSway + blade.lean;
 
-            // GRADIENT: Dark bottom, light top (Fake lighting)
-            // We create it on the fly for each blade (a bit expensive but looks great)
-            const gradient = ctx.createLinearGradient(blade.x, this.gameHeight, totalTipX, this.gameHeight - blade.height);
-            gradient.addColorStop(0, `${blade.colorBase} 0.2)`); // Dark/Transparent Bottom
-            gradient.addColorStop(1, `${blade.colorBase} 0.9)`); // Bright Top
-
-            ctx.fillStyle = gradient;
+        this.clusters.forEach(cluster => {
+            /* === SHARED ROOT BASE === */
+            ctx.save();
             ctx.beginPath();
-
-            // Draw Curved Blade (Kelp Shape)
-            ctx.moveTo(blade.x - (blade.width / 2), this.gameHeight); // Bottom Left
-            
-            // Curve to the top tip
+            ctx.moveTo(cluster.x - cluster.baseWidth, this.gameHeight);
             ctx.quadraticCurveTo(
-                blade.x + blade.lean, this.gameHeight - (blade.height / 2), // Control Point (Bends with lean)
-                totalTipX, this.gameHeight - blade.height                   // Top Tip
+                cluster.x,
+                this.gameHeight - 20,
+                cluster.x + cluster.baseWidth,
+                this.gameHeight
             );
+            ctx.closePath();
 
-            // Curve back to bottom right
-            ctx.quadraticCurveTo(
-                blade.x + blade.lean, this.gameHeight - (blade.height / 2), // Control Point
-                blade.x + (blade.width / 2), this.gameHeight                  // Bottom Right
-            );
-            
+            ctx.fillStyle = "rgba(40, 120, 90, 0.35)";
             ctx.fill();
+            ctx.restore();
+
+            /* === BLADES === */
+            cluster.blades.forEach(blade => {
+                const sway =
+                    Math.sin(time * blade.swaySpeed + blade.swayOffset) *
+                    (12 + blade.depth * 10);
+
+                const tipX = blade.x + sway + blade.lean;
+                const tipY = this.gameHeight - blade.height;
+
+                const gradient = ctx.createLinearGradient(
+                    blade.x,
+                    this.gameHeight,
+                    tipX,
+                    tipY
+                );
+
+                gradient.addColorStop(
+                    0,
+                    `rgba(30, ${100 + blade.depth * 50}, 80, 0.25)`
+                );
+                gradient.addColorStop(
+                    1,
+                    `rgba(80, ${180 + blade.depth * 40}, 140, 0.95)`
+                );
+
+                ctx.fillStyle = gradient;
+                ctx.beginPath();
+
+                ctx.moveTo(blade.x - blade.width * 0.5, this.gameHeight);
+
+                ctx.quadraticCurveTo(
+                    blade.x + blade.lean * 0.6,
+                    this.gameHeight - blade.height * 0.5,
+                    tipX,
+                    tipY
+                );
+
+                ctx.quadraticCurveTo(
+                    blade.x + blade.lean * 0.4,
+                    this.gameHeight - blade.height * 0.5,
+                    blade.x + blade.width * 0.5,
+                    this.gameHeight
+                );
+
+                ctx.fill();
+            });
         });
     }
 }
