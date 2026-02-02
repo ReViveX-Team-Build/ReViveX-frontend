@@ -5,6 +5,32 @@ import { useState } from "react";
 
 export default function DoctorAICompanion() {
     const [input, setInput] = useState("");
+    const [messages, setMessages] = useState<
+        { sender: "ai" | "user"; text: string }[]
+    >([
+        {
+            sender: "ai",
+            text: "Hello Doctor 👋 I’m your AI Clinical Assistant. I can help you analyze patient progress, adherence, and therapy risks.",
+        },
+    ]);
+    const handleSend = () => {
+        if (!input.trim()) return;
+
+        // Add user message
+        const userMessage = { sender: "user" as const, text: input };
+        setMessages((prev) => [...prev, userMessage]);
+        setInput("");
+
+        // Simulate AI response (Firebase-style placeholder)
+        setTimeout(() => {
+            const aiMessage = {
+                sender: "ai" as const,
+                text:
+                    "I've analyzed the current data. Two patients show declining adherence and may need intervention. Would you like a detailed report?",
+            };
+            setMessages((prev) => [...prev, aiMessage]);
+        }, 1000);
+    };
     return (
         <div className="p-8 min-h-screen bg-gray-50">
 
@@ -33,35 +59,33 @@ export default function DoctorAICompanion() {
 
                 {/* Messages */}
                 <div className="flex-1 p-6 space-y-6 overflow-y-auto">
+                    {messages.map((msg, index) => (
+                        <div
+                            key={index}
+                            className={`flex ${
+                                msg.sender === "user" ? "justify-end" : "justify-start"
+                            }`}
+                        >
+                            <div className="max-w-2xl">
+                                {msg.sender === "ai" && (
+                                    <div className="flex items-start gap-3">
+                                        <div className="w-9 h-9 bg-gradient-to-br from-purple-600 to-blue-600 rounded-lg flex items-center justify-center">
+                                            <Bot className="w-5 h-5 text-white" />
+                                        </div>
+                                        <div className="bg-gray-100 rounded-xl p-4 text-sm text-gray-800">
+                                            {msg.text}
+                                        </div>
+                                    </div>
+                                )}
 
-                    {/* AI Message */}
-                    <div className="flex items-start gap-3 max-w-2xl">
-                        <div className="w-9 h-9 bg-gradient-to-br from-purple-600 to-blue-600 rounded-lg flex items-center justify-center">
-                            <Bot className="w-5 h-5 text-white" />
-                        </div>
-                        <div>
-                            <p className="text-sm font-semibold text-gray-700 mb-1">
-                                AI Assistant
-                            </p>
-                            <div className="bg-gray-100 rounded-xl p-4 text-sm text-gray-800">
-                                Hello Doctor 👋 I’m your AI Clinical Assistant.
-                                I can help you analyze patient progress, adherence, and therapy risks.
+                                {msg.sender === "user" && (
+                                    <div className="bg-teal-600 text-white rounded-xl p-4 text-sm">
+                                        {msg.text}
+                                    </div>
+                                )}
                             </div>
                         </div>
-                    </div>
-
-                    {/* User Message */}
-                    <div className="flex justify-end">
-                        <div className="max-w-2xl">
-                            <p className="text-sm font-semibold text-gray-700 mb-1 text-right">
-                                You
-                            </p>
-                            <div className="bg-teal-600 text-white rounded-xl p-4 text-sm">
-                                Show me patients who need attention today
-                            </div>
-                        </div>
-                    </div>
-
+                    ))}
                 </div>
 
                 {/* Input Placeholder (disabled for now) */}
@@ -83,12 +107,23 @@ export default function DoctorAICompanion() {
                             </button>
                         ))}
                     </div>
-                    <input
-                        value={input}
-                        onChange={(e) => setInput(e.target.value)}
-                        placeholder="Type your question here..."
-                        className="w-full px-4 py-3 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"
-                    />
+                    <div className="flex gap-3">
+                        <input
+                            value={input}
+                            onChange={(e) => setInput(e.target.value)}
+                            onKeyDown={(e) => e.key === "Enter" && handleSend()}
+                            placeholder="Ask me anything about your patients..."
+                            className="flex-1 px-4 py-3 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"
+                        />
+
+                        <button
+                            onClick={handleSend}
+                            disabled={!input.trim()}
+                            className="px-5 py-3 bg-teal-600 text-white rounded-lg hover:bg-teal-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition"
+                        >
+                            Send
+                        </button>
+                    </div>
                 </div>
             </div>
 
