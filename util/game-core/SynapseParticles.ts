@@ -1,5 +1,13 @@
 export class Particle {
-    constructor(x, y) {
+    x: number;
+    y: number;
+    size: number;
+    speedX: number;
+    speedY: number;
+    color: string;
+    markedForDeletion: boolean;
+
+    constructor(x: number, y: number) {
         this.x = x;
         this.y = y;
         this.size = Math.random() * 3 + 1; 
@@ -9,7 +17,7 @@ export class Particle {
         this.markedForDeletion = false;
     }
 
-     update() {
+    update(): void {
         this.x += this.speedX;
         this.y += this.speedY;
         this.size -= 0.05; 
@@ -20,9 +28,8 @@ export class Particle {
         }
     }
 
-     draw(ctx) {
-        //not allow invisble / negative particles
-
+    draw(ctx: CanvasRenderingContext2D): void {
+        // not allow invisible / negative particles
         if (this.size > 0) {
             ctx.fillStyle = this.color;
             ctx.beginPath();
@@ -31,5 +38,3 @@ export class Particle {
         }
     }
 }
-
-    

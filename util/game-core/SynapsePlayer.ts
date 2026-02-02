@@ -1,5 +1,44 @@
+interface Obstacle {
+    x: number;
+    y: number;
+    radius: number;
+}
+
+type PlayerStatus = "swimming" | "hit_ceiling" | "hit_floor";
+type DeathReason = "" | "stung" | "dried_out" | "crushed";
+
 export class Player {
-    constructor(gameWidth, gameHeight) {
+    gameWidth: number;
+    gameHeight: number;
+    x: number;
+    y: number;
+    
+    // VISUALS
+    radius: number;
+    image: HTMLImageElement;
+
+    // RHYTHMIC PUMPING
+    velocity: number;
+    
+    // Gravity is lighter (Floaty feel)
+    weight: number;
+    
+    // Buoyancy is STRONG (Burst feel)
+    buoyancy: number;
+
+    // Max Speed Cap (Prevents flying off screen too fast)
+    maxUpwardSpeed: number;
+
+    // TIMERS
+    airTime: number;
+    floorTime: number;
+    maxTime: number;
+    
+    isDead: boolean;
+    deathReason: DeathReason;
+    status: PlayerStatus;
+
+    constructor(gameWidth: number, gameHeight: number) {
         this.gameWidth = gameWidth;
         this.gameHeight = gameHeight;
         this.x = 100;
@@ -31,8 +70,9 @@ export class Player {
         this.deathReason = "";  
         this.status = "swimming"; 
     }
-    //  ADD THIS FUNCTION INSIDE PLAYER CLASS
-    checkCollision(obstacles) {
+
+    // ADD THIS FUNCTION INSIDE PLAYER CLASS
+    checkCollision(obstacles: Obstacle[]): boolean {
         if (!obstacles) return false;
 
         for (let i = 0; i < obstacles.length; i++) {
@@ -54,7 +94,7 @@ export class Player {
         return false;
     }
 
-    update(inputActive, deltaTime = 16.6, currentSandHeight = 50) {
+    update(inputActive: boolean, deltaTime: number = 16.6, currentSandHeight: number = 50): void {
         if (this.isDead) return; 
 
         // PHYSICS ENGINE (Updated for Pump-Style)
@@ -79,7 +119,7 @@ export class Player {
         // Apply movement
         this.y += this.velocity;
 
-        //  BOUNDARIES 
+        // BOUNDARIES 
         const waterSurface = this.gameHeight * 0.42; 
         const floorLevel = this.gameHeight - currentSandHeight - this.radius;
 
@@ -116,12 +156,12 @@ export class Player {
         }
     }
 
-    draw(ctx) {
+    draw(ctx: CanvasRenderingContext2D): void {
         ctx.save();
         ctx.translate(this.x, this.y);
 
-        // Rotationnn - Tilt up when swimming fast, tilt down when sinking
-        // The divider- controls how much it tilts
+        // Rotation - Tilt up when swimming fast, tilt down when sinking
+        // The divider controls how much it tilts
         const angle = this.velocity / 10; 
         ctx.rotate(angle);
 
@@ -143,4 +183,4 @@ export class Player {
 
         ctx.restore();
     }
-}    
+}
