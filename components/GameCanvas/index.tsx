@@ -185,7 +185,8 @@ const GameCanvas: React.FC = () => {
     };
 
     const confirmExit = (): void => {
-        router.push('/patient-home'); 
+        '/patients/home'
+        router.push('/patients/home');
     };
 
     const cancelExit = (): void => {
