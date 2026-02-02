@@ -1,8 +1,10 @@
 "use client";
 
 import { Bot } from "lucide-react";
+import { useState } from "react";
 
 export default function DoctorAICompanion() {
+    const [input, setInput] = useState("");
     return (
         <div className="p-8 min-h-screen bg-gray-50">
 
@@ -64,10 +66,28 @@ export default function DoctorAICompanion() {
 
                 {/* Input Placeholder (disabled for now) */}
                 <div className="border-t border-gray-200 p-4">
+                    {/* Quick Actions */}
+                    <div className="mb-3 flex flex-wrap gap-2">
+                        {[
+                            "Analyze patient progress trends",
+                            "Identify at-risk patients",
+                            "Generate weekly summary report",
+                            "Suggest protocol optimizations",
+                        ].map((action) => (
+                            <button
+                                key={action}
+                                onClick={() => setInput(action)}
+                                className="px-3 py-2 rounded-lg text-xs font-medium bg-gray-100 text-gray-700 hover:bg-gray-200 transition"
+                            >
+                                {action}
+                            </button>
+                        ))}
+                    </div>
                     <input
-                        disabled
+                        value={input}
+                        onChange={(e) => setInput(e.target.value)}
                         placeholder="Type your question here..."
-                        className="w-full px-4 py-3 border rounded-lg text-sm bg-gray-100 text-gray-400 cursor-not-allowed"
+                        className="w-full px-4 py-3 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"
                     />
                 </div>
             </div>
