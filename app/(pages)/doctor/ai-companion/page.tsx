@@ -126,6 +126,18 @@ export default function DoctorAICompanion() {
                     </div>
                 </div>
             </div>
+            {/* Premium AI Info */}
+            <div className="mt-4 bg-purple-50 border border-purple-200 rounded-lg p-4">
+                <p className="text-sm text-gray-700">
+                    <span className="font-semibold text-purple-800">
+                     Premium AI Features:
+                     </span>{" "}
+                    This clinical AI assistant is designed to analyze patient adherence,
+                    rehabilitation progress, and therapy risks using secure Firebase Cloud
+                    Functions and advanced machine learning models. All data access is
+                    role-based and compliant with healthcare data privacy standards.
+                </p>
+            </div>
 
         </div>
     );
