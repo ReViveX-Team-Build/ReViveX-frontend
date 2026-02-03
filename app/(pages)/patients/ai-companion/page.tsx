@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect } from "react";
 import { Bot } from "lucide-react";
+import { Crown, Check } from "lucide-react";
 
 export default function PatientAICompanion() {
     type Message = {
@@ -163,10 +164,92 @@ export default function PatientAICompanion() {
                     </div>
 
                     {/* Plans / Info Placeholder */}
-                    <div className="bg-white shadow-lg rounded-xl p-6 flex items-center justify-center">
-                        <p className="text-gray-400 text-sm">
-                            Subscription and plan details will appear here
-                        </p>
+                    <div className="space-y-6">
+
+                        {/* Current Plan */}
+                        <div className="bg-white shadow-lg rounded-xl p-6">
+                            <h3 className="text-[#0A2E4C] mb-3">
+                                Current Plan
+                            </h3>
+
+                            <div className="bg-[#2DD4BF]/10 border border-[#2DD4BF]/20 rounded-lg p-4">
+                                <p className="text-[#0A2E4C]">
+                                    Text Chat
+                                </p>
+                                <p className="text-sm text-gray-600 mt-1">
+                                    Free plan with unlimited text-based AI support
+                                </p>
+                            </div>
+                        </div>
+
+                        {/* Premium Plans */}
+                        <div className="bg-white shadow-lg rounded-xl p-6">
+                            <div className="flex items-center gap-2 mb-4">
+                                <Crown className="h-5 w-5 text-amber-500" />
+                                <h3 className="text-[#0A2E4C]">
+                                    Premium Plans
+                                </h3>
+                            </div>
+
+                            {/* Voice Companion */}
+                            <div className="border-2 border-amber-300 rounded-lg p-4 mb-4">
+                                <p className="text-[#0A2E4C] mb-1">
+                                    Voice Companion
+                                </p>
+                                <p className="text-2xl text-[#0A2E4C] mb-3">
+                                    $29<span className="text-sm text-gray-600">/month</span>
+                                </p>
+
+                                <ul className="space-y-2 text-sm mb-4">
+                                    <li className="flex items-start gap-2">
+                                        <Check className="h-4 w-4 text-green-500 mt-0.5" />
+                                        <span>Real-time voice guidance</span>
+                                    </li>
+                                    <li className="flex items-start gap-2">
+                                        <Check className="h-4 w-4 text-green-500 mt-0.5" />
+                                        <span>Hands-free interaction</span>
+                                    </li>
+                                    <li className="flex items-start gap-2">
+                                        <Check className="h-4 w-4 text-green-500 mt-0.5" />
+                                        <span>Personalized encouragement</span>
+                                    </li>
+                                </ul>
+
+                                <button className="w-full bg-amber-600 hover:bg-amber-700 text-white py-2 rounded-lg">
+                                    Upgrade Now
+                                </button>
+                            </div>
+
+                            {/* Advanced Analytics */}
+                            <div className="border-2 border-[#2DD4BF] rounded-lg p-4">
+                                <p className="text-[#0A2E4C] mb-1">
+                                    Advanced Analytics
+                                </p>
+                                <p className="text-2xl text-[#0A2E4C] mb-3">
+                                    $19<span className="text-sm text-gray-600">/month</span>
+                                </p>
+
+                                <ul className="space-y-2 text-sm mb-4">
+                                    <li className="flex items-start gap-2">
+                                        <Check className="h-4 w-4 text-green-500 mt-0.5" />
+                                        <span>Detailed progress insights</span>
+                                    </li>
+                                    <li className="flex items-start gap-2">
+                                        <Check className="h-4 w-4 text-green-500 mt-0.5" />
+                                        <span>Weekly AI reports</span>
+                                    </li>
+                                    <li className="flex items-start gap-2">
+                                        <Check className="h-4 w-4 text-green-500 mt-0.5" />
+                                        <span>Recovery trend predictions</span>
+                                    </li>
+                                </ul>
+
+                                <button className="w-full border border-[#2DD4BF] text-[#2DD4BF] py-2 rounded-lg hover:bg-[#2DD4BF]/10">
+                                    Upgrade
+                                </button>
+                            </div>
+
+                        </div>
                     </div>
 
                 </div>
