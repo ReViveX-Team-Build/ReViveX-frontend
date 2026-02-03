@@ -30,6 +30,28 @@ export default function PatientAICompanion() {
         }
     }, [messages]);
 
+    const getAIResponse = (input: string): string => {
+        const lower = input.toLowerCase();
+
+        if (lower.includes("pain") || lower.includes("hurt")) {
+            return "I’m sorry you’re feeling pain 💙. If it continues, it’s important to inform your therapist. Would you like me to remind you to report this?";
+        }
+
+        if (lower.includes("tired") || lower.includes("exhausted")) {
+            return "Feeling tired after therapy is normal. Make sure you rest well and stay hydrated. You’re still doing great 👍";
+        }
+
+        if (lower.includes("progress") || lower.includes("improving")) {
+            return "Great news! 🎉 Your recent sessions show steady improvement. Consistency like this really helps recovery.";
+        }
+
+        if (lower.includes("worried") || lower.includes("scared")) {
+            return "It’s completely okay to feel worried sometimes. You’re not alone in this — your care team and I are here for you 🤍";
+        }
+
+        return "Thanks for sharing 💬. Keep staying consistent with your exercises — every small step matters in recovery!";
+    };
+
     const handleSendMessage = () => {
         if (!inputValue.trim()) return;
 
@@ -45,6 +67,21 @@ export default function PatientAICompanion() {
 
         setMessages((prev) => [...prev, userMessage]);
         setInputValue("");
+
+        // Simulated AI reply
+        setTimeout(() => {
+            const aiMessage: Message = {
+                id: (Date.now() + 1).toString(),
+                sender: "ai",
+                text: getAIResponse(userMessage.text),
+                timestamp: new Date().toLocaleTimeString([], {
+                    hour: "2-digit",
+                    minute: "2-digit",
+                }),
+            };
+
+            setMessages((prev) => [...prev, aiMessage]);
+        }, 1000);
     };
 
     return (
