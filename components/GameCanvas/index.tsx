@@ -335,7 +335,7 @@ const styles: { [key: string]: React.CSSProperties } = {
     backBtn: {
         position: 'absolute',
         top: '20px',
-        left: '-80px',
+        left: '20px',
         background: 'rgba(255, 255, 255, 0.1)',
         border: '1px solid rgba(255, 255, 255, 0.3)',
         borderRadius: '50%',
