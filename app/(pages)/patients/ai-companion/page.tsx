@@ -1,8 +1,52 @@
 "use client";
 
+import { useState, useRef, useEffect } from "react";
 import { Bot } from "lucide-react";
 
 export default function PatientAICompanion() {
+    type Message = {
+        id: string;
+        sender: "user" | "ai";
+        text: string;
+        timestamp: string;
+    };
+
+    const [messages, setMessages] = useState<Message[]>([
+        {
+            id: "1",
+            sender: "ai",
+            text:
+                "Hello John! 👋 I’m your AI companion here to support you through your rehabilitation journey. How are you feeling today?",
+            timestamp: "10:00 AM",
+        },
+    ]);
+
+    const [inputValue, setInputValue] = useState("");
+    const scrollRef = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        if (scrollRef.current) {
+            scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+        }
+    }, [messages]);
+
+    const handleSendMessage = () => {
+        if (!inputValue.trim()) return;
+
+        const userMessage: Message = {
+            id: Date.now().toString(),
+            sender: "user",
+            text: inputValue,
+            timestamp: new Date().toLocaleTimeString([], {
+                hour: "2-digit",
+                minute: "2-digit",
+            }),
+        };
+
+        setMessages((prev) => [...prev, userMessage]);
+        setInputValue("");
+    };
+
     return (
         <div className="p-4 sm:p-6 lg:p-8">
             <div className="max-w-7xl mx-auto">
@@ -24,41 +68,60 @@ export default function PatientAICompanion() {
                     <div className="bg-white shadow-lg rounded-xl h-[calc(100vh-250px)] flex flex-col">
 
                         {/* Chat Messages */}
-                        <div className="flex-1 p-4 space-y-4 overflow-y-auto">
+                        <div
+                            ref={scrollRef}
+                            className="flex-1 p-4 space-y-4 overflow-y-auto"
+                        >
+                            {messages.map((message) => (
+                                <div
+                                    key={message.id}
+                                    className={`flex ${
+                                        message.sender === "user" ? "justify-end" : "justify-start"
+                                    }`}
+                                >
+                                    {message.sender === "ai" && (
+                                        <div className="flex items-start gap-3 max-w-[80%]">
+                                            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#2DD4BF] to-[#0A2E4C] flex items-center justify-center">
+                                                <Bot className="h-5 w-5 text-white" />
+                                            </div>
+                                            <div className="bg-[#F8F9FA] text-[#0A2E4C] rounded-lg p-3">
+                                                <p className="text-sm">{message.text}</p>
+                                                <p className="text-xs text-gray-500 mt-1">
+                                                    {message.timestamp}
+                                                </p>
+                                            </div>
+                                        </div>
+                                    )}
 
-                            {/* AI Message */}
-                            <div className="flex items-start gap-3 max-w-[80%]">
-                                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#2DD4BF] to-[#0A2E4C] flex items-center justify-center">
-                                    <Bot className="h-5 w-5 text-white" />
+                                    {message.sender === "user" && (
+                                        <div className="bg-[#2DD4BF] text-white rounded-lg p-3 max-w-[80%]">
+                                            <p className="text-sm">{message.text}</p>
+                                            <p className="text-xs text-white/70 mt-1 text-right">
+                                                {message.timestamp}
+                                            </p>
+                                        </div>
+                                    )}
                                 </div>
-                                <div className="bg-[#F8F9FA] text-[#0A2E4C] rounded-lg p-3">
-                                    <p className="text-sm">
-                                        Hello John! 👋 I’m your AI companion here to support you through your rehabilitation journey.
-                                        How are you feeling today?
-                                    </p>
-                                    <p className="text-xs text-gray-500 mt-1">10:00 AM</p>
-                                </div>
-                            </div>
-
-                            {/* User Message */}
-                            <div className="flex justify-end">
-                                <div className="bg-[#2DD4BF] text-white rounded-lg p-3 max-w-[80%]">
-                                    <p className="text-sm">
-                                        I’m feeling a bit tired after today’s session.
-                                    </p>
-                                    <p className="text-xs text-white/70 mt-1 text-right">10:02 AM</p>
-                                </div>
-                            </div>
-
+                            ))}
                         </div>
 
                         {/* Input Placeholder */}
                         <div className="border-t p-4">
-                            <input
-                                disabled
-                                placeholder="Type your message..."
-                                className="w-full px-4 py-3 border rounded-lg text-sm bg-gray-100 text-gray-400 cursor-not-allowed"
-                            />
+                            <div className="flex gap-2">
+                                <input
+                                    value={inputValue}
+                                    onChange={(e) => setInputValue(e.target.value)}
+                                    onKeyDown={(e) => e.key === "Enter" && handleSendMessage()}
+                                    placeholder="Type your message..."
+                                    className="flex-1 px-4 py-3 border rounded-lg text-sm"
+                                />
+                                <button
+                                    onClick={handleSendMessage}
+                                    className="bg-[#2DD4BF] hover:bg-[#2DD4BF]/90 text-white px-4 rounded-lg"
+                                >
+                                    Send
+                                </button>
+                            </div>
                         </div>
                     </div>
 
