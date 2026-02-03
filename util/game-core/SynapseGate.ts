@@ -8,7 +8,7 @@ export class SynapseGate {
     isCorrect: boolean;
     markedForDeletion: boolean = false;
 
-    color: String;
+    color: string;
 
     constructor(gameWidth: number, y: number, type: "top" | "bottom", label: string, isCorrect: boolean) {
         this.x = gameWidth;
