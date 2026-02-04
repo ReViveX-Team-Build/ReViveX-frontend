@@ -1,5 +1,6 @@
 import React from 'react';
-import DoctorSidebar from '@/components/DoctorSidebar';
+import DoctorSidebar from '@/components/DoctorPortal/Sidebar';
+import TopNav from '@/components/DoctorPortal/TopNav';
 
 export default function DoctorLayout({
   children,
@@ -11,9 +12,13 @@ export default function DoctorLayout({
       
       <DoctorSidebar />
       
-      <main className="flex-1 ml-72 p-8 relative z-0">
-        <div className="max-w-7xl mx-auto animate-fade-in">
-          {children}
+      <main className="flex-1 ml-72 relative flex flex-col min-w-0">
+
+        <TopNav /> 
+
+
+        <div className="p-8 flex-1 overflow-y-auto animate-fade-in">
+          <div className="max-w-7xl mx-auto">{children}</div>
         </div>
       </main>
 
