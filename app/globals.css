@@ -4,9 +4,9 @@
 
 @layer base {
   :root {
-    /* --- ReViveX Theme Colors (Light/Base) --- */
+    /* --- ReViveX Theme Colors  --- */
     --background: 0 0% 100%;       /* #ffffff */
-    --foreground: 211 63% 12%;     /* #0B1E33 (Deep Blue) */
+    --foreground: 211 63% 12%;     /* #0B1E33  */
 
     --card: 0 0% 100%;             /* #ffffff */
     --card-foreground: 211 63% 12%;
@@ -14,12 +14,12 @@
     --popover: 0 0% 100%;
     --popover-foreground: 211 63% 12%;
 
-    /* Primary = Deep Blue Sidebar/Header */
+    /*  Deep Blue Sidebar/Header */
     --primary: 211 63% 12%;        /* #0B1E33 */
     --primary-foreground: 0 0% 100%;
 
-    /* Secondary = Teal Accent */
-    --secondary: 173 66% 50%;      /* #2DD4BF (Teal-400) */
+    /*  Teal Accent */
+    --secondary: 173 66% 50%;      /* #2DD4BF-teal */
     --secondary-foreground: 231 72% 4%; /* #030213 */
 
     --muted: 220 14% 96%;          /* #f3f4f6 */
