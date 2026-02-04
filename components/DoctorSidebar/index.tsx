@@ -57,7 +57,7 @@ const DoctorSidebar = () => {
   };
 
   return (
-    <aside className="h-screen w-72 bg-primary text-primary-foreground flex flex-col border-r border-white/10 sticky top-0 shadow-xl z-50">
+    <aside className="h-screen w-72 bg-[#0B1E33] text-white flex flex-col fixed left-0 top-0 border-r border-white/10 shadow-2xl z-[100]">
       
       {/* --- HEADER --- */}
       <div className="p-6 mb-4 flex items-center gap-3">
