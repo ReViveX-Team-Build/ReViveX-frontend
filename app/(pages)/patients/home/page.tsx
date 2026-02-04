@@ -98,43 +98,88 @@ export default function PatientDashboard() {
         </div>
 
         {/* Bottom Grid Placeholders */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
-          <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 h-48">
-            <h4 className="font-bold text-[#0B1E33] mb-4">Session & Adherence Status</h4>
-            <div className="h-full flex items-center justify-center text-gray-400 bg-gray-50 rounded-xl border border-dashed border-gray-200">
+        
+        <div className='bg-white p-6 rounded-2xl shadow-sm border-gray-100'>
+          <h4 className='text-lg font-semibold text-[#0B1E33] mb-6'>
+            Session & Adherence Status
+          </h4>
 
-              <div className='space-y-4'>
-                <div className='bg-gray-50 p-4 rounded-x1'>
-                  <p className='text-sm text-gray-500'>Next Therapy Session</p>
-                  <p className='font-semibold'>
-                    {mockAdherenceData.nextSession.data} .{" "}
-                    {mockAdherenceData.nextSession.time}
-                  </p>
-                  <p className='text-sm text-grey-600'>
-                    Prescribed Hand: {mockAdherenceData.nextSession.hand}
-                  </p>
+          {/* Next Therapy Session */}
+
+          <div className='bg-gray-50 rounded-xl p-5 mb-6'>
+            <h5 className='font-semibold text-[#0B1E33] mb-4'>
+              Next Therapy Session
+            </h5>
+
+            <div className='grid grid-cols-1 sm:grid-cols-3 gap-6 text-sm'>
+              <div className='flex items-center gap-3'>
+                <div className='w-10 h-10 rounded-full bg-teal-100 flex items-center justify-center'>
+                📅
                 </div>
+                <div>
+                  <p className='text-gray-500'>Date</p>
+                  <p className='font-semibold text-teal-600'>{mockAdherenceData.nextSession.data}</p>
+                </div>
+              </div>
 
-                <div className='bg-green-50 p-4 rounded-xl flex items-center justify-between'>
-                  <div>
-                    <p className='text-sm text-grey-500'>Weekly Adherence</p>
-                    <p className='font-semibold'>
-                      {mockAdherenceData.weekly.completed} /
-                      {mockAdherenceData.weekly.total} Sessions
-                    </p>
-                  </div>
-                  <p className='text-2xl font-bold text-green-600'>
-                    {mockAdherenceData.weekly.percentage}%
-                  </p>
+              <div className='flex items-center gap-3'>
+                <div className='w-10 h-10 rounded-full bg-teal-100 flex items-center justify-center'>
+                ⏰
+                </div>
+                <div>
+                  <p className='text-gray-500'>Time</p>
+                  <p className='font-semibold text-teal-600'>{mockAdherenceData.nextSession.time}</p>
+                </div>
+              </div>
+
+              <div className='flex items-center gap-3'>
+                <div className='w-10 h-10 rounded-full bg-teal-100 flex items-center justify-center'>
+                ✋
+                </div>
+                <div>
+                  <p className='text-gray-500'>Prescribed Hand</p>
+                  <p className='font-semibold text-teal-600'>{mockAdherenceData.nextSession.hand}</p>
                 </div>
               </div>
             </div>
           </div>
-          <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 h-48">
-            <h4 className="font-bold text-[#0B1E33] mb-4">AI Companion</h4>
-             <div className="h-full flex items-center justify-center text-gray-400 bg-gray-50 rounded-xl border border-dashed border-gray-200">
-              Chat Bot Loading...
+
+          {/* Weekly Adherence */}
+
+          <div className='bg-green-50 rounded-xl p-5'>
+            <div className='flex items-center justify-between mb-3'>
+              <h5 className='font-semibold text-[#0B1E33]'>
+                Weekly Adherence Score
+              </h5>
+
+              <p className='text-2xl font-bold text-green-600'>
+                {mockAdherenceData.weekly.percentage}%
+              </p>
             </div>
+
+            {/* Progress Bar */}
+
+            <div className='w-full h-2 bg-gray-200 rounded-full overflow-hidden mb-3'>
+              <div 
+              className='h-full bg-amber-600'
+              style={{
+                width: `${mockAdherenceData.weekly.percentage}%`,
+              }}
+              />
+            </div>
+
+            <p className='text-sm text-gray-600'>
+              {mockAdherenceData.weekly.completed} /{" "}
+              {mockAdherenceData.weekly.total} sessions completed this week 
+            </p>
+          </div>
+        </div>
+
+        <div className='bg-white p-6 rounded-2xl shadow-sm border border-gray-100 h-48'>
+          <h4 className='font-bold text-[#0B1E33] mb-4'>AI Companion</h4>
+          <div className='h-full flex items-center justify-center text-gray-400 bg-gray-50 
+          rounded-xl border border-dashed border-gray-200'>
+            Chat Bot Loading....
           </div>
         </div>
       </main>
