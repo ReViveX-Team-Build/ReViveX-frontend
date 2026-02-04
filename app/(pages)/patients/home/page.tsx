@@ -1,3 +1,16 @@
+const mockAdherenceData = {
+  nextSession: {
+    data: "Feb 10 2025",
+    time: "10.30 AM",
+    hand: "Right Hand",
+  },
+  weekly: {
+    completed: 5,
+    total: 7,
+    percentage: 71,
+  },
+};
+
 import Link from 'next/link';
 import {
   Home,
@@ -89,7 +102,32 @@ export default function PatientDashboard() {
           <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 h-48">
             <h4 className="font-bold text-[#0B1E33] mb-4">Session & Adherence Status</h4>
             <div className="h-full flex items-center justify-center text-gray-400 bg-gray-50 rounded-xl border border-dashed border-gray-200">
-              Chart Loading...
+
+              <div className='space-y-4'>
+                <div className='bg-gray-50 p-4 rounded-x1'>
+                  <p className='text-sm text-gray-500'>Next Therapy Session</p>
+                  <p className='font-semibold'>
+                    {mockAdherenceData.nextSession.data} .{" "}
+                    {mockAdherenceData.nextSession.time}
+                  </p>
+                  <p className='text-sm text-grey-600'>
+                    Prescribed Hand: {mockAdherenceData.nextSession.hand}
+                  </p>
+                </div>
+
+                <div className='bg-green-50 p-4 rounded-xl flex items-center justify-between'>
+                  <div>
+                    <p className='text-sm text-grey-500'>Weekly Adherence</p>
+                    <p className='font-semibold'>
+                      {mockAdherenceData.weekly.completed} /
+                      {mockAdherenceData.weekly.total} Sessions
+                    </p>
+                  </div>
+                  <p className='text-2xl font-bold text-green-600'>
+                    {mockAdherenceData.weekly.percentage}%
+                  </p>
+                </div>
+              </div>
             </div>
           </div>
           <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 h-48">
