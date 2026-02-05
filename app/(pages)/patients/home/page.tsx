@@ -182,6 +182,108 @@ export default function PatientDashboard() {
             Chat Bot Loading....
           </div>
         </div>
+
+        <div className='bg-white p-6 rounded-2xl shadow-sm border-gray-100'>
+          <div className='flex items-center justify-between mb-6'>
+          <h4 className='text-lg font-semibold text-[#0B1E33] mb-6'>
+            Quick Stats
+          </h4>
+
+          <button className='flex items-center gap-2 text-teal-500 font-medium hover:text-teal-600 transition'>
+                 View Deyails →
+            </button>
+          </div>
+          
+          <div className='grid grid-cols-1 sm:grid-cols-3 gap-6'>
+            <div className='rounded-x1 p-5 border border-green-200 bg-gradient-to-br from-green-50 to-white'>
+              <div className='flex items-center gap-2 text-green-600 mb-2'>
+                <span>📈</span>
+                <p className='text-sm font-medium'>Grip Strength</p>
+              </div>
+              <p className='text-2xl font-bold text-green-700'>
+                +15% <span className='text-sm'>↗</span>
+              </p>
+            </div>
+
+            <div className='rounded-xl p-5 border border-teal-200 bg-gradient-to-br from-teal-50 to-white'>
+              <div className='flex items-center gap-2 text-teal-600 mb-2'>
+              <span>🧠</span>
+              <p className='text-sm font-medium'>Meomory Sucess</p>
+              </div>
+              <p className='text-2xl font-bold text-teal-700'>85%</p>
+            </div>
+
+            <div className='rounded-xl p-5 border border-teal-200 bg-gradient-to-br from-teal-50 to-white'>
+              <div className='flex items-center gap-2 text-teal-600 mb-2'>
+              <span>📊</span>
+              <p className='text-sm font-medium'>Journey</p>
+              </div>
+              <p className='text-2xl font-bold text-teal-700'>40%</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Hardware Status and Input Confirmation */}
+        <div className='bg-white rounded-2xl shadow-sm border-gray-100 p-6'>
+            <h4 className='text-lg font-semibold text-[#0B1E33] mb-6'>
+              Hardware Status & Input Confirmation
+            </h4> 
+
+          <div className='grid grid-cols-1 sm:grid-cols-2 gap-6'>
+            <div className='rounded-xl border border-green-200 bg-gradient-to-br from-green-50 to-white p-6'>
+                <div className='flex items-center justify-between mb-4'>
+                <h5 className='font-semibold text-[#0B1E33]'>Device Status</h5>
+
+                <span className='flex items-center gap-2 bg-green-500 text-white text-xs font-semibold px-3 py-1 rounded-full'>
+                  Connected
+                </span>
+                </div>
+
+                <div className='flex items-center gap-4 mb-6'>
+                  <div className='w-14 h-14 rounded-full bg-teal-100 items-center justify-center text-teal-600 text-xl'>
+                    📶
+                  </div>
+
+                  <div>
+                    <p className='text-sm text-gray-500'>Device ID</p>
+                    <p className='text-lg font-semibold text-[#0B1E33]'>R-103</p>
+                  </div>
+                </div>
+                
+            </div>
+
+            {/* Input Device Card */}  
+            <div className='rounded-xl border border-teal-200 bg-gradient-to-br from-teal-50 to-white p-6'>
+              <h5 className='font-semibold text-[#0B1E33] mb-4'>
+                Input Device Confirmed
+              </h5>
+
+              <div className='flex items-center gap-4 mb-4'>
+                <div className='w-14 h-14 rounded-full bg-teal-100 flex items-center justify-center text-teal-600 text-xl'>
+                  🫧
+                </div>
+
+                <div>
+                  <p className='font-semibold text-[#0B1E33]'>
+                    BP Bulb Pressure Sensor
+                  </p>
+
+                  <p className='text-sm text-gray-500'>
+                    Rubber inflation bulb with tube 
+                  </p>
+
+                </div>
+              </div>
+
+              <p className='flex items-center gap-2 text-green-600 font-medium text-sm'>
+                System Ready
+              </p>
+
+            </div>
+          </div>
+          
+        </div>
+
       </main>
     </div>
   );
