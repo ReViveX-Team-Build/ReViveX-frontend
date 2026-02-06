@@ -73,12 +73,20 @@ export default function DoctorDashboard() {
 
 function StatCard({ title, value, alert }: StatCardProps) {
   return (
-    <div
-      className={`rounded-2xl p-5 shadow-sm text-white ${
-        alert ? "bg-red-500" : "bg-[#0B1E33]"
-      }`}>
-      <p className="text-sm text-gray-300">{title}</p>
-      <p className="text-3xl font-bold mt-1">{value}</p>
+    <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+      <div className="flex items-center justify-between mb-4">
+        <div className="w-12 h-12 rounded-xl bg-teal-100 flex items-center justify-center text-teal-600">
+          📊
+        </div>
+        {alert && (
+          <span className="bg-red-100 text-red-600 text-xs font-semibold px-2 py-1 rounded-full">
+            Alert
+          </span>
+        )}
+      </div>
+
+      <p className="text-2xl font-bold text-[#0B1E33]">{value}</p>
+      <p className="text-sm text-gray-500">{title}</p>
     </div>
   );
 }
