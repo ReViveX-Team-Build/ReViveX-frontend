@@ -63,6 +63,30 @@ export default function DoctorDashboard() {
               status="Active"
             />
           </div>
+
+          {/* Cohort Performance Trends (Chart Placeholder) */}
+          <div className="lg:col-span-2 bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+            <h4 className="font-bold text-[#0B1E33] mb-4">
+              Cohort Perfotmance Trends
+            </h4>
+
+            <div className="h-72 flex flex-col items-center justify-center bg-gray-50 rounded-xl border border-dashed border-gray-200 text-gray-400">
+              <p className="font-medium">Line Chart Placeholder</p>
+              <p className="text-sm mt-1">
+                Cognitive, Grip Strenght, Tremor Reduction
+              </p>
+            </div>
+          </div>
+        </section>
+
+        <section className="mt-6 bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+          <h4 className="font-bold text-[#0B1E33] mb-4">
+            Weekly Session Activity
+          </h4>
+
+          <div className="h-64 flex items-center justify-center bg-gray-50 rounded-xl border border-dashed border-gray-200 text-gray-400">
+            Bar Chart Placeholder
+          </div>
         </section>
       </main>
     </div>
@@ -73,7 +97,7 @@ export default function DoctorDashboard() {
 
 function StatCard({ title, value, alert }: StatCardProps) {
   return (
-    <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+    <div className="bg-pink-50 rounded-2xl p-6 shadow-sm border border-gray-100">
       <div className="flex items-center justify-between mb-4">
         <div className="w-12 h-12 rounded-xl bg-teal-100 flex items-center justify-center text-teal-600">
           📊
@@ -99,24 +123,22 @@ function PatientRow({
   warning,
 }: PatientRowProps) {
   return (
-    <div
-      className={`flex justify-between items-center p-4 rounded-xl mb-3 ${
-        warning ? "bg-red-50" : "bg-gray-50"
-      }`}>
+    <div className="flex justify-between items-center p-4 rounded-x1 mb-3 border border-gray-100 bg-white">
       <div>
-        <p className="font-semibold text-gray-800">{name}</p>
+        <p className="font-semibold text-[#0B1E33]">{name}</p>
         <p className="text-xs text-gray-500">Grip: {grip}</p>
       </div>
 
       <div className="text-right">
         <p className="font-bold text-gray-800">{adherence}</p>
-        <p
-          className={`text-xs font-medium ${
-            warning ? "text-red-600" : "text-green-600"
-          }`}>
-          {status}
-        </p>
+        <span 
+        className={`text-xs font-semibold px-2 py-1 rounded-full ${
+          warning ? "bg-red-100 text-red-600" : "bg-green-100 text-gray-600"}`}>
+            {status}
+          </span>
       </div>
     </div>
   );
 }
+
+
