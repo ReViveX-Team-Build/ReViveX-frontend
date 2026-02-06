@@ -34,6 +34,9 @@ export default function SchedulePage() {
     status: "missed",
   },
 ];
+  const upcomingSessions = sessions.filter((s) => s.status === "upcoming");
+
+  const pastSessions = sessions.filter((s) => s.status !== "upcoming");
 
   return (
     <div className="p-8 max-w-5xl mx-auto">
