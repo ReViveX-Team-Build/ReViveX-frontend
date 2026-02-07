@@ -43,17 +43,19 @@ export default function SchedulePage() {
   );
 
   return (
-    <div className="p-8 max-w-5xl mx-auto">
+    <div className="p-10 max-w-4xl mx-auto space-y-8">
       {/* Header */}
-      <h1 className="text-2xl font-semibold text-slate-800">
-        My Schedule
-      </h1>
-      <p className="text-slate-500 mt-1">
-        View your upcoming and past therapy sessions
-      </p>
+      <div>
+        <h1 className="text-2xl font-semibold text-slate-800">
+          My Schedule
+        </h1>
+        <p className="text-slate-500 mt-1">
+          View your upcoming and past therapy sessions
+        </p>
+      </div>
 
       {/* Upcoming Sessions */}
-      <div className="mt-8 bg-white rounded-xl shadow p-6">
+      <div className="bg-white rounded-xl shadow p-6">
         <h2 className="font-semibold text-slate-700 mb-4">
           Upcoming Sessions
         </h2>
@@ -82,7 +84,7 @@ export default function SchedulePage() {
       </div>
 
       {/* Past Sessions */}
-      <div className="mt-10 bg-white rounded-xl shadow p-6">
+      <div className="bg-white rounded-xl shadow p-6">
         <h2 className="font-semibold text-slate-700 mb-4">
           Past Sessions
         </h2>
