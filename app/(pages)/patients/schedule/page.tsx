@@ -48,6 +48,33 @@ export default function SchedulePage() {
       </p>
     </div>
   );
+  <div className="mt-8 bg-white rounded-xl shadow p-6">
+  <h2 className="font-semibold text-slate-700 mb-4">
+    Upcoming Sessions
+  </h2>
+
+  <div className="space-y-4">
+    {upcomingSessions.map((session, index) => (
+      <div
+        key={index}
+        className="flex justify-between items-center border rounded-lg p-4 bg-teal-50"
+      >
+        <div>
+          <p className="font-medium text-slate-800">
+            {session.date}
+          </p>
+          <p className="text-sm text-slate-500">
+            ⏰ {session.time} • ✋ {session.hand}
+          </p>
+        </div>
+
+        <span className="text-sm bg-teal-400 text-white px-3 py-1 rounded-full">
+          Scheduled
+        </span>
+      </div>
+    ))}
+  </div>
+</div>
 
   
 }
