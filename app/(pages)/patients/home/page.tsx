@@ -76,7 +76,7 @@ export default function PatientDashboard() {
               <p className="text-gray-400">Target: Right Hand • Moderate Resistance • 15 Mins</p>
             </div>
 
-            <Link href="/game">
+            <Link href="/patients/game">
               <button className="bg-teal-500 hover:bg-teal-400 text-[#0B1E33] font-bold py-3 px-8 rounded-xl shadow-lg shadow-teal-500/20 transition-transform active:scale-95 flex items-center gap-2">
                 ▶ Start Therapy
               </button>
