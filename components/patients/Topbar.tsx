@@ -30,5 +30,25 @@ export default function PatientTopbar() {
           <span className="absolute top-1.5 right-1.5 h-2.5 w-2.5 bg-red-500 rounded-full border-2 border-white"></span>
         </button>
 
+        {/* Divider */}
+        <div className="h-8 w-px bg-gray-200"></div>
+
+                {/* Profile Dropdown */}
+        <button className="flex items-center gap-3 hover:bg-gray-50 p-2 rounded-xl transition-all group">
+          <div className="text-right hidden md:block">
+            <p className="text-sm font-bold text-[#0B1E33] leading-none">John Doe</p>
+            <p className="text-xs text-gray-500 mt-1">Patient ID: RVX-9988</p>
+          </div>
+          
+          <div className="h-10 w-10 rounded-full bg-gradient-to-tr from-[#2DD4BF] to-purple-500 p-[2px]">
+             <div className="h-full w-full rounded-full bg-white flex items-center justify-center overflow-hidden">
+                <User className="text-gray-400" /> 
+             </div>
+          </div>
+
+          <ChevronDown size={16} className="text-gray-400 group-hover:text-[#0B1E33] transition-colors" />
+        </button>
+
+
 
 
