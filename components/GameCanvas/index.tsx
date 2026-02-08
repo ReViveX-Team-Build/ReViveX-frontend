@@ -2,6 +2,8 @@
 
 import React, { useRef, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+//  Import Icons for UI
+import { Play, RotateCcw } from "lucide-react"; 
 
 // Imports
 import { Player } from "../../util/game-core/SynapsePlayer";
@@ -9,12 +11,19 @@ import { SynapseBackground } from "../../util/game-core/SynapseBackground";
 import { SeaGrass } from "../../util/game-core/SynapseSeaGrass";
 import { Particle } from "../../util/game-core/SynapseParticles";
 import { SynapseCorals } from "../../util/game-core/SynapseCorals";
+// Import Cognitive Logic
+import { Pearl, CognitiveTask } from "../../util/game-core/SynapseCognitive";
 
 type CountdownValue = number | "GO!" | null;
 
+//  Interface for internal metrics
+interface ClinicalMetrics {
+  accuracy: { correct: number; total: number };
+}
+
 const GameCanvas: React.FC = () => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
-  const rafRef = useRef<number | null>(null); // Animation Frame ID
+  const rafRef = useRef<number | null>(null);
   const router = useRouter();
 
   /* =================== GAME OBJECTS =================== */
@@ -25,24 +34,41 @@ const GameCanvas: React.FC = () => {
   const particlesRef = useRef<Particle[]>([]);
   const inputRef = useRef<boolean>(false);
 
+  //  Refs for Pearls and Task Timer
+  const pearlsRef = useRef<Pearl[]>([]);
+  const taskTimerRef = useRef<number>(0);
+
+  // Metrics storage
+  const metricsRef = useRef<ClinicalMetrics>({
+    accuracy: { correct: 0, total: 0 },
+  });
+
   /* =================== STATE =================== */
   const startTimeRef = useRef<number>(0);
   const lastFrameRef = useRef<number>(0);
 
-  const [isPaused, setIsPaused] = useState(false);
-  const [gameOver, setGameOver] = useState(false);
-  const [gameOverMsg, setGameOverMsg] = useState("");
-  const [warningMsg, setWarningMsg] = useState("");
-  const [showExitConfirm, setShowExitConfirm] = useState(false);
-  const [countdown, setCountdown] = useState<CountdownValue>(null);
+  //  Replaced simple 'gameOver' with robust State Machine
+  const [gameState, setGameState] = useState<"MENU" | "PLAYING" | "SOFT_FAIL">("MENU");
+  const [failReason, setFailReason] = useState<"floor" | "ceiling" | null>(null);
+  
+  // NEW: Task and Score State
+  const [currentTask, setCurrentTask] = useState<CognitiveTask>({ instruction: "Collect BLUE", targetColor: "#00BFFF" });
+  const [score, setScore] = useState(0);
 
+  const [countdown, setCountdown] = useState<CountdownValue>(null);
+  const [showExitConfirm, setShowExitConfirm] = useState(false);
   const countdownTimer = useRef<NodeJS.Timeout | null>(null);
 
   /* =================== HANDLERS =================== */
-  // These must be OUTSIDE the loop
   const handleBackClick = (): void => {
-      setIsPaused(true); 
-      setShowExitConfirm(true); 
+      // UPDATED: Pause logic uses Soft Fail state visually
+      if (gameState === "PLAYING") {
+          setGameState("SOFT_FAIL"); 
+          setFailReason(null); // Just paused, not failed
+          setShowExitConfirm(true);
+      } else {
+          setShowExitConfirm(true);
+      }
   };
 
   const confirmExit = (): void => {
@@ -51,55 +77,44 @@ const GameCanvas: React.FC = () => {
 
   const cancelExit = (): void => {
       setShowExitConfirm(false);
-      setIsPaused(false); 
-      // Restart the loop
-      if (!gameOver) {
+      //  Resume only if we weren't actually dead
+      if (gameState === "SOFT_FAIL" && failReason === null) {
+          setGameState("PLAYING");
           lastFrameRef.current = performance.now();
           rafRef.current = requestAnimationFrame(loop);
       }
   };
 
-  /* =================== START / RESET =================== */
-  const startGame = () => {
+  /* =================== START / INIT =================== */
+  const initGame = () => {
     const canvas = canvasRef.current;
     if (!canvas) return;
 
-    // Set Resolution
     canvas.width = 1024;
     canvas.height = 600;
 
     // Initialize Objects
     playerRef.current = new Player(canvas.width, canvas.height);
     bgRef.current = new SynapseBackground(canvas.width, canvas.height);
-    coralsRef.current = new SynapseCorals(canvas.width, canvas.height);
     grassRef.current = new SeaGrass(canvas.width, canvas.height);
+    coralsRef.current = new SynapseCorals(canvas.width, canvas.height);
+    
+    //  Reset Arrays
     particlesRef.current = [];
+    pearlsRef.current = [];
 
-    // Reset State
-    setGameOver(false);
-    setGameOverMsg("");
-    setWarningMsg("");
-    setIsPaused(false);
+    //  Reset Metrics
+    setScore(0);
+    metricsRef.current = { accuracy: { correct: 0, total: 0 } };
+    setFailReason(null);
 
     startTimeRef.current = Date.now();
     lastFrameRef.current = performance.now();
 
-    // Clear previous timers
-    if (rafRef.current) cancelAnimationFrame(rafRef.current);
-    if (countdownTimer.current) clearInterval(countdownTimer.current);
-
-    // Initial Draw (Static)
-    const ctx = canvas.getContext("2d");
-    if (ctx) {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        bgRef.current?.draw(ctx, 0);
-        grassRef.current?.draw(ctx);
-        playerRef.current?.draw(ctx);
-    }
-
     // Start Countdown
     setCountdown(3);
     let count = 3;
+    if (countdownTimer.current) clearInterval(countdownTimer.current);
 
     countdownTimer.current = setInterval(() => {
       count--;
@@ -108,7 +123,8 @@ const GameCanvas: React.FC = () => {
       else {
         setCountdown(null);
         if (countdownTimer.current) clearInterval(countdownTimer.current);
-        // Start the Loop
+        // UPDATED: Set state to PLAYING explicitly
+        setGameState("PLAYING");
         rafRef.current = requestAnimationFrame(loop);
       }
     }, 900);
@@ -116,26 +132,21 @@ const GameCanvas: React.FC = () => {
 
   /* =================== MAIN GAME LOOP =================== */
   const loop = (now: number) => {
-    // Stop if paused or over
-    if (isPaused || gameOver) return;
+    //  Check gameState instead of boolean flags
+    if (gameState !== "PLAYING") return;
 
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
-    // Calculate Delta Time
     const delta = Math.min(32, now - lastFrameRef.current);
     lastFrameRef.current = now;
-
     const elapsed = Date.now() - startTimeRef.current;
 
-    // Clear Screen
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-    /* --- UPDATE & DRAW --- */
     
-    // 1. Background (Returns nightFactor for lighting)
+    // 1. Background
     let nightFactor = 0;
     let sandHeight = 50;
     if (bgRef.current) {
@@ -152,15 +163,18 @@ const GameCanvas: React.FC = () => {
 
     // 3. Sea Grass
     if (grassRef.current && playerRef.current) {
-      grassRef.current.update(
-        playerRef.current.x,
-        playerRef.current.y,
-        delta
-      );
+      grassRef.current.update(playerRef.current.x, playerRef.current.y, delta);
       grassRef.current.draw(ctx);
     }
 
-    // 4. Particles
+    // 4.  Spawn Pearls Logic
+    taskTimerRef.current += delta;
+    if (taskTimerRef.current > 3000) { // Every 3 seconds
+        spawnPearls(canvas.width, canvas.height);
+        taskTimerRef.current = 0;
+    }
+
+    // 5. Particles (Bubbles)
     for (let i = particlesRef.current.length - 1; i >= 0; i--) {
       const p = particlesRef.current[i];
       p.update();
@@ -168,57 +182,130 @@ const GameCanvas: React.FC = () => {
       if (p.markedForDeletion) particlesRef.current.splice(i, 1);
     }
 
-    // 5. Player
-    const player = playerRef.current;
-    if (player) {
-      player.update(inputRef.current, delta, sandHeight);
-      player.draw(ctx);
+    // 6. Player Logic
+    if (playerRef.current) {
+      //  Pass 'particlesRef.current' so Player can spawn bubbles
+      playerRef.current.update(inputRef.current, delta, sandHeight, particlesRef.current);
+      playerRef.current.draw(ctx);
       
-      // Spawn bubbles/particles from player
-      if (Math.random() > 0.8) {
-          particlesRef.current.push(new Particle(player.x, player.y));
+      // Check for Soft Failures (Nap / Surface)
+      if (playerRef.current.status === "hit_floor") {
+          setFailReason("floor");
+          setGameState("SOFT_FAIL");
+          return; // Stop Loop
+      }
+      if (playerRef.current.status === "hit_ceiling") {
+          setFailReason("ceiling");
+          setGameState("SOFT_FAIL");
+          return; // Stop Loop
       }
 
-      // Check Death
-      if (player.isDead) {
-        setGameOver(true);
-        setGameOverMsg(
-          player.deathReason === "dried_out"
-            ? "Fish need water to survive 🐟"
-            : "You hit the ocean floor 🦀"
-        );
-        return; // Stop the loop here
-      }
-
-      // Warnings
-      if (player.status === "hit_floor")
-        setWarningMsg("Careful! Crabs ahead 🦀");
-      else if (player.status === "hit_ceiling")
-        setWarningMsg("Too high! 🦅");
-      else setWarningMsg("");
+      // Pearl Collision Check
+      pearlsRef.current.forEach(pearl => {
+          if (!pearl.collected && !pearl.markedForDeletion) {
+              const dx = playerRef.current!.x - pearl.x;
+              const dy = playerRef.current!.y - pearl.y;
+              const dist = Math.sqrt(dx*dx + dy*dy);
+              
+              // Collision radius check
+              if (dist < playerRef.current!.radius + pearl.radius) {
+                  collectPearl(pearl);
+              }
+          }
+      });
     }
 
-    // 6. Overlay Effect (Underwater Tint)
+    // 7.  Draw Pearls
+    for (let i = pearlsRef.current.length - 1; i >= 0; i--) {
+        const p = pearlsRef.current[i];
+        p.update(3); // Scroll speed
+        p.draw(ctx);
+        if (p.markedForDeletion) pearlsRef.current.splice(i, 1);
+    }
+
+    // 8. NEW: Draw Task UI (The instructions box)
+    drawTaskUI(ctx, canvas.width);
+
+    // 9. Overlay Tint
     ctx.fillStyle = "rgba(0, 20, 40, 0.12)";
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    // Request Next Frame
     rafRef.current = requestAnimationFrame(loop);
+  };
+
+  /* =================== HELPER FUNCTIONS  =================== */
+
+  // NEW: Spawns one correct pearl and one distractor
+  const spawnPearls = (w: number, h: number) => {
+      const isTopCorrect = Math.random() > 0.5;
+      const wrongColor = currentTask.targetColor === "#00BFFF" ? "#FF4500" : "#00BFFF";
+
+      const topY = h * 0.3;
+      const botY = h * 0.7;
+
+      pearlsRef.current.push(new Pearl(w, topY, isTopCorrect ? currentTask.targetColor : wrongColor, isTopCorrect));
+      pearlsRef.current.push(new Pearl(w, botY, !isTopCorrect ? currentTask.targetColor : wrongColor, !isTopCorrect));
+  };
+
+  //  Handles score and particle burst on collection
+  const collectPearl = (pearl: Pearl) => {
+      pearl.collected = true;
+      metricsRef.current.accuracy.total++;
+      
+      if (pearl.isTarget) {
+          // Correct
+          metricsRef.current.accuracy.correct++;
+          setScore(prev => prev + 100);
+          // Spawn "Happy" particles
+          for(let i=0; i<8; i++) {
+              particlesRef.current.push(new Particle(pearl.x, pearl.y, 1, true));
+          }
+      } 
+  };
+
+  //  Draws the instruction box at top
+  const drawTaskUI = (ctx: CanvasRenderingContext2D, w: number) => {
+      ctx.fillStyle = "rgba(0, 0, 0, 0.5)";
+      ctx.beginPath();
+      if (ctx.roundRect) {
+         ctx.roundRect(w/2 - 150, 20, 300, 50, 25);
+      } else {
+         ctx.rect(w/2 - 150, 20, 300, 50);
+      }
+      ctx.fill();
+      
+      ctx.fillStyle = "white";
+      ctx.font = "bold 20px Inter, sans-serif";
+      ctx.textAlign = "center";
+      ctx.fillText(currentTask.instruction, w/2, 52);
+
+      // Draw color dot
+      ctx.fillStyle = currentTask.targetColor;
+      ctx.beginPath();
+      ctx.arc(w/2 + 100, 45, 10, 0, Math.PI*2);
+      ctx.fill();
+  };
+
+  //  Resumes game from Soft Fail
+  const resumeGame = () => {
+      if (playerRef.current) {
+          playerRef.current.y = 300; 
+          playerRef.current.velocity = 0;
+          playerRef.current.status = "swimming";
+          playerRef.current.airTime = 0;
+          playerRef.current.floorTime = 0;
+      }
+      setFailReason(null);
+      setGameState("PLAYING");
+      lastFrameRef.current = performance.now();
+      rafRef.current = requestAnimationFrame(loop);
   };
 
   /* =================== EFFECTS =================== */
   
-  // 1. Input Listeners
   useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent): void => { 
-        if (e.code === "Space") { 
-            e.preventDefault(); 
-            inputRef.current = true; 
-        } 
-    };
-    const handleKeyUp = (e: KeyboardEvent): void => { 
-        if (e.code === "Space") inputRef.current = false; 
-    };
+    const handleKeyDown = (e: KeyboardEvent) => { if (e.code === "Space") inputRef.current = true; };
+    const handleKeyUp = (e: KeyboardEvent) => { if (e.code === "Space") inputRef.current = false; };
     window.addEventListener("keydown", handleKeyDown);
     window.addEventListener("keyup", handleKeyUp);
     return () => { 
@@ -227,9 +314,8 @@ const GameCanvas: React.FC = () => {
     };
   }, []);
 
-  // 2. Lifecycle (Start/Cleanup)
   useEffect(() => {
-    startGame();
+    // Cleanup on unmount
     return () => {
         if (rafRef.current) cancelAnimationFrame(rafRef.current);
         if (countdownTimer.current) clearInterval(countdownTimer.current);
@@ -238,79 +324,71 @@ const GameCanvas: React.FC = () => {
 
   return (
     <div style={styles.container}>
-        <h2 style={{ color: 'rgba(255,255,255,0.7)', letterSpacing: '2px', textTransform: 'uppercase', fontSize: '1rem', marginBottom: '10px' }}>
-            Level 1: The Flow
-        </h2>
+        <canvas ref={canvasRef} style={styles.canvas} />
 
-        {/* BACK BUTTON */}
-        <button 
-            onClick={handleBackClick} 
-            style={styles.backBtn}
-        >
-            ⬅
-        </button>
-        
-        {/* COUNTDOWN */}
+        {/* --- 1. START MENU --- */}
+        {gameState === "MENU" && (
+            <div style={styles.overlay}>
+                <h1 className="text-4xl font-bold text-[#00FFFF] mb-4">Synapse Racer</h1>
+                <p className="text-gray-300 mb-8">Protocol A: Memory & Motor Control</p>
+                <button onClick={initGame} style={styles.btnPrimary}>
+                    <Play size={24} /> Start Session
+                </button>
+            </div>
+        )}
+
+        {/* --- 2. SOFT FAIL SCREEN  --- */}
+        {gameState === "SOFT_FAIL" && failReason && (
+            <div style={styles.overlay}>
+                <div className="bg-[#0B1E33] p-8 rounded-3xl border border-[#2DD4BF] text-center shadow-2xl">
+                    <h2 className="text-2xl font-bold text-white mb-2">
+                        {failReason === "floor" ? "🐟 The Fish is Sleeping..." : "🦅 Too High!"}
+                    </h2>
+                    <p className="text-[#2DD4BF] mb-6">
+                        {failReason === "floor" ? "Squeeze harder to wake up!" : "Relax your grip to dive down."}
+                    </p>
+                    <button onClick={resumeGame} style={styles.btnPrimary}>
+                        <RotateCcw size={20} /> Resume
+                    </button>
+                </div>
+            </div>
+        )}
+
+        {/* --- 3. HUD  --- */}
+        {gameState === "PLAYING" && (
+            <div style={styles.hud}>
+                <div className="text-[#2DD4BF] font-bold text-xl">Score: {score}</div>
+                <div className="text-white opacity-50 text-sm">
+                    Pearls: {metricsRef.current.accuracy.correct} / {metricsRef.current.accuracy.total}
+                </div>
+            </div>
+        )}
+
+        {/* --- 4. COUNTDOWN --- */}
         {countdown !== null && (
-            <div style={{
-                position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)',
-                fontSize: '8rem', fontWeight: '900', color: '#00FFFF', 
-                textShadow: '0 0 50px rgba(0, 255, 255, 0.8)', zIndex: 50,
-                animation: 'pulse 0.5s infinite alternate'
-            }}>
+            <div style={styles.countdown}>
                 {countdown}
             </div>
         )}
 
-        {/* EXIT CONFIRMATION MODAL */}
+        {/* --- 5. EXIT MODAL --- */}
         {showExitConfirm && (
             <div style={styles.overlayFull}>
                 <div style={styles.modalCard}>
-                    <h3 style={{ color: 'white', marginTop: 0, fontSize: '1.5rem' }}>Leave Session?</h3>
-                    <p style={{ color: '#aaa', marginBottom: '30px' }}>Your current progress will be lost.</p>
+                    <h3 style={{ color: 'white', marginTop: 0, fontSize: '1.5rem' }}>Pause Session?</h3>
+                    <p style={{ color: '#aaa', marginBottom: '30px' }}>Your progress is saved.</p>
                     <div style={{ display: 'flex', gap: '20px', justifyContent: 'center' }}>
                         <button onClick={cancelExit} style={{...styles.btnPrimary, background: 'transparent', border: '1px solid #555', color: '#fff', boxShadow: 'none'}}>
                             Resume
                         </button>
                         <button onClick={confirmExit} style={{...styles.btnPrimary, background: '#FF4500', boxShadow: '0 0 20px rgba(255, 69, 0, 0.4)'}}>
-                            Leave
+                            Exit
                         </button>
                     </div>
                 </div>
             </div>
         )}
 
-        {/* GAME OVER SCREEN */}
-        {gameOver && (
-            <div style={styles.overlayFull}>
-                <h1 style={styles.gameOverTitle}>Mission Failed</h1>
-                <p style={styles.gameOverText}>{gameOverMsg}</p>
-                <button 
-                    onClick={startGame} 
-                    style={styles.btnPrimary}
-                >
-                    Reboot System ↻
-                </button>
-            </div>
-        )}
-
-        {/* WARNING TOAST */}
-        {!gameOver && warningMsg && (
-            <div style={styles.warningToast}>
-                <span style={{ fontSize: '24px' }}>⚠️</span>
-                <div>
-                    <div style={{ fontSize: '12px', textTransform: 'uppercase', opacity: 0.7, letterSpacing: '1px' }}>System Alert</div>
-                    {warningMsg}
-                </div>
-            </div>
-        )}
-
-        <canvas 
-            ref={canvasRef} 
-            style={styles.canvas} 
-            onClick={() => window.focus()} 
-        />
-        
         <p style={{ color: 'rgba(255,255,255,0.4)', marginTop: '15px', fontSize: '0.9rem' }}>
             Hold <strong style={{color:'#00FFFF'}}>SPACE</strong> to Swim Up
         </p>
@@ -321,109 +399,69 @@ const GameCanvas: React.FC = () => {
 // --- STYLES ---
 const styles: { [key: string]: React.CSSProperties } = {
     container: {
+        position: 'relative',
+        width: '100%',
+        display: 'flex',
+        justifyContent: 'center',
+        marginTop: '20px',
+        flexDirection: 'column',
+        alignItems: 'center',
+    },
+    canvas: {
+        borderRadius: '20px',
+        boxShadow: '0 0 50px rgba(45, 212, 191, 0.2)',
+        border: '2px solid rgba(45, 212, 191, 0.3)',
+        background: '#020c1b',
+        maxWidth: '100%'
+    },
+    overlay: {
+        position: 'absolute',
+        top: 0, left: 0, right: 0, bottom: 0,
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
-        marginTop: '10px',
-        position: 'relative', 
-        fontFamily: "'Inter', 'Roboto', sans-serif",
-    },
-    canvas: {
-        border: '3px solid rgba(0, 255, 255, 0.3)', 
-        borderRadius: '15px',
-        boxShadow: '0 0 40px rgba(0, 255, 255, 0.1)',
-        background: 'rgba(0, 10, 30, 0.3)', 
-        maxWidth: '100%',
-        cursor: 'crosshair', 
+        justifyContent: 'center',
+        background: 'rgba(2, 12, 27, 0.8)',
         backdropFilter: 'blur(5px)',
-    },
-    backBtn: {
-        position: 'absolute',
-        top: '20px',
-        left: '20px',
-        background: 'rgba(255, 255, 255, 0.1)',
-        border: '1px solid rgba(255, 255, 255, 0.3)',
-        borderRadius: '50%',
-        width: '50px',
-        height: '50px',
-        cursor: 'pointer',
-        color: 'white',
-        fontSize: '24px',
-        transition: 'all 0.3s ease',
-        display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'center',
-        backdropFilter: 'blur(4px)',
-    },
-    warningToast: {
-        position: 'absolute',
-        top: '15%', 
-        left: '50%',
-        transform: 'translateX(-50%)',
-        background: 'rgba(20, 0, 0, 0.8)',
-        borderLeft: '5px solid #FF4500', 
-        padding: '15px 30px',
-        borderRadius: '8px',
-        color: '#fff',
-        fontSize: '18px',
-        fontWeight: '600',
-        boxShadow: '0 10px 30px rgba(0,0,0,0.5)',
-        backdropFilter: 'blur(10px)',
-        display: 'flex',
-        alignItems: 'center',
-        gap: '15px',
-        zIndex: 50,
-        minWidth: '300px',
-        justifyContent: 'center',
+        borderRadius: '20px',
+        zIndex: 20
     },
     overlayFull: {
         position: 'absolute',
-        top: 0,
-        left: 0,
-        width: '100%',
-        height: '100%',
+        top: 0, left: 0, width: '100%', height: '100%',
         background: 'rgba(2, 12, 27, 0.85)', 
         backdropFilter: 'blur(8px)', 
-        display: 'flex',
-        flexDirection: 'column',
-        justifyContent: 'center',
-        alignItems: 'center',
-        zIndex: 100,
-        borderRadius: '15px', 
-    },
-    gameOverTitle: {
-        fontSize: '4rem',
-        margin: '0 0 20px 0',
-        fontFamily: 'sans-serif',
-        fontWeight: '800',
-        background: 'linear-gradient(180deg, #FF4500 0%, #FF8800 100%)', 
-        WebkitBackgroundClip: 'text',
-        WebkitTextFillColor: 'transparent',
-        textShadow: '0 10px 30px rgba(255, 69, 0, 0.3)',
-        textTransform: 'uppercase',
-        letterSpacing: '2px',
-    },
-    gameOverText: {
-        fontSize: '1.5rem',
-        color: '#ccc',
-        marginBottom: '40px',
-        maxWidth: '80%',
-        textAlign: 'center',
-        lineHeight: '1.5',
+        display: 'flex', flexDirection: 'column',
+        justifyContent: 'center', alignItems: 'center',
+        zIndex: 100, borderRadius: '15px', 
     },
     btnPrimary: {
-        padding: '18px 50px',
-        fontSize: '1.2rem',
-        background: 'linear-gradient(90deg, #00FFFF, #0088FF)',
-        border: 'none',
-        borderRadius: '50px',
-        cursor: 'pointer',
+        display: 'flex',
+        gap: '10px',
+        alignItems: 'center',
+        padding: '15px 40px',
+        background: '#2DD4BF',
+        color: '#0B1E33',
         fontWeight: 'bold',
-        color: '#000',
-        boxShadow: '0 0 20px rgba(0, 255, 255, 0.4)',
-        transition: 'transform 0.2s, box-shadow 0.2s',
-        textTransform: 'uppercase',
-        letterSpacing: '1px',
+        fontSize: '18px',
+        borderRadius: '50px',
+        border: 'none',
+        cursor: 'pointer',
+        boxShadow: '0 0 20px rgba(45, 212, 191, 0.5)',
+        transition: 'transform 0.1s',
+    },
+    hud: {
+        position: 'absolute',
+        top: '20px',
+        right: '30px',
+        textAlign: 'right',
+        zIndex: 10
+    },
+    countdown: {
+        position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)',
+        fontSize: '8rem', fontWeight: '900', color: '#00FFFF', 
+        textShadow: '0 0 50px rgba(0, 255, 255, 0.8)', zIndex: 50,
+        animation: 'pulse 0.5s infinite alternate'
     },
     modalCard: {
         background: 'rgba(20, 20, 30, 0.95)',
