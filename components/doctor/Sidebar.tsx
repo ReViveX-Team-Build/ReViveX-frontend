@@ -20,7 +20,7 @@ const DoctorSidebar = () => {
   const pathname = usePathname();
 
   const navItems = [
-    { icon: <LayoutDashboard size={22} />, label: "Dashboard", href: "/doctor/home" },
+    { icon: <LayoutDashboard size={22} />, label: "Dashboard", href: "/doctor/home/page" },
     { icon: <Users size={22} />, label: "My Patients", href: "/doctor/patients" },
     { icon: <CalendarDays size={22} />, label: "Schedule", href: "/doctor/schedule" },
     { icon: <FileText size={22} />, label: "Therapy Protocols", href: "/doctor/protocols" },
