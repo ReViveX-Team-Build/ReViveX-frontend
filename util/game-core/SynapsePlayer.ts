@@ -1,11 +1,14 @@
+import { Particle } from "./SynapseParticles";
+
+// --- TYPES ---
 interface Obstacle {
     x: number;
     y: number;
     radius: number;
 }
 
-type PlayerStatus = "swimming" | "hit_ceiling" | "hit_floor";
-type DeathReason = "" | "stung" | "dried_out" | "crushed";
+type PlayerStatus = "swimming" | "hit_ceiling" | "hit_floor" | "burrowed";
+type DeathReason = "" | "stung"; // Removed "dried_out" & "crushed" (converted to Soft Fails)
 
 export class Player {
     gameWidth: number;
@@ -16,27 +19,26 @@ export class Player {
     // VISUALS
     radius: number;
     image: HTMLImageElement;
+    rotation: number;
+    targetRotation: number;
 
-    // RHYTHMIC PUMPING
+    // PHYSICS (Rhythmic Pump)
     velocity: number;
-    
-    // Gravity is lighter (Floaty feel)
-    weight: number;
-    
-    // Buoyancy is STRONG (Burst feel)
-    buoyancy: number;
-
-    // Max Speed Cap (Prevents flying off screen too fast)
+    weight: number;      // Gravity
+    buoyancy: number;    // Upward force
     maxUpwardSpeed: number;
 
-    // TIMERS
+    // TIMERS & STATE
     airTime: number;
     floorTime: number;
-    maxTime: number;
+    maxSafeTime: number; // Time before "Soft Fail" fully triggers
     
     isDead: boolean;
     deathReason: DeathReason;
     status: PlayerStatus;
+
+    // CLINICAL METRICS
+    totalForce: number; 
 
     constructor(gameWidth: number, gameHeight: number) {
         this.gameWidth = gameWidth;
@@ -48,43 +50,34 @@ export class Player {
         this.radius = 30; 
         this.image = new Image();
         this.image.src = "/images/fish.png"; 
+        this.rotation = 0;
+        this.targetRotation = 0;
 
-        // RHYTHMIC PUMPING
+        // PHYSICS TUNING
         this.velocity = 0;
-        
-        // Gravity is lighter (Floaty feel)
-        this.weight = 0.15;      
-        
-        // Buoyancy is STRONG (Burst feel)
-        this.buoyancy = -2.0;   
-
-        // Max Speed Cap (Prevents flying off screen too fast)
-        this.maxUpwardSpeed = -6; 
+        this.weight = 0.18;      // Slightly heavier for better "release" feel
+        this.buoyancy = -2.2;    // Strong burst
+        this.maxUpwardSpeed = -7; 
 
         // TIMERS
         this.airTime = 0;       
         this.floorTime = 0;     
-        this.maxTime = 3000;    
+        this.maxSafeTime = 1000; // 1 second grace period before "Animation" starts
         
         this.isDead = false;
         this.deathReason = "";  
         this.status = "swimming"; 
+        this.totalForce = 0;
     }
 
-    // ADD THIS FUNCTION INSIDE PLAYER CLASS
     checkCollision(obstacles: Obstacle[]): boolean {
         if (!obstacles) return false;
-
         for (let i = 0; i < obstacles.length; i++) {
             const obs = obstacles[i];
-            
-            // Calculate distance between Player Center and Jellyfish Center
             const dx = this.x - obs.x;
             const dy = this.y - obs.y;
             const distance = Math.sqrt(dx * dx + dy * dy);
 
-            // If circles touch (Hitbox overlap)
-            // use * 0.8 to make the hitbox slightly smaller than the image 
             if (distance < (this.radius + obs.radius) * 0.8) {
                 this.isDead = true;
                 this.deathReason = "stung"; 
@@ -94,92 +87,182 @@ export class Player {
         return false;
     }
 
-    update(inputActive: boolean, deltaTime: number = 16.6, currentSandHeight: number = 50): void {
-        if (this.isDead) return; 
+    update(inputActive: boolean, deltaTime: number, sandHeight: number, particles: Particle[]): void {
+        if (this.isDead) return;
 
-        // PHYSICS ENGINE (Updated for Pump-Style)
-        this.status = "swimming"; 
-
+        // --- 1. PHYSICS ENGINE ---
         if (inputActive) {
-            // APPLY STRONG BURST FORCE
-            this.velocity += this.buoyancy; 
-            
-            // Cap the speed so they don't teleport instantly
-            if (this.velocity < this.maxUpwardSpeed) {
-                this.velocity = this.maxUpwardSpeed;
+            // APPLY BURST
+            this.velocity += this.buoyancy;
+            if (this.velocity < this.maxUpwardSpeed) this.velocity = this.maxUpwardSpeed;
+
+            // BIOFEEDBACK: Emit Bubbles based on "Effort" (Speed)
+            const pressureRatio = Math.min(1, Math.abs(this.velocity) / 6);
+            this.totalForce += pressureRatio;
+
+            // Spawn bubbles at tail
+            if (Math.random() > 0.4) {
+                 // Calculate tail position based on rotation
+                 const angle = this.rotation;
+                 const tailX = this.x - Math.cos(angle) * 25;
+                 const tailY = this.y - Math.sin(angle) * 25;
+                 particles.push(new Particle(tailX, tailY, pressureRatio, true));
             }
         } else {
-            // GRAVITY (Gentle sink)
-            this.velocity += this.weight;   
+            this.velocity += this.weight;
         }
 
-        // Air Resistance (Drag) slows the fish down smoothly after a burst
-        this.velocity *= 0.95; 
-
-        // Apply movement
+        // Drag / Air Resistance
+        this.velocity *= 0.96; 
         this.y += this.velocity;
 
-        // BOUNDARIES 
-        const waterSurface = this.gameHeight * 0.42; 
-        const floorLevel = this.gameHeight - currentSandHeight - this.radius;
+        // --- 2. BOUNDARY & SOFT FAIL LOGIC ---
+        const waterSurface = 60; // Keep fish inside water, not flying into sky
+        const floorLevel = this.gameHeight - sandHeight - this.radius;
 
-        // Check Air
+        // A. CEILING (SUNGLASSES MODE)
         if (this.y < waterSurface) {
+            this.y = waterSurface;
+            this.velocity = 0;
+            this.status = "hit_ceiling";
+            this.targetRotation = -0.2; // Look slightly up at sun
             this.airTime += deltaTime;
-            this.status = "hit_ceiling"; 
-            if (this.airTime > this.maxTime) {
-                this.isDead = true;
-                this.deathReason = "dried_out";
-            }
-        } else {
-            this.airTime = 0; 
-        }
-
-        // Check Floor
-        if (this.y > floorLevel) { 
-            this.y = floorLevel; 
+        } 
+        // B. FLOOR (BURROW MODE)
+        else if (this.y > floorLevel) {
+            this.y = floorLevel; // Snap to floor
             this.velocity = 0;
-            this.status = "hit_floor"; 
+            this.status = "hit_floor";
+            this.targetRotation = 0.1; // Slight tilt down
             this.floorTime += deltaTime;
-            if (this.floorTime > this.maxTime) {
-                this.isDead = true;
-                this.deathReason = "crushed";
-            }
-        } else {
-            this.floorTime = 0; 
+        } 
+        // C. SWIMMING (NORMAL)
+        else {
+            this.status = "swimming";
+            this.airTime = 0;
+            this.floorTime = 0;
+            // Rotate based on velocity (Up = tilt up, Down = tilt down)
+            this.targetRotation = this.velocity * 0.1;
         }
 
-        // Ceiling Hard Stop
-        if (this.y < this.radius) {
-            this.y = this.radius;
-            this.velocity = 0;
-        }
+        // Smooth Rotation Lerp
+        this.rotation += (this.targetRotation - this.rotation) * 0.1;
     }
 
     draw(ctx: CanvasRenderingContext2D): void {
         ctx.save();
         ctx.translate(this.x, this.y);
 
-        // Rotation - Tilt up when swimming fast, tilt down when sinking
-        // The divider controls how much it tilts
-        const angle = this.velocity / 10; 
-        ctx.rotate(angle);
+        // --- DRAWING LOGIC FOR STATES ---
 
-        // Visual Feedback for Danger
-        if (this.airTime > 2000 || this.floorTime > 2000 || this.isDead) {
-            ctx.shadowBlur = 30;
-            ctx.shadowColor = "#FF4500";
+        // 1. FLOOR STATE: Draw the "Hole" before the fish
+        if (this.status === "hit_floor" && this.floorTime > 500) {
+            const holeSize = Math.min(1, (this.floorTime - 500) / 1000); // Grow hole over 1s
+            
+            ctx.save();
+            ctx.translate(0, this.radius + 10); // Move to bottom of fish
+            ctx.scale(1, 0.3); // Flatten circle into oval
+            ctx.fillStyle = "rgba(0,0,0,0.6)";
+            ctx.beginPath();
+            ctx.arc(0, 0, 40 * holeSize, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.restore();
+
+            // SINK EFFECT: Translate fish down slightly to look like it's entering
+            const sinkDepth = Math.min(15, (this.floorTime - 1000) * 0.02);
+            if (sinkDepth > 0) ctx.translate(0, sinkDepth);
         }
 
+        // 2. DRAW FISH BODY
+        ctx.rotate(this.rotation);
+        
         if (this.image.complete && this.image.naturalWidth > 0) {
             const size = this.radius * 2.8; 
             ctx.drawImage(this.image, -size / 2, -size / 2, size, size);
         } else {
-            ctx.fillStyle = "yellow";
+            // Fallback (Gold Circle)
+            ctx.fillStyle = "#FFD700";
             ctx.beginPath();
             ctx.arc(0, 0, this.radius, 0, Math.PI * 2);
             ctx.fill();
         }
+
+        // 3. CEILING STATE: Sunglasses
+        if (this.status === "hit_ceiling") {
+            this.drawSunglasses(ctx);
+            // Optional: Speech Bubble
+            if (this.airTime > 500) {
+                 this.drawSpeechBubble(ctx, "Too Bright! 😎");
+            }
+        }
+
+        // 4. FLOOR STATE: Zzz Text
+        if (this.status === "hit_floor" && this.floorTime > 1500) {
+             this.drawSpeechBubble(ctx, "Zzz... 😴");
+        }
+
+        ctx.restore();
+    }
+
+    // --- PROCEDURAL ACCESSORIES ---
+
+    drawSunglasses(ctx: CanvasRenderingContext2D) {
+        // Assuming Fish faces Right. Adjust offsets if your sprite faces Left.
+        // Lens 1
+        ctx.fillStyle = "black";
+        ctx.beginPath();
+        ctx.arc(12, -5, 6, 0, Math.PI*2);
+        ctx.fill();
+
+        // Lens 2
+        ctx.beginPath();
+        ctx.arc(22, -5, 6, 0, Math.PI*2);
+        ctx.fill();
+
+        // Frame
+        ctx.strokeStyle = "black";
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(12, -5);
+        ctx.lineTo(22, -5);
+        ctx.stroke();
+
+        // Glint
+        ctx.fillStyle = "white";
+        ctx.beginPath();
+        ctx.arc(14, -7, 2, 0, Math.PI*2);
+        ctx.arc(24, -7, 2, 0, Math.PI*2);
+        ctx.fill();
+    }
+
+    drawSpeechBubble(ctx: CanvasRenderingContext2D, text: string) {
+        ctx.save();
+        // Reset rotation so text is always readable (upright)
+        ctx.rotate(-this.rotation); 
+        
+        ctx.font = "bold 16px 'Inter', sans-serif";
+        const textWidth = ctx.measureText(text).width;
+        const p = 10; // Padding
+        const bx = -textWidth/2; 
+        const by = -60;
+
+        // Bubble Body
+        ctx.fillStyle = "white";
+        ctx.beginPath();
+        ctx.roundRect(bx - p, by - p, textWidth + p*2, 30, 10);
+        ctx.fill();
+
+        // Bubble Tail
+        ctx.beginPath();
+        ctx.moveTo(0, by + 30 - p); // Bottom of bubble
+        ctx.lineTo(-5, by + 40);    // Pointy bit
+        ctx.lineTo(5, by + 30 - p);
+        ctx.fill();
+
+        // Text
+        ctx.fillStyle = "#0B1E33";
+        ctx.textAlign = "center";
+        ctx.fillText(text, 0, by + 18);
 
         ctx.restore();
     }

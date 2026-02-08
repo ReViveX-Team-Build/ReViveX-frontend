@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 
 // Imports
 import { Player } from "../../util/game-core/SynapsePlayer";
-import { SynapseBackground } from "../../util/game-core/SyanpseBackground";
+import { SynapseBackground } from "../../util/game-core/SynapseBackground";
 import { SeaGrass } from "../../util/game-core/SynapseSeaGrass";
 import { Particle } from "../../util/game-core/SynapseParticles";
 import { SynapseCorals } from "../../util/game-core/SynapseCorals";
