@@ -60,3 +60,28 @@ const bottomItems = [
     </p>
   </div>
 </div>
+
+{/* 2. NAVIGATION MENU */}
+      <nav className="flex-1 px-4 py-4 space-y-2 overflow-y-auto no-scrollbar">
+        <p className="px-4 text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Menu</p>
+        
+        {navItems.map((item) => {
+          const isActive = pathname === item.href || pathname?.startsWith(`${item.href}/`);
+          return (
+            <Link key={item.href} href={item.href}>
+              <div className={`
+                flex items-center gap-4 px-4 py-3.5 rounded-xl transition-all duration-200 group
+                ${isActive 
+                  ? "bg-[#2DD4BF] text-[#0B1E33] font-bold shadow-lg shadow-[#2DD4BF]/20 translate-x-1" 
+                  : "text-gray-400 hover:bg-white/5 hover:text-white"
+                }
+              `}>
+                <span className={isActive ? "text-[#0B1E33]" : "group-hover:text-[#2DD4BF] transition-colors"}>
+                  {item.icon}
+                </span>
+                <span className="text-sm font-medium">{item.label}</span>
+              </div>
+            </Link>
+          );
+        })}
+      </nav>
