@@ -21,3 +21,8 @@ export default function PatientTopbar() {
         </div>
       </div>
 
+            {/* 2. RIGHT ACTIONS */}
+      <div className="flex items-center gap-6">
+      </div>
+
+
