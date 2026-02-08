@@ -7,8 +7,8 @@ interface Obstacle {
     radius: number;
 }
 
-type PlayerStatus = "swimming" | "hit_ceiling" | "hit_floor" | "burrowed";
-type DeathReason = "" | "stung"; // Removed "dried_out" & "crushed" (converted to Soft Fails)
+type PlayerStatus = "swimming" | "hit_ceiling" | "hit_floor";
+type DeathReason = "" | "stung"; 
 
 export class Player {
     gameWidth: number;
@@ -22,23 +22,23 @@ export class Player {
     rotation: number;
     targetRotation: number;
 
-    // PHYSICS (Rhythmic Pump)
+    // PHYSICS
     velocity: number;
-    weight: number;      // Gravity
-    buoyancy: number;    // Upward force
-    maxUpwardSpeed: number;
+    weight: number = 0.18;
+    buoyancy: number = -2.2;
+    maxUpwardSpeed: number = -7;
 
-    // TIMERS & STATE
-    airTime: number;
-    floorTime: number;
-    maxSafeTime: number; // Time before "Soft Fail" fully triggers
+    // TIMERS & STATE (NEW)
+    surfaceTime: number = 0; // Tracks how long you stay at top
+    floorTime: number = 0;   // Tracks how long you stay at bottom
+    maxSafeTime: number = 5000; // 5 Seconds Grace Period
     
-    isDead: boolean;
-    deathReason: DeathReason;
-    status: PlayerStatus;
+    isDead: boolean = false;
+    deathReason: DeathReason = "";
+    status: PlayerStatus = "swimming";
 
-    // CLINICAL METRICS
-    totalForce: number; 
+    // METRICS
+    totalForce: number = 0; 
 
     constructor(gameWidth: number, gameHeight: number) {
         this.gameWidth = gameWidth;
@@ -46,28 +46,12 @@ export class Player {
         this.x = 100;
         this.y = gameHeight / 2;
         
-        // VISUALS
         this.radius = 30; 
         this.image = new Image();
         this.image.src = "/images/fish.png"; 
         this.rotation = 0;
         this.targetRotation = 0;
-
-        // PHYSICS TUNING
         this.velocity = 0;
-        this.weight = 0.18;      // Slightly heavier for better "release" feel
-        this.buoyancy = -2.2;    // Strong burst
-        this.maxUpwardSpeed = -7; 
-
-        // TIMERS
-        this.airTime = 0;       
-        this.floorTime = 0;     
-        this.maxSafeTime = 1000; // 1 second grace period before "Animation" starts
-        
-        this.isDead = false;
-        this.deathReason = "";  
-        this.status = "swimming"; 
-        this.totalForce = 0;
     }
 
     checkCollision(obstacles: Obstacle[]): boolean {
@@ -87,22 +71,20 @@ export class Player {
         return false;
     }
 
+    // UPDATED: Logic for 5-second timer
     update(inputActive: boolean, deltaTime: number, sandHeight: number, particles: Particle[]): void {
         if (this.isDead) return;
 
-        // --- 1. PHYSICS ENGINE ---
+        // --- 1. PHYSICS ---
         if (inputActive) {
-            // APPLY BURST
             this.velocity += this.buoyancy;
             if (this.velocity < this.maxUpwardSpeed) this.velocity = this.maxUpwardSpeed;
 
-            // BIOFEEDBACK: Emit Bubbles based on "Effort" (Speed)
+            // Biofeedback Bubbles
             const pressureRatio = Math.min(1, Math.abs(this.velocity) / 6);
             this.totalForce += pressureRatio;
 
-            // Spawn bubbles at tail
             if (Math.random() > 0.4) {
-                 // Calculate tail position based on rotation
                  const angle = this.rotation;
                  const tailX = this.x - Math.cos(angle) * 25;
                  const tailY = this.y - Math.sin(angle) * 25;
@@ -112,166 +94,176 @@ export class Player {
             this.velocity += this.weight;
         }
 
-        // Drag / Air Resistance
         this.velocity *= 0.96; 
         this.y += this.velocity;
 
-        // --- 2. BOUNDARY & SOFT FAIL LOGIC ---
-        const waterSurface = 60; // Keep fish inside water, not flying into sky
+        // --- 2. BOUNDARY LOGIC (TIMED) ---
+        const waterSurface = 60; 
         const floorLevel = this.gameHeight - sandHeight - this.radius;
 
-        // A. CEILING (SUNGLASSES MODE)
+        // A. CEILING ZONE
         if (this.y < waterSurface) {
             this.y = waterSurface;
             this.velocity = 0;
-            this.status = "hit_ceiling";
-            this.targetRotation = -0.2; // Look slightly up at sun
-            this.airTime += deltaTime;
+            
+            // Increment Timer
+            this.surfaceTime += deltaTime;
+            this.floorTime = 0; // Reset floor timer
+            
+            // Trigger Fail ONLY after 5 seconds
+            if (this.surfaceTime > this.maxSafeTime) {
+                this.status = "hit_ceiling";
+            } else {
+                this.status = "swimming"; // Still safe, but warning state in draw()
+            }
+            
+            this.targetRotation = -0.2;
         } 
-        // B. FLOOR (BURROW MODE)
+        // B. FLOOR ZONE
         else if (this.y > floorLevel) {
-            this.y = floorLevel; // Snap to floor
+            this.y = floorLevel;
             this.velocity = 0;
-            this.status = "hit_floor";
-            this.targetRotation = 0.1; // Slight tilt down
+            
+            // Increment Timer
             this.floorTime += deltaTime;
+            this.surfaceTime = 0; // Reset surface timer
+            
+            // Trigger Fail ONLY after 5 seconds
+            if (this.floorTime > this.maxSafeTime) {
+                this.status = "hit_floor";
+            } else {
+                this.status = "swimming";
+            }
+            
+            this.targetRotation = 0.1;
         } 
-        // C. SWIMMING (NORMAL)
+        // C. SAFE ZONE
         else {
+            this.floorTime = 0; 
+            this.surfaceTime = 0;
             this.status = "swimming";
-            this.airTime = 0;
-            this.floorTime = 0;
-            // Rotate based on velocity (Up = tilt up, Down = tilt down)
             this.targetRotation = this.velocity * 0.1;
         }
 
-        // Smooth Rotation Lerp
         this.rotation += (this.targetRotation - this.rotation) * 0.1;
     }
 
     hover(time: number): void {
-        // Gentle Sine Wave bobbing
         this.y = (this.gameHeight / 2) + Math.sin(time * 0.002) * 30;
         this.velocity = 0;
         this.rotation = 0;
         this.status = "swimming";
     }
 
-    draw(ctx: CanvasRenderingContext2D): void {
+    // UPDATED: Now accepts nightFactor to show Night Vision Goggles
+    draw(ctx: CanvasRenderingContext2D, nightFactor: number): void {
         ctx.save();
         ctx.translate(this.x, this.y);
 
-        // --- DRAWING LOGIC FOR STATES ---
-
-        // 1. FLOOR STATE: Draw the "Hole" before the fish
-        if (this.status === "hit_floor" && this.floorTime > 500) {
-            const holeSize = Math.min(1, (this.floorTime - 500) / 1000); // Grow hole over 1s
+        // --- 1. WARNING GLOW (Red Skin) ---
+        // If timer is active but not yet failed
+        const warningTime = Math.max(this.surfaceTime, this.floorTime);
+        
+        if (warningTime > 0 && warningTime < this.maxSafeTime) {
+            const urgency = warningTime / this.maxSafeTime; // 0.0 to 1.0
             
+            // Pulse Red Glow
+            ctx.shadowBlur = 20 + (Math.sin(Date.now() * 0.02) * 10);
+            ctx.shadowColor = `rgba(255, 0, 0, ${urgency})`;
+            
+            // Subtle Shake Effect
+            ctx.translate((Math.random() - 0.5) * (urgency * 3), 0);
+            
+            // Draw Warning Text above fish
             ctx.save();
-            ctx.translate(0, this.radius + 10); // Move to bottom of fish
-            ctx.scale(1, 0.3); // Flatten circle into oval
-            ctx.fillStyle = "rgba(0,0,0,0.6)";
-            ctx.beginPath();
-            ctx.arc(0, 0, 40 * holeSize, 0, Math.PI * 2);
-            ctx.fill();
+            ctx.rotate(-this.rotation);
+            ctx.fillStyle = `rgba(255, 100, 100, ${urgency})`;
+            ctx.font = "bold 14px Arial";
+            ctx.fillText(this.surfaceTime > 0 ? "Dive Down!" : "Swim Up!", -30, -50);
+            
+            // Countdown bar
+            ctx.fillStyle = "red";
+            ctx.fillRect(-30, -45, 60 * (1 - urgency), 5);
             ctx.restore();
-
-            // SINK EFFECT: Translate fish down slightly to look like it's entering
-            const sinkDepth = Math.min(15, (this.floorTime - 1000) * 0.02);
-            if (sinkDepth > 0) ctx.translate(0, sinkDepth);
         }
 
-        // 2. DRAW FISH BODY
+        // --- 2. DRAW FISH ---
         ctx.rotate(this.rotation);
-        
         if (this.image.complete && this.image.naturalWidth > 0) {
             const size = this.radius * 2.8; 
             ctx.drawImage(this.image, -size / 2, -size / 2, size, size);
         } else {
-            // Fallback (Gold Circle)
             ctx.fillStyle = "#FFD700";
             ctx.beginPath();
             ctx.arc(0, 0, this.radius, 0, Math.PI * 2);
             ctx.fill();
         }
 
-        // 3. CEILING STATE: Sunglasses
+        // --- 3. STATE ACCESSORIES ---
+        
+        // A. CEILING FAIL
         if (this.status === "hit_ceiling") {
-            this.drawSunglasses(ctx);
-            // Optional: Speech Bubble
-            if (this.airTime > 500) {
-                 this.drawSpeechBubble(ctx, "Too Bright! 😎");
+            if (nightFactor < 0.5) {
+                // DAY: Sunglasses
+                this.drawSunglasses(ctx);
+                this.drawSpeechBubble(ctx, "Too Bright! 😎");
+            } else {
+                // NIGHT: Night Vision / Scared
+                this.drawNightVision(ctx);
+                this.drawSpeechBubble(ctx, "Too Cold! 🥶");
             }
         }
 
-        // 4. FLOOR STATE: Zzz Text
-        if (this.status === "hit_floor" && this.floorTime > 1500) {
+        // B. FLOOR FAIL
+        if (this.status === "hit_floor") {
              this.drawSpeechBubble(ctx, "Zzz... 😴");
         }
 
         ctx.restore();
     }
 
-    // --- PROCEDURAL ACCESSORIES ---
-
     drawSunglasses(ctx: CanvasRenderingContext2D) {
-        // Assuming Fish faces Right. Adjust offsets if your sprite faces Left.
-        // Lens 1
         ctx.fillStyle = "black";
-        ctx.beginPath();
-        ctx.arc(12, -5, 6, 0, Math.PI*2);
-        ctx.fill();
+        ctx.beginPath(); ctx.arc(12, -5, 6, 0, Math.PI*2); ctx.fill();
+        ctx.beginPath(); ctx.arc(22, -5, 6, 0, Math.PI*2); ctx.fill();
+        ctx.strokeStyle = "black"; ctx.lineWidth = 2;
+        ctx.beginPath(); ctx.moveTo(12, -5); ctx.lineTo(22, -5); ctx.stroke();
+    }
 
-        // Lens 2
-        ctx.beginPath();
-        ctx.arc(22, -5, 6, 0, Math.PI*2);
-        ctx.fill();
-
-        // Frame
-        ctx.strokeStyle = "black";
-        ctx.lineWidth = 2;
-        ctx.beginPath();
-        ctx.moveTo(12, -5);
-        ctx.lineTo(22, -5);
-        ctx.stroke();
-
-        // Glint
-        ctx.fillStyle = "white";
-        ctx.beginPath();
-        ctx.arc(14, -7, 2, 0, Math.PI*2);
-        ctx.arc(24, -7, 2, 0, Math.PI*2);
-        ctx.fill();
+    drawNightVision(ctx: CanvasRenderingContext2D) {
+        // Green Goggles
+        ctx.fillStyle = "#00FF00";
+        ctx.shadowBlur = 10; ctx.shadowColor = "#00FF00";
+        ctx.beginPath(); ctx.arc(12, -5, 6, 0, Math.PI*2); ctx.fill();
+        ctx.beginPath(); ctx.arc(22, -5, 6, 0, Math.PI*2); ctx.fill();
+        ctx.fillStyle = "rgba(0, 50, 0, 0.5)"; // Strap
+        ctx.fillRect(8, -8, 20, 6);
     }
 
     drawSpeechBubble(ctx: CanvasRenderingContext2D, text: string) {
         ctx.save();
-        // Reset rotation so text is always readable (upright)
         ctx.rotate(-this.rotation); 
-        
         ctx.font = "bold 16px 'Inter', sans-serif";
         const textWidth = ctx.measureText(text).width;
-        const p = 10; // Padding
+        const p = 10; 
         const bx = -textWidth/2; 
-        const by = -60;
+        const by = -70;
 
-        // Bubble Body
         ctx.fillStyle = "white";
         ctx.beginPath();
-        ctx.roundRect(bx - p, by - p, textWidth + p*2, 30, 10);
+        if (ctx.roundRect) ctx.roundRect(bx - p, by - p, textWidth + p*2, 30, 10);
+        else ctx.rect(bx - p, by - p, textWidth + p*2, 30);
         ctx.fill();
 
-        // Bubble Tail
         ctx.beginPath();
-        ctx.moveTo(0, by + 30 - p); // Bottom of bubble
-        ctx.lineTo(-5, by + 40);    // Pointy bit
+        ctx.moveTo(0, by + 30 - p); 
+        ctx.lineTo(-5, by + 40);    
         ctx.lineTo(5, by + 30 - p);
         ctx.fill();
 
-        // Text
         ctx.fillStyle = "#0B1E33";
         ctx.textAlign = "center";
         ctx.fillText(text, 0, by + 18);
-
         ctx.restore();
     }
 }
