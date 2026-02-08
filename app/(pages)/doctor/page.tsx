@@ -17,8 +17,6 @@ interface PatientRowProps {
 
 /* ---------- Main Component ---------- */
 export default function DoctorDashboard() {
-  // NOTICE: No outer <div className="min-h-screen">. 
-  // We just return the content directly.
   return (
     <div className="space-y-8"> 
       
@@ -69,7 +67,7 @@ export default function DoctorDashboard() {
           </div>
         </div>
 
-        {/* Example: A Calendar or Upcoming box could go here in col-span-1 */}
+        {/* Quick Actions */}
         <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
            <h4 className="text-lg font-bold text-[#0B1E33] mb-5">Quick Actions</h4>
            <button className="w-full py-3 bg-[#0B1E33] text-white rounded-xl mb-3 font-semibold text-sm">Add New Patient</button>
