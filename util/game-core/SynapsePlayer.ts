@@ -149,6 +149,14 @@ export class Player {
         this.rotation += (this.targetRotation - this.rotation) * 0.1;
     }
 
+    hover(time: number): void {
+        // Gentle Sine Wave bobbing
+        this.y = (this.gameHeight / 2) + Math.sin(time * 0.002) * 30;
+        this.velocity = 0;
+        this.rotation = 0;
+        this.status = "swimming";
+    }
+
     draw(ctx: CanvasRenderingContext2D): void {
         ctx.save();
         ctx.translate(this.x, this.y);
