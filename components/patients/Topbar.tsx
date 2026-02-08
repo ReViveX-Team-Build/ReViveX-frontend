@@ -24,5 +24,11 @@ export default function PatientTopbar() {
             {/* 2. RIGHT ACTIONS */}
       <div className="flex items-center gap-6">
       </div>
+              {/* Notifications */}
+        <button className="relative p-2 text-gray-500 hover:bg-gray-100 rounded-full transition-colors">
+          <Bell size={22} />
+          <span className="absolute top-1.5 right-1.5 h-2.5 w-2.5 bg-red-500 rounded-full border-2 border-white"></span>
+        </button>
+
 
 
