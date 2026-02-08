@@ -47,3 +47,25 @@ export default function PatientDashboard() {
            </Link>
          </div>
       </div>
+
+            {/* LOWER GRID: STATS & INFO */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        
+        {/* Progress Card Placeholder */}
+        <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 min-h-[200px] flex flex-col">
+           <h4 className="font-bold text-[#0B1E33] mb-4">Weekly Adherence</h4>
+           <div className="flex-1 flex items-center justify-center bg-gray-50 rounded-xl border border-dashed border-gray-200 text-gray-400 text-sm">
+              Chart Component Here
+           </div>
+        </div>
+
+        {/* AI Companion Card Placeholder */}
+        <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 min-h-[200px] flex flex-col">
+           <h4 className="font-bold text-[#0B1E33] mb-4">AI Companion Suggestions</h4>
+           <div className="flex-1 flex items-center justify-center bg-gray-50 rounded-xl border border-dashed border-gray-200 text-gray-400 text-sm">
+              "Try stretching before your session..."
+           </div>
+        </div>
+
+      </div>
+
