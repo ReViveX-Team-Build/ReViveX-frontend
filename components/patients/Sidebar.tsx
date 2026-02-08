@@ -85,3 +85,16 @@ const bottomItems = [
           );
         })}
       </nav>
+
+      {/* 3. BOTTOM UTILITIES & LOGOUT */}
+      <div className="p-4 border-t border-white/10 bg-[#081626]">
+        <div className="space-y-1 mb-4">
+            {bottomItems.map((item) => (
+                <Link key={item.href} href={item.href}>
+                <div className="flex items-center gap-4 px-4 py-3 rounded-lg text-gray-400 hover:text-white hover:bg-white/5 transition-colors cursor-pointer">
+                    {item.icon}
+                    <span className="text-sm font-medium">{item.label}</span>
+                </div>
+                </Link>
+            ))}
+        </div>
