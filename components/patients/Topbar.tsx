@@ -5,9 +5,6 @@ import { Search, Bell, ChevronDown, User } from "lucide-react";
 export default function PatientTopbar() {
   return (
     <header className="sticky top-0 z-40 w-full bg-white border-b border-gray-200 shadow-sm px-8 py-4 flex items-center justify-between">
-    </header>
-  );
-}
 
       {/* 1. SEARCH BAR */}
       <div className="flex-1 max-w-xl">
@@ -23,7 +20,6 @@ export default function PatientTopbar() {
 
             {/* 2. RIGHT ACTIONS */}
       <div className="flex items-center gap-6">
-      </div>
               {/* Notifications */}
         <button className="relative p-2 text-gray-500 hover:bg-gray-100 rounded-full transition-colors">
           <Bell size={22} />
@@ -48,6 +44,10 @@ export default function PatientTopbar() {
 
           <ChevronDown size={16} className="text-gray-400 group-hover:text-[#0B1E33] transition-colors" />
         </button>
+      </div>
+    </header>
+  );
+}
 
 
 
