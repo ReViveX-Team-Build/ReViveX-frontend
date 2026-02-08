@@ -1,6 +1,5 @@
 import { Particle } from "./SynapseParticles";
 
-// --- TYPES ---
 interface Obstacle {
     x: number;
     y: number;
@@ -23,14 +22,14 @@ export class Player {
     targetRotation: number;
 
     // PHYSICS
-    velocity: number;
+    velocity: number; 
     weight: number = 0.18;
     buoyancy: number = -2.2;
     maxUpwardSpeed: number = -7;
 
-    // TIMERS & STATE (NEW)
-    surfaceTime: number = 0; // Tracks how long you stay at top
-    floorTime: number = 0;   // Tracks how long you stay at bottom
+    // Timers for the 5-Second Rule
+    surfaceTime: number = 0; 
+    floorTime: number = 0;   
     maxSafeTime: number = 5000; // 5 Seconds Grace Period
     
     isDead: boolean = false;
@@ -51,7 +50,7 @@ export class Player {
         this.image.src = "/images/fish.png"; 
         this.rotation = 0;
         this.targetRotation = 0;
-        this.velocity = 0;
+        this.velocity = 0; // Initialize velocity
     }
 
     checkCollision(obstacles: Obstacle[]): boolean {
@@ -71,8 +70,8 @@ export class Player {
         return false;
     }
 
-    // UPDATED: Logic for 5-second timer
-    update(inputActive: boolean, deltaTime: number, sandHeight: number, particles: Particle[]): void {
+    //  Added 'nightFactor' t
+    update(inputActive: boolean, deltaTime: number, sandHeight: number, particles: Particle[], nightFactor: number): void {
         if (this.isDead) return;
 
         // --- 1. PHYSICS ---
@@ -97,7 +96,7 @@ export class Player {
         this.velocity *= 0.96; 
         this.y += this.velocity;
 
-        // --- 2. BOUNDARY LOGIC (TIMED) ---
+        // --- 2. BOUNDARY LOGIC (TIMED 5 SECONDS) ---
         const waterSurface = 60; 
         const floorLevel = this.gameHeight - sandHeight - this.radius;
 
@@ -106,17 +105,16 @@ export class Player {
             this.y = waterSurface;
             this.velocity = 0;
             
-            // Increment Timer
+            //  Increment Timer
             this.surfaceTime += deltaTime;
             this.floorTime = 0; // Reset floor timer
             
-            // Trigger Fail ONLY after 5 seconds
+            // Fail ONLY after 5 seconds
             if (this.surfaceTime > this.maxSafeTime) {
                 this.status = "hit_ceiling";
             } else {
-                this.status = "swimming"; // Still safe, but warning state in draw()
+                this.status = "swimming"; // Warning state handled in draw()
             }
-            
             this.targetRotation = -0.2;
         } 
         // B. FLOOR ZONE
@@ -124,17 +122,16 @@ export class Player {
             this.y = floorLevel;
             this.velocity = 0;
             
-            // Increment Timer
+            // NEW: Increment Timer
             this.floorTime += deltaTime;
-            this.surfaceTime = 0; // Reset surface timer
+            this.surfaceTime = 0; 
             
-            // Trigger Fail ONLY after 5 seconds
+            // Fail ONLY after 5 seconds
             if (this.floorTime > this.maxSafeTime) {
                 this.status = "hit_floor";
             } else {
                 this.status = "swimming";
             }
-            
             this.targetRotation = 0.1;
         } 
         // C. SAFE ZONE
@@ -148,6 +145,7 @@ export class Player {
         this.rotation += (this.targetRotation - this.rotation) * 0.1;
     }
 
+    //  Helper for Menu Animation
     hover(time: number): void {
         this.y = (this.gameHeight / 2) + Math.sin(time * 0.002) * 30;
         this.velocity = 0;
@@ -155,15 +153,15 @@ export class Player {
         this.status = "swimming";
     }
 
-    // UPDATED: Now accepts nightFactor to show Night Vision Goggles
+    // CHANGED: Added 'nightFactor' to draw method for Day/Night awareness
     draw(ctx: CanvasRenderingContext2D, nightFactor: number): void {
         ctx.save();
         ctx.translate(this.x, this.y);
 
-        // --- 1. WARNING GLOW (Red Skin) ---
-        // If timer is active but not yet failed
+        // --- 1. NEW: VISUAL WARNING (Red Glow) ---
         const warningTime = Math.max(this.surfaceTime, this.floorTime);
         
+        // If timer is running but hasn't failed yet
         if (warningTime > 0 && warningTime < this.maxSafeTime) {
             const urgency = warningTime / this.maxSafeTime; // 0.0 to 1.0
             
@@ -171,17 +169,17 @@ export class Player {
             ctx.shadowBlur = 20 + (Math.sin(Date.now() * 0.02) * 10);
             ctx.shadowColor = `rgba(255, 0, 0, ${urgency})`;
             
-            // Subtle Shake Effect
+            // Shake Effect
             ctx.translate((Math.random() - 0.5) * (urgency * 3), 0);
             
-            // Draw Warning Text above fish
+            // Warning Text
             ctx.save();
             ctx.rotate(-this.rotation);
             ctx.fillStyle = `rgba(255, 100, 100, ${urgency})`;
             ctx.font = "bold 14px Arial";
             ctx.fillText(this.surfaceTime > 0 ? "Dive Down!" : "Swim Up!", -30, -50);
             
-            // Countdown bar
+            // Countdown Bar
             ctx.fillStyle = "red";
             ctx.fillRect(-30, -45, 60 * (1 - urgency), 5);
             ctx.restore();
@@ -199,7 +197,7 @@ export class Player {
             ctx.fill();
         }
 
-        // --- 3. STATE ACCESSORIES ---
+        // --- 3. NEW: CONTEXT AWARE ACCESSORIES ---
         
         // A. CEILING FAIL
         if (this.status === "hit_ceiling") {
@@ -208,7 +206,7 @@ export class Player {
                 this.drawSunglasses(ctx);
                 this.drawSpeechBubble(ctx, "Too Bright! 😎");
             } else {
-                // NIGHT: Night Vision / Scared
+                // NIGHT: Night Vision Goggles
                 this.drawNightVision(ctx);
                 this.drawSpeechBubble(ctx, "Too Cold! 🥶");
             }
@@ -230,13 +228,13 @@ export class Player {
         ctx.beginPath(); ctx.moveTo(12, -5); ctx.lineTo(22, -5); ctx.stroke();
     }
 
+    // NEW: Night Vision Goggles
     drawNightVision(ctx: CanvasRenderingContext2D) {
-        // Green Goggles
         ctx.fillStyle = "#00FF00";
         ctx.shadowBlur = 10; ctx.shadowColor = "#00FF00";
         ctx.beginPath(); ctx.arc(12, -5, 6, 0, Math.PI*2); ctx.fill();
         ctx.beginPath(); ctx.arc(22, -5, 6, 0, Math.PI*2); ctx.fill();
-        ctx.fillStyle = "rgba(0, 50, 0, 0.5)"; // Strap
+        ctx.fillStyle = "rgba(0, 50, 0, 0.5)"; 
         ctx.fillRect(8, -8, 20, 6);
     }
 

@@ -24,7 +24,6 @@ const GameCanvas: React.FC = () => {
   const router = useRouter();
 
   /* =================== GAME REFS (The Logic Fix) =================== */
-  // Refs update INSTANTLY. The Loop needs these to work.
   const playerRef = useRef<Player | null>(null);
   const bgRef = useRef<SynapseBackground | null>(null);
   const grassRef = useRef<SeaGrass | null>(null);
@@ -33,7 +32,6 @@ const GameCanvas: React.FC = () => {
   const particlesRef = useRef<Particle[]>([]);
   const pearlsRef = useRef<Pearl[]>([]);
   
-  // LOGIC FLAGS (Refs)
   const inputRef = useRef<boolean>(false);
   const taskTimerRef = useRef<number>(0);
   
@@ -48,7 +46,6 @@ const GameCanvas: React.FC = () => {
   const [failReason, setFailReason] = useState<"floor" | "ceiling" | null>(null);
   const [showExitConfirm, setShowExitConfirm] = useState(false);
   
-  // The Task
   const [currentTask, setCurrentTask] = useState<CognitiveTask>({ instruction: "Collect BLUE", targetColor: "#00BFFF" });
 
   const metricsRef = useRef<ClinicalMetrics>({ accuracy: { correct: 0, total: 0 } });
@@ -57,7 +54,6 @@ const GameCanvas: React.FC = () => {
   const countdownTimer = useRef<NodeJS.Timeout | null>(null);
 
   /* =================== STATE MANAGEMENT =================== */
-  // Updates both Logic (Ref) and UI (State)
   const setGameStatus = (status: "MENU" | "PLAYING" | "SOFT_FAIL") => {
       gameStateRef.current = status; 
       setUiState(status);            
@@ -76,13 +72,11 @@ const GameCanvas: React.FC = () => {
     canvas.width = 1024;
     canvas.height = 600;
 
-    // Create Game Objects
     playerRef.current = new Player(canvas.width, canvas.height);
     bgRef.current = new SynapseBackground(canvas.width, canvas.height);
     grassRef.current = new SeaGrass(canvas.width, canvas.height);
     coralsRef.current = new SynapseCorals(canvas.width, canvas.height);
     
-    // Start Loop Immediately so background moves
     startTimeRef.current = Date.now();
     lastFrameRef.current = performance.now();
     rafRef.current = requestAnimationFrame(loop);
@@ -95,7 +89,6 @@ const GameCanvas: React.FC = () => {
 
   /* =================== START SESSION =================== */
   const startSession = () => {
-    // Reset Logic
     if (playerRef.current) {
         playerRef.current.y = 300;
         playerRef.current.velocity = 0;
@@ -106,7 +99,6 @@ const GameCanvas: React.FC = () => {
     setScore(0);
     setFailReason(null);
     
-    // Start Countdown
     setGameStatus("PLAYING"); 
     setCountdownStatus(3);
     
@@ -118,7 +110,7 @@ const GameCanvas: React.FC = () => {
       if (count > 0) setCountdownStatus(count);
       else if (count === 0) setCountdownStatus("GO!");
       else {
-        setCountdownStatus(null); // UNBLOCK PHYSICS
+        setCountdownStatus(null); 
         if (countdownTimer.current) clearInterval(countdownTimer.current);
       }
     }, 900);
@@ -135,7 +127,6 @@ const GameCanvas: React.FC = () => {
     lastFrameRef.current = now;
     const elapsed = Date.now() - startTimeRef.current;
 
-    // Clear Screen
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
     // --- 1. ALWAYS DRAW BACKGROUND ---
@@ -156,7 +147,6 @@ const GameCanvas: React.FC = () => {
     }
 
     // --- 2. GAME LOGIC ---
-    // CRITICAL: Read from REFS, not State
     const currentState = gameStateRef.current;
     const isCountingDown = countdownRef.current !== null;
     const physicsActive = (currentState === "PLAYING" && !isCountingDown);
@@ -165,11 +155,11 @@ const GameCanvas: React.FC = () => {
         
         // A. PHYSICS UPDATE (Only when actually playing)
         if (physicsActive) {
-            playerRef.current.update(inputRef.current, delta, sandHeight, particlesRef.current);
+            // CHANGED: Passed nightFactor to update logic
+            playerRef.current.update(inputRef.current, delta, sandHeight, particlesRef.current, nightFactor);
             
-            // Spawn Pearls
             taskTimerRef.current += delta;
-            if (taskTimerRef.current > 2000) {  // Spawn faster (2s)
+            if (taskTimerRef.current > 2000) {  
                 spawnPearls(canvas.width, canvas.height);
                 taskTimerRef.current = 0;
             }
@@ -183,13 +173,11 @@ const GameCanvas: React.FC = () => {
                 setGameStatus("SOFT_FAIL");
             }
 
-            // Check Pearls
             pearlsRef.current.forEach(pearl => {
                 if (!pearl.collected && !pearl.markedForDeletion) {
                     const dx = playerRef.current!.x - pearl.x;
                     const dy = playerRef.current!.y - pearl.y;
                     const dist = Math.sqrt(dx*dx + dy*dy);
-                    // Hitbox slightly larger than visual
                     if (dist < playerRef.current!.radius + pearl.radius + 10) {
                         collectPearl(pearl);
                     }
@@ -197,23 +185,23 @@ const GameCanvas: React.FC = () => {
             });
         } 
         
-        // B. MENU HOVER (So fish isn't stiff)
+        // B. MENU HOVER
         else if (currentState === "MENU" || isCountingDown) {
              if (playerRef.current.hover) {
                  playerRef.current.hover(elapsed);
              } else {
-                 // Fallback if hover method missing
                  playerRef.current.y = (canvas.height / 2) + Math.sin(elapsed * 0.003) * 20;
                  playerRef.current.velocity = 0;
              }
         }
 
-        playerRef.current.draw(ctx);
+        // CHANGED: Passed nightFactor to draw logic
+        playerRef.current.draw(ctx, nightFactor);
     }
 
     // --- 3. DRAW PARTICLES & PEARLS ---
     pearlsRef.current.forEach(p => {
-        if (physicsActive) p.update(4); // Pearl Speed
+        if (physicsActive) p.update(4); 
         p.draw(ctx);
     });
     
@@ -241,7 +229,6 @@ const GameCanvas: React.FC = () => {
       const isTopCorrect = Math.random() > 0.5;
       const wrongColor = currentTask.targetColor === "#00BFFF" ? "#FF4500" : "#00BFFF";
       
-      // Spawn slightly off screen to right
       const startX = w + 50;
       pearlsRef.current.push(new Pearl(startX, h * 0.3, isTopCorrect ? currentTask.targetColor : wrongColor, isTopCorrect));
       pearlsRef.current.push(new Pearl(startX, h * 0.7, !isTopCorrect ? currentTask.targetColor : wrongColor, !isTopCorrect));
@@ -278,6 +265,9 @@ const GameCanvas: React.FC = () => {
           playerRef.current.y = 300; 
           playerRef.current.velocity = 0;
           playerRef.current.status = "swimming";
+          // Reset Timers
+          playerRef.current.floorTime = 0;
+          playerRef.current.surfaceTime = 0;
       }
       setFailReason(null);
       setGameStatus("PLAYING");
@@ -316,7 +306,6 @@ const GameCanvas: React.FC = () => {
     <div style={styles.container}>
         <canvas ref={canvasRef} style={styles.canvas} />
 
-        {/* --- UI OVERLAYS --- */}
         {uiState === "MENU" && (
             <div style={styles.overlay}>
                 <h1 className="text-4xl font-bold text-[#00FFFF] mb-4">Synapse Racer</h1>
@@ -343,7 +332,6 @@ const GameCanvas: React.FC = () => {
             </div>
         )}
 
-        {/* HUD only shows when playing */}
         {uiState === "PLAYING" && (
             <div style={styles.hud}>
                 <div className="text-[#2DD4BF] font-bold text-xl">Score: {score}</div>
