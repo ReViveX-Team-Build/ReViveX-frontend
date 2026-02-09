@@ -171,7 +171,7 @@ export class Player {
             ctx.shadowColor = "#FF4500";
         }
 
-        if (this.image.complete) {
+        if (this.image.complete && this.image.naturalWidth > 0) {
             const size = this.radius * 2.8; 
             ctx.drawImage(this.image, -size / 2, -size / 2, size, size);
         } else {

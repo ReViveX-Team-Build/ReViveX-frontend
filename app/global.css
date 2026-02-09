@@ -1,0 +1,103 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* --- ReViveX Theme Colors  --- */
+    --background: 0 0% 100%;       /* #ffffff */
+    --foreground: 211 63% 12%;     /* #0B1E33  */
+
+    --card: 0 0% 100%;             /* #ffffff */
+    --card-foreground: 211 63% 12%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 211 63% 12%;
+
+    /*  Deep Blue Sidebar/Header */
+    --primary: 211 63% 12%;        /* #0B1E33 */
+    --primary-foreground: 0 0% 100%;
+
+    /*  Teal Accent */
+    --secondary: 173 66% 50%;      /* #2DD4BF-teal */
+    --secondary-foreground: 231 72% 4%; /* #030213 */
+
+    --muted: 220 14% 96%;          /* #f3f4f6 */
+    --muted-foreground: 220 9% 46%; /* #6b7280 */
+
+    --accent: 175 84% 97%;         /* #f0fdFa (Light Teal Tint) */
+    --accent-foreground: 175 75% 26%; /* #0f766e */
+
+    --destructive: 0 84% 60%;      /* #ef4444 */
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 220 13% 91%;         /* #e5e7eb */
+    --input: 220 13% 91%;
+    --ring: 173 66% 50%;           /* Teal Focus Ring */
+
+    --radius: 0.75rem;             /* 12px Rounded Corners */
+  }
+
+  .dark {
+    --background: 222 47% 11%;     /* #0f172a */
+    --foreground: 210 40% 98%;     /* #f8fafc */
+
+    --card: 222 47% 11%;
+    --card-foreground: 210 40% 98%;
+
+    --popover: 222 47% 11%;
+    --popover-foreground: 210 40% 98%;
+
+    --primary: 210 40% 98%;
+    --primary-foreground: 222 47.4% 11.2%;
+
+    --secondary: 173 58% 39%;      /* #14b8a6 */
+    --secondary-foreground: 0 0% 100%;
+
+    --muted: 217 33% 17%;
+    --muted-foreground: 215 20% 65%;
+
+    --accent: 217 33% 17%;
+    --accent-foreground: 210 40% 98%;
+
+    --destructive: 0 63% 31%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 217 33% 17%;
+    --input: 217 33% 17%;
+    --ring: 173 58% 39%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+/* Animations (Standard CSS) */
+@keyframes fade-in {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes slide-up {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes pulse-glow {
+  0%, 100% { box-shadow: 0 0 20px rgba(45, 212, 191, 0.4); }
+  50% { box-shadow: 0 0 30px rgba(45, 212, 191, 0.6); }
+}
+
+.animate-fade-in {
+  animation: fade-in 0.5s ease-out;
+}
+.animate-slide-up {
+  animation: slide-up 0.4s ease-out;
+}
+.animate-pulse-glow {
+  animation: pulse-glow 2s ease-in-out infinite;
+}
