@@ -160,67 +160,86 @@ export class Player {
 
         // --- 1. NEW: VISUAL WARNING (Red Glow) ---
         const warningTime = Math.max(this.surfaceTime, this.floorTime);
-        
-        // If timer is running but hasn't failed yet
-        if (warningTime > 0 && warningTime < this.maxSafeTime) {
-            const urgency = warningTime / this.maxSafeTime; // 0.0 to 1.0
-            
-            // Pulse Red Glow
-            ctx.shadowBlur = 20 + (Math.sin(Date.now() * 0.02) * 10);
-            ctx.shadowColor = `rgba(255, 0, 0, ${urgency})`;
-            
-            // Shake Effect
-            ctx.translate((Math.random() - 0.5) * (urgency * 3), 0);
-            
-            // Warning Text
-            ctx.save();
-            ctx.rotate(-this.rotation);
-            ctx.fillStyle = `rgba(255, 100, 100, ${urgency})`;
-            ctx.font = "bold 14px Arial";
-            ctx.fillText(this.surfaceTime > 0 ? "Dive Down!" : "Swim Up!", -30, -50);
-            
-            // Countdown Bar
-            ctx.fillStyle = "red";
-            ctx.fillRect(-30, -45, 60 * (1 - urgency), 5);
-            ctx.restore();
-        }
+        //phase 2>3secs (turn red)
+        const isRedPhase = warningTime > 3000;
 
-        // --- 2. DRAW FISH ---
+        //phase 3:>4 secs (shake + alert) 
+        const isDangerPhase = warningTime > 4000;
+
+        if(isDangerPhase){
+            const shakeAmount = (Math.random() - 0.5) *5;
+            ctx.translate(shakeAmount, shakeAmount);
+        }
+        
+        //draw fish
         ctx.rotate(this.rotation);
-        if (this.image.complete && this.image.naturalWidth > 0) {
-            const size = this.radius * 2.8; 
-            ctx.drawImage(this.image, -size / 2, -size / 2, size, size);
-        } else {
-            ctx.fillStyle = "#FFD700";
+
+        if(this.image.complete && this.image.naturalWidth > 0){
+            const size = this.radius *2.8;
+            ctx.drawImage(this.image, -size/2, -size/2, size, size);
+
+            // APPLY RED TINT
+            if ( isRedPhase){
+                ctx.save();
+                ctx.globalCompositeOperation = "source-atop"; //only draw on top of exixting pixels
+
+                const opacity = isDangerPhase ? 0.6 :0.3;
+                ctx.fillStyle = `rgba(255,0,0,${opacity})`;
+                ctx.fillRect(-size/2, -size/2, size, size);
+                ctx.restore();
+
+            }
+        } else{
+            ctx.fillStyle = isRedPhase ? "red": "FFD700";
             ctx.beginPath();
-            ctx.arc(0, 0, this.radius, 0, Math.PI * 2);
+            ctx.arc(0,0, this.radius, 0, Math.PI*2);
             ctx.fill();
         }
 
-        // --- 3. NEW: CONTEXT AWARE ACCESSORIES ---
-        
-        // A. CEILING FAIL
-        if (this.status === "hit_ceiling") {
-            if (nightFactor < 0.5) {
-                // DAY: Sunglasses
+        //3 - DRAW DANGER ALERT (only in danger phase)
+
+        if(isDangerPhase){
+            ctx.save();
+            ctx.rotate(-this.rotation); // Keep text upright
+
+            ctx.shadowBlur = 10;
+            ctx.shadowColor = "red";
+            ctx.fillStyle = "white";
+            ctx.font = "bold 30px Arial";
+            ctx.fillText("!", -5, -45); // Floating above fish
+            
+            // Optional: Draw a small warning circle behind the "!"
+            ctx.strokeStyle = "red";
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.arc(2, -55, 15, 0, Math.PI*2);
+            ctx.stroke();
+            
+            ctx.restore();
+        }
+
+        //4- STATE ACCESSORIES ( fail states)
+
+        //only show if we have actually failed.. 
+
+        if( this.status === "hit_ceiling"){
+            if(nightFactor > 0.5){
                 this.drawSunglasses(ctx);
-                this.drawSpeechBubble(ctx, "Too Bright! 😎");
-            } else {
-                // NIGHT: Night Vision Goggles
+                this.drawSpeechBubble(ctx, "Too bright!😎");
+            }else {
                 this.drawNightVision(ctx);
-                this.drawSpeechBubble(ctx, "Too Cold! 🥶");
+                this.drawSpeechBubble(ctx, "Too cold!🥶");
             }
         }
 
-        // B. FLOOR FAIL
-        if (this.status === "hit_floor") {
-             this.drawSpeechBubble(ctx, "Zzz... 😴");
+        if (this.status === "hit_floor"){
+            this.drawSpeechBubble(ctx, "Ouch! Too deep!💥");
         }
 
-        ctx.restore();
+         ctx.restore();
     }
 
-    drawSunglasses(ctx: CanvasRenderingContext2D) {
+         drawSunglasses(ctx: CanvasRenderingContext2D) {
         ctx.fillStyle = "black";
         ctx.beginPath(); ctx.arc(12, -5, 6, 0, Math.PI*2); ctx.fill();
         ctx.beginPath(); ctx.arc(22, -5, 6, 0, Math.PI*2); ctx.fill();
@@ -228,7 +247,6 @@ export class Player {
         ctx.beginPath(); ctx.moveTo(12, -5); ctx.lineTo(22, -5); ctx.stroke();
     }
 
-    // NEW: Night Vision Goggles
     drawNightVision(ctx: CanvasRenderingContext2D) {
         ctx.fillStyle = "#00FF00";
         ctx.shadowBlur = 10; ctx.shadowColor = "#00FF00";
@@ -249,6 +267,7 @@ export class Player {
 
         ctx.fillStyle = "white";
         ctx.beginPath();
+        // Safe check for roundRect support
         if (ctx.roundRect) ctx.roundRect(bx - p, by - p, textWidth + p*2, 30, 10);
         else ctx.rect(bx - p, by - p, textWidth + p*2, 30);
         ctx.fill();
