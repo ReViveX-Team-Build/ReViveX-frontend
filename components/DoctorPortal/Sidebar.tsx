@@ -26,8 +26,8 @@ const DoctorSidebar = () => {
     { icon: <Users size={22} />, label: "My Patients", href: "/doctor/patients" },
     { icon: <CalendarDays size={22} />, label: "Schedule", href: "/doctor/schedule" },
     { icon: <FileText size={22} />, label: "Therapy Protocols", href: "/doctor/protocols" },
-    { icon: <BarChart2 size={22} />, label: "Reports & Analytics", href: "/doctor/analytics" },
-    { icon: <Bot size={22} />, label: "AI Companion", href: "/doctor/ai" },
+    { icon: <BarChart2 size={22} />, label: "Reports & Analytics", href: "/doctor/reports" },
+    { icon: <Bot size={22} />, label: "AI Companion", href: "/doctor/ai-companion" },
   ];
 
   // 2. SYSTEM MENU CONFIGURATION
