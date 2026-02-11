@@ -4,6 +4,7 @@ import { Bot } from "lucide-react";
 import { useState } from "react";
 
 export default function DoctorAICompanion() {
+
     const [input, setInput] = useState("");
     const [messages, setMessages] = useState<
         { sender: "ai" | "user"; text: string }[]
