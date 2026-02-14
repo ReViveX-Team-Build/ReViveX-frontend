@@ -53,6 +53,81 @@ export default function PatientSettingsPage() {
 
                     </div>
 
+                    {/* Notification Preferences */}
+                    <div className="bg-white shadow-lg rounded-xl p-6">
+
+                        <h3 className="text-[#0A2E4C] text-lg font-semibold mb-4">
+                            Notification Preferences
+                        </h3>
+
+                        <div className="bg-[#F8F9FA] rounded-lg p-6 space-y-6">
+
+                            {/* Session Reminders */}
+                            <div className="flex items-center justify-between">
+                                <div>
+                                    <p className="text-[#0A2E4C]">Session Reminders</p>
+                                    <p className="text-sm text-gray-600">
+                                        Get notified before your therapy sessions
+                                    </p>
+                                </div>
+                                <input type="checkbox" defaultChecked className="w-5 h-5 accent-[#2DD4BF]" />
+                            </div>
+
+                            {/* Progress Updates */}
+                            <div className="flex items-center justify-between">
+                                <div>
+                                    <p className="text-[#0A2E4C]">Progress Updates</p>
+                                    <p className="text-sm text-gray-600">
+                                        Receive weekly progress summaries
+                                    </p>
+                                </div>
+                                <input type="checkbox" defaultChecked className="w-5 h-5 accent-[#2DD4BF]" />
+                            </div>
+
+                            {/* AI Messages */}
+                            <div className="flex items-center justify-between">
+                                <div>
+                                    <p className="text-[#0A2E4C]">AI Companion Messages</p>
+                                    <p className="text-sm text-gray-600">
+                                        Allow motivational AI messages
+                                    </p>
+                                </div>
+                                <input type="checkbox" defaultChecked className="w-5 h-5 accent-[#2DD4BF]" />
+                            </div>
+
+                            {/* Doctor Messages */}
+                            <div className="flex items-center justify-between">
+                                <div>
+                                    <p className="text-[#0A2E4C]">Doctor Messages</p>
+                                    <p className="text-sm text-gray-600">
+                                        Notify me of new doctor messages
+                                    </p>
+                                </div>
+                                <input type="checkbox" defaultChecked className="w-5 h-5 accent-[#2DD4BF]" />
+                            </div>
+
+                            {/* Email Notifications */}
+                            <div className="flex items-center justify-between">
+                                <div>
+                                    <p className="text-[#0A2E4C]">Email Notifications</p>
+                                    <p className="text-sm text-gray-600">
+                                        Send notifications to your email
+                                    </p>
+                                </div>
+                                <input type="checkbox" className="w-5 h-5 accent-[#2DD4BF]" />
+                            </div>
+
+                            {/* Save Button */}
+                            <div className="pt-4 border-t">
+                                <button className="bg-[#2DD4BF] hover:bg-[#2DD4BF]/90 text-white px-6 py-2 rounded-lg">
+                                    Save Preferences
+                                </button>
+                            </div>
+
+                        </div>
+
+                    </div>
+
                 </div>
 
             </div>
