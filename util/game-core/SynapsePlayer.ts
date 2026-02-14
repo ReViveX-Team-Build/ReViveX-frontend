@@ -134,7 +134,7 @@ export class Player {
 
         this.rotation += (this.targetRotation - this.rotation) * 0.1;
     }
-    
+
     //  Helper for Menu Animation
     hover(time: number): void {
         this.y = (this.gameHeight / 2) + Math.sin(time * 0.002) * 30;
@@ -148,63 +148,62 @@ export class Player {
         ctx.save();
         ctx.translate(this.x, this.y);
 
-        // --- 1. NEW: VISUAL WARNING (Red Glow) ---
+        // --- 1. DETERMINE WARNING STATE ---
         const warningTime = Math.max(this.surfaceTime, this.floorTime);
-        //phase 2>3secs (turn red)
-        const isRedPhase = warningTime > 3000;
-
-        //phase 3:>4 secs (shake + alert) 
-        const isDangerPhase = warningTime > 4000;
-
-        if(isDangerPhase){
-            const shakeAmount = (Math.random() - 0.5) *5;
-            ctx.translate(shakeAmount, shakeAmount);
-        }
         
-        //draw fish
+        // Logic: 
+        // 0s - 2s: Safe (No tint)
+        // 2s - 5s: Red Tint (Warning)
+        const isRedPhase = warningTime > this.warnTime; 
+
+        // --- 2. DRAW FISH ---
         ctx.rotate(this.rotation);
-
-        if(this.image.complete && this.image.naturalWidth > 0){
-            const size = this.radius *2.8;
-            ctx.drawImage(this.image, -size/2, -size/2, size, size);
-
-            // APPLY RED TINT
-            // ORGANIC RED PULSE (No Text needed)
+        
+        if (this.image.complete && this.image.naturalWidth > 0) {
+            const size = this.radius * 2.8; 
+            ctx.drawImage(this.image, -size / 2, -size / 2, size, size);
+            
+            // ORGANIC RED TINT (The Fix)
             if (isRedPhase) {
                 ctx.save();
-                ctx.globalCompositeOperation = "source-atop"; // Paints ONLY on the fish pixels
-
-                // Pulse Calculation: Oscillates between 0.3 and 0.6 opacity quickly
-                const time = Date.now() * 0.01; 
-                const pulse = (Math.sin(time) + 1) / 2; // 0.0 to 1.0
+                // "source-atop" ensures we ONLY draw on top of the fish pixels, not the empty box around it.
+                ctx.globalCompositeOperation = "source-atop"; 
                 
-                // Base opacity increases if in danger phase
-                const baseOpacity = isDangerPhase ? 0.5 : 0.2;
-                const finalOpacity = baseOpacity + (pulse * 0.3);
-
-                // Use a "Hot" Red/Orange 
-                ctx.fillStyle = `rgba(255, 60, 60, ${finalOpacity})`;
+                // Pulsing Red Effect
+                const pulse = (Math.sin(Date.now() * 0.01) + 1) / 2; // 0 to 1
+                const opacity = 0.3 + (pulse * 0.3); // 0.3 to 0.6
                 
-                // Draw the tint
+                ctx.fillStyle = `rgba(255, 60, 60, ${opacity})`;
+                
+                // We draw a rectangle, BUT the composite mode masks it to the fish shape!
                 ctx.fillRect(-size/2, -size/2, size, size);
                 ctx.restore();
             }
-
-        } else{
-            ctx.fillStyle = isRedPhase ? "red": "FFD700";
+        } else {
+            // Fallback Circle
+            ctx.fillStyle = isRedPhase ? "#FF4444" : "#FFD700";
             ctx.beginPath();
-            ctx.arc(0,0, this.radius, 0, Math.PI*2);
+            ctx.arc(0, 0, this.radius, 0, Math.PI * 2);
             ctx.fill();
         }
 
-        //3 - DRAW DANGER ALERT (only in danger phase)
-
-        if(isDangerPhase){
-            ctx.save();
-            ctx.rotate(-this.rotation); // Keep text upright
-            
-            ctx.restore();
+        // --- 3. FAIL STATE PROPS (Accessories) ---
+        // Only show these if the game has actually failed/paused
+        
+        if (this.status === "hit_ceiling") {
+            if (nightFactor < 0.5) {
+                this.drawSunglasses(ctx); // Day
+            } else {
+                this.drawNightVision(ctx); // Night
+            }
         }
+
+        if (this.status === "hit_floor") {
+             this.drawSpeechBubble(ctx, "Zzz...");
+        }
+
+        ctx.restore();
+    }
 
         //4- STATE ACCESSORIES ( fail states)
 
