@@ -187,12 +187,10 @@ const GameCanvas: React.FC = () => {
         
         // B. MENU HOVER
         else if (currentState === "MENU" || isCountingDown) {
-             if (playerRef.current.hover) {
-                 playerRef.current.hover(elapsed);
-             } else {
-                 playerRef.current.y = (canvas.height / 2) + Math.sin(elapsed * 0.003) * 20;
-                 playerRef.current.velocity = 0;
-             }
+             // Manual Hover Animation (Sine Wave)
+             playerRef.current.y = (canvas.height / 2) + Math.sin(elapsed * 0.003) * 20;
+             playerRef.current.velocity = 0;
+             playerRef.current.rotation = 0; // Keep fish straight
         }
 
         // CHANGED: Passed nightFactor to draw logic
