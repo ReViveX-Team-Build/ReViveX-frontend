@@ -36,7 +36,7 @@ export default function PatientDashboard() {
              <p className="text-gray-400 max-w-md">Targeting Right Hand Motor Control • Moderate Resistance • 15 Mins</p>
            </div>
 
-           <Link href="/patients/game">
+           <Link href="/patients/levels">
              <button className="bg-[#2DD4BF] hover:bg-[#20cbb5] text-[#0B1E33] font-bold py-4 px-8 rounded-2xl shadow-[0_0_20px_rgba(45,212,191,0.3)] transition-all active:scale-95 flex items-center gap-3">
                <Play size={20} fill="#0B1E33" /> Start Session
              </button>
