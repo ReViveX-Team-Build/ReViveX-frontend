@@ -112,7 +112,7 @@ export class Player {
         const floorLevel = this.gameHeight - sandHeight - this.radius;
         const ceilingLimit = this.radius; // The absolute top of the screen
 
-        / A. AIR ZONE (Anytime fish is above water)
+        // A. AIR ZONE (Anytime fish is above water)
         if (this.y < waterLevel) {
             // Increment Timer because we are out of water
             this.surfaceTime += deltaTime;
@@ -160,7 +160,7 @@ export class Player {
 
         this.rotation += (this.targetRotation - this.rotation) * 0.1;
     }
-    
+
     draw(ctx: CanvasRenderingContext2D, nightFactor: number): void {
         ctx.save();
         ctx.translate(this.x, this.y);
