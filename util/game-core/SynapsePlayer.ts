@@ -7,7 +7,8 @@ interface Obstacle {
 }
 
 type PlayerStatus = "swimming" | "hit_ceiling" | "hit_floor";
-type DeathReason = "" | "stung"; 
+// RESTORED: Added missing reasons so typescript doesn't complain
+type DeathReason = "" | "stung" | "dried_out" | "crushed"; 
 
 export class Player {
     gameWidth: number;
@@ -27,14 +28,18 @@ export class Player {
     buoyancy: number = -2.2;
     maxUpwardSpeed: number = -7;
 
-    // TIMERS (Crucial for the 2-second safe zone)
+    // TIMERS (The "Safe Zone" Logic)
     surfaceTime: number = 0; 
     floorTime: number = 0;   
     maxSafeTime: number = 5000; // 5 Seconds Total before fail
-    warnTime: number = 2000;    // 2 Seconds Safe Zone (No red tint before this)
+    warnTime: number = 2000;    // 2 Seconds Grace Period (No red glow)
     
     isDead: boolean = false;
+    deathReason: DeathReason = ""; // RESTORED
     status: PlayerStatus = "swimming";
+
+    // METRICS
+    totalForce: number = 0; 
 
     constructor(gameWidth: number, gameHeight: number) {
         this.gameWidth = gameWidth;
@@ -49,7 +54,8 @@ export class Player {
         this.targetRotation = 0;
         this.velocity = 0; 
     }
-    
+
+    // RESTORED: Collision Check for Level 2 (Jellyfish)
     checkCollision(obstacles: Obstacle[]): boolean {
         if (!obstacles) return false;
         for (let i = 0; i < obstacles.length; i++) {
@@ -58,6 +64,7 @@ export class Player {
             const dy = this.y - obs.y;
             const distance = Math.sqrt(dx * dx + dy * dy);
 
+            // 0.8 is the hitbox forgiveness (makes it slightly smaller than the image)
             if (distance < (this.radius + obs.radius) * 0.8) {
                 this.isDead = true;
                 this.deathReason = "stung"; 
@@ -70,17 +77,27 @@ export class Player {
     update(inputActive: boolean, deltaTime: number, sandHeight: number, particles: Particle[], nightFactor: number): void {
         if (this.isDead) return;
 
-        // --- 1. PHYSICS ---
+        // --- 1. PHYSICS (With Bubble Burst) ---
         if (inputActive) {
             this.velocity += this.buoyancy;
             if (this.velocity < this.maxUpwardSpeed) this.velocity = this.maxUpwardSpeed;
 
-            // Biofeedback Bubbles (Juice!)
+            // Biofeedback Juice:
             const pressureRatio = Math.min(1, Math.abs(this.velocity) / 6);
-            if (Math.random() > 0.4) {
+            this.totalForce += pressureRatio;
+
+            // Burst Logic: Harder squeeze = More bubbles
+            let bubbleCount = 0;
+            if (Math.random() < 0.3 + (pressureRatio * 0.5)) {
+                bubbleCount = 1;
+                if (pressureRatio > 0.8) bubbleCount = Math.floor(Math.random() * 3) + 1; // Burst!
+            }
+
+            for (let i = 0; i < bubbleCount; i++) {
                  const angle = this.rotation;
-                 const tailX = this.x - Math.cos(angle) * 25;
-                 const tailY = this.y - Math.sin(angle) * 25;
+                 // Randomize tail position slightly
+                 const tailX = (this.x - Math.cos(angle) * 25) + (Math.random() * 5 - 2.5);
+                 const tailY = (this.y - Math.sin(angle) * 25) + (Math.random() * 5 - 2.5);
                  particles.push(new Particle(tailX, tailY, pressureRatio, true));
             }
         } else {
@@ -90,7 +107,7 @@ export class Player {
         this.velocity *= 0.96; 
         this.y += this.velocity;
 
-        // --- 2. BOUNDARY LOGIC (The 2-Second Safe Zone) ---
+        // --- 2. BOUNDARY LOGIC (TIMING) ---
         const waterSurface = 60; 
         const floorLevel = this.gameHeight - sandHeight - this.radius;
 
@@ -98,8 +115,6 @@ export class Player {
         if (this.y < waterSurface) {
             this.y = waterSurface;
             this.velocity = 0;
-            
-            // Increment Surface Timer
             this.surfaceTime += deltaTime;
             this.floorTime = 0; 
             
@@ -113,8 +128,6 @@ export class Player {
         else if (this.y > floorLevel) {
             this.y = floorLevel;
             this.velocity = 0;
-            
-            // Increment Floor Timer
             this.floorTime += deltaTime;
             this.surfaceTime = 0; 
             
@@ -124,7 +137,7 @@ export class Player {
             }
             this.targetRotation = 0.1;
         } 
-        // C. SAFE ZONE (Swimming)
+        // C. SAFE ZONE
         else {
             this.floorTime = 0; 
             this.surfaceTime = 0;
@@ -135,15 +148,6 @@ export class Player {
         this.rotation += (this.targetRotation - this.rotation) * 0.1;
     }
 
-    //  Helper for Menu Animation
-    hover(time: number): void {
-        this.y = (this.gameHeight / 2) + Math.sin(time * 0.002) * 30;
-        this.velocity = 0;
-        this.rotation = 0;
-        this.status = "swimming";
-    }
-
-    // CHANGED: Added 'nightFactor' to draw method for Day/Night awareness
     draw(ctx: CanvasRenderingContext2D, nightFactor: number): void {
         ctx.save();
         ctx.translate(this.x, this.y);
@@ -152,50 +156,47 @@ export class Player {
         const warningTime = Math.max(this.surfaceTime, this.floorTime);
         
         // Logic: 
-        // 0s - 2s: Safe (No tint)
-        // 2s - 5s: Red Tint (Warning)
+        // 0s - 2s: Safe (No effect)
+        // 2s - 5s: Red Glow (Warning)
         const isRedPhase = warningTime > this.warnTime; 
+        const isDangerPhase = warningTime > 4000;
 
-        // --- 2. DRAW FISH ---
+        // Shake Effect (Only when very close to dying)
+        if (isDangerPhase) {
+            const shake = (Math.random() - 0.5) * 5;
+            ctx.translate(shake, shake);
+        }
+
         ctx.rotate(this.rotation);
-        
+
+        // --- 2. DRAW FISH WITH GLOW (No Square!) ---
         if (this.image.complete && this.image.naturalWidth > 0) {
             const size = this.radius * 2.8; 
+            
+            // FIX: Use Shadow/Glow instead of tinting to avoid the "Square Box"
+            if (isRedPhase) {
+                const pulse = (Math.sin(Date.now() * 0.01) + 1) / 2; 
+                ctx.shadowBlur = 20 + (pulse * 20); // Breathe effect
+                ctx.shadowColor = isDangerPhase ? "#FF0000" : "#FF4500"; // Redder when closer to death
+            }
+
             ctx.drawImage(this.image, -size / 2, -size / 2, size, size);
             
-            // ORGANIC RED TINT (The Fix)
-            if (isRedPhase) {
-                ctx.save();
-                // "source-atop" ensures we ONLY draw on top of the fish pixels, not the empty box around it.
-                ctx.globalCompositeOperation = "source-atop"; 
-                
-                // Pulsing Red Effect
-                const pulse = (Math.sin(Date.now() * 0.01) + 1) / 2; // 0 to 1
-                const opacity = 0.3 + (pulse * 0.3); // 0.3 to 0.6
-                
-                ctx.fillStyle = `rgba(255, 60, 60, ${opacity})`;
-                
-                // We draw a rectangle, BUT the composite mode masks it to the fish shape!
-                ctx.fillRect(-size/2, -size/2, size, size);
-                ctx.restore();
-            }
+            // Reset shadow so accessories don't glow
+            ctx.shadowBlur = 0;
+            
         } else {
-            // Fallback Circle
+            // Fallback if image fails
             ctx.fillStyle = isRedPhase ? "#FF4444" : "#FFD700";
             ctx.beginPath();
             ctx.arc(0, 0, this.radius, 0, Math.PI * 2);
             ctx.fill();
         }
 
-        // --- 3. FAIL STATE PROPS (Accessories) ---
-        // Only show these if the game has actually failed/paused
-        
+        // --- 3. ACCESSORIES (Fun Stuff) ---
         if (this.status === "hit_ceiling") {
-            if (nightFactor < 0.5) {
-                this.drawSunglasses(ctx); // Day
-            } else {
-                this.drawNightVision(ctx); // Night
-            }
+            if (nightFactor < 0.5) this.drawSunglasses(ctx);
+            else this.drawNightVision(ctx);
         }
 
         if (this.status === "hit_floor") {
@@ -205,28 +206,8 @@ export class Player {
         ctx.restore();
     }
 
-        //4- STATE ACCESSORIES ( fail states)
-
-        //only show if we have actually failed.. 
-
-        if( this.status === "hit_ceiling"){
-            if(nightFactor > 0.5){
-                this.drawSunglasses(ctx);
-                this.drawSpeechBubble(ctx, "Too bright!😎");
-            }else {
-                this.drawNightVision(ctx);
-                this.drawSpeechBubble(ctx, "Too cold!🥶");
-            }
-        }
-
-        if (this.status === "hit_floor"){
-            this.drawSpeechBubble(ctx, "Ouch! Too deep!💥");
-        }
-
-         ctx.restore();
-    }
-
-         drawSunglasses(ctx: CanvasRenderingContext2D) {
+    // --- HELPERS ---
+    drawSunglasses(ctx: CanvasRenderingContext2D) {
         ctx.fillStyle = "black";
         ctx.beginPath(); ctx.arc(12, -5, 6, 0, Math.PI*2); ctx.fill();
         ctx.beginPath(); ctx.arc(22, -5, 6, 0, Math.PI*2); ctx.fill();
@@ -254,7 +235,6 @@ export class Player {
 
         ctx.fillStyle = "white";
         ctx.beginPath();
-        // Safe check for roundRect support
         if (ctx.roundRect) ctx.roundRect(bx - p, by - p, textWidth + p*2, 30, 10);
         else ctx.rect(bx - p, by - p, textWidth + p*2, 30);
         ctx.fill();
