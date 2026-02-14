@@ -52,6 +52,10 @@ const GameCanvas: React.FC = () => {
   const [showExitConfirm, setShowExitConfirm] = useState(false);
   
   const [currentTask, setCurrentTask] = useState<CognitiveTask>({ instruction: "Collect BLUE", targetColor: "#00BFFF" });
+  
+
+  //add feedback 
+  const [feedback, setFeedback] = useState<{ text: string; color: string } | null>(null);
 
   const metricsRef = useRef<ClinicalMetrics>({ accuracy: { correct: 0, total: 0 },
   missed: 0});
