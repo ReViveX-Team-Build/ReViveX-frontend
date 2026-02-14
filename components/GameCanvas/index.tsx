@@ -468,9 +468,11 @@ const collectPearl = (pearl: Pearl) => {
             </div>
         )}
 
-        <button onClick={handleBackClick} style={styles.backBtn}>⬅</button>
-    </div>
-  );
+        <button onClick={handleBackClick} style={styles.backBtn} className="hover:bg-white/20">
+            <RotateCcw size={16} /> <span>EXIT</span>
+        </button>
+        </div>
+    );
 };
 
 // --- STYLES ---
@@ -482,7 +484,8 @@ const styles: { [key: string]: React.CSSProperties } = {
     btnPrimary: { display: 'flex', gap: '10px', alignItems: 'center', padding: '15px 40px', background: '#2DD4BF', color: '#0B1E33', fontWeight: 'bold', fontSize: '18px', borderRadius: '50px', border: 'none', cursor: 'pointer', boxShadow: '0 0 20px rgba(45, 212, 191, 0.5)', transition: 'transform 0.1s' },
     countdown: { position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', fontSize: '8rem', fontWeight: '900', color: '#00FFFF', textShadow: '0 0 50px rgba(0, 255, 255, 0.8)', zIndex: 50, animation: 'pulse 0.5s infinite alternate' },
     modalCard: { background: 'rgba(20, 20, 30, 0.95)', padding: '30px 40px', borderRadius: '20px', border: '1px solid rgba(255, 255, 255, 0.1)', textAlign: 'center', boxShadow: '0 20px 50px rgba(0,0,0,0.5)' },
-    backBtn: { position: 'absolute', top: '20px', left: '20px', background: 'rgba(255, 255, 255, 0.1)', border: '1px solid rgba(255, 255, 255, 0.3)', borderRadius: '50%', width: '50px', height: '50px', cursor: 'pointer', color: 'white', fontSize: '24px', display: 'flex', justifyContent: 'center', alignItems: 'center', backdropFilter: 'blur(4px)', zIndex: 30 }
+    backBtn: { position: 'absolute', top: '20px',  left: '20px', background: 'rgba(255, 255, 255, 0.1)', border: '1px solid rgba(255, 255, 255, 0.2)', padding: '10px 20px',          borderRadius: '30px', cursor: 'pointer', color: 'white', fontSize: '14px', fontWeight: 'bold',display: 'flex', gap: '8px', alignItems: 'center', backdropFilter: 'blur(4px)',  zIndex: 30, transition: 'all 0.2s ease'
+    }
 };
 
 export default GameCanvas;
