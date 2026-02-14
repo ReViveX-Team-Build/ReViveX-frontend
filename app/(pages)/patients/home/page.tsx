@@ -43,25 +43,6 @@ const NavButton: React.FC<NavButtonProps> = ({ icon, label, active = false }) =>
 export default function PatientDashboard() {
   return (
     <div className="flex min-h-screen bg-gray-50">
-      
-      {/* Sidebar Navigation */}
-      <aside className="w-64 bg-[#0B1E33] text-white hidden md:flex flex-col p-6">
-        <div className="flex items-center gap-3 mb-10">
-          <div className="w-8 h-8 bg-teal-500 rounded-lg flex items-center justify-center font-bold text-lg">R</div>
-          <div>
-            <h1 className="text-xl font-bold">ReViveX</h1>
-            <p className="text-xs text-gray-400">Patient Portal</p>
-          </div>
-        </div>
-        <nav className="space-y-2">
-          <NavButton icon={<Home size={18} />} label="Home" active />
-          <NavButton icon={<Gamepad2 size={18} />} label="Therapy Games" />
-          <NavButton icon={<BarChart3 size={18} />} label="My Progress" />
-          <NavButton icon={<Calendar size={18} />} label="Schedule" />
-          <NavButton icon={<Bot size={18} />} label="AI Companion" />
-        </nav>
-      </aside>
-
       {/* Main Content Area */}
       <main className="flex-1 p-8">
         <header className="mb-8">
