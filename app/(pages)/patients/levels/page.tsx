@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { 
     Lock, Play, Activity, Brain, Dumbbell, 
-    LayoutGrid, Zap, TrendingUp 
+    Zap, Calendar, CheckCircle2, Stethoscope, ChevronRight 
 } from 'lucide-react';
 
 // --- TYPES ---
@@ -14,7 +14,18 @@ const LevelsPage = () => {
     const router = useRouter();
     const [activeCategory, setActiveCategory] = useState<Category>('ALL');
 
-    // --- DATA ---
+    // --- MOCK DATA: DOCTOR'S ASSIGNMENT ---
+    // In a real app, you would fetch this from your Firebase/Backend
+    const assignedSession = {
+        title: "Rhythm Reef",
+        levelId: 2,
+        duration: "15 Mins",
+        doctorNote: "Focus on maintaining grip strength during the fast sections.",
+        path: "/game/level-2", // Direct link to the assigned game
+        isCompleted: false
+    };
+
+    // --- DATA: ALL LEVELS ---
     const levels = [
         { 
             id: 1, 
@@ -79,94 +90,154 @@ const LevelsPage = () => {
         : levels.filter(l => l.category === activeCategory);
 
     return (
-        // 1. BACKGROUND: Deep Blue Gradient (Matches Global Theme but Darker)
-        <div className="min-h-screen w-full bg-gradient-to-b from-[#0B1E33] to-[#020c1b] text-white p-8 overflow-hidden relative">
+        <div className="min-h-screen w-full bg-gradient-to-b from-[#0B1E33] to-[#020c1b] text-white p-6 md:p-10 overflow-x-hidden relative">
             
             {/* Ambient Background Glows */}
-            <div className="absolute top-0 left-1/4 w-96 h-96 bg-[#2DD4BF]/10 rounded-full blur-[128px] pointer-events-none" />
-            <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-[#00FFFF]/5 rounded-full blur-[128px] pointer-events-none" />
-
-            {/* 2. HEADER SECTION */}
-            <div className="relative z-10 max-w-7xl mx-auto mb-12 flex flex-col md:flex-row justify-between items-end gap-6">
-                <div>
-                    <h2 className="text-[#2DD4BF] font-bold tracking-widest text-sm uppercase mb-2">Rehabilitation Protocols</h2>
-                    <h1 className="text-5xl md:text-6xl font-black tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-white via-white to-slate-400">
-                        MISSION CONTROL
-                    </h1>
-                </div>
-
-                {/* 3. FILTER PILLS (Replaces Sidebar) */}
-                <div className="flex gap-2 bg-white/5 p-1.5 rounded-2xl backdrop-blur-md border border-white/10">
-                    <FilterTab label="All" active={activeCategory === 'ALL'} onClick={() => setActiveCategory('ALL')} />
-                    <FilterTab label="Motor" active={activeCategory === 'MOTOR'} onClick={() => setActiveCategory('MOTOR')} />
-                    <FilterTab label="Cognitive" active={activeCategory === 'COGNITIVE'} onClick={() => setActiveCategory('COGNITIVE')} />
-                    <FilterTab label="Strength" active={activeCategory === 'STRENGTH'} onClick={() => setActiveCategory('STRENGTH')} />
-                </div>
+            <div className="absolute top-[-20%] left-[10%] w-[500px] h-[500px] bg-[#2DD4BF]/20 rounded-full blur-[150px] pointer-events-none" />
+            
+            {/* --- HEADER --- */}
+            <div className="max-w-7xl mx-auto mb-8">
+                <h1 className="text-4xl md:text-5xl font-black tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-white via-slate-200 to-slate-500 mb-2">
+                    MISSION CONTROL
+                </h1>
+                <p className="text-slate-400 text-lg">Your rehabilitation roadmap.</p>
             </div>
 
-            {/* 4. CARDS GRID */}
-            <div className="relative z-10 max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-fade-in-up">
-                {filteredLevels.map((level, index) => (
-                    <div 
-                        key={level.id}
-                        onClick={() => !level.locked && router.push(level.path)}
-                        className={`
-                            group relative overflow-hidden rounded-[2rem] border transition-all duration-500
-                            ${level.locked 
-                                ? 'border-white/5 bg-white/5 cursor-not-allowed grayscale opacity-60' 
-                                : 'border-white/10 bg-[#112240]/80 hover:border-[#2DD4BF]/50 hover:shadow-[0_0_40px_-10px_rgba(45,212,191,0.3)] cursor-pointer hover:-translate-y-2'
-                            }
-                        `}
-                    >
-                        {/* Card Content Container */}
-                        <div className="p-8 h-full flex flex-col relative z-20">
-                            
-                            {/* Top Row: Number & Difficulty */}
-                            <div className="flex justify-between items-start mb-6">
-                                <span className="text-4xl font-black text-white/10 font-mono">
-                                    0{level.id}
-                                </span>
-                                {level.locked ? (
-                                    <div className="bg-white/5 px-3 py-1 rounded-full flex items-center gap-1.5 text-xs font-bold text-slate-400 border border-white/10">
-                                        <Lock size={12} /> LOCKED
-                                    </div>
-                                ) : (
-                                    <div className={`px-3 py-1 rounded-full text-xs font-bold border border-white/10 bg-white/5 ${level.color}`}>
-                                        {level.difficulty.toUpperCase()}
-                                    </div>
-                                )}
+            <div className="max-w-7xl mx-auto flex flex-col gap-12">
+                
+                {/* --- 1. HERO SECTION: THE DOCTOR'S ASSIGNMENT --- */}
+                {/* This is the "Decorated" Card you requested */}
+                <div className="relative group w-full rounded-[2.5rem] border border-[#2DD4BF]/30 bg-gradient-to-r from-[#0f1f38] to-[#0B1E33] p-1 overflow-hidden shadow-[0_0_50px_-10px_rgba(45,212,191,0.15)]">
+                    
+                    {/* Glowing Border Animation */}
+                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-[#2DD4BF]/20 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000 pointer-events-none" />
+
+                    <div className="relative bg-[#0B1E33]/80 backdrop-blur-xl rounded-[2.3rem] p-8 md:p-10 flex flex-col md:flex-row items-center justify-between gap-8">
+                        
+                        {/* Left Info */}
+                        <div className="flex-1 space-y-4">
+                            <div className="flex items-center gap-3">
+                                <div className="bg-[#2DD4BF] text-[#0B1E33] px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-widest flex items-center gap-2 animate-pulse">
+                                    <div className="w-2 h-2 bg-[#0B1E33] rounded-full" />
+                                    Assigned For Today
+                                </div>
+                                <div className="text-slate-400 text-sm flex items-center gap-2">
+                                    <Calendar size={14} /> {new Date().toLocaleDateString()}
+                                </div>
                             </div>
 
-                            {/* Middle: Title & Desc */}
-                            <div className="mb-8">
-                                <h3 className="text-2xl font-bold text-white mb-2 group-hover:text-[#2DD4BF] transition-colors duration-300">
-                                    {level.title}
-                                </h3>
-                                <p className="text-slate-400 text-sm leading-relaxed">
-                                    {level.desc}
+                            <div>
+                                <h2 className="text-3xl md:text-4xl font-bold text-white mb-2">
+                                    {assignedSession.title} <span className="text-[#2DD4BF]">Protocol</span>
+                                </h2>
+                                <p className="text-slate-300 text-lg max-w-xl leading-relaxed flex items-start gap-2">
+                                    <Stethoscope className="text-[#2DD4BF] mt-1 shrink-0" size={18} />
+                                    <span>
+                                        <span className="text-[#2DD4BF] font-bold">Dr. Note:</span> "{assignedSession.doctorNote}"
+                                    </span>
                                 </p>
                             </div>
 
-                            {/* Bottom: Action Button */}
-                            <div className="mt-auto">
-                                {!level.locked ? (
-                                    <button className="w-full py-4 rounded-xl bg-[#2DD4BF] text-[#0B1E33] font-bold text-sm tracking-wide flex items-center justify-center gap-2 group-hover:scale-[1.02] transition-transform duration-300 shadow-lg shadow-[#2DD4BF]/20">
-                                        <Play size={18} fill="currentColor" /> START SESSION
-                                    </button>
-                                ) : (
-                                    <div className="w-full py-4 rounded-xl border border-dashed border-white/10 text-white/20 font-bold text-sm text-center">
-                                        COMPLETE LEVEL {level.id - 1} TO UNLOCK
-                                    </div>
-                                )}
+                            <div className="flex gap-4 pt-2">
+                                <div className="bg-white/5 border border-white/10 px-4 py-2 rounded-xl text-sm text-slate-300 flex items-center gap-2">
+                                    <Activity size={16} className="text-yellow-400" />
+                                    Target: {assignedSession.duration}
+                                </div>
+                                <div className="bg-white/5 border border-white/10 px-4 py-2 rounded-xl text-sm text-slate-300 flex items-center gap-2">
+                                    <Brain size={16} className="text-purple-400" />
+                                    Focus: Timing
+                                </div>
                             </div>
                         </div>
 
-                        {/* Hover Gradient Overlay */}
-                        {!level.locked && (
-                            <div className="absolute inset-0 bg-gradient-to-t from-[#2DD4BF]/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 z-10" />
-                        )}
+                        {/* Right Action Button */}
+                        <div className="shrink-0 w-full md:w-auto">
+                            <button 
+                                onClick={() => router.push(assignedSession.path)}
+                                className="relative w-full md:w-64 h-20 bg-gradient-to-r from-[#2DD4BF] to-[#0ea5e9] rounded-2xl flex items-center justify-center gap-4 text-[#0B1E33] font-black text-xl tracking-wide group hover:scale-105 active:scale-95 transition-all duration-300 shadow-[0_0_40px_rgba(45,212,191,0.4)] hover:shadow-[0_0_60px_rgba(45,212,191,0.6)]"
+                            >
+                                <Play fill="currentColor" size={24} />
+                                START SESSION
+                                
+                                {/* Inner sheen effect */}
+                                <div className="absolute inset-0 bg-white/20 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity" />
+                            </button>
+                            <p className="text-center text-slate-500 text-xs mt-3 uppercase tracking-wider">
+                                Mandatory Session
+                            </p>
+                        </div>
                     </div>
-                ))}
+                </div>
+
+
+                {/* --- 2. DIVIDER & FILTERS --- */}
+                <div className="flex flex-col md:flex-row justify-between items-end gap-4 border-b border-white/10 pb-4">
+                    <div>
+                        <h3 className="text-2xl font-bold text-white flex items-center gap-2">
+                            <CheckCircle2 className="text-slate-500" /> 
+                            Module Library
+                        </h3>
+                        <p className="text-slate-400 text-sm">Replay unlocked levels for extra practice.</p>
+                    </div>
+
+                    {/* Filter Pills */}
+                    <div className="flex gap-2 bg-white/5 p-1 rounded-xl backdrop-blur-md">
+                        <FilterTab label="All" active={activeCategory === 'ALL'} onClick={() => setActiveCategory('ALL')} />
+                        <FilterTab label="Motor" active={activeCategory === 'MOTOR'} onClick={() => setActiveCategory('MOTOR')} />
+                        <FilterTab label="Cognitive" active={activeCategory === 'COGNITIVE'} onClick={() => setActiveCategory('COGNITIVE')} />
+                    </div>
+                </div>
+
+
+                {/* --- 3. THE GRID (Manual Selection) --- */}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 pb-20">
+                    {filteredLevels.map((level) => (
+                        <div 
+                            key={level.id}
+                            onClick={() => !level.locked && router.push(level.path)}
+                            className={`
+                                group relative overflow-hidden rounded-[2rem] border transition-all duration-500
+                                ${level.locked 
+                                    ? 'border-white/5 bg-white/5 cursor-not-allowed grayscale opacity-60' 
+                                    : 'border-white/10 bg-[#112240]/50 hover:border-[#2DD4BF]/50 hover:bg-[#112240] hover:shadow-[0_0_30px_-5px_rgba(45,212,191,0.2)] cursor-pointer hover:-translate-y-1'
+                                }
+                            `}
+                        >
+                            <div className="p-8 h-full flex flex-col relative z-20">
+                                <div className="flex justify-between items-start mb-6">
+                                    <span className="text-4xl font-black text-white/10 font-mono">0{level.id}</span>
+                                    {level.locked ? (
+                                        <div className="bg-white/5 px-3 py-1 rounded-full flex items-center gap-1.5 text-xs font-bold text-slate-400 border border-white/10">
+                                            <Lock size={12} /> LOCKED
+                                        </div>
+                                    ) : (
+                                        <div className={`px-3 py-1 rounded-full text-xs font-bold border border-white/10 bg-white/5 ${level.color}`}>
+                                            {level.difficulty}
+                                        </div>
+                                    )}
+                                </div>
+
+                                <div className="mb-8">
+                                    <h3 className="text-xl font-bold text-white mb-2 group-hover:text-[#2DD4BF] transition-colors">
+                                        {level.title}
+                                    </h3>
+                                    <p className="text-slate-400 text-sm leading-relaxed">
+                                        {level.desc}
+                                    </p>
+                                </div>
+
+                                <div className="mt-auto">
+                                    {!level.locked && (
+                                        <button className="w-full py-3 rounded-xl border border-white/10 bg-white/5 text-white font-bold text-sm hover:bg-[#2DD4BF] hover:text-[#0B1E33] hover:border-[#2DD4BF] transition-all flex items-center justify-center gap-2">
+                                            REPLAY LEVEL <ChevronRight size={14} />
+                                        </button>
+                                    )}
+                                </div>
+                            </div>
+                        </div>
+                    ))}
+                </div>
+
             </div>
         </div>
     );
@@ -177,10 +248,10 @@ const FilterTab = ({ label, active, onClick }: { label: string, active: boolean,
     <button
         onClick={onClick}
         className={`
-            px-6 py-2 rounded-xl text-sm font-bold transition-all duration-300
+            px-5 py-2 rounded-lg text-xs font-bold transition-all duration-300
             ${active 
-                ? 'bg-[#2DD4BF] text-[#0B1E33] shadow-lg shadow-[#2DD4BF]/25' 
-                : 'text-slate-400 hover:text-white hover:bg-white/5'
+                ? 'bg-[#2DD4BF] text-[#0B1E33] shadow-lg shadow-[#2DD4BF]/20' 
+                : 'text-slate-400 hover:text-white hover:bg-white/10'
             }
         `}
     >
