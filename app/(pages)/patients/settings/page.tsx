@@ -127,6 +127,62 @@ export default function PatientSettingsPage() {
                         </div>
 
                     </div>
+                    {/* Privacy & Security */}
+                    <div className="bg-white shadow-lg rounded-xl p-6">
+
+                        <h3 className="text-[#0A2E4C] text-lg font-semibold mb-4">
+                            Privacy & Security
+                        </h3>
+
+                        <div className="bg-[#F8F9FA] rounded-lg p-6 space-y-4">
+
+                            <p className="text-sm text-gray-700 leading-relaxed">
+                                Your therapy data is securely stored and protected.
+                                Only you and your assigned clinician have access to your records.
+                                ReviVeX complies with healthcare privacy standards to ensure your information remains confidential.
+                            </p>
+
+                            <button className="border border-[#0A2E4C] text-[#0A2E4C] px-4 py-2 rounded-lg hover:bg-[#0A2E4C]/5">
+                                View Privacy Policy
+                            </button>
+
+                        </div>
+
+                    </div>
+                    {/* Support & Help */}
+                    <div className="bg-white shadow-lg rounded-xl p-6">
+
+                        <h3 className="text-[#0A2E4C] text-lg font-semibold mb-4">
+                            Support & Help
+                        </h3>
+
+                        <div className="bg-[#F8F9FA] rounded-lg p-6 space-y-6">
+
+                            <div>
+                                <p className="text-[#0A2E4C] font-medium">
+                                    Contact Support
+                                </p>
+                                <p className="text-sm text-gray-600 mt-1">
+                                    support@revivex.com
+                                </p>
+                                <p className="text-sm text-gray-600">
+                                    1-800-REVIVEX
+                                </p>
+                            </div>
+
+                            <div className="grid gap-3 sm:grid-cols-2">
+                                <button className="border border-[#0A2E4C] text-[#0A2E4C] py-2 rounded-lg hover:bg-[#0A2E4C]/5">
+                                    Help Center
+                                </button>
+                                <button className="border border-[#0A2E4C] text-[#0A2E4C] py-2 rounded-lg hover:bg-[#0A2E4C]/5">
+                                    Report an Issue
+                                </button>
+                            </div>
+
+                        </div>
+
+                    </div>
+
 
                 </div>
 
