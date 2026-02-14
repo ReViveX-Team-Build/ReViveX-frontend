@@ -52,10 +52,9 @@ const GameCanvas: React.FC = () => {
   const [showExitConfirm, setShowExitConfirm] = useState(false);
   
   const [currentTask, setCurrentTask] = useState<CognitiveTask>({ instruction: "Collect BLUE", targetColor: "#00BFFF" });
-  
 
-  //add feedback 
   const [feedback, setFeedback] = useState<{ text: string; color: string } | null>(null);
+
 
   const metricsRef = useRef<ClinicalMetrics>({ accuracy: { correct: 0, total: 0 },
   missed: 0});
@@ -254,6 +253,15 @@ for (let i = particlesRef.current.length - 1; i >= 0; i--) {
       pearlsRef.current.push(new Pearl(startX, h * 0.3, isTopCorrect ? currentTask.targetColor : wrongColor, isTopCorrect));
       pearlsRef.current.push(new Pearl(startX, h * 0.7, !isTopCorrect ? currentTask.targetColor : wrongColor, !isTopCorrect));
   };
+
+  const triggerFeedback = (text: string, color: string) => {
+    setFeedback({ text, color });
+
+    setTimeout(() => {
+        setFeedback(null);
+    }, 2000);
+};
+
 
   const collectPearl = (pearl: Pearl) => {
       pearl.collected = true;
