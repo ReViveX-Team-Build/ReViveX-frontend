@@ -108,46 +108,59 @@ export class Player {
         this.y += this.velocity;
 
         // --- 2. BOUNDARY LOGIC (TIMING) ---
-        const waterSurface = 60; 
+        const waterLevel = this.gameHeight * 0.38; 
         const floorLevel = this.gameHeight - sandHeight - this.radius;
+        const ceilingLimit = this.radius; // The absolute top of the screen
 
-        // A. CEILING ZONE
-        if (this.y < waterSurface) {
-            this.y = waterSurface;
-            this.velocity = 0;
+        / A. AIR ZONE (Anytime fish is above water)
+        if (this.y < waterLevel) {
+            // Increment Timer because we are out of water
             this.surfaceTime += deltaTime;
             this.floorTime = 0; 
             
+            // Visual State: "hit_ceiling" triggers the sunglasses/warning
             // Fail ONLY after 5 seconds
             if (this.surfaceTime > this.maxSafeTime) {
                 this.status = "hit_ceiling";
             }
-            this.targetRotation = -0.2;
+            
+            // Hard Stop at Top of Screen (So you can't fly off canvas)
+            if (this.y < ceilingLimit) {
+                this.y = ceilingLimit;
+                this.velocity = 0;
+            }
+            
+            this.targetRotation = -0.3; // Tilt up slightly
         } 
-        // B. FLOOR ZONE
+        
+        // B. FLOOR ZONE (Touching Sand)
         else if (this.y > floorLevel) {
             this.y = floorLevel;
             this.velocity = 0;
+            
+            // Increment Floor Timer
             this.floorTime += deltaTime;
             this.surfaceTime = 0; 
             
-            // Fail ONLY after 5 seconds
             if (this.floorTime > this.maxSafeTime) {
                 this.status = "hit_floor";
             }
             this.targetRotation = 0.1;
         } 
-        // C. SAFE ZONE
+        
+        // C. SAFE ZONE (Swimming in Water)
         else {
             this.floorTime = 0; 
             this.surfaceTime = 0;
             this.status = "swimming";
+            
+            // Smooth rotation based on movement
             this.targetRotation = this.velocity * 0.1;
         }
 
         this.rotation += (this.targetRotation - this.rotation) * 0.1;
     }
-
+    
     draw(ctx: CanvasRenderingContext2D, nightFactor: number): void {
         ctx.save();
         ctx.translate(this.x, this.y);
