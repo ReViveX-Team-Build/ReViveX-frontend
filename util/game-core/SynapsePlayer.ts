@@ -102,7 +102,7 @@ export class Player {
                  
                  particles.push(new Particle(tailX, tailY, pressureRatio, true));
             }
-            
+
         } else {
             this.velocity += this.weight;
         }
@@ -215,19 +215,6 @@ export class Player {
         if(isDangerPhase){
             ctx.save();
             ctx.rotate(-this.rotation); // Keep text upright
-
-            ctx.shadowBlur = 10;
-            ctx.shadowColor = "red";
-            ctx.fillStyle = "white";
-            ctx.font = "bold 30px Arial";
-            ctx.fillText("!", -5, -45); // Floating above fish
-            
-            // Optional: Draw a small warning circle behind the "!"
-            ctx.strokeStyle = "red";
-            ctx.lineWidth = 2;
-            ctx.beginPath();
-            ctx.arc(2, -55, 15, 0, Math.PI*2);
-            ctx.stroke();
             
             ctx.restore();
         }
