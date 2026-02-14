@@ -193,16 +193,27 @@ export class Player {
             ctx.drawImage(this.image, -size/2, -size/2, size, size);
 
             // APPLY RED TINT
-            if ( isRedPhase){
+            // ORGANIC RED PULSE (No Text needed)
+            if (isRedPhase) {
                 ctx.save();
-                ctx.globalCompositeOperation = "source-atop"; //only draw on top of exixting pixels
+                ctx.globalCompositeOperation = "source-atop"; // Paints ONLY on the fish pixels
 
-                const opacity = isDangerPhase ? 0.6 :0.3;
-                ctx.fillStyle = `rgba(255,0,0,${opacity})`;
+                // Pulse Calculation: Oscillates between 0.3 and 0.6 opacity quickly
+                const time = Date.now() * 0.01; 
+                const pulse = (Math.sin(time) + 1) / 2; // 0.0 to 1.0
+                
+                // Base opacity increases if in danger phase
+                const baseOpacity = isDangerPhase ? 0.5 : 0.2;
+                const finalOpacity = baseOpacity + (pulse * 0.3);
+
+                // Use a "Hot" Red/Orange 
+                ctx.fillStyle = `rgba(255, 60, 60, ${finalOpacity})`;
+                
+                // Draw the tint
                 ctx.fillRect(-size/2, -size/2, size, size);
                 ctx.restore();
-
             }
+
         } else{
             ctx.fillStyle = isRedPhase ? "red": "FFD700";
             ctx.beginPath();
