@@ -16,6 +16,7 @@ type CountdownValue = number | "GO!" | null;
 
 interface ClinicalMetrics {
   accuracy: { correct: number; total: number };
+  missed: number;
 }
 
 const GameCanvas: React.FC = () => {
@@ -52,7 +53,8 @@ const GameCanvas: React.FC = () => {
   
   const [currentTask, setCurrentTask] = useState<CognitiveTask>({ instruction: "Collect BLUE", targetColor: "#00BFFF" });
 
-  const metricsRef = useRef<ClinicalMetrics>({ accuracy: { correct: 0, total: 0 } });
+  const metricsRef = useRef<ClinicalMetrics>({ accuracy: { correct: 0, total: 0 },
+  missed: 0});
   const startTimeRef = useRef<number>(0);
   const lastFrameRef = useRef<number>(0);
   const countdownTimer = useRef<NodeJS.Timeout | null>(null);
