@@ -411,25 +411,44 @@ const collectPearl = (pearl: Pearl) => {
             </div>
         )}
 
-        {/* --- 3. HUD (Score & Streak) --- */}
         {uiState === "PLAYING" && (
-            <div className="absolute top-6 right-6 flex gap-4 pointer-events-none">
-                {/* Streak Counter */}
-                <div className={`flex flex-col items-center justify-center bg-[#0B1E33]/80 backdrop-blur border border-white/10 px-4 py-2 rounded-xl transition-all ${streak > 5 ? 'border-yellow-400 shadow-[0_0_20px_rgba(250,204,21,0.4)]' : ''}`}>
-                    <span className="text-[10px] text-gray-400 uppercase tracking-wider font-bold">Streak</span>
-                    <div className="flex items-center gap-1">
-                        <Zap size={20} className={streak > 5 ? "text-yellow-400 fill-yellow-400 animate-pulse" : "text-gray-500"} />
-                        <span className={`text-2xl font-black ${streak > 5 ? 'text-yellow-400' : 'text-white'}`}>{streak}</span>
-                    </div>
-                </div>
+    <>
+        {/* Top Center HUD */}
+        <div className="absolute top-4 left-1/2 -translate-x-1/2 flex gap-4 pointer-events-none z-30">
 
-                {/* Score Counter */}
-                <div className="flex flex-col items-end justify-center bg-[#0B1E33]/80 backdrop-blur border border-[#2DD4BF]/30 px-6 py-2 rounded-xl shadow-[0_0_20px_rgba(45,212,191,0.2)]">
-                    <span className="text-[10px] text-[#2DD4BF] uppercase tracking-wider font-bold">Current Score</span>
-                    <span className="text-3xl font-black text-white font-mono">{score.toString().padStart(4, '0')}</span>
+            {/* Score Pill */}
+            <div className="bg-[#0B1E33]/60 backdrop-blur-md border border-[#2DD4BF]/30 px-6 py-2 rounded-full shadow-lg flex flex-col items-center">
+                <span className="text-[10px] text-[#2DD4BF] uppercase font-bold tracking-widest">Score</span>
+                <span className="text-2xl font-mono font-black text-white leading-none">
+                    {score.toString().padStart(4, '0')}
+                </span>
+            </div>
+
+            {/* Streak Pill */}
+            <div className={`bg-[#0B1E33]/60 backdrop-blur-md border px-4 py-2 rounded-full shadow-lg flex flex-col items-center transition-colors ${streak > 5 ? 'border-yellow-400/60' : 'border-white/10'}`}>
+                <span className="text-[10px] text-gray-400 uppercase font-bold tracking-widest">Streak</span>
+                <div className="flex items-center gap-1 leading-none">
+                    <Zap size={16} className={streak > 5 ? "text-yellow-400 fill-yellow-400" : "text-gray-500"} />
+                    <span className={`text-2xl font-black ${streak > 5 ? 'text-yellow-400' : 'text-white'}`}>
+                        {streak}
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        {/* Floating Feedback Message */}
+        {feedback && (
+            <div className="absolute top-24 left-1/2 -translate-x-1/2 animate-bounce z-40">
+                <div 
+                    className="px-6 py-2 rounded-full font-bold text-lg shadow-[0_0_20px_rgba(0,0,0,0.5)] border border-white/20 backdrop-blur-md"
+                    style={{ backgroundColor: 'rgba(11, 30, 51, 0.9)', color: feedback.color }}
+                >
+                    {feedback.text}
                 </div>
             </div>
         )}
+    </>
+)}
 
         {/* --- 4. COUNTDOWN --- */}
         {uiCountdown !== null && (
