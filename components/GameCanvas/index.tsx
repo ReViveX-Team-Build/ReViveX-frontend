@@ -2,7 +2,7 @@
 
 import React, { useRef, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Play, RotateCcw, Zap, AlertCircle, Hand } from "lucide-react"; 
+import { Play, RotateCcw, Zap,Hand } from "lucide-react";
 
 // Imports
 import { Player } from "../../util/game-core/SynapsePlayer";
