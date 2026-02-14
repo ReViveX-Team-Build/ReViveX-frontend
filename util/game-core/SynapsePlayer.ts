@@ -80,15 +80,29 @@ export class Player {
             if (this.velocity < this.maxUpwardSpeed) this.velocity = this.maxUpwardSpeed;
 
             // Biofeedback Bubbles
-            const pressureRatio = Math.min(1, Math.abs(this.velocity) / 6);
+            // 1. Calculate Pressure (0.0 to 1.0)
+            const pressureRatio = Math.min(1, Math.abs(this.velocity) / 7);
             this.totalForce += pressureRatio;
 
-            if (Math.random() > 0.4) {
+            // 2. Determine Bubble Count (Juice!)
+            // Low pressure = low chance (0 or 1 bubble)
+            // High pressure = spawn 2-3 bubbles at once
+            let bubbleCount = 0;
+            if (Math.random() < 0.3 + (pressureRatio * 0.5)) {
+                bubbleCount = 1;
+                if (pressureRatio > 0.8) bubbleCount = Math.floor(Math.random() * 3) + 1; // Burst!
+            }
+
+            // 3. Spawn the Bubbles
+            for (let i = 0; i < bubbleCount; i++) {
                  const angle = this.rotation;
-                 const tailX = this.x - Math.cos(angle) * 25;
-                 const tailY = this.y - Math.sin(angle) * 25;
+                 // Add randomness to tail position so they don't form a straight line
+                 const tailX = (this.x - Math.cos(angle) * 25) + (Math.random() * 5 - 2.5);
+                 const tailY = (this.y - Math.sin(angle) * 25) + (Math.random() * 5 - 2.5);
+                 
                  particles.push(new Particle(tailX, tailY, pressureRatio, true));
             }
+            
         } else {
             this.velocity += this.weight;
         }
