@@ -67,7 +67,6 @@ export class Player {
         return false;
     }
 
-    //  Added 'nightFactor' t
     update(inputActive: boolean, deltaTime: number, sandHeight: number, particles: Particle[], nightFactor: number): void {
         if (this.isDead) return;
 
@@ -76,30 +75,14 @@ export class Player {
             this.velocity += this.buoyancy;
             if (this.velocity < this.maxUpwardSpeed) this.velocity = this.maxUpwardSpeed;
 
-            // Biofeedback Bubbles
-            // 1. Calculate Pressure (0.0 to 1.0)
-            const pressureRatio = Math.min(1, Math.abs(this.velocity) / 7);
-            this.totalForce += pressureRatio;
-
-            // 2. Determine Bubble Count (Juice!)
-            // Low pressure = low chance (0 or 1 bubble)
-            // High pressure = spawn 2-3 bubbles at once
-            let bubbleCount = 0;
-            if (Math.random() < 0.3 + (pressureRatio * 0.5)) {
-                bubbleCount = 1;
-                if (pressureRatio > 0.8) bubbleCount = Math.floor(Math.random() * 3) + 1; // Burst!
-            }
-
-            // 3. Spawn the Bubbles
-            for (let i = 0; i < bubbleCount; i++) {
+            // Biofeedback Bubbles (Juice!)
+            const pressureRatio = Math.min(1, Math.abs(this.velocity) / 6);
+            if (Math.random() > 0.4) {
                  const angle = this.rotation;
-                 // Add randomness to tail position so they don't form a straight line
-                 const tailX = (this.x - Math.cos(angle) * 25) + (Math.random() * 5 - 2.5);
-                 const tailY = (this.y - Math.sin(angle) * 25) + (Math.random() * 5 - 2.5);
-                 
+                 const tailX = this.x - Math.cos(angle) * 25;
+                 const tailY = this.y - Math.sin(angle) * 25;
                  particles.push(new Particle(tailX, tailY, pressureRatio, true));
             }
-
         } else {
             this.velocity += this.weight;
         }
@@ -107,7 +90,7 @@ export class Player {
         this.velocity *= 0.96; 
         this.y += this.velocity;
 
-        // --- 2. BOUNDARY LOGIC (TIMED 5 SECONDS) ---
+        // --- 2. BOUNDARY LOGIC (The 2-Second Safe Zone) ---
         const waterSurface = 60; 
         const floorLevel = this.gameHeight - sandHeight - this.radius;
 
@@ -116,15 +99,13 @@ export class Player {
             this.y = waterSurface;
             this.velocity = 0;
             
-            //  Increment Timer
+            // Increment Surface Timer
             this.surfaceTime += deltaTime;
-            this.floorTime = 0; // Reset floor timer
+            this.floorTime = 0; 
             
             // Fail ONLY after 5 seconds
             if (this.surfaceTime > this.maxSafeTime) {
                 this.status = "hit_ceiling";
-            } else {
-                this.status = "swimming"; // Warning state handled in draw()
             }
             this.targetRotation = -0.2;
         } 
@@ -133,19 +114,17 @@ export class Player {
             this.y = floorLevel;
             this.velocity = 0;
             
-            // NEW: Increment Timer
+            // Increment Floor Timer
             this.floorTime += deltaTime;
             this.surfaceTime = 0; 
             
             // Fail ONLY after 5 seconds
             if (this.floorTime > this.maxSafeTime) {
                 this.status = "hit_floor";
-            } else {
-                this.status = "swimming";
             }
             this.targetRotation = 0.1;
         } 
-        // C. SAFE ZONE
+        // C. SAFE ZONE (Swimming)
         else {
             this.floorTime = 0; 
             this.surfaceTime = 0;
@@ -155,7 +134,7 @@ export class Player {
 
         this.rotation += (this.targetRotation - this.rotation) * 0.1;
     }
-
+    
     //  Helper for Menu Animation
     hover(time: number): void {
         this.y = (this.gameHeight / 2) + Math.sin(time * 0.002) * 30;
