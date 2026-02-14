@@ -22,22 +22,19 @@ export class Player {
     targetRotation: number;
 
     // PHYSICS
-    velocity: number; 
+    velocity: number;
     weight: number = 0.18;
     buoyancy: number = -2.2;
     maxUpwardSpeed: number = -7;
 
-    // Timers for the 5-Second Rule
+    // TIMERS (Crucial for the 2-second safe zone)
     surfaceTime: number = 0; 
     floorTime: number = 0;   
-    maxSafeTime: number = 5000; // 5 Seconds Grace Period
+    maxSafeTime: number = 5000; // 5 Seconds Total before fail
+    warnTime: number = 2000;    // 2 Seconds Safe Zone (No red tint before this)
     
     isDead: boolean = false;
-    deathReason: DeathReason = "";
     status: PlayerStatus = "swimming";
-
-    // METRICS
-    totalForce: number = 0; 
 
     constructor(gameWidth: number, gameHeight: number) {
         this.gameWidth = gameWidth;
@@ -50,9 +47,9 @@ export class Player {
         this.image.src = "/images/fish.png"; 
         this.rotation = 0;
         this.targetRotation = 0;
-        this.velocity = 0; // Initialize velocity
+        this.velocity = 0; 
     }
-
+    
     checkCollision(obstacles: Obstacle[]): boolean {
         if (!obstacles) return false;
         for (let i = 0; i < obstacles.length; i++) {
