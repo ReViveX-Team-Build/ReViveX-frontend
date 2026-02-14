@@ -206,17 +206,31 @@ const GameCanvas: React.FC = () => {
     }
 
     // --- 3. DRAW PARTICLES & PEARLS ---
-    pearlsRef.current.forEach(p => {
-        if (physicsActive) p.update(4); 
-        p.draw(ctx);
-    });
-    
-    for (let i = particlesRef.current.length - 1; i >= 0; i--) {
-        const p = particlesRef.current[i];
-        if (physicsActive) p.update();
-        p.draw(ctx);
-        if (p.markedForDeletion) particlesRef.current.splice(i, 1);
+    // PEARLS LOOP (With Cleanup & Missed Tracking)
+for (let i = pearlsRef.current.length - 1; i >= 0; i--) {
+    const p = pearlsRef.current[i];
+    if (physicsActive) p.update(4); // Move pearl
+    p.draw(ctx);
+
+    // CHECK: Did it go off screen?
+    if (p.markedForDeletion) {
+        // If it was a TARGET (Blue) and we didn't collect it -> It's a Miss
+        if (!p.collected && p.isTarget) {
+            metricsRef.current.missed++;
+            // Optional: Flash a small "Missed" text or sound here later
+        }
+        // Remove from array to save memory
+        pearlsRef.current.splice(i, 1);
     }
+}
+
+// PARTICLES LOOP
+for (let i = particlesRef.current.length - 1; i >= 0; i--) {
+    const p = particlesRef.current[i];
+    if (physicsActive) p.update();
+    p.draw(ctx);
+    if (p.markedForDeletion) particlesRef.current.splice(i, 1);
+}
 
     // --- 4. TINT (Depth Effect) ---
     ctx.fillStyle = "rgba(0, 20, 40, 0.12)";
