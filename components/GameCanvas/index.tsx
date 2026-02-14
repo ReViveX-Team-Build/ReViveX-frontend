@@ -262,33 +262,45 @@ for (let i = particlesRef.current.length - 1; i >= 0; i--) {
     }, 2000);
 };
 
+const collectPearl = (pearl: Pearl) => {
+    pearl.collected = true;
+    metricsRef.current.accuracy.total++;
 
-  const collectPearl = (pearl: Pearl) => {
-      pearl.collected = true;
-      metricsRef.current.accuracy.total++;
-      
-      if (pearl.isTarget) {
-          // --- GOOD PEARL ---
-          metricsRef.current.accuracy.correct++;
-          setScore(prev => prev + 100); 
-          setStreak(prev => prev + 1); // Increase Streak
-          
-          // Teal Particles (Success)
-          for(let i=0; i<8; i++) particlesRef.current.push(new Particle(pearl.x, pearl.y, 1, true));
-      
-      } else {
-          // --- BAD PEARL (The Red Logic) ---
-          setScore(prev => Math.max(0, prev - 50)); // Penalty
-          setStreak(0); // Reset Streak (Ouch!)
-          
-          // Red Particles (Explosion)
-          for(let i=0; i<12; i++) {
-              const p = new Particle(pearl.x, pearl.y, 1.5, true);
-              p.color = "rgba(255, 69, 0, 0.8)"; // Override color to Red
-              particlesRef.current.push(p);
-          }
-      }
-  };
+    if (pearl.isTarget) {
+        // --- GOOD PEARL ---
+        metricsRef.current.accuracy.correct++;
+        setScore(prev => prev + 100); 
+
+        setStreak(prev => {
+            const newStreak = prev + 1;
+
+            if (newStreak % 5 === 0) {
+                triggerFeedback(`${newStreak} Streak! Incredible! 🔥`, "#FFD700");
+            } else if (newStreak === 3) {
+                triggerFeedback("Great Rhythm!", "#2DD4BF");
+            }
+
+            return newStreak;
+        });
+
+        for (let i = 0; i < 8; i++) {
+            particlesRef.current.push(new Particle(pearl.x, pearl.y, 1, true));
+        }
+
+    } else {
+        // --- BAD PEARL ---
+        setScore(prev => Math.max(0, prev - 50));
+        setStreak(0);
+
+        triggerFeedback("Oops! Focus on Blue!", "#FF6B6B");
+
+        for (let i = 0; i < 12; i++) {
+            const p = new Particle(pearl.x, pearl.y, 1.5, true);
+            p.color = "rgba(255, 69, 0, 0.8)";
+            particlesRef.current.push(p);
+        }
+    }
+};
 
   // --- RESUME ---
   const resumeGame = () => {
