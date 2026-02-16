@@ -20,7 +20,7 @@ export default function Home() {
         </Link>
 
         {/* for now im adding this to go to the doctors page 😀*/}
-        <Link href="/doctor">
+        <Link href="/doctor/home">
           <button className="w-full bg-slate-800 hover:bg-slate-900 text-white font-semibold py-3 rounded-lg shadow transition">
             Doctor Portal
           </button>
