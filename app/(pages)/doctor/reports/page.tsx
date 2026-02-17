@@ -1,5 +1,7 @@
 "use client";
 
+import ReportKPICard from "@/components/DoctorPortal/ReportKPICard";
+
 export default function ReportsPage() {
   return (
     <div className="p-8 max-w-7xl mx-auto space-y-8">
@@ -15,7 +17,34 @@ export default function ReportsPage() {
         </div>
       </div>
 
-      {/* Content will go here */}
+      {/* KPI Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <ReportKPICard
+          title="Total Patients"
+          value="147"
+          subtext="+12 this month"
+          icon="👤"
+        />
+        <ReportKPICard
+          title="Avg Adherence"
+          value="84.8%"
+          subtext="+2.3% vs last month"
+          icon="📈"
+        />
+        <ReportKPICard
+          title="Avg Improvement"
+          value="+8.2%"
+          subtext="Grip strength gain"
+          icon="💪"
+        />
+        <ReportKPICard
+          title="Success Rate"
+          value="89%"
+          subtext="Target achievement"
+          icon="🎯"
+        />
+      </div>
+
     </div>
   );
 }
