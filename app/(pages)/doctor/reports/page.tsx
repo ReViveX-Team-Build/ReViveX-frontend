@@ -1,6 +1,7 @@
 "use client";
 
 import ReportKPICard from "@/components/DoctorPortal/ReportKPICard";
+import PatientOutcomesChart from "@/components/DoctorPortal/PatientOutcomesChart";
 
 export default function ReportsPage() {
   return (
@@ -44,7 +45,7 @@ export default function ReportsPage() {
           icon="🎯"
         />
       </div>
-
+      <PatientOutcomesChart />
     </div>
   );
 }
