@@ -2,6 +2,7 @@
 
 import ReportKPICard from "@/components/DoctorPortal/ReportKPICard";
 import PatientOutcomesChart from "@/components/DoctorPortal/PatientOutcomesChart";
+import AdherenceRateChart from "@/components/DoctorPortal/AdherenceRateChart";
 
 export default function ReportsPage() {
   return (
@@ -45,7 +46,11 @@ export default function ReportsPage() {
           icon="🎯"
         />
       </div>
-      <PatientOutcomesChart />
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <PatientOutcomesChart />
+        <AdherenceRateChart />
+      </div>
+
     </div>
   );
 }
