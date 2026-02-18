@@ -117,40 +117,63 @@ const GameCanvas: React.FC = () => {
         alert("Web Serial API not supported. Please use Chrome or Edge.");
         return;
       }
+
       const port = await navigator.serial.requestPort();
-      await port.open({ baudRate: 115200 });
+
+      // Guard: requestPort() can return a port that is already open
+      // (e.g. user re-clicks Connect after a soft disconnect). Only call
+      // open() when the port is not yet open — readable being null is the
+      // reliable signal for that in the Web Serial spec.
+      if (port.readable === null) {
+        await port.open({ baudRate: 115200 });
+      }
+
       serialPortRef.current = port;
 
       // Update BOTH state (for UI) and ref (for game loop)
       setIsConnected(true);
-      isConnectedRef.current = true;   // ← THE FIX
+      isConnectedRef.current = true;
 
+      // Build the decode pipeline AFTER open() resolves so readable is set
       const textDecoder = new TextDecoderStream();
-      port.readable!.pipeTo(textDecoder.writable);
+      port.readable!.pipeTo(textDecoder.writable).catch(() => {
+        // pipeTo rejects when the port is closed — that's expected, ignore it
+      });
       const reader = textDecoder.readable.getReader();
       readerRef.current = reader;
       readSerialData(reader);
-    } catch (err) {
+    } catch (err: unknown) {
+      // User cancelled the port picker — not a real error, skip the alert
+      if (err instanceof Error && err.name === "NotFoundError") return;
       console.error("Serial connection failed:", err);
+      alert("Could not connect to device. Make sure it is plugged in and no other tab is using it.");
     }
   };
 
   const disconnectSerial = async () => {
+    // Mark as disconnected immediately so the game loop stops reading
+    setIsConnected(false);
+    isConnectedRef.current = false;
+    pressureRef.current = 0;
+
     try {
       if (readerRef.current) {
         await readerRef.current.cancel();
+        readerRef.current.releaseLock(); // release lock before port.close()
         readerRef.current = null;
       }
+    } catch (err) {
+      console.error("Error cancelling reader:", err);
+    }
+
+    try {
       if (serialPortRef.current) {
         await serialPortRef.current.close();
         serialPortRef.current = null;
       }
     } catch (err) {
-      console.error("Error disconnecting:", err);
+      console.error("Error closing port:", err);
     }
-    setIsConnected(false);
-    isConnectedRef.current = false;  // ← keep ref in sync
-    pressureRef.current = 0;
   };
 
   /* =================== IOT: READ DATA =================== */
@@ -222,8 +245,26 @@ const GameCanvas: React.FC = () => {
     return () => {
       if (rafRef.current) cancelAnimationFrame(rafRef.current);
       if (countdownTimer.current) clearInterval(countdownTimer.current);
-      if (readerRef.current) readerRef.current.cancel();
-      if (serialPortRef.current) serialPortRef.current.close();
+      // Chain reader cancel → port close so they happen in order.
+      // All errors are swallowed — at unmount the port may already be
+      // closed/cancelled, and we don't want an unhandled rejection
+      // crashing the dev overlay.
+      const cleanup = async () => {
+        try {
+          if (readerRef.current) {
+            await readerRef.current.cancel();
+            readerRef.current.releaseLock(); // MUST release before port.close()
+            readerRef.current = null;
+          }
+        } catch (_) {}
+        try {
+          if (serialPortRef.current) {
+            await serialPortRef.current.close();
+            serialPortRef.current = null;
+          }
+        } catch (_) {}
+      };
+      cleanup();
     };
   }, []);
 
