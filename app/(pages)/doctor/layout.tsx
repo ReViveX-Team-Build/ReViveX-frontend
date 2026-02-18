@@ -1,7 +1,7 @@
 import React from 'react';
 // Ensure these paths match where you saved your components
-import DoctorSidebar from '@/components/doctor/Sidebar'; 
-import DoctorTopbar from '@/components/doctor/Topbar';
+import DoctorSidebar from '@/components/DoctorPortal/Sidebar'; 
+import DoctorTopbar from '@/components/DoctorPortal/Topbar';
 
 export default function DoctorLayout({
   children,
