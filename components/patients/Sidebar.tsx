@@ -5,12 +5,12 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   Home,
-  TrendingUp,   // My Progress
-  CalendarDays, // My Schedule
-  Bot,          // AI Companion
-  MessageCircle,// Doctor Messages
+  TrendingUp,   
+  CalendarDays, 
+  Bot,          
+  MessageCircle,
   Settings,
-  HelpCircle,   // FAQ
+  HelpCircle,   
   LogOut,
   BrainCircuit  
 } from "lucide-react";

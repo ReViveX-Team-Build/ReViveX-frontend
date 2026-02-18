@@ -18,21 +18,21 @@ export default function PatientTopbar() {
         </div>
       </div>
 
-            {/* 2. RIGHT ACTIONS */}
+            
       <div className="flex items-center gap-6">
-              {/* Notifications */}
+            
         <button className="relative p-2 text-gray-500 hover:bg-gray-100 rounded-full transition-colors">
           <Bell size={22} />
           <span className="absolute top-1.5 right-1.5 h-2.5 w-2.5 bg-red-500 rounded-full border-2 border-white"></span>
         </button>
 
-        {/* Divider */}
+        
         <div className="h-8 w-px bg-gray-200"></div>
 
-                {/* Profile Dropdown */}
+                
         <button className="flex items-center gap-3 hover:bg-gray-50 p-2 rounded-xl transition-all group">
           <div className="text-right hidden md:block">
-            <p className="text-sm font-bold text-[#0B1E33] leading-none">John Doe</p>
+            <p className="text-sm font-bold text-[#0B1E33] leading-none">P.B. Silva</p>
             <p className="text-xs text-gray-500 mt-1">Patient ID: RVX-9988</p>
           </div>
           

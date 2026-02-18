@@ -7,9 +7,9 @@ import {
   LayoutDashboard,
   Users,
   CalendarDays,
-  FileText,   // Protocols
-  BarChart2,  // Reports
-  Bot,        // AI
+  FileText,  
+  BarChart2, 
+  Bot,        
   Settings,
   HelpCircle,
   LogOut,
