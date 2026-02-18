@@ -2,8 +2,8 @@
 
 import React, { useState } from 'react';
 // Imports pointing to your existing components
-import Sidebar from '@/components/patients/Sidebar'; 
-import Topbar from '@/components/patients/Topbar';   
+import Sidebar from '@/components/PatientPortal/Sidebar'; 
+import Topbar from '@/components/PatientPortal/Topbar';   
 
 export default function ImmersiveLayout({
   children,
