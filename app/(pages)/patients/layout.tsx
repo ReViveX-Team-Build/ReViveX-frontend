@@ -1,6 +1,6 @@
 import React from 'react';
 import PatientSidebar from '@/components/PatientPortal/Sidebar';
-import PatientTopbar from '@/components/PatientPortal/TopNav';
+import PatientTopbar from '@/components/PatientPortal/Topbar';
 
 export default function PatientLayout({
   children,
