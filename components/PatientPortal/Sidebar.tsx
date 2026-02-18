@@ -1,95 +1,100 @@
 "use client";
 
+import React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   Home,
-  Gamepad2,
-  BarChart3,
-  Calendar,
+  TrendingUp,   
+  CalendarDays, 
+  Bot,          
   MessageCircle,
-  Bot,
-  User,
   Settings,
+  HelpCircle,   
+  LogOut,
+  BrainCircuit  
 } from "lucide-react";
 
-export default function PatientSidebar() {
+const PatientSidebar = () => {
   const pathname = usePathname();
 
-  const linkClass = (path: string) =>
-    `flex items-center gap-3 px-4 py-3 rounded-xl transition ${
-      pathname === path
-        ? "bg-teal-500 text-[#062E2B] font-semibold"
-        : "text-gray-300 hover:bg-white/10"
-    }`;
+  // Navigation Items
+  const navItems = [
+    { icon: <Home size={22} />, label: "Home", href: "/patients/home" },
+    { icon: <TrendingUp size={22} />, label: "My Progress", href: "/patients/progress" },
+    { icon: <CalendarDays size={22} />, label: "My Schedule", href: "/patients/schedule" },
+    { icon: <Bot size={22} />, label: "AI Companion", href: "/patients/ai" },
+    { icon: <MessageCircle size={22} />, label: "Doctor Messages", href: "/patients/messages" },
+  ];
+
+//BOTTOM ISTEMS
+
+const bottomItems = [
+    { icon: <Settings size={20} />, label: "Settings", href: "/patients/settings" },
+    { icon: <HelpCircle size={20} />, label: "FAQ", href: "/patients/faq" },
+  ];
 
   return (
-    <aside className="fixed left-0 top-0 w-72 h-screen bg-[#0B1E33] text-white p-6 flex flex-col">
-      {/* Logo */}
-      <div className="flex items-center gap-3 mb-10">
-        <div className="w-8 h-8 bg-teal-500 rounded-lg flex items-center justify-center font-bold text-lg text-[#062E2B]">
-          R
+    <aside className="h-screen w-72 bg-[#0B1E33] text-white flex flex-col fixed left-0 top-0 border-r border-white/10 shadow-2xl z-50">
+      
+      {/* 1. LOGO AREA */}
+     <div className="p-6 mb-2 flex items-center gap-3">
+        <div className="h-10 w-10 rounded-xl bg-[#2DD4BF] flex items-center justify-center shadow-[0_0_15px_rgba(45,212,191,0.5)]">
+             <BrainCircuit className="text-[#0B1E33] h-6 w-6" />
         </div>
         <div>
-          <h1 className="text-xl font-bold">ReViveX</h1>
-          <p className="text-xs text-gray-400">Patient Portal</p>
+          <h1 className="text-xl font-bold tracking-wide">ReViveX</h1>
+          <p className="text-[10px] text-[#2DD4BF] uppercase tracking-widest font-bold">Patient Portal</p>
         </div>
       </div>
 
-      {/* Navigation */}
-      <nav className="space-y-2">
-        <Link href="/patients/home" className={linkClass("/patients/home")}>
-          <Home size={18} />
-          Home
-        </Link>
-
-        <Link href="/patients/therapy-games" className={linkClass("/patients/therapy-games")}>
-          <Gamepad2 size={18} />
-          Therapy Games
-        </Link>
-
-        <Link
-          href="/patients/progress"
-          className={linkClass("/patients/progress")}>
-          <BarChart3 size={18} />
-          My Progress
-        </Link>
-
-        <Link
-          href="/patients/schedule"
-          className={linkClass("/patients/schedule")}>
-          <Calendar size={18} />
-          Schedule
-        </Link>
-
-        <Link
-          href="/patients/messages"
-          className={linkClass("/patients/messages")}>
-          <MessageCircle size={18} />
-          Messages
-        </Link>
-
-        <Link
-          href="/patients/ai-companion"
-          className={linkClass("/patients/ai-companion")}>
-          <Bot size={18} />
-          AI Companion
-        </Link>
-
-        <Link
-          href="/patients/profile"
-          className={linkClass("/patients/profile")}>
-          <User size={18} />
-          Profile
-        </Link>
-
-        <Link
-          href="/patients/settings"
-          className={linkClass("/patients/settings")}>
-          <Settings size={18} />
-          Settings
-        </Link>
+{/* 2. NAVIGATION MENU */}
+      <nav className="flex-1 px-4 py-4 space-y-2 overflow-y-auto no-scrollbar">
+        <p className="px-4 text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Menu</p>
+        
+        {navItems.map((item) => {
+          const isActive = pathname === item.href || pathname?.startsWith(`${item.href}/`);
+          return (
+            <Link key={item.href} href={item.href}>
+              <div className={`
+                flex items-center gap-4 px-4 py-3.5 rounded-xl transition-all duration-200 group
+                ${isActive 
+                  ? "bg-[#2DD4BF] text-[#0B1E33] font-bold shadow-lg shadow-[#2DD4BF]/20 translate-x-1" 
+                  : "text-gray-400 hover:bg-white/5 hover:text-white"
+                }
+              `}>
+                <span className={isActive ? "text-[#0B1E33]" : "group-hover:text-[#2DD4BF] transition-colors"}>
+                  {item.icon}
+                </span>
+                <span className="text-sm font-medium">{item.label}</span>
+              </div>
+            </Link>
+          );
+        })}
       </nav>
+
+      {/* 3. BOTTOM UTILITIES & LOGOUT */}
+      <div className="p-4 border-t border-white/10 bg-[#081626]">
+        <div className="space-y-1 mb-4">
+            {bottomItems.map((item) => (
+                <Link key={item.href} href={item.href}>
+                <div className="flex items-center gap-4 px-4 py-3 rounded-lg text-gray-400 hover:text-white hover:bg-white/5 transition-colors cursor-pointer">
+                    {item.icon}
+                    <span className="text-sm font-medium">{item.label}</span>
+                </div>
+                </Link>
+            ))}
+        </div>
+
+       <Link href="/">
+          <div className="w-full flex items-center gap-3 px-4 py-3 text-red-400 hover:bg-red-500/10 hover:text-red-300 rounded-lg transition-colors text-sm font-bold bg-red-500/5 border border-red-500/20 cursor-pointer">
+       <LogOut size={18} />
+       <span>Sign Out</span>
+   </div>
+</Link>
+      </div>
     </aside>
   );
-}
+};
+
+export default PatientSidebar;
