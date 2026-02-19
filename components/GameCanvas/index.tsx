@@ -82,10 +82,6 @@ const GAME_CSS = `
     92% { opacity:.6 }
     100%{ top:112%;  opacity:0 }
   }
-  @keyframes pulseRing {
-    0%  { transform:scale(1);   opacity:.5 }
-    100%{ transform:scale(1.6); opacity:0 }
-  }
 `;
 
 // ── PRESSURE COLOUR ───────────────────────────────────────────────────────────
@@ -263,9 +259,16 @@ const GameCanvas: React.FC = () => {
 
         ctx.clearRect(0, 0, c.width, c.height);
 
+        const state       = gsRef.current;
+        const isCounting  = cdRef.current !== null;
+        const physics     = state === 'PLAYING' && !isCounting;
+
+        // ★ CRUCIAL: Set parallax scroll speed based on game state ★
+        const scrollSpeed = physics ? 4.0 : 0.8;
+
         let nf = 0, sandH = 80;
         if (bgRef.current) {
-            nf    = bgRef.current.update(elapsed);
+            nf    = bgRef.current.update(elapsed, delta, scrollSpeed);
             bgRef.current.draw(ctx, nf);
             sandH = bgRef.current.sandHeight;
         }
@@ -274,10 +277,6 @@ const GameCanvas: React.FC = () => {
             grassRef.current.update(playerRef.current.x, playerRef.current.y, delta);
             grassRef.current.draw(ctx);
         }
-
-        const state       = gsRef.current;
-        const isCounting  = cdRef.current !== null;
-        const physics     = state === 'PLAYING' && !isCounting;
 
         if (playerRef.current) {
             if (isConnRef.current && pressRef.current >= DANGER_THRESHOLD && physics) {
@@ -306,7 +305,7 @@ const GameCanvas: React.FC = () => {
 
         for (let i = pearlsRef.current.length-1; i >= 0; i--) {
             const p = pearlsRef.current[i];
-            if (physics) p.update(4);
+            if (physics) p.update(4 + scrollSpeed * 0.5); // pearls move faster with scroll
             p.draw(ctx);
             if (p.markedForDeletion) { if (!p.collected && p.isTarget) metricsRef.current.missed++; pearlsRef.current.splice(i,1); }
         }
