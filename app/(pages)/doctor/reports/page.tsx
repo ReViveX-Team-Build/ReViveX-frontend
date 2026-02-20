@@ -3,6 +3,8 @@
 import ReportKPICard from "@/components/DoctorPortal/ReportKPICard";
 import PatientOutcomesChart from "@/components/DoctorPortal/PatientOutcomesChart";
 import AdherenceRateChart from "@/components/DoctorPortal/AdherenceRateChart";
+import DeviceStatusChart from "@/components/DoctorPortal/DeviceStatusChart";
+import ProgressTrendChart from "@/components/DoctorPortal/ProgressTrendChart";
 
 export default function ReportsPage() {
   return (
@@ -45,11 +47,19 @@ export default function ReportsPage() {
           subtext="Target achievement"
           icon="🎯"
         />
+
       </div>
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <PatientOutcomesChart />
         <AdherenceRateChart />
       </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+  <div className="lg:col-span-2">
+    <ProgressTrendChart />
+  </div>
+  <DeviceStatusChart />
+</div>
 
     </div>
   );
