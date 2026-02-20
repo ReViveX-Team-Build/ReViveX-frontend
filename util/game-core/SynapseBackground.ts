@@ -171,26 +171,32 @@ class CelestialBodies {
 
     draw(ctx: CanvasRenderingContext2D, nf: number, surfY: number, globalT: number) {
         // ── SUN ─────────────────────────────────────────────────────────
-        const SUN_WIN = 0.48; // Sun finishes setting completely at 0.48
+        const SUN_WIN = 0.48;
         if (globalT <= SUN_WIN) {
             const sunProg = clamp(globalT / SUN_WIN, 0, 1);
             const pos = this.arcXY(sunProg, surfY);
-            // fade as disc crosses horizon
-            const dipAlpha = clamp(1 - (pos.y - surfY + 10) / 55, 0, 1);
+            
+            // FIX 1 APPLIED: Slower, smoother horizon fade for the Sun
+            const dipAlpha = clamp(1 - (pos.y - surfY - 10) / 110, 0, 1);
+            
             if (dipAlpha > 0.005) this._drawSun(ctx, pos.x, pos.y, dipAlpha, nf, surfY);
         }
 
         // ── MOON ─────────────────────────────────────────────────────────
-        const MOON_START = 0.48; // FIX: Moon starts rising EXACTLY as the sun vanishes
+        
+        const MOON_START = 0.46; // Slightly before sun fully gone so handoff is seamless
         const MOON_END = 0.97;
-
+        
         if (globalT >= MOON_START && globalT <= MOON_END) {
             const moonProg = clamp((globalT - MOON_START) / (MOON_END - MOON_START), 0, 1);
-            const pos = this.arcXY(1 - moonProg, surfY); // Rises right, sets left
-            const dipAlpha = clamp(1 - (pos.y - surfY + 10) / 55, 0, 1);
+            const pos = this.arcXY(1 - moonProg, surfY);
+
             
-            // Smoothly fade in alpha as it crests the horizon
-            const moonA = dipAlpha * smoothstep(0.40, 0.80, nf); 
+            const dipAlpha = clamp(1 - (pos.y - surfY - 10) / 110, 0, 1);
+            
+            
+            const moonA = dipAlpha * smoothstep(0.0, 0.08, moonProg);
+            
             if (moonA > 0.005) this._drawMoon(ctx, pos.x, pos.y, moonA, surfY, globalT);
         }
     }
