@@ -5,7 +5,7 @@ import {
 } from "recharts";
 
 const data = [
-  { condition: "Stroke",    Declined: 8,  Improved: 65, Stable: 27 },
+  { condition: "Stroke",    Declined: 8,  Improved: 65, Stable: 27 }, 
   { condition: "TBI",       Declined: 6,  Improved: 72, Stable: 22 },
   { condition: "MS",        Declined: 10, Improved: 60, Stable: 30 },
   { condition: "Parkinson's", Declined: 5, Improved: 70, Stable: 25 },
