@@ -172,15 +172,12 @@ class CelestialBodies {
 
     constructor(W:number,H:number){this.W=W;this.H=H;}
 
-    // Convert arc progress [0..1] to canvas XY
-    // Arc is a semi-ellipse; zenith is at 22% of sky height
     private arcXY(prog:number,surfY:number):{x:number,y:number}{
-        const angle=prog*Math.PI; // 0→π
+        const angle=prog*Math.PI; 
         const arcW=this.W*0.76;
-        // Peak height: zenith at 22% of sky from top
         const arcH=surfY*0.78;
         const cx=this.W*0.50;
-        const baseY=surfY-4; // horizon level
+        const baseY=surfY-4; 
         return {
             x:cx+Math.cos(Math.PI-angle)*(arcW/2),
             y:baseY-Math.sin(angle)*arcH,
@@ -188,92 +185,66 @@ class CelestialBodies {
     }
 
     draw(ctx:CanvasRenderingContext2D,nf:number,surfY:number,globalT:number){
-        // Cycle layout (globalT 0→1 = 3 min):
-        //  0.00 → 0.45  sun arc (rises left-horizon → sets right at 0.45)
-        //  0.45 → 0.52  dusk gap — BOTH HIDDEN. Sun is gone, moon hasn't risen.
-        //  0.52 → 0.85  moon arc (rises right → sets left)
-        //  0.85 → 1.00  dawn gap — BOTH HIDDEN.
-
-        // ── SUN ──────────────────────────────────────────────────────────
-        const SUN_START=0.00, SUN_END=0.45, SUN_FADE=0.05;
-        
-        // Allow sun to render until it is fully below the horizon (nf < 1.0)
-        if(globalT <= SUN_END+SUN_FADE && nf < 1.0){
-            const sunProg=clamp((globalT-SUN_START)/(SUN_END-SUN_START),0,1);
-            const pos=this.arcXY(sunProg,surfY);
-            // Smooth fade-in at dawn, fade-out at dusk
-            const fadeIn  = smoothstep(SUN_START, SUN_START+SUN_FADE, globalT);
-            const fadeOut = 1-smoothstep(SUN_END-SUN_FADE, SUN_END, globalT);
-            const a=Math.min(fadeIn,fadeOut);
-            // Extra fade as disc approaches/dips below horizon
-            const dip=clamp(1-Math.max(0,pos.y-surfY+40)/65,0,1);
-            if(a*dip>0.01) this._drawSun(ctx,pos.x,pos.y,a*dip,this.W,this.H,nf,surfY);
+        // ── SUN (0.85 to 0.45) ──────────────────────────────────────────
+        // Sun emerges at 0.85 (dawn) and vanishes completely at exactly 0.45 (sunset)
+        const sunT = (globalT - 0.85 + 1.0) % 1.0; 
+        if (sunT <= 0.60) {
+            const sunProg = sunT / 0.60; // Normalize 0 to 1 over its lifespan
+            const pos = this.arcXY(sunProg, surfY);
+            const dip = clamp(1 - Math.max(0, pos.y - surfY + 40) / 65, 0, 1);
+            
+            if (dip > 0.01) {
+                this._drawSun(ctx, pos.x, pos.y, dip, this.W, this.H, nf, surfY);
+            }
         }
 
-        // ── MOON ─────────────────────────────────────────────────────────
-        const MOON_START=0.52, MOON_END=0.85, MOON_FADE=0.05;
-        
-        // HARD GUARD: Moon waits until globalT is 0.52 (Sun is long gone and sky is dark)
-        if(nf > 0.05 && globalT >= MOON_START-MOON_FADE && globalT <= MOON_END+MOON_FADE){
-            const moonProg=clamp((globalT-MOON_START)/(MOON_END-MOON_START),0,1);
-            // Moon travels the arc in the opposite direction: rises right, sets left
-            const pos=this.arcXY(1-moonProg,surfY);
-            const fadeIn  = smoothstep(MOON_START, MOON_START+MOON_FADE, globalT);
-            const fadeOut = 1-smoothstep(MOON_END-MOON_FADE, MOON_END, globalT);
-            // Also gate alpha by nf: moon alpha can only be 100% when sky is fully dark
-            const nightGate = smoothstep(0.05, 0.20, nf);
-            const a=Math.min(fadeIn,fadeOut)*nightGate;
-            const dip=clamp(1-Math.max(0,pos.y-surfY+30)/52,0,1);
-            if(a*dip>0.01) this._drawMoon(ctx,pos.x,pos.y,a*dip,this.W,this.H,surfY,globalT);
+        // ── MOON (0.46 to 0.84) ─────────────────────────────────────────
+        // Moon appears right after sun sets (0.46) and vanishes right before it rises (0.84)
+        if (globalT >= 0.46 && globalT <= 0.84) {
+            const moonProg = (globalT - 0.46) / 0.38;
+            const pos = this.arcXY(1 - moonProg, surfY); // Rises right, sets left
+            const dip = clamp(1 - Math.max(0, pos.y - surfY + 30) / 52, 0, 1);
+            
+            if (dip > 0.01) {
+                this._drawMoon(ctx, pos.x, pos.y, dip, this.W, this.H, surfY, globalT);
+            }
         }
     }
 
     private _drawSun(ctx:CanvasRenderingContext2D,sx:number,sy:number,a:number,W:number,H:number,nf:number,surfY:number){
         const R=Math.min(W,H)*0.046;
-        // As nf rises (sun setting), shift hue from yellow→orange→red
-        const sunsetT=clamp(nf*2.2,0,1); // 0=noon, 1=full sunset
+        // Curve the sunset value so it stays yellow longer, then quickly shifts to orange at horizon
+        const sunsetT = Math.pow(clamp(nf * 2.0, 0, 1), 1.5); 
         ctx.save(); ctx.globalAlpha=a;
 
-        // Far atmospheric haze — warm at day, deep orange-red at sunset
-        const hazeC0=sunsetT>0.5
-            ?`rgba(255,${Math.round(120-sunsetT*80)},20,${0.28-sunsetT*0.10})`
-            :`rgba(255,${Math.round(210-sunsetT*90)},80,${0.26})`;
-        const haze=ctx.createRadialGradient(sx,sy,R,sx,sy,R*9);
-        haze.addColorStop(0,hazeC0);
-        haze.addColorStop(0.30,`rgba(255,${Math.round(155-sunsetT*80)},${Math.round(30-sunsetT*20)},0.08)`);
-        haze.addColorStop(0.70,`rgba(255,${Math.round(100-sunsetT*60)},0,0.02)`);
-        haze.addColorStop(1,'rgba(255,60,0,0)');
-        ctx.beginPath(); ctx.arc(sx,sy,R*9,0,Math.PI*2); ctx.fillStyle=haze; ctx.fill();
+        // ENHANCED: Massive, soft blooming glow that gets bigger as it sets
+        const hazeR = R * (6 + sunsetT * 6); 
+        const haze = ctx.createRadialGradient(sx, sy, R, sx, sy, hazeR);
+        haze.addColorStop(0, sunsetT > 0.5 ? `rgba(255, 120, 40, ${0.35 - sunsetT*0.1})` : `rgba(255, 230, 120, 0.3)`);
+        haze.addColorStop(0.4, sunsetT > 0.5 ? `rgba(255, 60, 10, ${0.15 - sunsetT*0.05})` : `rgba(255, 190, 60, 0.08)`);
+        haze.addColorStop(1, 'rgba(255, 50, 0, 0)');
+        ctx.beginPath(); ctx.arc(sx, sy, hazeR, 0, Math.PI * 2); ctx.fillStyle = haze; ctx.fill();
 
-        // Inner corona — yellowy at noon, orange at dusk
-        const corona=ctx.createRadialGradient(sx,sy,0,sx,sy,R*3.2);
-        corona.addColorStop(0,`rgba(255,${Math.round(252-sunsetT*80)},${Math.round(160-sunsetT*160)},0.65)`);
-        corona.addColorStop(0.45,`rgba(255,${Math.round(220-sunsetT*100)},${Math.round(60-sunsetT*60)},0.25)`);
-        corona.addColorStop(1,'rgba(255,140,0,0)');
-        ctx.beginPath(); ctx.arc(sx,sy,R*3.2,0,Math.PI*2); ctx.fillStyle=corona; ctx.fill();
+        // ENHANCED: Solid Sun Disc (keeps a hot white/yellow core so it doesn't look muddy)
+        const disc = ctx.createRadialGradient(sx - R*0.2, sy - R*0.2, 0, sx, sy, R);
+        disc.addColorStop(0, '#FFFFFF'); 
+        disc.addColorStop(0.3, sunsetT > 0.3 ? '#FFD060' : '#FFF0A0');
+        disc.addColorStop(1, sunsetT > 0.6 ? '#FF4500' : '#FFB000'); 
 
-        // Disc — clearly yellow/golden at noon, deep orange-red as it sets
-        const discCtr=sunsetT>0.6?'#FF6820':'#FFE820';
-        const discEdge=sunsetT>0.6?'#CC2200':'#FF8800';
-        const disc=ctx.createRadialGradient(sx-R*0.28,sy-R*0.26,0,sx,sy,R);
-        disc.addColorStop(0,discCtr);
-        disc.addColorStop(0.50,'#FFC020');
-        disc.addColorStop(1,discEdge);
-        ctx.shadowBlur=55+sunsetT*30; ctx.shadowColor=sunsetT>0.5?'#FF4400':'#FFB800';
-        ctx.beginPath(); ctx.arc(sx,sy,R,0,Math.PI*2); ctx.fillStyle=disc; ctx.fill();
-        ctx.shadowBlur=0;
+        ctx.shadowBlur = 40 + sunsetT * 25; 
+        ctx.shadowColor = sunsetT > 0.5 ? '#FF3300' : '#FFBB00';
+        ctx.beginPath(); ctx.arc(sx, sy, R, 0, Math.PI * 2); ctx.fillStyle = disc; ctx.fill();
+        ctx.shadowBlur = 0;
 
-        // Horizon glow column — only when sun is low (nf > 0.15)
-        if(nf>0.15 && sy>surfY*0.60){
-            const colA=(nf-0.15)*0.25*a;
-            const colG=ctx.createLinearGradient(sx,surfY,sx,surfY+H*0.15);
-            colG.addColorStop(0,`rgba(255,${Math.round(120-sunsetT*70)},0,${colA})`);
-            colG.addColorStop(0.5,`rgba(255,${Math.round(80-sunsetT*50)},0,${colA*0.35})`);
-            colG.addColorStop(1,'rgba(255,60,0,0)');
-            const colW=R*4;
-            ctx.fillStyle=colG; ctx.fillRect(sx-colW,surfY,colW*2,H*0.15);
+        // Water Reflection Glow
+        if (sy > surfY * 0.4 && nf < 0.9) {
+            const colA = a * (1 - nf) * 0.7;
+            const colG = ctx.createLinearGradient(sx, surfY, sx, surfY + H * 0.2);
+            colG.addColorStop(0, `rgba(255, ${Math.round(180 - sunsetT * 100)}, 10, ${colA})`);
+            colG.addColorStop(1, 'rgba(255, 50, 0, 0)');
+            const colW = R * 4.5;
+            ctx.fillStyle = colG; ctx.fillRect(sx - colW, surfY, colW * 2, H * 0.2);
         }
-
         ctx.restore();
     }
 
@@ -281,15 +252,12 @@ class CelestialBodies {
         const R=Math.min(W,H)*0.048;
         ctx.save(); ctx.globalAlpha=a;
 
-        // Atmospheric halo
         const halo=ctx.createRadialGradient(mx,my,R*0.9,mx,my,R*5);
         halo.addColorStop(0,'rgba(200,225,255,0.16)');
         halo.addColorStop(0.5,'rgba(180,210,255,0.05)');
         halo.addColorStop(1,'rgba(160,195,255,0)');
         ctx.beginPath(); ctx.arc(mx,my,R*5,0,Math.PI*2); ctx.fillStyle=halo; ctx.fill();
 
-        // ── Disc: bright white with subtle warm-grey maria ────────────────
-        // NO dark shadow. Bright, beautiful, cartoon-realistic.
         const disc=ctx.createRadialGradient(mx-R*0.20,my-R*0.18,0,mx,my,R);
         disc.addColorStop(0,'#FFFFFF');
         disc.addColorStop(0.45,'#F2F6FF');
@@ -299,7 +267,6 @@ class CelestialBodies {
         ctx.beginPath(); ctx.arc(mx,my,R,0,Math.PI*2); ctx.fillStyle=disc; ctx.fill();
         ctx.shadowBlur=0;
 
-        // Light-grey maria (lunar seas) — subtle patches, NO dark blobs
         ctx.save();
         ctx.beginPath(); ctx.arc(mx,my,R,0,Math.PI*2); ctx.clip();
         const maria=[
@@ -310,7 +277,6 @@ class CelestialBodies {
             {ox:-0.05,oy: 0.35,rx:0.10,ry:0.06,rot:-0.25, a:0.09},
         ];
         for(const m of maria){
-            // Soft radial gradient per maria — light grey, barely visible
             const mg=ctx.createRadialGradient(mx+m.ox*R,my+m.oy*R,0,mx+m.ox*R,my+m.oy*R,m.rx*R);
             mg.addColorStop(0,`rgba(180,195,215,${m.a})`);
             mg.addColorStop(1,'rgba(180,195,215,0)');
@@ -321,14 +287,12 @@ class CelestialBodies {
         }
         ctx.restore();
 
-        // Subtle limb darkening ring (edge gets slightly cooler, not dark)
         const limb=ctx.createRadialGradient(mx,my,R*0.55,mx,my,R);
         limb.addColorStop(0,'rgba(220,235,255,0)');
         limb.addColorStop(1,'rgba(150,185,230,0.18)');
         ctx.beginPath(); ctx.arc(mx,my,R,0,Math.PI*2);
         ctx.fillStyle=limb; ctx.fill();
 
-        // Water reflection
         if(surfY<H*0.92){
             ctx.save(); ctx.globalCompositeOperation='lighter';
             for(let i=0;i<6;i++){
@@ -345,7 +309,6 @@ class CelestialBodies {
             }
             ctx.restore();
         }
-
         ctx.restore();
     }
 }
