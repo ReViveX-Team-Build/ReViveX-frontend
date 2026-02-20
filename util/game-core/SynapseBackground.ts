@@ -352,6 +352,8 @@ class CelestialBodies {
 // ═══════════════════════════════════════════════════════════════════════════
 //  STARS + SHOOTING STARS
 // ═══════════════════════════════════════════════════════════════════════════
+
+
 class Star {
     x:number;y:number;r:number;phase:number;bright:number;rgb:string;
     constructor(W:number,H:number){
@@ -362,9 +364,15 @@ class Star {
         this.rgb=t>0.65?'255,238,200':t>0.35?'255,255,242':'200,218,255';
     }
     draw(ctx:CanvasRenderingContext2D,nf:number,surfY:number){
-        if(this.y>=surfY-2||nf<0.08) return;
+        // FIX: Stars ONLY appear when sky is deeply dark (nf > 0.60)
+        if(this.y>=surfY-2||nf<0.60) return;
+        
+        // Scale alpha so they fade in smoothly after it gets dark
+        const darkFactor = (nf - 0.60) / 0.40;
         const tw=0.55+Math.sin(Date.now()*0.00168+this.phase)*0.45;
-        const a=clamp(tw*this.bright*nf,0,1); if(a<0.01) return;
+        const a=clamp(tw*this.bright*darkFactor,0,1); 
+        if(a<0.01) return;
+
         if(this.r>1.0&&a>0.20){
             ctx.save(); ctx.strokeStyle=`rgba(${this.rgb},${a*0.28})`; ctx.lineWidth=0.5;
             const arm=this.r*3.5;
@@ -394,7 +402,8 @@ class ShootingStar {
         if(this.life<=0||this.y>=surfY-6) this.active=false;
     }
     draw(ctx:CanvasRenderingContext2D,nf:number,surfY:number){
-        if(!this.active||nf<0.28||this.y>=surfY-6) return;
+        // FIX: Shooting stars wait for true darkness (nf > 0.50)
+        if(!this.active||nf<0.50||this.y>=surfY-6) return;
         const p=this.life/this.maxLife;
         const tx=this.x-this.vx*10, ty=Math.min(this.y-this.vy*10,surfY-7);
         ctx.save();
