@@ -181,7 +181,7 @@ class CelestialBodies {
         }
 
         // ── MOON ─────────────────────────────────────────────────────────
-        // Hard guard: only when sky is genuinely dark
+        // only when sky is genuinely dark
         if (nf > 0.60 && globalT > 0.56 && globalT < 0.97) {
             const moonProg = clamp((globalT - 0.56) / (0.97 - 0.56), 0, 1);
             const pos = this.arcXY(1 - moonProg, surfY);
@@ -197,58 +197,41 @@ class CelestialBodies {
         nf: number, surfY: number
     ) {
         const R = Math.min(this.W, this.H) * 0.044;
-        // sunsetT only begins shifting colour when sun is in its FINAL descent
-        // nf hits 1 when sun is at horizon. Delay shift to last 30% of descent.
-        const sunsetT = smoothstep(0.62, 1.0, nf);
 
-        ctx.save(); ctx.globalAlpha = a;
+        ctx.save(); 
+        // Alpha 'a' handles the smooth fade out as it dips below the horizon
+        ctx.globalAlpha = a; 
 
-        // ── Atmospheric bloom — pure radial circle, NO ctx.scale ──────────
-        const bloomR = R * (3.8 + sunsetT * 3.5);
-        const bloom = ctx.createRadialGradient(sx, sy, R * 0.3, sx, sy, bloomR);
-        bloom.addColorStop(0,   `rgba(255,${Math.round(238 - sunsetT * 58)},${Math.round(110 - sunsetT * 100)},0.28)`);
-        bloom.addColorStop(0.4, `rgba(255,${Math.round(200 - sunsetT * 65)},${Math.round(45 - sunsetT * 40)},0.10)`);
-        bloom.addColorStop(0.7, `rgba(255,${Math.round(155 - sunsetT * 45)},10,0.03)`);
-        bloom.addColorStop(1,   'rgba(255,80,0,0)');
+        // ── Atmospheric bloom — pure, soft radial circle  ──
+        const bloomR = R * 4.5;
+        const bloom = ctx.createRadialGradient(sx, sy, R * 0.5, sx, sy, bloomR);
+        bloom.addColorStop(0,   'rgba(255, 230, 100, 0.3)');
+        bloom.addColorStop(0.4, 'rgba(255, 180, 50, 0.1)');
+        bloom.addColorStop(1,   'rgba(255, 120, 0, 0)');
         ctx.beginPath(); ctx.arc(sx, sy, bloomR, 0, Math.PI * 2);
         ctx.fillStyle = bloom; ctx.fill();
 
         // ── Corona ────────────────────────────────────────────────────────
-        const corona = ctx.createRadialGradient(sx, sy, 0, sx, sy, R * 2.6);
-        corona.addColorStop(0,   `rgba(255,${Math.round(252 - sunsetT * 42)},${Math.round(190 - sunsetT * 160)},0.55)`);
-        corona.addColorStop(0.5, `rgba(255,${Math.round(220 - sunsetT * 65)},${Math.round(70 - sunsetT * 60)},0.18)`);
-        corona.addColorStop(1,   'rgba(255,120,0,0)');
-        ctx.beginPath(); ctx.arc(sx, sy, R * 2.6, 0, Math.PI * 2);
+        const corona = ctx.createRadialGradient(sx, sy, R, sx, sy, R * 2.2);
+        corona.addColorStop(0,   'rgba(255, 220, 80, 0.6)');
+        corona.addColorStop(0.6, 'rgba(255, 160, 40, 0.2)');
+        corona.addColorStop(1,   'rgba(255, 100, 0, 0)');
+        ctx.beginPath(); ctx.arc(sx, sy, R * 2.2, 0, Math.PI * 2);
         ctx.fillStyle = corona; ctx.fill();
 
-        // ── Disc — white-hot core → golden → warm amber at dusk only ──────
-        const disc = ctx.createRadialGradient(sx - R * 0.12, sy - R * 0.12, 0, sx, sy, R);
-        disc.addColorStop(0,    '#FFFFFF');
-        disc.addColorStop(0.25, `rgba(255,${Math.round(245 - sunsetT * 38)},${Math.round(175 - sunsetT * 145)},1)`);
-        disc.addColorStop(0.65, `rgba(255,${Math.round(210 - sunsetT * 55)},${Math.round(45 - sunsetT * 38)},1)`);
-        disc.addColorStop(1,    `rgba(255,${Math.round(170 - sunsetT * 45)},0,1)`);
-        ctx.shadowBlur = 24 + sunsetT * 14;
-        ctx.shadowColor = `rgba(255,${Math.round(190 - sunsetT * 65)},20,0.85)`;
+        // ── Disc — Consistent Golden/Yellow Core  ───────────
+        const disc = ctx.createRadialGradient(sx - R * 0.15, sy - R * 0.15, 0, sx, sy, R);
+        disc.addColorStop(0,    '#FFFFFF');      // Hot white center
+        disc.addColorStop(0.4,  '#FFEA70');      // Bright yellow
+        disc.addColorStop(1,    '#FFB800');      // Golden edge
+        
+        ctx.shadowBlur = 30;
+        ctx.shadowColor = 'rgba(255, 180, 0, 0.8)';
         ctx.beginPath(); ctx.arc(sx, sy, R, 0, Math.PI * 2);
         ctx.fillStyle = disc; ctx.fill();
         ctx.shadowBlur = 0;
 
-        // ── Dusk horizon band — VERTICAL LINEAR GRADIENT ONLY ─────────────
-        // This is the key fix: NO ctx.scale, NO ctx.translate+arc tricks.
-        // A pure fillRect with a vertical linear gradient is guaranteed
-        // to produce a smooth fade, never a solid bar.
-        if (sunsetT > 0.04 && sy < surfY + R * 4) {
-            const bandH = Math.min(surfY * 0.32, R * 7) * sunsetT;
-            const bandTop = Math.max(0, surfY - bandH);
-            const hg = ctx.createLinearGradient(0, bandTop, 0, surfY);
-            hg.addColorStop(0,   'rgba(255,120,20,0)');
-            hg.addColorStop(0.5, `rgba(255,${Math.round(138 - sunsetT * 48)},18,${sunsetT * 0.055})`);
-            hg.addColorStop(1,   `rgba(255,${Math.round(155 - sunsetT * 55)},20,${sunsetT * 0.12})`);
-            ctx.fillStyle = hg;
-            // fillRect with globalAlpha already set — no transform needed
-            ctx.fillRect(0, bandTop, this.W, surfY - bandTop);
-        }
-
+        
         ctx.restore();
     }
 
