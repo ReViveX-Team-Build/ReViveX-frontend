@@ -104,7 +104,8 @@ export class Player {
                 this.y = ceilingLimit;
                 this.velocity = 0;
             }
-            this.targetRotation = -0.3;
+            // FIX: Allow physics-based rotation in the air instead of forcing -0.3
+            this.targetRotation = this.velocity * 0.1;
         } 
         // Floor
         else if (this.y > floorLevel) {
@@ -113,7 +114,7 @@ export class Player {
             this.floorTime += deltaTime;
             this.surfaceTime = 0; 
             if (this.floorTime > this.maxSafeTime) this.status = "hit_floor";
-            this.targetRotation = 0.1;
+            this.targetRotation = 0.1; // Slight downward point when resting on bottom
         } 
         // Water
         else {
@@ -123,9 +124,10 @@ export class Player {
             this.targetRotation = this.velocity * 0.1;
         }
 
+        // Smoothly interpolate current rotation to the target rotation
         this.rotation += (this.targetRotation - this.rotation) * 0.1;
     }
-
+    
     draw(ctx: CanvasRenderingContext2D, nightFactor: number): void {
         ctx.save();
         ctx.translate(this.x, this.y);
