@@ -13,3 +13,37 @@ const data = [
   { month: "Dec", improvement: 7.8, sessions: 560 },
   { month: "Jan", improvement: 8.2, sessions: 590 },
 ];
+
+export default function ProgressTrendChart() {
+  return (
+    <div className="bg-white rounded-xl border border-slate-200 p-6 shadow-sm">
+      <h2 className="text-base font-semibold text-slate-700 mb-4">
+        7-Month Progress Trend
+      </h2>
+      <ResponsiveContainer width="100%" height={280}>
+        <LineChart data={data}>
+          <CartesianGrid strokeDasharray="3 3" />
+          <XAxis dataKey="month" />
+          <YAxis yAxisId="left" />
+          <YAxis yAxisId="right" orientation="right" />
+          <Tooltip />
+          <Legend />
+          <Line
+            yAxisId="left"
+            type="monotone"
+            dataKey="improvement"
+            stroke="#14b8a6"
+            name="Avg Improvement %"
+          />
+          <Line
+            yAxisId="right"
+            type="monotone"
+            dataKey="sessions"
+            stroke="#8b5cf6"
+            name="Sessions Completed"
+          />
+        </LineChart>
+      </ResponsiveContainer>
+    </div>
+  );
+}
