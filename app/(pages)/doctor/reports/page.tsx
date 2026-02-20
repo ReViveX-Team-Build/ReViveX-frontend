@@ -19,6 +19,9 @@ export default function ReportsPage() {
             Comprehensive clinical performance metrics and outcomes
           </p>
         </div>
+        <button className="bg-teal-500 hover:bg-teal-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
+          ↑ Export Report
+        </button>
       </div>
 
       {/* KPI Cards */}
@@ -47,19 +50,19 @@ export default function ReportsPage() {
           subtext="Target achievement"
           icon="🎯"
         />
-
       </div>
+
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <PatientOutcomesChart />
         <AdherenceRateChart />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-  <div className="lg:col-span-2">
-    <ProgressTrendChart />
-  </div>
-  <DeviceStatusChart />
-</div>
+        <div className="lg:col-span-2">
+          <ProgressTrendChart />
+        </div>
+        <DeviceStatusChart />
+      </div>
 
     </div>
   );
