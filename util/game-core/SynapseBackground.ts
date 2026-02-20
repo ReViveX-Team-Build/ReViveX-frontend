@@ -189,19 +189,16 @@ class CelestialBodies {
 
     draw(ctx:CanvasRenderingContext2D,nf:number,surfY:number,globalT:number){
         // Cycle layout (globalT 0→1 = 3 min):
-        //  0.00 → 0.48  sun arc (rises left-horizon → noon at 0.24 → sets right)
-        //  0.48 → 0.54  dusk gap — both celestial bodies hidden
-        //  0.54 → 0.96  moon arc (rises right → sets left)
-        //  0.96 → 1.00  dawn gap — both hidden, cycle repeats
-        //
-        // HARD RULE: moon draws ONLY when nf > 0.02 (sky is noticeably dark).
-        // This is a double-safety guard that prevents the moon ever appearing
-        // against a bright daytime sky regardless of floating-point edge cases.
+        //  0.00 → 0.45  sun arc (rises left-horizon → sets right at 0.45)
+        //  0.45 → 0.52  dusk gap — BOTH HIDDEN. Sun is gone, moon hasn't risen.
+        //  0.52 → 0.85  moon arc (rises right → sets left)
+        //  0.85 → 1.00  dawn gap — BOTH HIDDEN.
 
         // ── SUN ──────────────────────────────────────────────────────────
-        const SUN_START=0.00, SUN_END=0.48, SUN_FADE=0.05;
-        // Sun only in its arc window; clamp prevents NaN at boundaries
-        if(globalT <= SUN_END+SUN_FADE && nf < 0.98){
+        const SUN_START=0.00, SUN_END=0.45, SUN_FADE=0.05;
+        
+        // Allow sun to render until it is fully below the horizon (nf < 1.0)
+        if(globalT <= SUN_END+SUN_FADE && nf < 1.0){
             const sunProg=clamp((globalT-SUN_START)/(SUN_END-SUN_START),0,1);
             const pos=this.arcXY(sunProg,surfY);
             // Smooth fade-in at dawn, fade-out at dusk
@@ -214,16 +211,17 @@ class CelestialBodies {
         }
 
         // ── MOON ─────────────────────────────────────────────────────────
-        const MOON_START=0.56, MOON_END=0.96, MOON_FADE=0.05;
-        // HARD GUARD: sky must be meaningfully dark before moon can appear
-        if(nf > 0.02 && globalT >= MOON_START-MOON_FADE && globalT <= MOON_END+MOON_FADE){
+        const MOON_START=0.52, MOON_END=0.85, MOON_FADE=0.05;
+        
+        // HARD GUARD: Moon waits until globalT is 0.52 (Sun is long gone and sky is dark)
+        if(nf > 0.05 && globalT >= MOON_START-MOON_FADE && globalT <= MOON_END+MOON_FADE){
             const moonProg=clamp((globalT-MOON_START)/(MOON_END-MOON_START),0,1);
             // Moon travels the arc in the opposite direction: rises right, sets left
             const pos=this.arcXY(1-moonProg,surfY);
             const fadeIn  = smoothstep(MOON_START, MOON_START+MOON_FADE, globalT);
             const fadeOut = 1-smoothstep(MOON_END-MOON_FADE, MOON_END, globalT);
             // Also gate alpha by nf: moon alpha can only be 100% when sky is fully dark
-            const nightGate = smoothstep(0.02, 0.20, nf);
+            const nightGate = smoothstep(0.05, 0.20, nf);
             const a=Math.min(fadeIn,fadeOut)*nightGate;
             const dip=clamp(1-Math.max(0,pos.y-surfY+30)/52,0,1);
             if(a*dip>0.01) this._drawMoon(ctx,pos.x,pos.y,a*dip,this.W,this.H,surfY,globalT);
@@ -302,7 +300,6 @@ class CelestialBodies {
         ctx.shadowBlur=0;
 
         // Light-grey maria (lunar seas) — subtle patches, NO dark blobs
-        // These are the classic visible features: Mare Imbrium, Mare Serenitatis etc.
         ctx.save();
         ctx.beginPath(); ctx.arc(mx,my,R,0,Math.PI*2); ctx.clip();
         const maria=[
@@ -352,7 +349,6 @@ class CelestialBodies {
         ctx.restore();
     }
 }
-
 // ═══════════════════════════════════════════════════════════════════════════
 //  STARS + SHOOTING STARS
 // ═══════════════════════════════════════════════════════════════════════════
@@ -636,22 +632,22 @@ export class SynapseBackground {
     }
 
     // Signature matches what GameCanvas passes: (elapsed, delta, scrollSpeed)
+   // Signature matches what GameCanvas passes: (elapsed, delta, scrollSpeed)
     update(gameTime:number, delta:number, scrollSpeed:number):number{
         const C=180_000;
-        // Offset 0.24 → at gameTime=0, globalT=0.24 → sunProg=0.24/0.48=0.5 exactly.
-        // sunProg=0.5 means sin(π/2)=1 (peak) and cos(π/2)=0 → x=center of sky.
-        // The sun is therefore at TRUE SOLAR NOON on the very first frame, and
-        // travels the second half of its arc toward the right/setting horizon.
-        this.globalT=((gameTime%C)/C+0.24)%1.0;
+        
+        // 1. UPDATE THIS OFFSET: Start exactly at Noon (0.225 is the exact middle of the sun's 0.00 -> 0.45 arc)
+        this.globalT=((gameTime%C)/C+0.225)%1.0;
 
-        // Smooth sigmoid night factor — no abrupt linear knee
+        // 2. UPDATE THESE TIMINGS: Smooth sigmoid night factor — PERFECTLY SYNCED WITH SUNSET
         const pos=this.globalT;
         let nf=0;
-        if     (pos<0.22) nf=0;
-        else if(pos<0.38) nf=smoothstep(0.22,0.38,pos);
-        else if(pos<0.72) nf=1;
-        else if(pos<0.88) nf=1-smoothstep(0.72,0.88,pos);
+        if     (pos<0.30) nf=0; // Full Day
+        else if(pos<0.48) nf=smoothstep(0.30,0.48,pos); // Dusk (Sun hits horizon at 0.45, fully dark at 0.48)
+        else if(pos<0.80) nf=1; // Full Night
+        else if(pos<0.98) nf=1-smoothstep(0.80,0.98,pos); // Dawn
 
+        // ── EVERYTHING BELOW THIS LINE IS UNCHANGED ──
         this.wallT=Date.now();
         const diff=clamp((this.floor.sandHeight-60)/165,0,1);
         this.waveAmp=Math.max(14,30*(1-diff*0.45));
