@@ -3,7 +3,6 @@
 import ReportKPICard from "@/components/DoctorPortal/ReportKPICard";
 import PatientOutcomesChart from "@/components/DoctorPortal/PatientOutcomesChart";
 import AdherenceRateChart from "@/components/DoctorPortal/AdherenceRateChart";
-import ProgressTrendChart from "@/components/DoctorPortal/ProgressTrendChart";
 
 export default function ReportsPage() {
   return (
