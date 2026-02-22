@@ -597,104 +597,114 @@ function FloatingParticles({ count = 35 }: { count?: number }) {
     </div>
   );
 }
-
 function NeuralNetwork({ mouse }: { mouse: { x: number; y: number } }) {
+  // Generate a complex 3D point cloud
+  const { nodes, lines } = useMemo(() => {
+    const n = Array.from({ length: 65 }, (_, i) => {
+      const z = Math.random(); // Depth: 0 is far away, 1 is right up against the screen
+      return {
+        id: i,
+        x: Math.random() * 100,
+        y: Math.random() * 100,
+        z: z,
+        r: 0.8 + z * 2.5,           // Closer nodes are larger
+        speed: 0.02 + z * 0.12,     // Closer nodes move much faster (Parallax)
+        blur: (1 - z) * 4,          // Far away nodes are blurred (Depth of Field)
+        baseAlpha: 0.05 + z * 0.25, // Closer nodes are brighter
+      };
+    });
 
-  const nodes = useMemo(() => Array.from({ length: 18 }, (_, i) => ({
-
-    id:    i,
-
-    x:     10 + Math.random() * 82,
-
-    y:     8  + Math.random() * 82,
-
-    r:     Math.random() * 2.2 + 1.5,
-
-    speed: Math.random() * 0.04 + 0.01,
-
-  })), []);
-
-  const lines = useMemo(() => {
-
-    const pairs: { a: number; b: number; alpha: number }[] = [];
-
-    for (let i = 0; i < nodes.length; i++) {
-
-      for (let j = i + 1; j < nodes.length; j++) {
-
-        const dx = nodes[i].x - nodes[j].x;
-
-        const dy = nodes[i].y - nodes[j].y;
-
-        const d  = Math.sqrt(dx*dx + dy*dy);
-
-        if (d < 28) pairs.push({ a: i, b: j, alpha: 1 - d / 28 });
-
+    const l = [];
+    for (let i = 0; i < n.length; i++) {
+      for (let j = i + 1; j < n.length; j++) {
+        const dx = n[i].x - n[j].x;
+        const dy = n[i].y - n[j].y;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        
+        // Connect nodes if they are close on the X/Y axis AND close on the Z axis
+        if (dist < 18 && Math.abs(n[i].z - n[j].z) < 0.3) {
+          l.push({ 
+            a: i, b: j, 
+            baseAlpha: (1 - dist / 18) * 0.2, 
+            zAvg: (n[i].z + n[j].z) / 2 
+          });
+        }
       }
-
     }
-
-    return pairs;
-
-  }, [nodes]);
+    return { nodes: n, lines: l };
+  }, []);
 
   return (
-
     <svg style={{ position: "absolute", inset: 0, width: "100%", height: "100%", pointerEvents: "none" }}>
+      <defs>
+        {/* Adds a subtle glowing filter to the synapses */}
+        <filter id="glow">
+          <feGaussianBlur stdDeviation="2" result="coloredBlur"/>
+          <feMerge>
+            <feMergeNode in="coloredBlur"/>
+            <feMergeNode in="SourceGraphic"/>
+          </feMerge>
+        </filter>
+      </defs>
 
+      {/* Render Connecting Lines */}
       {lines.map((l, i) => {
-
         const na = nodes[l.a], nb = nodes[l.b];
+        
+        // Calculate true positions including 3D parallax
+        const ax = na.x + mouse.x * na.speed * 100;
+        const ay = na.y + mouse.y * na.speed * 100;
+        const bx = nb.x + mouse.x * nb.speed * 100;
+        const by = nb.y + mouse.y * nb.speed * 100;
 
-        return (
-
-          <line key={i}
-
-            x1={`${na.x + mouse.x * na.speed * 100}%`} y1={`${na.y + mouse.y * na.speed * 100}%`}
-
-            x2={`${nb.x + mouse.x * nb.speed * 100}%`} y2={`${nb.y + mouse.y * nb.speed * 100}%`}
-
-            stroke={`rgba(45,212,191,${l.alpha * 0.18})`} strokeWidth={l.alpha * 1.2} />
-
-        );
-
-      })}
-
-      {nodes.map(n => {
-
+        // Calculate distance from the line to the mouse cursor for illumination
         const mx = (mouse.x + 0.5) * 100, my = (mouse.y + 0.5) * 100;
-
-        const dx = mx - (n.x + mouse.x * n.speed * 100);
-
-        const dy = my - (n.y + mouse.y * n.speed * 100);
-
-        const bright = Math.max(0, 1 - Math.sqrt(dx*dx + dy*dy) / 25);
+        const midX = (ax + bx) / 2, midY = (ay + by) / 2;
+        const distToMouse = Math.sqrt(Math.pow(mx - midX, 2) + Math.pow(my - midY, 2));
+        
+        // If mouse is near, the line lights up and gets thicker
+        const illumination = Math.max(0, 1 - distToMouse / 20);
+        const finalAlpha = l.baseAlpha + (illumination * 0.4);
 
         return (
-
-          <circle key={n.id}
-
-            cx={`${n.x + mouse.x * n.speed * 100}%`}
-
-            cy={`${n.y + mouse.y * n.speed * 100}%`}
-
-            r={n.r + bright * 3}
-
-            fill={`rgba(45,212,191,${0.22 + bright * 0.55})`}
-
-            style={{ transition: "r .2s, fill .2s" }} />
-
+          <line key={`line-${i}`}
+            x1={`${ax}%`} y1={`${ay}%`}
+            x2={`${bx}%`} y2={`${by}%`}
+            stroke={`rgba(45,212,191,${finalAlpha})`} 
+            strokeWidth={0.5 + (l.zAvg * 1) + (illumination * 1.5)} 
+            style={{ filter: illumination > 0.2 ? "url(#glow)" : "none", transition: "stroke 0.2s, stroke-width 0.2s" }}
+          />
         );
-
       })}
 
+      {/* Render Nodes */}
+      {nodes.map(n => {
+        // Apply Parallax Speed
+        const nx = n.x + mouse.x * n.speed * 100;
+        const ny = n.y + mouse.y * n.speed * 100;
+
+        // Illumination math
+        const mx = (mouse.x + 0.5) * 100, my = (mouse.y + 0.5) * 100;
+        const distToMouse = Math.sqrt(Math.pow(mx - nx, 2) + Math.pow(my - ny, 2));
+        const illumination = Math.max(0, 1 - distToMouse / 15);
+
+        return (
+          <circle key={`node-${n.id}`}
+            cx={`${nx}%`}
+            cy={`${ny}%`}
+            r={n.r + (illumination * 3)}
+            fill={`rgba(45,212,191,${n.baseAlpha + illumination})`}
+            style={{ 
+              filter: `blur(${n.blur}px)`, 
+              transition: "r 0.15s, fill 0.15s",
+              boxShadow: "0 0 10px #2DD4BF" 
+            }} 
+          />
+        );
+      })}
     </svg>
-
   );
-
 }
-
-
 
 function MedicalCursor() {
 
