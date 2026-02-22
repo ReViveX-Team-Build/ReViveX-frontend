@@ -2023,3 +2023,203 @@ function SolutionSection() {
 }
 
 
+
+//  OFFER SECTION  — white bento grid
+
+
+function OfferSection() {
+
+  return (
+
+    <section id="offer" data-theme="light" style={{ background: "#FFFFFF", padding: "120px 40px", position: "relative" }}>
+
+      <div className="grid-lt" style={{ position: "absolute", inset: 0, pointerEvents: "none" }} />
+
+      <div style={{ maxWidth: 1280, margin: "0 auto" }}>
+
+        <Reveal dir="left" style={{ marginBottom: 60 }}>
+
+          <div className="fM" style={{ fontSize: 9, color: "rgba(11,30,51,.35)", textTransform: "uppercase", letterSpacing: ".3em", marginBottom: 12 }}>What We Offer</div>
+
+          <h2 className="fB" style={{ fontSize: "clamp(3rem,7vw,6.5rem)", letterSpacing: ".03em", lineHeight: .9, color: "#0B1E33" }}>
+
+            EVERYTHING YOUR<br /><span style={{ color: "#2DD4BF" }}>RECOVERY NEEDS.</span>
+
+          </h2>
+
+        </Reveal>
+
+
+
+        {/* Row 1 */}
+
+        <div style={{ display: "grid", gridTemplateColumns: "7fr 5fr", gap: 16, marginBottom: 16 }}>
+
+          <Reveal dir="zoom">
+
+            <TiltCard style={{ padding: "42px 38px", borderRadius: 34, background: "#0B1E33", minHeight: 300, position: "relative", overflow: "hidden" }}>
+
+              <div className="scanline" />
+
+              <div style={{ position: "absolute", bottom: -40, right: -40, width: 200, height: 200, borderRadius: "50%", pointerEvents: "none",
+
+                background: "radial-gradient(circle,rgba(45,212,191,.14),transparent 70%)" }} />
+
+              <div style={{ position: "relative", zIndex: 1 }}>
+
+                <div style={{ width: 54, height: 54, borderRadius: 18, marginBottom: 20,
+
+                  display: "flex", alignItems: "center", justifyContent: "center",
+
+                  background: "rgba(45,212,191,.12)", border: "1px solid rgba(45,212,191,.24)", color: "#2DD4BF" }}>
+
+                  <Sparkles size={22} />
+
+                </div>
+
+                <div className="fM" style={{ fontSize: 8, color: "rgba(45,212,191,.55)", textTransform: "uppercase", letterSpacing: ".22em", marginBottom: 10 }}>AI-Powered</div>
+
+                <h3 className="fB" style={{ fontSize: 30, color: "#fff", letterSpacing: ".04em", marginBottom: 14, lineHeight: 1.05 }}>
+
+                  Therapy that grows with the patient.
+
+                </h3>
+
+                <p className="fS" style={{ fontSize: 14, color: "rgba(255,255,255,.52)", lineHeight: 1.78, fontWeight: 300, maxWidth: 400 }}>
+
+                  Reinforcement learning monitors every squeeze and adjusts difficulty live.
+
+                  An AI companion provides vocal encouragement. Always meeting you exactly where you are.
+
+                </p>
+
+              </div>
+
+            </TiltCard>
+
+          </Reveal>
+
+          <Reveal dir="right" delay={.1}>
+
+            <TiltCard style={{ padding: "36px 32px", borderRadius: 34, background: "#F3F0FF", minHeight: 300, border: "1px solid rgba(139,92,246,.14)" }}>
+
+              <div style={{ width: 54, height: 54, borderRadius: 18, marginBottom: 20,
+
+                display: "flex", alignItems: "center", justifyContent: "center",
+
+                background: "rgba(139,92,246,.12)", border: "1px solid rgba(139,92,246,.2)", color: "#8b5cf6" }}>
+
+                <Brain size={22} />
+
+              </div>
+
+              <div className="fM" style={{ fontSize: 8, color: "rgba(139,92,246,.65)", textTransform: "uppercase", letterSpacing: ".22em", marginBottom: 10 }}>Dual-Task</div>
+
+              <h3 className="fB" style={{ fontSize: 24, color: "#0B1E33", letterSpacing: ".04em", marginBottom: 14, lineHeight: 1.05 }}>
+
+                Motor + Cognitive. Simultaneously.
+
+              </h3>
+
+              <p className="fS" style={{ fontSize: 14, color: "#374151", lineHeight: 1.75, fontWeight: 300 }}>
+
+                The only therapy system training both physical grip and working memory at once. Because neuroplasticity requires both.
+
+              </p>
+
+              <div style={{ marginTop: 20, display: "flex", alignItems: "center", gap: 8, color: "#8b5cf6" }}>
+
+                <CheckCircle2 size={13} />
+
+                <span className="fM" style={{ fontSize: 8, textTransform: "uppercase", letterSpacing: ".18em" }}>Clinically validated</span>
+
+              </div>
+
+            </TiltCard>
+
+          </Reveal>
+
+        </div>
+
+
+
+        {/* Row 2 */}
+
+        <div style={{ display: "grid", gridTemplateColumns: "5fr 7fr", gap: 16 }}>
+
+          <Reveal dir="left" delay={.15}>
+
+            <TiltCard style={{ padding: "36px 32px", borderRadius: 34, background: "#F0FDF4", border: "1px solid rgba(52,211,153,.16)", minHeight: 260 }}>
+
+              <div style={{ width: 54, height: 54, borderRadius: 18, marginBottom: 20,
+
+                display: "flex", alignItems: "center", justifyContent: "center",
+
+                background: "rgba(52,211,153,.12)", border: "1px solid rgba(52,211,153,.22)", color: "#34d399" }}>
+
+                <Waves size={22} />
+
+              </div>
+
+              <div className="fM" style={{ fontSize: 8, color: "rgba(52,211,153,.68)", textTransform: "uppercase", letterSpacing: ".22em", marginBottom: 10 }}>Tremor Intelligence</div>
+
+              <h3 className="fB" style={{ fontSize: 22, color: "#0B1E33", letterSpacing: ".04em", marginBottom: 12, lineHeight: 1.05 }}>
+
+                Filters involuntary tremors in real-time.
+
+              </h3>
+
+              <p className="fS" style={{ fontSize: 14, color: "#374151", lineHeight: 1.75, fontWeight: 300 }}>
+
+                6-axis IMU continuously separates Parkinson's tremors from intentional grip for clinical accuracy even in severe cases.
+
+              </p>
+
+            </TiltCard>
+
+          </Reveal>
+
+          <Reveal dir="right" delay={.2}>
+
+            <TiltCard style={{ padding: "36px 32px", borderRadius: 34, background: "#FFFBF0", border: "1px solid rgba(251,191,36,.16)", minHeight: 260 }}>
+
+
+              <div style={{ width: 54, height: 54, borderRadius: 18, marginBottom: 20,
+
+                display: "flex", alignItems: "center", justifyContent: "center",
+
+                background: "rgba(251,191,36,.10)", border: "1px solid rgba(251,191,36,.24)", color: "#fbbf24" }}>
+
+                <BarChart3 size={22} />
+
+              </div>
+
+              <div className="fM" style={{ fontSize: 8, color: "rgba(251,191,36,.72)", textTransform: "uppercase", letterSpacing: ".22em", marginBottom: 10 }}>Tele-Rehab</div>
+
+              <h3 className="fB" style={{ fontSize: 22, color: "#0B1E33", letterSpacing: ".04em", marginBottom: 12, lineHeight: 1.05 }}>
+
+                Your doctor sees every session, from anywhere.
+
+              </h3>
+
+              <p className="fS" style={{ fontSize: 14, color: "#374151", lineHeight: 1.75, fontWeight: 300 }}>
+
+                Firebase streams grip force, tremor amplitude, and reaction data live. Therapy adjustments happen remotely — no clinic visits needed.
+
+              </p>
+
+            </TiltCard>
+
+          </Reveal>
+
+        </div>
+
+      </div>
+
+    </section>
+
+  );
+
+}
+
+
