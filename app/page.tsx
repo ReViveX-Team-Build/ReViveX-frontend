@@ -1887,3 +1887,83 @@ function ProblemSection() {
 
 }
 
+
+//  DARK BRIDGE 
+
+function DarkBridge() {
+  const ref = useRef<HTMLDivElement>(null);
+  const { scrollYProgress: p } = useScroll({ target: ref, offset: ["start start", "end end"] });
+
+  // Background transition
+  const bg = useTransform(p, [0, 0.3], ["#F8F9FA", "#080f1a"]);
+  
+  const rawWordY     = useTransform(p, [0, 0.15], [300, 0]);
+  const rawWordScale = useTransform(p, [0.25, 0.45], [1, 25]); 
+  const wordOp       = useTransform(p, [0, 0.05, 0.35, 0.45], [0, 1, 1, 0]); 
+  
+  const statsOp      = useTransform(p, [0.2, 0.25, 0.40, 0.45], [0, 1, 1, 0]);
+
+  // SPRING PHYSICS
+  const wordY     = useSpring(rawWordY, { stiffness: 70, damping: 25 });
+  const wordScale = useSpring(rawWordScale, { stiffness: 70, damping: 25 });
+
+  const absCenter: React.CSSProperties = {
+    position: "absolute", top: "50%", left: "50%", transform: "translate(-50%, -50%)",
+    display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
+    pointerEvents: "none", width: "100%"
+  };
+
+  return (
+    <div ref={ref} style={{ height: "300vh", position: "relative" }}>
+      <motion.div style={{ position: "sticky", top: 0, height: "100vh", overflow: "hidden", backgroundColor: bg }}>
+        <div className="grid-dk" style={{ position: "absolute", inset: 0, pointerEvents: "none" }} />
+        <div className="scanline" />
+        
+        {/* Floating Data Points */}
+        <div style={absCenter}>
+          <motion.div style={{ 
+            position: "absolute", opacity: statsOp, 
+            width: "100vw", height: "100vh", 
+            willChange: "opacity" 
+          }}>
+            {[
+              { label: "MOTOR",     x: -36, y: -18, ang: -12, c: "#2DD4BF" },
+              { label: "COGNITIVE", x:  34, y: -22, ang:  10, c: "#a78bfa" },
+              { label: "CLINICAL",  x: -32, y:  20, ang:  -8, c: "#fbbf24" },
+              { label: "REMOTE",    x:  32, y:  22, ang:   6, c: "#34d399" },
+            ].map(d => (
+              <div key={d.label} style={{ position: "absolute", left: `calc(50% + ${d.x}vw)`, top: `calc(50% + ${d.y}vh)`, transform: `translate(-50%,-50%) rotate(${d.ang}deg)` }}>
+                <div className="fM" style={{ fontSize: 10, color: d.c, textTransform: "uppercase", letterSpacing: ".24em", opacity: .8, whiteSpace: "nowrap" }}>
+                  ·{d.label}·
+                </div>
+              </div>
+            ))}
+          </motion.div>
+        </div>
+        
+        {/* THE SOLUTION */}
+        <div style={absCenter}>
+          {/* translateZ(0) forces hardware acceleration on the GPU */}
+          <motion.div style={{ 
+            y: wordY, 
+            scale: wordScale, 
+            opacity: wordOp, 
+            textAlign: "center", 
+            transformOrigin: "center center",
+            willChange: "transform, opacity",
+            transform: "translateZ(0)"
+          }}>
+            <div className="fB" style={{ fontSize: "clamp(5rem,15vw,16rem)", letterSpacing: "0.04em", lineHeight: .88, color: "#FFFFFF" }}>
+              THE<br /><span style={{ color: "#2DD4BF" }}>SOLUTION</span>
+            </div>
+            <div className="fM" style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: ".3em", marginTop: 26, color: "rgba(45,212,191,.6)" }}>
+              ↓ A new paradigm in rehabilitation
+            </div>
+          </motion.div>
+        </div>
+      </motion.div>
+    </div>
+  );
+}
+
+
