@@ -457,3 +457,103 @@ function CountUp({ to, suffix = "", prefix = "", decimals = 0 }:
   return <span ref={ref}>{prefix}{decimals > 0 ? val.toFixed(decimals) : val}{suffix}</span>;
 
 }
+
+
+function TiltCard({ children, style = {}, className = "" }:
+
+  { children: React.ReactNode; style?: React.CSSProperties; className?: string }) {
+
+  const ref = useRef<HTMLDivElement>(null);
+
+  const onMove = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
+
+    const el = ref.current; if (!el) return;
+
+    const r = el.getBoundingClientRect();
+
+    const x = ((e.clientX - r.left) / r.width  - 0.5) * 2;
+
+    const y = ((e.clientY - r.top)  / r.height - 0.5) * 2;
+
+    el.style.transform  = `perspective(900px) rotateY(${x * 10}deg) rotateX(${-y * 10}deg) scale(1.018)`;
+
+    el.style.transition = "transform .07s";
+
+  }, []);
+
+  const onLeave = useCallback(() => {
+
+    const el = ref.current; if (!el) return;
+
+    el.style.transform  = "perspective(900px) rotateY(0) rotateX(0) scale(1)";
+
+    el.style.transition = "transform .55s cubic-bezier(.22,1,.36,1)";
+
+  }, []);
+
+  return (
+
+    <div ref={ref} className={`tilt3d ${className}`} style={style}
+
+      onMouseMove={onMove} onMouseLeave={onLeave}>
+
+      {children}
+
+    </div>
+
+  );
+
+}
+function MagButton({ children, onClick, style = {}, className = "", type = "button" }:
+
+  { children: React.ReactNode; onClick?: () => void; style?: React.CSSProperties; className?: string; type?: "button"|"submit" }) {
+
+  const ref   = useRef<HTMLButtonElement>(null);
+
+  const RANGE = 90, PULL = 0.36;
+
+  const onMove = useCallback((e: React.MouseEvent) => {
+
+    const el = ref.current; if (!el) return;
+
+    const r  = el.getBoundingClientRect();
+
+    const dx = e.clientX - (r.left + r.width  / 2);
+
+    const dy = e.clientY - (r.top  + r.height / 2);
+
+    if (Math.sqrt(dx*dx + dy*dy) < RANGE) {
+
+      el.style.transform  = `translate(${dx * PULL}px, ${dy * PULL}px)`;
+
+      el.style.transition = "transform .15s";
+
+    }
+
+  }, []);
+
+  const onLeave = useCallback(() => {
+
+    const el = ref.current; if (!el) return;
+
+    el.style.transform  = "translate(0,0)";
+
+    el.style.transition = "transform .55s cubic-bezier(.22,1,.36,1)";
+
+  }, []);
+
+  return (
+
+    <button ref={ref} data-mag type={type} onClick={onClick}
+
+      className={className} style={style}
+
+      onMouseMove={onMove} onMouseLeave={onLeave}>
+
+      {children}
+
+    </button>
+
+  );
+
+}
