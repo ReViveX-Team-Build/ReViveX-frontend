@@ -558,49 +558,44 @@ function MagButton({ children, onClick, style = {}, className = "", type = "butt
 
 }
 
-
-function FloatingParticles({ count = 22 }: { count?: number }) {
-
+function FloatingParticles({ count = 35 }: { count?: number }) {
   const P = useMemo(() => Array.from({ length: count }, (_, i) => ({
-
     id:      i,
-
     x:       Math.random() * 100,
-
-    size:    Math.random() * 2.2 + .8,
-
-    dur:     Math.random() * 9 + 6,
-
-    delay:   Math.random() * 12,
-
-    opacity: Math.random() * 0.25 + 0.04,
-
+    size:    Math.random() * 2.5 + 0.5,
+    dur:     Math.random() * 12 + 8,
+    delay:   Math.random() * 15,
+    opacity: Math.random() * 0.3 + 0.05,
+    drift:   (Math.random() - 0.5) * 60, // Horizontal sway distance
   })), [count]);
 
   const vh = typeof window !== "undefined" ? window.innerHeight : 900;
 
   return (
-
     <div style={{ position: "absolute", inset: 0, overflow: "hidden", pointerEvents: "none" }}>
-
       {P.map(p => (
-
         <motion.div key={p.id}
-
-          style={{ position: "absolute", left: `${p.x}%`, bottom: -8,
-
-            width: p.size, height: p.size, borderRadius: "50%", background: "#2DD4BF" }}
-
-          animate={{ y: [0, -(vh * 1.15)], opacity: [0, p.opacity, p.opacity, 0] }}
-
-          transition={{ duration: p.dur, delay: p.delay, repeat: Infinity, ease: "linear" }} />
-
+          style={{ 
+            position: "absolute", left: `${p.x}%`, bottom: -20,
+            width: p.size, height: p.size, borderRadius: "50%", 
+            background: "#2DD4BF",
+            boxShadow: `0 0 ${p.size * 3}px rgba(45,212,191,0.8)` // Inner glow
+          }}
+          animate={{ 
+            y: [0, -(vh * 1.2)], 
+            x: [0, p.drift, -p.drift, 0], // Smooth organic swaying
+            opacity: [0, p.opacity, p.opacity, 0] 
+          }}
+          transition={{ 
+            duration: p.dur, 
+            delay: p.delay, 
+            repeat: Infinity, 
+            ease: "easeInOut" 
+          }} 
+        />
       ))}
-
     </div>
-
   );
-
 }
 
 function NeuralNetwork({ mouse }: { mouse: { x: number; y: number } }) {
