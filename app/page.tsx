@@ -2312,3 +2312,63 @@ function WhySection() {
 }
 
 
+//  MARQUEE STRIP
+
+
+
+function MarqueeStrip() {
+
+  const A = ["MOTOR RECOVERY","COGNITIVE TRAINING","GRIP STRENGTH","TREMOR DETECTION","DUAL-TASK PROTOCOL","AI ADAPTATION","TELE-REHABILITATION","NEUROPLASTICITY"];
+
+  const B = ["STROKE RECOVERY","PARKINSON'S CARE","BRAIN INJURY REHAB","ADAPTIVE DIFFICULTY","REAL-TIME FEEDBACK","GAMIFIED THERAPY","HOME-BASED CARE","CLINICAL DASHBOARD"];
+
+  const dot = <span style={{ margin: "0 18px", color: "rgba(45,212,191,.28)" }}>·</span>;
+
+  const makeRow = (items: string[], cls: string) => (
+
+    <div style={{ overflow: "hidden", marginBottom: 8 }}>
+
+      <div className={cls} style={{ display: "flex", whiteSpace: "nowrap", width: "200%" }}>
+
+        {[0, 1].map(r => (
+
+          <span key={r} style={{ width: "50%", display: "inline-block" }}>
+
+            {items.map((t, i) => (
+
+              <span key={i} style={{ display: "inline-flex", alignItems: "center" }}>
+
+                <span className="fB" style={{ fontSize: 13, color: "rgba(255,255,255,.12)", letterSpacing: ".14em" }}>{t}</span>
+
+                {dot}
+
+              </span>
+
+            ))}
+
+          </span>
+
+        ))}
+
+      </div>
+
+    </div>
+
+  );
+
+  return (
+
+    <div style={{ background: "#060f1a", padding: "20px 0",
+
+      borderTop: "1px solid rgba(255,255,255,.04)", borderBottom: "1px solid rgba(255,255,255,.04)", overflow: "hidden" }}>
+
+      {makeRow(A, "mqL")}
+
+      {makeRow(B, "mqR")}
+
+    </div>
+
+  );
+
+}
+
