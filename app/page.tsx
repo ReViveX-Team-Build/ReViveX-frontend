@@ -1140,3 +1140,92 @@ function Preloader({ onDone }: { onDone: () => void }) {
   );
 
 }
+
+
+function Navbar() {
+
+  const [scrolled, setScrolled] = useState(false);
+
+  useEffect(() => {
+
+    const h = () => setScrolled(window.scrollY > 60);
+
+    window.addEventListener("scroll", h, { passive: true });
+
+    return () => window.removeEventListener("scroll", h);
+
+  }, []);
+
+  return (
+
+    <motion.nav initial={{ y: -80, opacity: 0 }} animate={{ y: 0, opacity: 1 }}
+
+      transition={{ delay: .3, duration: .9, ease: [0.22, 1, 0.36, 1] }}
+
+      style={{
+
+        position: "fixed", top: 0, left: 0, right: 0, zIndex: 500,
+
+        display: "flex", alignItems: "center", justifyContent: "space-between",
+
+        padding: "18px 40px",
+
+        background:     scrolled ? "rgba(8,15,26,.9)" : "transparent",
+
+        backdropFilter: scrolled ? "blur(22px)"       : "none",
+
+        borderBottom:   scrolled ? "1px solid rgba(45,212,191,.07)" : "none",
+
+        transition: "background .4s, backdrop-filter .4s, border .4s",
+
+      }}>
+
+      <div className="fB" style={{ fontSize: 22, letterSpacing: ".1em", color: "#fff" }}>
+
+        REVIVE<span style={{ color: "#2DD4BF" }}>X</span>
+
+      </div>
+
+      <div style={{ display: "flex", gap: 28, alignItems: "center" }}>
+
+        {[["Problem","#problem"],["Solution","#solution"],["Offer","#offer"],["Why Us","#why"],["Contact","#contact"]].map(([l,h]) => (
+
+          <a key={l} href={h} data-mag className="fM"
+
+            style={{ fontSize: 9, textTransform: "uppercase", letterSpacing: ".22em",
+
+              color: "rgba(255,255,255,.38)", textDecoration: "none", transition: "color .3s" }}
+
+            onMouseEnter={e => (e.currentTarget.style.color = "rgba(255,255,255,.85)")}
+
+            onMouseLeave={e => (e.currentTarget.style.color = "rgba(255,255,255,.38)")}>
+
+            {l}
+
+          </a>
+
+        ))}
+
+      </div>
+
+      <a href="#contact" data-mag className="fM"
+
+        style={{ fontSize: 9, textTransform: "uppercase", letterSpacing: ".2em",
+
+          color: "#2DD4BF", padding: "8px 18px", borderRadius: 99,
+
+          border: "1px solid rgba(45,212,191,.3)", textDecoration: "none", transition: "background .3s" }}
+
+        onMouseEnter={e => (e.currentTarget.style.background = "rgba(45,212,191,.1)")}
+
+        onMouseLeave={e => (e.currentTarget.style.background = "transparent")}>
+
+        ● Get Started
+
+      </a>
+
+    </motion.nav>
+
+  );
+
+}
