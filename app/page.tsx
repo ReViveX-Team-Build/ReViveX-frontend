@@ -30,247 +30,137 @@ import {
 
 } from "lucide-react";
 
-
 const CSS = `
-
   @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500&family=Space+Mono:wght@400;700&display=swap');
 
-
-
   :root {
-
-    --dk:  #080f1a;
-
-    --dk2: #0B1E33;
-
-    --dk3: #0d1f38;
-
-    --tl:  #2DD4BF;
-
-    --tl2: #0d9488;
-
-    --wh:  #F8F9FA;
-
-    --bd:  #374151;
-
-    --mu:  #6B7280;
-
+    /* The New "Slate" Dark Mode (Professional, softer, less eye-strain) */
+    --dk:  #0F172A;  
+    --dk2: #1E293B;  
+    --dk3: #334155;  
+    
+    /* The Signature Clinical Teal */
+    --tl:  #2DD4BF;  
+    --tl2: #0F766E;  
+    
+    /* The New Light Mode (Cooler, softer white to reduce glare) */
+    --wh:  #F8FAFC;  
+    
+    /* Typography & Borders */
+    --bd:  #475569;  
+    --mu:  #94A3B8;  /* Lighter Muted Text for perfect readability */
   }
-
-
 
   *, *::before, *::after { cursor: none !important; box-sizing: border-box; margin: 0; padding: 0; }
-
   html { scroll-behavior: auto; }
-
-  body { overflow-x: hidden; background: var(--dk); }
-
-  ::selection { background: rgba(45,212,191,.25); color: var(--dk2); }
-
-
+  body { overflow-x: hidden; background: var(--dk); color: #F1F5F9; }
+  ::selection { background: rgba(45,212,191,.25); color: var(--dk); }
 
   .fB { font-family: 'Bebas Neue','Arial Black',sans-serif; }
-
   .fS { font-family: 'DM Sans',system-ui,sans-serif; }
-
   .fM { font-family: 'Space Mono',monospace; }
 
-
-
   @keyframes ecgDraw {
-
     0%   { stroke-dashoffset: 2800; opacity: 1; }
-
     72%  { stroke-dashoffset: 0;    opacity: 1; }
-
     92%  { stroke-dashoffset: 0;    opacity: 1; }
-
     100% { stroke-dashoffset: 0;    opacity: 0; }
-
   }
-
   .ecg-line {
-
     stroke-dasharray: 2800;
-
     stroke-dashoffset: 2800;
-
     animation: ecgDraw 3.4s cubic-bezier(.4,0,.2,1) forwards;
-
   }
-
-
 
   @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
-
   .blink { animation: blink .85s step-end infinite; }
 
-
-
+  /* Grids updated to perfectly match the new Slate background */
   @keyframes gridDrift { to { background-position: 44px 44px; } }
-
   .grid-dk {
-
     background-image:
-
-      linear-gradient(rgba(45,212,191,.028) 1px, transparent 1px),
-
-      linear-gradient(90deg, rgba(45,212,191,.028) 1px, transparent 1px);
-
+      linear-gradient(rgba(45,212,191,.035) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(45,212,191,.035) 1px, transparent 1px);
     background-size: 44px 44px;
-
     animation: gridDrift 6s linear infinite;
-
   }
-
   .grid-lt {
-
     background-image:
-
-      linear-gradient(rgba(11,30,51,.042) 1px, transparent 1px),
-
-      linear-gradient(90deg, rgba(11,30,51,.042) 1px, transparent 1px);
-
+      linear-gradient(rgba(15,23,42,.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(15,23,42,.04) 1px, transparent 1px);
     background-size: 44px 44px;
-
   }
-
-
 
   @keyframes scanDown { 0%{top:-14%;opacity:0} 8%{opacity:.7} 92%{opacity:.7} 100%{top:116%;opacity:0} }
-
   .scanline {
-
     position: absolute; left: 0; right: 0; height: 13%;
-
-    background: linear-gradient(to bottom, transparent, rgba(45,212,191,.045), transparent);
-
+    background: linear-gradient(to bottom, transparent, rgba(45,212,191,.05), transparent);
     animation: scanDown 7s linear infinite;
-
     pointer-events: none;
-
   }
-
-
 
   @keyframes shimSweep {
-
     0%   { transform: translateX(-180%) skewX(-12deg); }
-
     100% { transform: translateX(180%)  skewX(-12deg); }
-
   }
-
   .btn-shim::after {
-
     content: ''; position: absolute; inset: 0;
-
-    background: linear-gradient(90deg,transparent,rgba(255,255,255,.3),transparent);
-
+    background: linear-gradient(90deg,transparent,rgba(255,255,255,.25),transparent);
     animation: shimSweep 2.4s ease-in-out infinite;
-
   }
-
-
 
   @keyframes mLeft  { to { transform: translateX(-50%); } }
-
   @keyframes mRight { to { transform: translateX(0); } }
-
   .mqL { animation: mLeft  30s linear infinite; }
-
   .mqR { animation: mRight 30s linear infinite; transform: translateX(-50%); }
 
-
-
   @keyframes glowBreath { 0%,100%{opacity:.3;transform:scale(1)} 50%{opacity:.62;transform:scale(1.08)} }
-
   .glow-breath { animation: glowBreath 5s ease-in-out infinite; }
 
-
-
   @keyframes floatUpDown {
-
     0%,100% { transform: translateY(0) rotate(-.35deg); }
-
     50%     { transform: translateY(-20px) rotate(.35deg); }
-
   }
-
   .float-card { animation: floatUpDown 7s ease-in-out infinite; }
 
-
-
   @keyframes ringPop {
-
     0%   { transform: translate(-50%,-50%) scale(.8); opacity: .8; }
-
     100% { transform: translate(-50%,-50%) scale(2.5); opacity: 0; }
-
   }
-
   .ring-pop {
-
     animation: ringPop 2.8s ease-out infinite;
-
     position: absolute; top: 50%; left: 50%;
-
   }
 
-
-
+  /* Grain overlay softened to match the lighter slate */
   .grain::after {
-
     content: ''; position: fixed; inset: 0; z-index: 9980; pointer-events: none;
-
-    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.04'/%3E%3C/svg%3E");
-
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.03'/%3E%3C/svg%3E");
     opacity: .4;
-
   }
-
-
 
   @keyframes arcCW  { to { transform: rotate(360deg);  } }
-
   @keyframes arcCCW { to { transform: rotate(-360deg); } }
-
   .arc-cw  { animation: arcCW  3.5s linear infinite; transform-origin: center; }
-
   .arc-ccw { animation: arcCCW 2.2s linear infinite; transform-origin: center; }
 
-
-
   @keyframes heartPulse {
-
     0%,100% { transform: scale(1); }
-
     14%     { transform: scale(1.4); }
-
     28%     { transform: scale(1); }
-
     42%     { transform: scale(1.2); }
-
     56%     { transform: scale(1); }
-
   }
-
   .heartbeat { animation: heartPulse 1.4s ease-in-out infinite; }
-
-
 
   .tilt3d { transform-style: preserve-3d; will-change: transform; }
 
-
-
   @keyframes nodePulse { 0%,100%{opacity:.45} 50%{opacity:1} }
-
   input:focus, textarea:focus { outline: none; border-color: rgba(45,212,191,.5) !important; }
-
-  .stat-card:hover { transform: translateY(-4px); box-shadow: 0 20px 50px rgba(0,0,0,.12); }
-
+  
+  /* Shadows updated to use dark slate instead of pure black for a softer, more realistic drop */
+  .stat-card:hover { transform: translateY(-4px); box-shadow: 0 20px 40px rgba(15,23,42,.12); }
   .stat-card { transition: transform .3s, box-shadow .3s; }
-
 `;
 
 
@@ -579,11 +469,11 @@ function FloatingParticles({ count = 35 }: { count?: number }) {
             position: "absolute", left: `${p.x}%`, bottom: -20,
             width: p.size, height: p.size, borderRadius: "50%", 
             background: "#2DD4BF",
-            boxShadow: `0 0 ${p.size * 3}px rgba(45,212,191,0.8)` // Inner glow
+            boxShadow: `0 0 ${p.size * 3}px rgba(45,212,191,0.8)` 
           }}
           animate={{ 
             y: [0, -(vh * 1.2)], 
-            x: [0, p.drift, -p.drift, 0], // Smooth organic swaying
+            x: [0, p.drift, -p.drift, 0], 
             opacity: [0, p.opacity, p.opacity, 0] 
           }}
           transition={{ 
@@ -598,19 +488,19 @@ function FloatingParticles({ count = 35 }: { count?: number }) {
   );
 }
 function NeuralNetwork({ mouse }: { mouse: { x: number; y: number } }) {
-  // Generate a complex 3D point cloud
+  
   const { nodes, lines } = useMemo(() => {
     const n = Array.from({ length: 65 }, (_, i) => {
-      const z = Math.random(); // Depth: 0 is far away, 1 is right up against the screen
+      const z = Math.random(); 
       return {
         id: i,
         x: Math.random() * 100,
         y: Math.random() * 100,
         z: z,
-        r: 0.8 + z * 2.5,           // Closer nodes are larger
-        speed: 0.02 + z * 0.12,     // Closer nodes move much faster (Parallax)
-        blur: (1 - z) * 4,          // Far away nodes are blurred (Depth of Field)
-        baseAlpha: 0.05 + z * 0.25, // Closer nodes are brighter
+        r: 0.8 + z * 2.5,           
+        speed: 0.02 + z * 0.12,    
+        blur: (1 - z) * 4,          
+        baseAlpha: 0.05 + z * 0.25, 
       };
     });
 
@@ -968,6 +858,9 @@ const ECG_PATH = `
 
 //  PRELOADER (Procedural Neural Signal Generator)
 
+// ─────────────────────────────────────────────────────────────────────
+//  PRELOADER (Elevated Slate & Teal Boot Sequence)
+// ─────────────────────────────────────────────────────────────────────
 function Preloader({ onDone }: { onDone: () => void }) {
   const [pct, setPct] = useState(0);
   const [phase, setPhase] = useState<"loading" | "ready" | "exit">("loading");
@@ -1041,66 +934,76 @@ function Preloader({ onDone }: { onDone: () => void }) {
       {phase !== "exit" && (
         <motion.div
           key="pl"
-          exit={{ y: "-100%", opacity: 0, filter: "blur(10px)", transition: { duration: 0.9, ease: [0.76, 0, 0.24, 1] } }}
+          exit={{ y: "-100%", opacity: 0, filter: "blur(12px)", transition: { duration: 0.9, ease: [0.76, 0, 0.24, 1] } }}
           style={{
             position: "fixed", inset: 0, zIndex: 9900,
             display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
-            overflow: "hidden", background: "#080f1a",
+            overflow: "hidden", 
+            background: "#0F172A", // Deep Slate background instead of harsh black
           }}
         >
+          {/* Subtle Ambient Aura */}
           <motion.div
-            animate={{ opacity: phase === "ready" ? 0.8 : 0.4, scale: phase === "ready" ? 1.5 : 1 }}
-            transition={{ duration: 0.8, ease: "easeOut" }}
+            animate={{ opacity: phase === "ready" ? 0.6 : 0.2, scale: phase === "ready" ? 1.4 : 1 }}
+            transition={{ duration: 1.2, ease: "easeOut" }}
             style={{
               position: "absolute", inset: 0, pointerEvents: "none",
-              background: "radial-gradient(circle at center, rgba(45,212,191,0.18) 0%, transparent 60%)"
+              background: "radial-gradient(circle at center, rgba(45,212,191,0.12) 0%, transparent 60%)"
             }}
           />
           
-          <div className="grid-dk" style={{ position: "absolute", inset: 0, pointerEvents: "none", opacity: phase === "ready" ? 0.8 : 0.3, transition: "opacity 0.8s" }} />
+          {/* Grid Overlay */}
+          <div className="grid-dk" style={{ position: "absolute", inset: 0, pointerEvents: "none", opacity: phase === "ready" ? 0.8 : 0.4, transition: "opacity 1s" }} />
 
+          {/* Procedural ECG Signal */}
           <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", overflow: "hidden", pointerEvents: "none" }}>
             <svg width="100%" height="160" viewBox="0 0 3000 160" preserveAspectRatio="none">
               <motion.path d={ecgPath} fill="none" stroke="#2DD4BF" strokeWidth="6" strokeLinecap="round" strokeLinejoin="bevel"
-                style={{ filter: "blur(10px)" }}
+                style={{ filter: "blur(8px)" }}
                 initial={{ pathLength: 0, opacity: 0 }}
-                animate={{ pathLength: 1, opacity: phase === "ready" ? 0 : 0.7 }}
+                animate={{ pathLength: 1, opacity: phase === "ready" ? 0 : 0.5 }}
                 transition={{ duration: 2.8, ease: "linear" }}
               />
-              <motion.path d={ecgPath} fill="none" stroke="#FFFFFF" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="bevel"
+              <motion.path d={ecgPath} fill="none" stroke="#F8FAFC" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="bevel"
                 initial={{ pathLength: 0, opacity: 0 }}
-                animate={{ pathLength: 1, opacity: phase === "ready" ? 0 : 1 }}
+                animate={{ pathLength: 1, opacity: phase === "ready" ? 0 : 0.9 }}
                 transition={{ duration: 2.8, ease: "linear" }}
               />
             </svg>
           </div>
 
+          {/* UI Content */}
           <div style={{ position: "relative", zIndex: 2, textAlign: "center" }}>
+            
+            {/* Heartbeat Icon */}
             <motion.div
-              animate={phase === "ready" ? { scale: [1, 1.5, 1], filter: ["blur(0px)", "blur(6px)", "blur(0px)"] } : {}}
+              animate={phase === "ready" ? { scale: [1, 1.4, 1], filter: ["drop-shadow(0 0 10px #2DD4BF)", "drop-shadow(0 0 25px #2DD4BF)", "drop-shadow(0 0 10px #2DD4BF)"] } : {}}
               transition={{ repeat: phase === "ready" ? Infinity : 0, duration: 0.4 }}
               style={{ marginBottom: 18, color: "#2DD4BF", display: "flex", justifyContent: "center" }}
               className={phase !== "ready" ? "heartbeat" : ""}
             >
-              <Heart size={36} style={{ fill: "#2DD4BF", filter: phase === "ready" ? "drop-shadow(0 0 25px #2DD4BF)" : "none", transition: "filter 0.5s" }} />
+              <Heart size={34} style={{ fill: "#2DD4BF", filter: "drop-shadow(0 0 8px rgba(45,212,191,0.4))", transition: "filter 0.5s" }} />
             </motion.div>
 
-            <div className="fM" style={{ fontSize: 9, color: "rgba(255,255,255,.3)", textTransform: "uppercase", letterSpacing: ".42em", marginBottom: 24 }}>
+            {/* Subtitle */}
+            <div className="fM" style={{ fontSize: 9, color: "#94A3B8", textTransform: "uppercase", letterSpacing: ".42em", marginBottom: 24 }}>
               NEURO-REHABILITATION SYSTEM
             </div>
 
+            {/* Main Logo */}
             <motion.div
               initial={{ opacity: 0, scale: .8 }}
-              animate={{ opacity: 1, scale: phase === "ready" ? 1.05 : 1, textShadow: phase === "ready" ? "0 0 60px rgba(45,212,191,0.8)" : "none" }}
+              animate={{ opacity: 1, scale: phase === "ready" ? 1.05 : 1, textShadow: phase === "ready" ? "0 0 50px rgba(45,212,191,0.4)" : "none" }}
               transition={{ delay: .4, duration: .7 }}
-              className="fB" style={{ fontSize: "clamp(4rem,14vw,11rem)", color: "#fff", letterSpacing: ".08em", lineHeight: 1 }}
+              className="fB" style={{ fontSize: "clamp(4rem,14vw,11rem)", color: "#F8FAFC", letterSpacing: ".08em", lineHeight: 1 }}
             >
-              REVIVE<motion.span animate={{ color: phase === "ready" ? "#fff" : "#2DD4BF" }} transition={{ duration: 0.5 }}>X</motion.span>
+              REVIVE<motion.span animate={{ color: phase === "ready" ? "#F8FAFC" : "#2DD4BF" }} transition={{ duration: 0.5 }}>X</motion.span>
             </motion.div>
 
+            {/* Progress Percentage */}
             <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "center", gap: 4, marginTop: 28, marginBottom: 14 }}>
               <motion.span 
-                animate={{ color: phase === "ready" ? "#2DD4BF" : "rgba(255,255,255,.85)" }}
+                animate={{ color: phase === "ready" ? "#2DD4BF" : "#F1F5F9" }}
                 className="fM" style={{ fontSize: "3.2rem", lineHeight: 1 }}
               >
                 {String(pct).padStart(3, "0")}
@@ -1108,14 +1011,21 @@ function Preloader({ onDone }: { onDone: () => void }) {
               <span className="fM blink" style={{ fontSize: "1.6rem", color: "#2DD4BF", marginBottom: 4 }}>%</span>
             </div>
 
-            <div style={{ width: 240, height: 2, background: "rgba(255,255,255,.1)", margin: "0 auto 14px", overflow: "hidden", borderRadius: 2 }}>
+            {/* Laser Loading Bar */}
+            <div style={{ width: 260, height: 2, background: "#1E293B", margin: "0 auto 14px", overflow: "hidden", borderRadius: 2 }}>
               <motion.div
-                animate={{ width: `${pct}%`, background: phase === "ready" ? "#fff" : "#2DD4BF" }}
+                animate={{ width: `${pct}%`, background: phase === "ready" ? "#F8FAFC" : "#2DD4BF" }}
                 transition={{ duration: .05 }}
-                style={{ height: "100%", boxShadow: "0 0 14px rgba(45,212,191,.8)" }}
-              />
+                style={{ height: "100%", boxShadow: "0 0 12px rgba(45,212,191,.5)", position: "relative" }}
+              >
+                {/* Bright Laser Tip */}
+                {phase !== "ready" && (
+                  <div style={{ position: "absolute", right: 0, top: 0, bottom: 0, width: 20, background: "#fff", filter: "blur(2px)" }} />
+                )}
+              </motion.div>
             </div>
 
+            {/* Status Messages */}
             <AnimatePresence mode="wait">
               <motion.div
                 key={phase === "ready" ? "SYSTEM ONLINE." : msg}
@@ -1126,7 +1036,7 @@ function Preloader({ onDone }: { onDone: () => void }) {
                 className="fM"
                 style={{
                   fontSize: phase === "ready" ? 11 : 9,
-                  color: phase === "ready" ? "#2DD4BF" : "rgba(255,255,255,.3)",
+                  color: phase === "ready" ? "#2DD4BF" : "#94A3B8",
                   textTransform: "uppercase",
                   letterSpacing: ".24em",
                   fontWeight: phase === "ready" ? "bold" : "normal"
@@ -1135,6 +1045,7 @@ function Preloader({ onDone }: { onDone: () => void }) {
                 {phase === "ready" ? "SYSTEM ONLINE. INITIALIZING UI..." : msg}
               </motion.div>
             </AnimatePresence>
+
           </div>
         </motion.div>
       )}
@@ -1736,7 +1647,7 @@ function RoadBridge() {
   );
 }
 
-//  PROBLEM SECTION  — white bg
+//  PROBLEM SECTION  
 
 function ProblemSection() {
 
@@ -2688,9 +2599,6 @@ export default function LandingPage() {
   const [booted, setBooted] = useState(false);
 
   useLenis();
-
-
-
   return (
 
     <div className="grain" style={{ overflowX: "hidden", background: "#080f1a" }}>
@@ -2698,12 +2606,7 @@ export default function LandingPage() {
       <style>{CSS}</style>
 
       <MedicalCursor />
-
-
-
       {!booted && <Preloader onDone={() => setBooted(true)} />}
-
-
 
       <AnimatePresence>
 
