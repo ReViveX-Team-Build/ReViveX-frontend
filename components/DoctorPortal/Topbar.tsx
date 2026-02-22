@@ -14,7 +14,7 @@ export default function DoctorTopbar() {
 
       
 
-      {/* SEARCH */}
+     
 
       <div className="flex-1 max-w-xl">
 
@@ -38,7 +38,7 @@ export default function DoctorTopbar() {
 
 
 
-      {/* RIGHT ACTIONS */}
+     
 
       <div className="flex items-center gap-6">
 
@@ -91,3 +91,4 @@ export default function DoctorTopbar() {
   );
 
 }
+``
