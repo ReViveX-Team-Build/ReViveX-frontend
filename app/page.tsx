@@ -1527,3 +1527,92 @@ function HeroSection() {
 
         </Reveal>
 
+        
+        {/* CTA pill */}
+
+        <Reveal dir="up" delay={1.8}>
+
+          <div style={{ display: "flex", flexDirection: "row", alignItems: "center", gap: 8, padding: 8,
+
+            borderRadius: 32, background: "rgba(255,255,255,.03)",
+
+            border: "1px solid rgba(255,255,255,.07)",
+
+            backdropFilter: "blur(24px)",
+
+            boxShadow: "0 24px 64px rgba(0,0,0,.6), inset 0 1px 0 rgba(255,255,255,.04)" }}>
+
+            <MagButton onClick={() => router.push("/patients/home")}
+
+              className="btn-shim fB"
+
+              style={{ position: "relative", overflow: "hidden",
+
+                display: "flex", alignItems: "center", gap: 12,
+
+                padding: "18px 44px", borderRadius: 24, fontSize: 15, letterSpacing: ".12em",
+
+                background: "#2DD4BF", color: "#080f1a", border: "none",
+
+                boxShadow: "0 0 55px rgba(45,212,191,.42)" }}>
+
+              <Play size={16} style={{ fill: "#080f1a", position: "relative", zIndex: 1 }} />
+
+              <span style={{ position: "relative", zIndex: 1 }}>Patient Portal</span>
+
+            </MagButton>
+
+            <div style={{ width: 1, height: 46, background: "rgba(255,255,255,.06)" }} />
+
+            <MagButton onClick={() => router.push("/doctor/home")}
+
+              className="fB"
+
+              style={{ display: "flex", alignItems: "center", gap: 12,
+
+                padding: "18px 44px", borderRadius: 24, fontSize: 15, letterSpacing: ".12em",
+
+                background: "transparent", color: "rgba(255,255,255,.78)", border: "none" }}>
+
+              <Stethoscope size={16} />
+
+              Clinician Access
+
+              <ArrowRight size={13} style={{ opacity: .4 }} />
+
+            </MagButton>
+
+          </div>
+
+        </Reveal>
+
+        {/* Scroll hint */}
+
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+
+          transition={{ delay: 2.9, duration: 1 }}
+
+          style={{ position: "absolute", bottom: 36,
+
+            display: "flex", flexDirection: "column", alignItems: "center",
+
+            gap: 8, color: "rgba(255,255,255,.2)" }}>
+
+          <span className="fM" style={{ fontSize: 8, textTransform: "uppercase", letterSpacing: ".3em" }}>Scroll</span>
+
+          <motion.div animate={{ y: [0, 8, 0] }} transition={{ repeat: Infinity, duration: 2, ease: "easeInOut" }}>
+
+            <ChevronDown size={14} />
+
+          </motion.div>
+
+        </motion.div>
+
+      </motion.div>
+
+    </section>
+
+  );
+
+}
+
