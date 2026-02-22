@@ -2223,3 +2223,92 @@ function OfferSection() {
 }
 
 
+//  WHY SECTION
+
+
+
+function WhySection() {
+
+  const POINTS = [
+
+    { n:"01", c:"#2DD4BF", dir:"left"  as const, t:"Dual-task is the only way.",
+
+      b:"Every other device trains motor OR cognitive. Science requires both simultaneously. ReViveX is the only system built around this clinical truth." },
+
+    { n:"02", c:"#a78bfa", dir:"right" as const, t:"Patients play. They don't quit.",
+
+      b:"Gamification is a proven adherence mechanism. When therapy feels like a game, patients return daily instead of abandoning after week two." },
+
+    { n:"03", c:"#fbbf24", dir:"left"  as const, t:"A doctor is always in the loop.",
+
+      b:"Unlike every home rehab app that sends data nowhere, every session streams live to a verified clinical dashboard. Real oversight drives real outcomes." },
+
+    { n:"04", c:"#34d399", dir:"right" as const, t:"Priced for the world.",
+
+      b:"The entire device costs less than a single hospital physio session. Built to be reproducible, repairable, and accessible to every patient who needs it." },
+
+  ];
+
+  return (
+
+    <section id="why" data-theme="dark" style={{ background: "#0B1E33", padding: "120px 40px", position: "relative", overflow: "hidden" }}>
+
+      <div className="grid-dk" style={{ position: "absolute", inset: 0, pointerEvents: "none" }} />
+
+      <div style={{ position: "absolute", top: 0, right: 0, width: 500, height: 500, pointerEvents: "none",
+
+        background: "radial-gradient(circle at top right, rgba(251,191,36,.04), transparent 65%)" }} />
+
+      <div style={{ maxWidth: 1280, margin: "0 auto" }}>
+
+        <Reveal dir="zoom" style={{ textAlign: "center", marginBottom: 72 }}>
+
+          <div className="fM" style={{ fontSize: 9, color: "rgba(45,212,191,.5)", textTransform: "uppercase", letterSpacing: ".32em", marginBottom: 16 }}>Why ReViveX</div>
+
+          <h2 className="fB" style={{ fontSize: "clamp(3rem,8vw,7rem)", letterSpacing: ".03em", lineHeight: .9, color: "#fff" }}>
+
+            NOT ANOTHER<br /><span style={{ color: "#2DD4BF" }}>REHAB GADGET.</span>
+
+          </h2>
+
+        </Reveal>
+
+        <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+
+          {POINTS.map((pt, i) => (
+
+            <Reveal key={pt.n} dir={pt.dir} delay={i * .1}>
+
+              <TiltCard style={{ padding: "36px 40px", borderRadius: 28,
+
+                display: "grid", gridTemplateColumns: "80px 1fr", gap: 32, alignItems: "center",
+
+                background: "rgba(255,255,255,.022)", borderLeft: `3px solid ${pt.c}`, position: "relative", overflow: "hidden" }}>
+
+                <div className="fB" style={{ fontSize: "5rem", color: `${pt.c}18`, lineHeight: 1, pointerEvents: "none" }}>{pt.n}</div>
+
+                <div>
+
+                  <h3 className="fB" style={{ fontSize: "clamp(1.4rem,3vw,2.2rem)", color: "#fff", letterSpacing: ".04em", marginBottom: 10 }}>{pt.t}</h3>
+
+                  <p className="fS" style={{ fontSize: 15, color: "rgba(255,255,255,.48)", lineHeight: 1.78, fontWeight: 300, maxWidth: 640 }}>{pt.b}</p>
+
+                </div>
+
+              </TiltCard>
+
+            </Reveal>
+
+          ))}
+
+        </div>
+
+      </div>
+
+    </section>
+
+  );
+
+}
+
+
