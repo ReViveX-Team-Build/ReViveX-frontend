@@ -1736,3 +1736,154 @@ function RoadBridge() {
   );
 }
 
+//  PROBLEM SECTION  — white bg
+
+function ProblemSection() {
+
+  return (
+
+    <section id="problem" data-theme="light" style={{
+
+      background: "#F8F9FA", padding: "120px 40px", position: "relative", overflow: "hidden",
+
+    }}>
+
+      <div className="grid-lt" style={{ position: "absolute", inset: 0, pointerEvents: "none" }} />
+
+      <div style={{ maxWidth: 1280, margin: "0 auto" }}>
+
+        <Reveal dir="left">
+
+          <div className="fM" style={{ fontSize: 9, color: "rgba(11,30,51,.35)", textTransform: "uppercase",
+
+            letterSpacing: ".32em", marginBottom: 20, display: "flex", alignItems: "center", gap: 12 }}>
+
+            <span style={{ width: 32, height: 1, background: "rgba(11,30,51,.2)", display: "inline-block" }} />
+
+            The Problem
+
+          </div>
+
+        </Reveal>
+
+        <Reveal dir="zoom" style={{ marginBottom: 48 }}>
+
+          <h2 className="fB" style={{ fontSize: "clamp(3.5rem,8vw,7.5rem)", color: "#0B1E33", letterSpacing: ".03em", lineHeight: .9 }}>
+
+            RECOVERY IS<br /><span style={{ color: "#ef4444" }}>BROKEN.</span>
+
+          </h2>
+
+        </Reveal>
+
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 48, marginBottom: 52 }}>
+
+          <Reveal dir="left" delay={.1}>
+
+            <p className="fS" style={{ fontSize: 17, color: "#374151", lineHeight: 1.75, fontWeight: 300, maxWidth: 460, marginBottom: 24 }}>
+
+              Traditional physiotherapy is repetitive, demoralising, and completely disconnected
+
+              from daily life. No feedback. No motivation. No way to see invisible progress.
+
+              Patients don't fail because they're lazy —{" "}
+
+              <strong style={{ color: "#0B1E33" }}>they quit because the system fails them.</strong>
+
+            </p>
+
+            <p className="fS" style={{ fontSize: 15, color: "#6B7280", lineHeight: 1.75, fontWeight: 300, maxWidth: 460 }}>
+
+              High-end robotic rehabilitation systems cost over{" "}
+
+              <strong style={{ color: "#0B1E33" }}>LKR 5 million</strong>. Even if affordable,
+
+              they only treat motor symptoms — ignoring the cognitive rewiring that neuroscience says is essential for real neuroplasticity.
+
+            </p>
+
+
+          </Reveal>
+
+          <Reveal dir="right" delay={.15}>
+
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+
+              {[
+
+                { n: 28, suf: "%",  pref: "",  l: "Home adherence", sub: "quit within 3 weeks",      c: "#ef4444" },
+
+                { n: 50, suf: "K+", pref: "$", l: "Robotic cost",   sub: "vs our $200 solution",     c: "#f97316" },
+
+                { n: 80, suf: "%",  pref: "",  l: "Drop-out rate",  sub: "before recovery target",   c: "#ef4444" },
+
+                { n: 9,  suf: "m+", pref: "",  l: "Recovery time",  sub: "without proper adherence", c: "#f97316" },
+
+              ].map((s, i) => (
+
+                <Reveal key={s.l} dir="zoom" delay={i * .1}>
+
+                  <TiltCard className="stat-card" style={{ padding: "20px 18px", borderRadius: 22,
+
+                    background: "#fff", border: "1px solid rgba(11,30,51,.08)", boxShadow: "0 4px 24px rgba(11,30,51,.05)" }}>
+
+                    <div className="fB" style={{ fontSize: "2.6rem", color: s.c, lineHeight: 1, marginBottom: 4 }}>
+
+                      <CountUp to={s.n} suffix={s.suf} prefix={s.pref} />
+
+                    </div>
+
+                    <div className="fM" style={{ fontSize: 8, color: "#0B1E33", textTransform: "uppercase", letterSpacing: ".18em", marginBottom: 4 }}>{s.l}</div>
+
+                    <div className="fS" style={{ fontSize: 11, color: "#9CA3AF", lineHeight: 1.5 }}>{s.sub}</div>
+
+                  </TiltCard>
+
+                </Reveal>
+
+              ))}
+
+            </div>
+
+          </Reveal>
+
+        </div>
+
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 18 }}>
+
+          {[
+
+            { t: "No Motivation", c: "#ef4444", b: "Squeezing a rubber ball 100 times with zero feedback isn't therapy — it's punishment. The brain doesn't rewire under boredom." },
+
+            { t: "No Access",     c: "#f97316", b: "Robotic exoskeletons cost more than a car. Hospital visits 3× a week for 6 months is unsustainable for almost any family." },
+
+            { t: "Cognitive Gap", c: "#ef4444", b: "Every existing device only trains the hand. None address the cognitive recovery neuroscience says is essential for real neuroplasticity." },
+
+          ].map((card, i) => (
+
+            <Reveal key={card.t} dir="up" delay={i * .12}>
+
+              <TiltCard style={{ padding: "28px 24px", borderRadius: 26, height: "100%",
+
+                background: "#fff", borderLeft: `3px solid ${card.c}`, boxShadow: "0 4px 28px rgba(11,30,51,.06)" }}>
+
+                <div className="fB" style={{ fontSize: 22, color: "#0B1E33", letterSpacing: ".04em", marginBottom: 12 }}>{card.t}</div>
+
+                <p className="fS" style={{ fontSize: 14, color: "#4B5563", lineHeight: 1.75, fontWeight: 300 }}>{card.b}</p>
+
+              </TiltCard>
+
+            </Reveal>
+
+          ))}
+
+        </div>
+
+      </div>
+
+    </section>
+
+  );
+
+}
+
