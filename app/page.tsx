@@ -331,3 +331,129 @@ function useVelocitySkew() {
   return useSpring(raw, { stiffness: 520, damping: 130 });
 
 }
+
+
+type RDir = "up"|"down"|"left"|"right"|"zoom"|"zoom-tilt"|"horizon"|"flip";
+
+function Reveal({ children, dir = "up", delay = 0, className = "", style }:
+
+  { children: React.ReactNode; dir?: RDir; delay?: number; className?: string; style?: React.CSSProperties }) {
+
+  const ref  = useRef(null);
+
+  const seen = useInView(ref, { once: true, margin: "-65px" });
+
+ const V: Record<RDir, Variants> = {
+
+    up:          { hidden: { y: 72, opacity: 0 },                    visible: { y: 0, opacity: 1 } },
+
+    down:        { hidden: { y: -50, opacity: 0 },                   visible: { y: 0, opacity: 1 } },
+
+    left:        { hidden: { x: -110, opacity: 0 },                  visible: { x: 0, opacity: 1 } },
+
+    right:       { hidden: { x: 110, opacity: 0 },                   visible: { x: 0, opacity: 1 } },
+
+    zoom:        { hidden: { scale: .7, opacity: 0 },                 visible: { scale: 1, opacity: 1 } },
+
+    "zoom-tilt": { hidden: { scale: .7, rotateY: -18, opacity: 0 }, visible: { scale: 1, rotateY: 0, opacity: 1 } },
+
+    horizon:     { hidden: { scaleX: .06, scaleY: .06, opacity: 0 }, visible: { scaleX: 1, scaleY: 1, opacity: 1 } },
+
+    flip:        { hidden: { rotateX: 90, opacity: 0 },              visible: { rotateX: 0, opacity: 1 } },
+
+  };
+
+  return (
+
+    <motion.div ref={ref} className={className} style={style}
+
+      variants={V[dir]} initial="hidden"
+
+      animate={seen ? "visible" : "hidden"}
+
+      transition={{ duration: 1, delay, ease: [0.22, 1, 0.36, 1] }}>
+
+      {children}
+
+    </motion.div>
+
+  );
+
+}
+
+function SplitText({ text, style, className = "", delay = 0, stagger = 0.03 }:
+
+  { text: string; style?: React.CSSProperties; className?: string; delay?: number; stagger?: number }) {
+
+  const ref  = useRef(null);
+
+  const seen = useInView(ref, { once: true, margin: "-55px" });
+
+  return (
+
+    <span ref={ref} className={className} style={style} aria-label={text}>
+
+      {text.split("").map((c, i) => (
+
+        <motion.span key={i} style={{ display: "inline-block" }}
+
+          initial={{ y: "120%", opacity: 0 }}
+
+          animate={seen ? { y: "0%", opacity: 1 } : {}}
+
+          transition={{ duration: .75, delay: delay + i * stagger, ease: [0.22, 1, 0.36, 1] }}>
+
+          {c === " " ? "\u00A0" : c}
+
+        </motion.span>
+
+      ))}
+
+    </span>
+
+  );
+
+}
+
+
+function CountUp({ to, suffix = "", prefix = "", decimals = 0 }:
+
+  { to: number; suffix?: string; prefix?: string; decimals?: number }) {
+
+  const ref    = useRef<HTMLSpanElement>(null);
+
+  const inView = useInView(ref, { once: true, margin: "-50px" });
+
+  const [val, setVal] = useState(0);
+
+  useEffect(() => {
+
+    if (!inView) return;
+
+    let start: number | null = null;
+
+    const dur = 1400;
+
+    const raf = (ts: number) => {
+
+      if (!start) start = ts;
+
+      const p = Math.min((ts - start) / dur, 1);
+
+      const eased = 1 - Math.pow(1 - p, 3);
+
+      setVal(parseFloat((eased * to).toFixed(decimals)));
+
+      if (p < 1) requestAnimationFrame(raf);
+
+      else setVal(to);
+
+    };
+
+    requestAnimationFrame(raf);
+
+  }, [inView, to, decimals]);
+
+  return <span ref={ref}>{prefix}{decimals > 0 ? val.toFixed(decimals) : val}{suffix}</span>;
+
+}
