@@ -966,10 +966,15 @@ const ECG_PATH = `
   L2770 76 L2788 85 L2806 18 L2822 148 L2834 6 L2850 80 L3000 80
 `;
 
+//  PRELOADER (Procedural Neural Signal Generator)
+
 function Preloader({ onDone }: { onDone: () => void }) {
   const [pct, setPct] = useState(0);
   const [phase, setPhase] = useState<"loading" | "ready" | "exit">("loading");
   const [msg, setMsg] = useState("DETECTING NEURAL SIGNAL...");
+  
+  // 1. Static initial state for Server-Side Rendering (Fixes Hydration Error)
+  const [ecgPath, setEcgPath] = useState("M-50 80 L3000 80"); 
 
   const MSGS = [
     "DETECTING NEURAL SIGNAL...",
@@ -980,8 +985,37 @@ function Preloader({ onDone }: { onDone: () => void }) {
     "NEURAL LINK ESTABLISHED."
   ];
 
+  // 2. Generate the random procedural path ONLY on the client after mount
   useEffect(() => {
-    // Smoothly count to 100
+    let path = "M-50 80";
+    let x = -50;
+    while (x < 3500) {
+      const noiseLength = 80 + Math.random() * 200;
+      const targetX = x + noiseLength;
+      while (x < targetX) {
+        x += 10 + Math.random() * 15;
+        const y = 80 + (Math.random() - 0.5) * 6;
+        path += ` L${x.toFixed(1)} ${y.toFixed(1)}`;
+      }
+      x += 18; path += ` L${x.toFixed(1)} ${70 - Math.random() * 12}`;
+      x += 12; path += ` L${x.toFixed(1)} ${80 + Math.random() * 4}`;
+      x += 10; path += ` L${x.toFixed(1)} ${95 + Math.random() * 10}`;
+      const isHuge = Math.random() > 0.8;
+      x += 12; path += ` L${x.toFixed(1)} ${(isHuge ? -30 : 10).toFixed(1)}`;
+      x += 14; path += ` L${x.toFixed(1)} ${(isHuge ? 190 : 150).toFixed(1)}`;
+      if (Math.random() > 0.7) {
+        x += 10; path += ` L${x.toFixed(1)} ${-5 - Math.random() * 20}`;
+        x += 12; path += ` L${x.toFixed(1)} ${140 + Math.random() * 20}`;
+      }
+      x += 15; path += ` L${x.toFixed(1)} ${80 + (Math.random() - 0.5) * 8}`;
+      x += 25; path += ` L${x.toFixed(1)} ${65 - Math.random() * 12}`;
+      x += 20; path += ` L${x.toFixed(1)} 80`;
+    }
+    setEcgPath(path);
+  }, []);
+
+  // 3. Handle the loading sequence and phases
+  useEffect(() => {
     const counter = setInterval(() => {
       setPct((p) => {
         if (p >= 100) { clearInterval(counter); return 100; }
@@ -995,10 +1029,9 @@ function Preloader({ onDone }: { onDone: () => void }) {
       setMsg(MSGS[mi]);
     }, 600);
 
-    // Timeline triggers
-    const t1 = setTimeout(() => setPhase("ready"), 3200); // Trigger the epic glowing state
-    const t2 = setTimeout(() => setPhase("exit"), 4200);  // Hold the epic state for 1 second, then exit
-    const t3 = setTimeout(onDone, 5000);                  // Fully remove component
+    const t1 = setTimeout(() => setPhase("ready"), 3200);
+    const t2 = setTimeout(() => setPhase("exit"), 4200);
+    const t3 = setTimeout(onDone, 5000);
 
     return () => { clearInterval(counter); clearInterval(msgTimer); [t1, t2, t3].forEach(clearTimeout); };
   }, [onDone]);
@@ -1008,7 +1041,6 @@ function Preloader({ onDone }: { onDone: () => void }) {
       {phase !== "exit" && (
         <motion.div
           key="pl"
-          // Exits with a smooth upwards slide and a futuristic blur fade
           exit={{ y: "-100%", opacity: 0, filter: "blur(10px)", transition: { duration: 0.9, ease: [0.76, 0, 0.24, 1] } }}
           style={{
             position: "fixed", inset: 0, zIndex: 9900,
@@ -1016,64 +1048,56 @@ function Preloader({ onDone }: { onDone: () => void }) {
             overflow: "hidden", background: "#080f1a",
           }}
         >
-          {/* Dynamic Background Glow - Expands when system is "ready" */}
           <motion.div
             animate={{ opacity: phase === "ready" ? 0.8 : 0.4, scale: phase === "ready" ? 1.5 : 1 }}
             transition={{ duration: 0.8, ease: "easeOut" }}
             style={{
               position: "absolute", inset: 0, pointerEvents: "none",
-              background: "radial-gradient(circle at center, rgba(45,212,191,0.15) 0%, transparent 60%)"
+              background: "radial-gradient(circle at center, rgba(45,212,191,0.18) 0%, transparent 60%)"
             }}
           />
           
-          {/* Grid lines intensify when ready */}
           <div className="grid-dk" style={{ position: "absolute", inset: 0, pointerEvents: "none", opacity: phase === "ready" ? 0.8 : 0.3, transition: "opacity 0.8s" }} />
 
-          {/* Framer Motion SVG Drawing (Replaces the old CSS keyframes) */}
           <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", overflow: "hidden", pointerEvents: "none" }}>
             <svg width="100%" height="160" viewBox="0 0 3000 160" preserveAspectRatio="none">
-              {/* Outer Blurred Glow */}
-              <motion.path d={ECG_PATH} fill="none" stroke="#2DD4BF" strokeWidth="8" strokeLinecap="round" strokeLinejoin="round"
-                style={{ filter: "blur(12px)" }}
+              <motion.path d={ecgPath} fill="none" stroke="#2DD4BF" strokeWidth="6" strokeLinecap="round" strokeLinejoin="bevel"
+                style={{ filter: "blur(10px)" }}
                 initial={{ pathLength: 0, opacity: 0 }}
-                animate={{ pathLength: 1, opacity: phase === "ready" ? 0 : 0.6 }} // Fades out when ready
-                transition={{ duration: 2.8, ease: "easeInOut" }}
+                animate={{ pathLength: 1, opacity: phase === "ready" ? 0 : 0.7 }}
+                transition={{ duration: 2.8, ease: "linear" }}
               />
-              {/* Inner White Core */}
-              <motion.path d={ECG_PATH} fill="none" stroke="#FFFFFF" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
+              <motion.path d={ecgPath} fill="none" stroke="#FFFFFF" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="bevel"
                 initial={{ pathLength: 0, opacity: 0 }}
                 animate={{ pathLength: 1, opacity: phase === "ready" ? 0 : 1 }}
-                transition={{ duration: 2.8, ease: "easeInOut" }}
+                transition={{ duration: 2.8, ease: "linear" }}
               />
             </svg>
           </div>
 
           <div style={{ position: "relative", zIndex: 2, textAlign: "center" }}>
-            {/* Heart Icon - Transitions from slow beat to hyper-pulse when ready */}
             <motion.div
-              animate={phase === "ready" ? { scale: [1, 1.4, 1], filter: ["blur(0px)", "blur(4px)", "blur(0px)"] } : {}}
+              animate={phase === "ready" ? { scale: [1, 1.5, 1], filter: ["blur(0px)", "blur(6px)", "blur(0px)"] } : {}}
               transition={{ repeat: phase === "ready" ? Infinity : 0, duration: 0.4 }}
               style={{ marginBottom: 18, color: "#2DD4BF", display: "flex", justifyContent: "center" }}
               className={phase !== "ready" ? "heartbeat" : ""}
             >
-              <Heart size={36} style={{ fill: "#2DD4BF", filter: phase === "ready" ? "drop-shadow(0 0 20px #2DD4BF)" : "none", transition: "filter 0.5s" }} />
+              <Heart size={36} style={{ fill: "#2DD4BF", filter: phase === "ready" ? "drop-shadow(0 0 25px #2DD4BF)" : "none", transition: "filter 0.5s" }} />
             </motion.div>
 
             <div className="fM" style={{ fontSize: 9, color: "rgba(255,255,255,.3)", textTransform: "uppercase", letterSpacing: ".42em", marginBottom: 24 }}>
               NEURO-REHABILITATION SYSTEM
             </div>
 
-            {/* Logo - Glows intensely upon 100% */}
             <motion.div
               initial={{ opacity: 0, scale: .8 }}
-              animate={{ opacity: 1, scale: phase === "ready" ? 1.05 : 1, textShadow: phase === "ready" ? "0 0 50px rgba(45,212,191,0.6)" : "none" }}
+              animate={{ opacity: 1, scale: phase === "ready" ? 1.05 : 1, textShadow: phase === "ready" ? "0 0 60px rgba(45,212,191,0.8)" : "none" }}
               transition={{ delay: .4, duration: .7 }}
               className="fB" style={{ fontSize: "clamp(4rem,14vw,11rem)", color: "#fff", letterSpacing: ".08em", lineHeight: 1 }}
             >
               REVIVE<motion.span animate={{ color: phase === "ready" ? "#fff" : "#2DD4BF" }} transition={{ duration: 0.5 }}>X</motion.span>
             </motion.div>
 
-            {/* Progress Numbers */}
             <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "center", gap: 4, marginTop: 28, marginBottom: 14 }}>
               <motion.span 
                 animate={{ color: phase === "ready" ? "#2DD4BF" : "rgba(255,255,255,.85)" }}
@@ -1084,7 +1108,6 @@ function Preloader({ onDone }: { onDone: () => void }) {
               <span className="fM blink" style={{ fontSize: "1.6rem", color: "#2DD4BF", marginBottom: 4 }}>%</span>
             </div>
 
-            {/* Loading Bar */}
             <div style={{ width: 240, height: 2, background: "rgba(255,255,255,.1)", margin: "0 auto 14px", overflow: "hidden", borderRadius: 2 }}>
               <motion.div
                 animate={{ width: `${pct}%`, background: phase === "ready" ? "#fff" : "#2DD4BF" }}
@@ -1093,7 +1116,6 @@ function Preloader({ onDone }: { onDone: () => void }) {
               />
             </div>
 
-            {/* Subtext Status */}
             <AnimatePresence mode="wait">
               <motion.div
                 key={phase === "ready" ? "SYSTEM ONLINE." : msg}
