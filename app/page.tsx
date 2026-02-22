@@ -698,3 +698,445 @@ function NeuralNetwork({ mouse }: { mouse: { x: number; y: number } }) {
   );
 
 }
+
+
+
+function MedicalCursor() {
+
+  const crossRef = useRef<HTMLDivElement>(null);
+
+  const ringRef  = useRef<HTMLDivElement>(null);
+
+  const trailRef = useRef<Array<HTMLDivElement | null>>([]);
+
+  const histRef  = useRef<Array<{ x: number; y: number }>>([]);
+
+  const TRAIL    = 8;
+
+
+
+  const [mode,  setMode]  = useState<"default"|"hover"|"click">("default");
+
+  const [light, setLight] = useState(false);
+
+
+
+  useEffect(() => {
+
+    let mx = -400, my = -400, rx = -400, ry = -400, raf = 0;
+
+
+
+    const onMove = (e: MouseEvent) => {
+
+      mx = e.clientX; my = e.clientY;
+
+      let el = document.elementFromPoint(mx, my) as HTMLElement | null;
+
+      while (el) {
+
+        if (el.dataset?.theme === "light") { setLight(true);  break; }
+
+        if (el.dataset?.theme === "dark")  { setLight(false); break; }
+
+        el = el.parentElement;
+
+      }
+
+    };
+
+    const onDown = () => setMode("click");
+
+    const onUp   = () => setMode(m => m === "click" ? "default" : m);
+
+    const onIn   = () => setMode("hover");
+
+    const onOut  = () => setMode("default");
+
+
+
+    document.addEventListener("mousemove", onMove);
+
+    document.addEventListener("mousedown", onDown);
+
+    document.addEventListener("mouseup",   onUp);
+
+    document.querySelectorAll("button,a,[data-mag]").forEach(el => {
+
+      el.addEventListener("mouseenter", onIn);
+
+      el.addEventListener("mouseleave", onOut);
+
+    });
+
+
+
+    const tick = () => {
+
+      if (crossRef.current) {
+
+        crossRef.current.style.left = `${mx}px`;
+
+        crossRef.current.style.top  = `${my}px`;
+
+      }
+
+      rx += (mx - rx) * 0.1; ry += (my - ry) * 0.1;
+
+      if (ringRef.current) {
+
+        ringRef.current.style.left = `${rx}px`;
+
+        ringRef.current.style.top  = `${ry}px`;
+
+      }
+
+      histRef.current.unshift({ x: mx, y: my });
+
+      if (histRef.current.length > TRAIL) histRef.current.pop();
+
+      trailRef.current.forEach((dot, i) => {
+
+        const p = histRef.current[i + 1];
+
+        if (!dot || !p) return;
+
+        dot.style.left    = `${p.x}px`;
+
+        dot.style.top     = `${p.y}px`;
+
+        dot.style.opacity = `${(1 - i / TRAIL) * 0.32}`;
+
+        const s = `${3.5 - i * 0.38}px`;
+
+        dot.style.width = s; dot.style.height = s;
+
+      });
+
+      raf = requestAnimationFrame(tick);
+
+    };
+
+    raf = requestAnimationFrame(tick);
+
+
+
+    return () => {
+
+      document.removeEventListener("mousemove", onMove);
+
+      document.removeEventListener("mousedown", onDown);
+
+      document.removeEventListener("mouseup",   onUp);
+
+      cancelAnimationFrame(raf);
+
+    };
+
+  }, []);
+
+
+
+  const C  = light ? "#0B1E33" : "#2DD4BF";
+
+  const sz = mode === "hover" ? 54 : mode === "click" ? 22 : 32;
+
+
+
+  return (
+
+    <>
+
+      {Array.from({ length: TRAIL - 1 }).map((_, i) => (
+
+        <div key={i} ref={el => { trailRef.current[i] = el; }}
+
+          style={{ position: "fixed", zIndex: 99990, pointerEvents: "none",
+
+            width: 4, height: 4, borderRadius: "50%", background: C, transform: "translate(-50%,-50%)" }} />
+
+      ))}
+
+      <div ref={ringRef} style={{
+
+        position: "fixed", zIndex: 99997, pointerEvents: "none",
+
+        width:  mode === "hover" ? 64 : mode === "click" ? 14 : 42,
+
+        height: mode === "hover" ? 64 : mode === "click" ? 14 : 42,
+
+        borderRadius: mode === "hover" ? 12 : "50%",
+
+        border: `1px solid ${C}`,
+
+        opacity: mode === "hover" ? .6 : .25,
+
+        background: mode === "hover" ? `${C}0b` : "transparent",
+
+        boxShadow: mode === "hover" ? `0 0 32px ${C}35` : "none",
+
+        transform: "translate(-50%,-50%)",
+
+        transition: "width .28s, height .28s, border-radius .3s, opacity .3s",
+
+      }} />
+
+      <div ref={crossRef} style={{ position: "fixed", zIndex: 99999, pointerEvents: "none", transform: "translate(-50%,-50%)" }}>
+
+        <svg width={sz} height={sz} viewBox="-20 -20 40 40"
+
+          style={{ display: "block", transition: "width .22s, height .22s" }}>
+
+          <line x1="-17" y1="0"   x2="-7"  y2="0"   stroke={C} strokeWidth={mode==="click"?1:1.5} strokeLinecap="round" />
+
+          <line x1="7"   y1="0"   x2="17"  y2="0"   stroke={C} strokeWidth={mode==="click"?1:1.5} strokeLinecap="round" />
+
+          <line x1="0"   y1="-17" x2="0"   y2="-7"  stroke={C} strokeWidth={mode==="click"?1:1.5} strokeLinecap="round" />
+
+          <line x1="0"   y1="7"   x2="0"   y2="17"  stroke={C} strokeWidth={mode==="click"?1:1.5} strokeLinecap="round" />
+
+          <circle cx="0" cy="0" r={mode==="click" ? 1.2 : 1.9} fill={C} />
+
+          <g className="arc-cw">
+
+            <path d="M-14,0 A14,14 0 0,1 0,-14" stroke={C} strokeWidth="1.5" fill="none"
+
+              style={{ filter: `drop-shadow(0 0 4px ${C})` }} />
+
+          </g>
+
+          <g className="arc-ccw">
+
+            <path d="M14,0 A14,14 0 0,1 0,14" stroke={C} strokeWidth="1.5" fill="none" opacity=".5" />
+
+          </g>
+
+          <line x1="-13" y1="-13" x2="-10" y2="-10" stroke={C} strokeWidth=".7" opacity=".4" />
+
+          <line x1="13"  y1="-13" x2="10"  y2="-10" stroke={C} strokeWidth=".7" opacity=".4" />
+
+          <line x1="-13" y1="13"  x2="-10" y2="10"  stroke={C} strokeWidth=".7" opacity=".4" />
+
+          <line x1="13"  y1="13"  x2="10"  y2="10"  stroke={C} strokeWidth=".7" opacity=".4" />
+
+          {mode === "hover" && (
+
+            <>
+
+              <path d="M-17,-17 L-10,-17 M-17,-17 L-17,-10" stroke={C} strokeWidth="1.5" fill="none" />
+
+              <path d="M17,-17 L10,-17 M17,-17 L17,-10"     stroke={C} strokeWidth="1.5" fill="none" />
+
+              <path d="M-17,17 L-10,17 M-17,17 L-17,10"     stroke={C} strokeWidth="1.5" fill="none" />
+
+              <path d="M17,17 L10,17 M17,17 L17,10"         stroke={C} strokeWidth="1.5" fill="none" />
+
+            </>
+
+          )}
+
+        </svg>
+
+      </div>
+
+    </>
+
+  );
+
+}
+
+
+const ECG_PATH = `
+
+  M-80 80 L-20 80 L0 76 L18 85
+
+  L36 18  L52 148 L64 6  L80 80  L145 80
+
+  L200 80 L218 76 L236 85
+
+  L254 18 L270 148 L282 6 L298 80 L363 80
+
+  L420 80 L438 76 L456 85
+
+  L474 18 L490 148 L502 6 L518 80 L583 80
+
+  L640 80 L658 76 L676 85
+
+  L694 18 L710 148 L722 6 L738 80 L803 80
+
+  L860 80 L878 76 L896 85
+
+  L914 18 L930 148 L942 6 L958 80 L1023 80
+
+  L1100 80 L1220 80
+
+`;
+
+function Preloader({ onDone }: { onDone: () => void }) {
+
+  const [pct,   setPct]   = useState(0);
+
+  const [phase, setPhase] = useState<"draw"|"flash"|"exit">("draw");
+
+  const [msg,   setMsg]   = useState("DETECTING NEURAL SIGNAL...");
+
+
+  const MSGS = [
+
+    "DETECTING NEURAL SIGNAL...",
+
+    "CALIBRATING GRIP SENSOR...",
+
+    "LOADING THERAPY PROTOCOL...",
+
+    "ESTABLISHING CLOUD LINK...",
+
+    "ACTIVATING AI COMPANION...",
+
+    "SYSTEM ONLINE.",
+
+  ];
+
+
+
+  useEffect(() => {
+
+    const counter  = setInterval(() => setPct(p => { if (p >= 100) { clearInterval(counter); return 100; } return p + 1; }), 28);
+
+    let mi = 0;
+
+    const msgTimer = setInterval(() => { mi = Math.min(mi + 1, MSGS.length - 1); setMsg(MSGS[mi]); }, 600);
+
+    const t1 = setTimeout(() => setPhase("flash"), 3400);
+
+    const t2 = setTimeout(() => setPhase("exit"),  3850);
+
+    const t3 = setTimeout(onDone, 4600);
+
+    return () => { clearInterval(counter); clearInterval(msgTimer); [t1,t2,t3].forEach(clearTimeout); };
+
+  }, [onDone]);
+
+
+
+  return (
+
+    <AnimatePresence>
+
+      {phase !== "exit" && (
+
+        <motion.div key="pl"
+
+          exit={{ y: "-100%", transition: { duration: 1.1, ease: [0.76, 0, 0.24, 1] } }}
+
+          style={{
+
+            position: "fixed", inset: 0, zIndex: 9900,
+
+            display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
+
+            overflow: "hidden",
+
+            background: phase === "flash" ? "#FFFFFF" : "#080f1a",
+
+            transition: phase === "flash" ? "background .08s" : "background .7s .2s",
+
+          }}>
+
+          <div className="grid-dk" style={{ position: "absolute", inset: 0, pointerEvents: "none" }} />
+
+          <div className="glow-breath" style={{ position: "absolute", inset: 0, pointerEvents: "none",
+
+            background: "radial-gradient(ellipse 52% 42% at 50% 52%, rgba(45,212,191,.09), transparent 62%)" }} />
+
+          <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", overflow: "hidden", pointerEvents: "none" }}>
+
+            <svg width="100%" height="160" viewBox="0 0 1220 160" preserveAspectRatio="xMidYMid slice">
+
+              <path d={ECG_PATH} fill="none" stroke="#2DD4BF" strokeWidth="8"
+
+                strokeLinecap="round" strokeLinejoin="round"
+
+                style={{ filter: "blur(15px)", opacity: .45 }}
+
+                className="ecg-line" />
+
+              <path d={ECG_PATH} fill="none" stroke="#2DD4BF" strokeWidth="2.2"
+
+                strokeLinecap="round" strokeLinejoin="round"
+
+                className="ecg-line" />
+
+            </svg>
+
+          </div>
+
+          <div style={{ position: "relative", zIndex: 2, textAlign: "center" }}>
+
+            <div className="heartbeat" style={{ marginBottom: 18, color: "#2DD4BF", display: "flex", justifyContent: "center" }}>
+
+              <Heart size={30} style={{ fill: "#2DD4BF" }} />
+
+            </div>
+
+            <div className="fM" style={{ fontSize: 9, color: "rgba(255,255,255,.2)", textTransform: "uppercase", letterSpacing: ".42em", marginBottom: 24 }}>
+
+              NEURO-REHABILITATION SYSTEM
+
+            </div>
+
+            <motion.div initial={{ opacity: 0, scale: .8 }} animate={{ opacity: 1, scale: 1 }}
+
+              transition={{ delay: .4, duration: .7 }}
+
+              className="fB" style={{ fontSize: "clamp(4rem,14vw,11rem)", color: "#fff", letterSpacing: ".08em", lineHeight: 1 }}>
+
+              REVIVE<span style={{ color: "#2DD4BF" }}>X</span>
+
+            </motion.div>
+
+            <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "center", gap: 4, marginTop: 28, marginBottom: 14 }}>
+
+              <span className="fM" style={{ fontSize: "3.2rem", color: "rgba(255,255,255,.85)", lineHeight: 1 }}>
+
+                {String(pct).padStart(3, "0")}
+
+              </span>
+
+              <span className="fM blink" style={{ fontSize: "1.6rem", color: "#2DD4BF", marginBottom: 4 }}>%</span>
+
+            </div>
+
+            <div style={{ width: 200, height: 1, background: "rgba(255,255,255,.1)", margin: "0 auto 14px", overflow: "hidden" }}>
+
+              <motion.div animate={{ width: `${pct}%` }} transition={{ duration: .05 }}
+
+                style={{ height: "100%", background: "linear-gradient(90deg,#2DD4BF,#0891b2)", boxShadow: "0 0 14px rgba(45,212,191,.8)" }} />
+
+            </div>
+
+            <AnimatePresence mode="wait">
+
+              <motion.div key={msg} initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }}
+
+                exit={{ opacity: 0, y: -4 }} transition={{ duration: .3 }}
+
+                className="fM" style={{ fontSize: 9, color: "rgba(255,255,255,.22)", textTransform: "uppercase", letterSpacing: ".24em" }}>
+
+                {msg}
+
+              </motion.div>
+
+            </AnimatePresence>
+
+          </div>
+
+        </motion.div>
+
+      )}
+
+    </AnimatePresence>
+
+  );
+
+}
