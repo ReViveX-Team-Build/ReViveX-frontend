@@ -2680,3 +2680,76 @@ function Footer() {
 
 }
 
+
+//  ROOT PAGE
+
+export default function LandingPage() {
+
+  const [booted, setBooted] = useState(false);
+
+  useLenis();
+
+
+
+  return (
+
+    <div className="grain" style={{ overflowX: "hidden", background: "#080f1a" }}>
+
+      <style>{CSS}</style>
+
+      <MedicalCursor />
+
+
+
+      {!booted && <Preloader onDone={() => setBooted(true)} />}
+
+
+
+      <AnimatePresence>
+
+        {booted && (
+
+          <motion.div key="site"
+
+            initial={{ opacity: 0, scale: .95 }}
+
+            animate={{ opacity: 1, scale: 1 }}
+
+            transition={{ duration: 1.05, ease: [0.22, 1, 0.36, 1] }}>
+
+
+
+            <Navbar />
+
+            <HeroSection />
+
+            <RoadBridge />
+
+            <ProblemSection />
+
+            <DarkBridge />
+
+            <SolutionSection />
+
+            <OfferSection />
+
+            <WhySection />
+
+            <MarqueeStrip />
+
+            <Footer />
+
+
+
+          </motion.div>
+
+        )}
+
+      </AnimatePresence>
+
+    </div>
+
+  );
+
+}
+
