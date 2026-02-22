@@ -1418,3 +1418,112 @@ function HeroSection() {
           </p>
 
         </Reveal>
+        
+        {/* Device */}
+
+        <Reveal dir="zoom" delay={.85} style={{ marginBottom: 80 }}>
+
+          <motion.div style={{ x: dX, y: dY, position: "relative", width: "300px", height: "240px" }}>
+
+            {[280, 210, 148].map((s, i) => (
+
+              <div key={i} style={{ position: "absolute", top: "50%", left: "50%",
+
+                width: s, height: s, borderRadius: "50%",
+
+                border: `1px solid rgba(45,212,191,${.04+i*.05})`,
+
+                transform: "translate(-50%,-50%)", pointerEvents: "none" }} />
+
+            ))}
+
+            <div className="ring-pop" style={{ width: 190, height: 190, borderRadius: "50%",
+
+              border: "1px solid rgba(45,212,191,.55)", pointerEvents: "none" }} />
+
+
+
+            <TiltCard style={{ position: "relative", zIndex: 2, width: "100%", height: "100%",
+
+              borderRadius: 44, display: "flex", flexDirection: "column",
+
+              alignItems: "center", justifyContent: "center", gap: 14 }}
+
+              className="float-card">
+
+              <div style={{ width: "100%", height: "100%", borderRadius: 44,
+
+                display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 14,
+
+                background: "linear-gradient(145deg,rgba(45,212,191,.12),rgba(4,10,20,.94))",
+
+                border: "1px solid rgba(45,212,191,.24)",
+
+                boxShadow: "0 0 80px rgba(45,212,191,.16), inset 0 1px 0 rgba(255,255,255,.05)" }}>
+
+                <Cpu size={44} strokeWidth={.9} style={{ color: "#2DD4BF", opacity: .55 }} />
+
+                <div className="fM" style={{ fontSize: 7, color: "rgba(255,255,255,.2)",
+
+                  textTransform: "uppercase", letterSpacing: ".22em", textAlign: "center", lineHeight: 1.8 }}>
+
+                  BP BULB · ESP32<br />MPX10DP · MPU6050
+
+                </div>
+
+                <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+
+                  <div style={{ width: 6, height: 6, borderRadius: "50%",
+
+                    background: "#2DD4BF", animation: "blink 1.3s step-end infinite" }} />
+
+                  <span className="fM" style={{ fontSize: 7, color: "rgba(45,212,191,.5)",
+
+                    textTransform: "uppercase", letterSpacing: ".26em" }}>LIVE</span>
+
+                </div>
+
+              </div>
+
+            </TiltCard>
+
+            {/* Floating data chips */}
+
+            {chips.map((chip, i) => (
+
+              <motion.div key={chip.l}
+
+                style={{ position: "absolute", x: chip.cx, y: chip.cy,
+
+                  left: "50%", transform: "translateX(-50%)" }}
+
+                initial={{ opacity: 0, scale: .5 }}
+
+                animate={{ opacity: 1, scale: 1 }}
+
+                transition={{ delay: chip.delay, duration: .55 }}>
+
+                <div style={{ padding: "7px 12px", borderRadius: 12, textAlign: "center",
+
+                  background: "rgba(4,10,20,.94)", border: `1px solid ${chip.c}25`,
+
+                  backdropFilter: "blur(14px)",
+
+                  boxShadow: `0 4px 24px rgba(0,0,0,.5), 0 0 12px ${chip.c}15` }}>
+
+                  <div className="fM" style={{ fontSize: 7, color: "rgba(255,255,255,.2)",
+
+                    textTransform: "uppercase", letterSpacing: ".2em" }}>{chip.l}</div>
+
+                  <div className="fB" style={{ fontSize: 15, color: chip.c, lineHeight: 1.2 }}>{chip.v}</div>
+
+                </div>
+
+              </motion.div>
+
+            ))}
+
+          </motion.div>
+
+        </Reveal>
+
