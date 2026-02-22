@@ -1616,3 +1616,123 @@ function HeroSection() {
 
 }
 
+//  ROAD BRIDGE  
+
+function RoadBridge() {
+  const ref = useRef<HTMLDivElement>(null);
+  const { scrollYProgress: p } = useScroll({ target: ref, offset: ["start start", "end end"] });
+
+  const bgColor    = useTransform(p, [0, .6, .85, 1], ["#080f1a", "#080f1a", "#0B1E33", "#F8F9FA"]);
+  const sweepX     = useTransform(p, [0, .10], ["-100%", "100%"]);
+  const sweepOp    = useTransform(p, [3, .01, .10, .15], [2, 0, 0, 5]);
+
+
+  const theY       = useTransform(p, [0, .10, .10, .32], ["100vh", "0vh", "0vh", "0vh"]);
+  const theScale   = useTransform(p, [0, .10, .10, .32], [0.4, 1, 1.2, 20]);
+  const theOp      = useTransform(p, [0, .10, .10, .32], [0, 1, 1, 0]);
+
+  const iw         = typeof window !== "undefined" ? window.innerWidth : 1440;
+
+  const probX      = useTransform(p, [.10, .10], [-iw * 0.15, 0]);
+  const probOp     = useTransform(p, [.0, .10, .50, .58], [0, 1, 1, 0]);
+  
+  const cntY       = useTransform(p, [.0, .10], [100, 0]);
+  const cntScale   = useTransform(p, [.0, .10], [.6, 1]);
+  const cntOp      = useTransform(p, [.0, .15, .50, .58], [0, 0.15, 0.15, 0]); // Faint background
+
+  const statsY     = useTransform(p, [.10, .10], [60, 0]);
+  const statsOp    = useTransform(p, [.10, .40, .55, .62], [0, 1, 1, 0]);
+
+  const realX      = useTransform(p, [.48, .56], [iw * 0.15, 0]);
+  const realOp     = useTransform(p, [.48, .52, .70, .78], [0, 1, 1, 0]);
+
+  const finalY     = useTransform(p, [.72, .82], [80, 0]);
+  const finalScale = useTransform(p, [.72, .82, 1], [.8, 1, 1.05]); 
+  const finalOp    = useTransform(p, [.72, .80], [0, 1]); 
+  
+  const textCol    = useTransform(p, [.72, .85], ["#FFFFFF", "#0B1E33"]);
+  const subCol     = useTransform(p, [.72, .85], ["rgba(255,255,255,.5)", "rgba(11,30,51,.6)"]);
+
+  const centerWrap: React.CSSProperties = {
+    position: "absolute", top: 0, left: 0, right: 0, bottom: 0,
+    display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
+    pointerEvents: "none"
+  };
+
+  return (
+    <div ref={ref} style={{ height: "220vh", position: "relative" }}>
+      <motion.div style={{
+        position: "sticky", top: 0, height: "100vh", overflow: "hidden", backgroundColor: bgColor, perspective: 1000
+      }}>
+        <div className="grid-dk" style={{ position: "absolute", inset: 0, pointerEvents: "none" }} />
+        <div className="scanline" />
+
+        <motion.div style={{ x: sweepX, opacity: sweepOp, position: "absolute", top: "50%", left: 0, width: "100%", height: 3, background: "linear-gradient(90deg,transparent,#2DD4BF,transparent)", boxShadow: "0 0 30px rgba(45,212,191,1)", pointerEvents: "none" }} />
+
+        {/* 28% BACKGROUND */}
+        <div style={centerWrap}>
+          <motion.div style={{ opacity: cntOp, y: cntY, scale: cntScale, willChange: "transform, opacity" }}>
+            <span className="fB" style={{ fontSize: "clamp(10rem,30vw,30rem)", color: "#ef4444", letterSpacing: ".02em", lineHeight: 1, filter: "blur(1px)" }}>28%</span>
+          </motion.div>
+        </div>
+
+        {/* PROBLEM */}
+        <div style={{ ...centerWrap, zIndex: 2 }}>
+          <motion.div style={{ x: probX, opacity: probOp, display: "flex", flexDirection: "column", alignItems: "center", willChange: "transform, opacity" }}>
+            <motion.span className="fB" style={{ fontSize: "clamp(5rem,14vw,13rem)", letterSpacing: ".05em", color: textCol, lineHeight: .9 }}>
+              THE
+            </motion.span>
+            <motion.div className="fM" style={{ fontSize: 10, textTransform: "uppercase", letterSpacing: ".3em", color: "rgba(45,212,191,.55)", marginTop: 14 }}>
+              Of patients quit physiotherapy at home
+            </motion.div>
+          </motion.div>
+        </div>
+
+        {/* STATS */}
+        <motion.div style={{ position: "absolute", inset: 0, opacity: statsOp, y: statsY, pointerEvents: "none", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 3, willChange: "transform, opacity" }}>
+          {[
+            { v: "80%",   l: "Drop-out rate",    x: -38, y: -25 },
+            { v: "$50K+", l: "Robotic cost",     x:  38, y: -22 },
+            { v: "6–12m", l: "Recovery time",    x: -38, y:  30 },
+            { v: "3 wks", l: "Before they quit", x:  38, y:  28 },
+          ].map(s => (
+            <motion.div key={s.v} style={{ position: "absolute", left: `${50 + s.x}vw`, top: `${50 + s.y}vh`, transform: "translate(-50%,-50%)" }}>
+              <div style={{ textAlign: "center", padding: "10px 18px", borderRadius: 16, background: "rgba(8,15,26,.85)", border: "1px solid rgba(255,255,255,.06)", backdropFilter: "blur(12px)" }}>
+                <div className="fB" style={{ fontSize: "2.2rem", color: "#ef4444", lineHeight: 1 }}>{s.v}</div>
+                <div className="fM" style={{ fontSize: 8, color: "rgba(255,255,255,.3)", textTransform: "uppercase", letterSpacing: ".18em" }}>{s.l}</div>
+              </div>
+            </motion.div>
+          ))}
+        </motion.div>
+
+        {/* THE - ZOOMS OVER EVERYTHING ELSE */}
+        <div style={{ ...centerWrap, zIndex: 10 }}>
+          <motion.div style={{ scale: theScale, opacity: theOp, y: theY, willChange: "transform, opacity" }}>
+            <motion.span className="fB" style={{ fontSize: "clamp(8rem,20vw,20rem)", letterSpacing: ".06em", color: textCol, lineHeight: 1 }}>PROBLEM</motion.span>
+          </motion.div>
+        </div>
+
+        {/* IS REAL */}
+        <div style={{ ...centerWrap, zIndex: 4 }}>
+          <motion.div style={{ x: realX, opacity: realOp, willChange: "transform, opacity" }}>
+            <span className="fB" style={{ fontSize: "clamp(5rem,14vw,13rem)", letterSpacing: ".05em", color: "#ef4444", lineHeight: .9 }}>IS REAL.</span>
+          </motion.div>
+        </div>
+
+        {/* FINAL STATEMENT */}
+        <div style={{ ...centerWrap, zIndex: 5 }}>
+          <motion.div style={{ opacity: finalOp, y: finalY, scale: finalScale, textAlign: "center", willChange: "transform, opacity" }}>
+            <motion.div className="fB" style={{ fontSize: "clamp(2.8rem,7vw,7.5rem)", letterSpacing: ".04em", color: textCol, lineHeight: .9 }}>
+              RECOVERY IS<br /><span style={{ color: "#ef4444" }}>BROKEN.</span>
+            </motion.div>
+            <motion.div className="fM" style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: ".28em", marginTop: 28, color: subCol }}>
+              ↓ Scroll to see why →
+            </motion.div>
+          </motion.div>
+        </div>
+
+      </motion.div>
+    </div>
+  );
+}
+
