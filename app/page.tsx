@@ -2372,3 +2372,311 @@ function MarqueeStrip() {
 
 }
 
+//  FOOTER + CONTACT
+
+
+
+function Footer() {
+
+  const [form, setForm] = useState({ name: "", email: "", msg: "" });
+
+  const [sent, setSent] = useState(false);
+
+
+
+  const onSubmit = (e: React.FormEvent) => {
+
+    e.preventDefault();
+
+    console.log("Form:", form); 
+
+    setSent(true);
+
+  };
+
+  return (
+
+    <footer id="contact" data-theme="dark" style={{
+
+      background: "#060f1a", padding: "120px 40px 60px",
+
+      position: "relative", overflow: "hidden",
+
+      borderTop: "1px solid rgba(45,212,191,.06)",
+
+    }}>
+
+      <div className="glow-breath" style={{ position: "absolute", inset: 0, pointerEvents: "none",
+
+        background: "radial-gradient(ellipse 55% 42% at 50% 92%, rgba(45,212,191,.06), transparent 58%)" }} />
+
+      <div className="fB" style={{ position: "absolute", bottom: 0, left: "50%",
+
+        transform: "translateX(-50%)", fontSize: "clamp(5rem,18vw,17rem)",
+
+        color: "rgba(255,255,255,.012)", letterSpacing: "-0.04em",
+
+        whiteSpace: "nowrap", lineHeight: 1, pointerEvents: "none", userSelect: "none" }}>
+
+        REVIVEX
+
+      </div>
+
+      <div style={{ maxWidth: 1280, margin: "0 auto", position: "relative", zIndex: 2 }}>
+
+        <div style={{ textAlign: "center", marginBottom: 80, lineHeight: .9, overflow: "hidden" }}>
+
+          <div className="fB" style={{ fontSize: "clamp(3rem,10vw,9rem)", letterSpacing: ".03em", overflow: "hidden" }}>
+
+            <SplitText text="LET'S REWIRE" style={{ color: "#fff" }} delay={0} stagger={.042} />
+
+          </div>
+
+          <div className="fB" style={{ fontSize: "clamp(3rem,10vw,9rem)", letterSpacing: ".03em", overflow: "hidden" }}>
+
+            <SplitText text="THE FUTURE." style={{ color: "#2DD4BF" }} delay={.34} stagger={.042} />
+
+          </div>
+
+        </div>
+
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 60 }}>
+
+          {/* Form */}
+
+          <Reveal dir="left">
+
+            <div style={{ padding: "42px 38px", borderRadius: 34,
+
+              background: "rgba(255,255,255,.025)", border: "1px solid rgba(45,212,191,.10)" }}>
+
+              <div className="fM" style={{ fontSize: 9, color: "rgba(45,212,191,.5)",
+
+                textTransform: "uppercase", letterSpacing: ".22em", marginBottom: 28 }}>Get In Touch</div>
+
+              {sent ? (
+
+                <motion.div initial={{ opacity: 0, scale: .9 }} animate={{ opacity: 1, scale: 1 }}
+
+                  style={{ textAlign: "center", padding: "44px 0" }}>
+
+                  <CheckCircle2 size={52} style={{ color: "#2DD4BF", display: "block", margin: "0 auto 18px" }} />
+
+                  <div className="fB" style={{ fontSize: 26, color: "#fff", letterSpacing: ".06em" }}>MESSAGE RECEIVED.</div>
+
+                  <div className="fM" style={{ fontSize: 9, color: "rgba(255,255,255,.25)",
+
+                    textTransform: "uppercase", letterSpacing: ".2em", marginTop: 10 }}>We'll be in touch.</div>
+
+                </motion.div>
+
+              ) : (
+
+                <form onSubmit={onSubmit} style={{ display: "flex", flexDirection: "column", gap: 18 }}>
+
+                  {[
+
+                    { k: "name",  l: "Name",  t: "text",  ph: "Dr. Sarah Johnson" },
+
+                    { k: "email", l: "Email", t: "email", ph: "hello@hospital.lk" },
+
+                  ].map(f => (
+
+                    <div key={f.k}>
+
+                      <div className="fM" style={{ fontSize: 8, color: "rgba(255,255,255,.28)",
+
+                        textTransform: "uppercase", letterSpacing: ".18em", marginBottom: 9 }}>{f.l}</div>
+
+                      <input type={f.t} placeholder={f.ph} required
+
+                        value={(form as any)[f.k]}
+
+                        onChange={e => setForm(p => ({ ...p, [f.k]: e.target.value }))}
+
+                        className="fS"
+
+                        style={{ width: "100%", padding: "14px 16px", borderRadius: 14, fontSize: 14,
+
+                          color: "rgba(255,255,255,.8)",
+
+                          background: "rgba(255,255,255,.04)", border: "1px solid rgba(255,255,255,.08)" }} />
+
+                    </div>
+
+                  ))}
+
+                  <div>
+
+                    <div className="fM" style={{ fontSize: 8, color: "rgba(255,255,255,.28)",
+
+                      textTransform: "uppercase", letterSpacing: ".18em", marginBottom: 9 }}>Message</div>
+
+                    <textarea rows={4} required placeholder="I'd like to learn more about ReViveX..."
+
+                      value={form.msg}
+
+                      onChange={e => setForm(p => ({ ...p, msg: e.target.value }))}
+
+                      className="fS"
+
+                      style={{ width: "100%", padding: "14px 16px", borderRadius: 14, fontSize: 14,
+
+                        color: "rgba(255,255,255,.8)", resize: "none",
+
+                        background: "rgba(255,255,255,.04)", border: "1px solid rgba(255,255,255,.08)" }} />
+
+                  </div>
+
+                  <MagButton type="submit"
+
+                    className="btn-shim fB"
+
+                    style={{ position: "relative", overflow: "hidden", width: "100%", padding: "18px",
+
+                      borderRadius: 16, fontSize: 15, letterSpacing: ".12em",
+
+                      background: "#2DD4BF", color: "#080f1a", border: "none",
+
+                      boxShadow: "0 0 44px rgba(45,212,191,.3)" }}>
+
+                    <span style={{ position: "relative", zIndex: 1 }}>SEND MESSAGE</span>
+
+                  </MagButton>
+
+                </form>
+
+              )}
+
+            </div>
+
+          </Reveal>
+
+
+
+          {/* Info */}
+
+          <Reveal dir="right" delay={.15} style={{ paddingTop: 8 }}>
+
+            <h3 className="fB" style={{ fontSize: "clamp(1.8rem,3vw,2.8rem)", color: "#fff",
+
+              letterSpacing: ".04em", lineHeight: 1.1, marginBottom: 22 }}>
+
+              DESIGNED FOR PATIENTS.<br /><span style={{ color: "#2DD4BF" }}>BUILT FOR IMPACT.</span>
+
+            </h3>
+
+            <p className="fS" style={{ fontSize: 15, color: "rgba(255,255,255,.42)",
+
+              lineHeight: 1.75, fontWeight: 300, marginBottom: 42 }}>
+
+              Whether you're a clinician, a hospital administrator, or a patient wanting
+
+              to take control of your recovery — we'd love to connect.
+
+            </p>
+
+            {[
+
+              { icon: <Mail size={15}/>,  l: "Email",   v: "hello@revivex.io", href: "mailto:hello@revivex.io" },
+
+              { icon: <Phone size={15}/>, l: "Phone",   v: "+94 77 000 0000",  href: "#" },
+
+              { icon: <Globe size={15}/>, l: "Website", v: "www.revivex.io",   href: "#" },
+
+            ].map(c => (
+
+              <a key={c.l} href={c.href} data-mag
+
+                style={{ display: "flex", alignItems: "center", gap: 16,
+
+                  textDecoration: "none", marginBottom: 18, color: "inherit" }}>
+
+                <div style={{ width: 44, height: 44, borderRadius: 14, flexShrink: 0,
+
+                  display: "flex", alignItems: "center", justifyContent: "center",
+
+                  background: "rgba(45,212,191,.08)", border: "1px solid rgba(45,212,191,.18)", color: "#2DD4BF" }}>
+
+                  {c.icon}
+
+                </div>
+
+                <div>
+
+                  <div className="fM" style={{ fontSize: 8, color: "rgba(255,255,255,.22)",
+
+                    textTransform: "uppercase", letterSpacing: ".18em" }}>{c.l}</div>
+
+                  <div className="fS" style={{ fontSize: 14, color: "rgba(255,255,255,.65)" }}>{c.v}</div>
+
+                </div>
+
+              </a>
+
+            ))}
+
+            <div style={{ display: "flex", gap: 12, marginTop: 22 }}>
+
+              {[
+
+                { icon: <Linkedin size={17}/>,  href: "#", label: "LinkedIn"  },
+
+                { icon: <Instagram size={17}/>, href: "#", label: "Instagram" },
+
+              ].map(s => (
+
+                <motion.a key={s.label} href={s.href} data-mag aria-label={s.label}
+
+                  whileHover={{ y: -5, scale: 1.12 }}
+
+                  style={{ width: 50, height: 50, borderRadius: 16, textDecoration: "none",
+
+                    display: "flex", alignItems: "center", justifyContent: "center",
+
+                    background: "rgba(255,255,255,.04)", border: "1px solid rgba(255,255,255,.07)",
+
+                    color: "rgba(255,255,255,.45)" }}>
+
+                  {s.icon}
+
+                </motion.a>
+
+              ))}
+
+            </div>
+
+          </Reveal>
+
+        </div>
+
+
+
+        <div style={{ marginTop: 80, paddingTop: 32, borderTop: "1px solid rgba(255,255,255,.05)",
+
+          display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+
+          <div className="fB" style={{ fontSize: 20, letterSpacing: ".10em", color: "#fff" }}>
+
+            REVIVE<span style={{ color: "#2DD4BF" }}>X</span>
+
+          </div>
+
+          <div className="fM" style={{ fontSize: 8, color: "rgba(255,255,255,.15)",
+
+            textTransform: "uppercase", letterSpacing: ".22em" }}>
+
+            © 2025 ReViveX · SDGP CS-09 Group 22 · Neuro-Rehabilitation Technology
+
+          </div>
+
+        </div>
+
+      </div>
+
+    </footer>
+
+  );
+
+}
+
