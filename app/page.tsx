@@ -978,174 +978,158 @@ const ECG_PATH = `
 `;
 
 function Preloader({ onDone }: { onDone: () => void }) {
-
-  const [pct,   setPct]   = useState(0);
-
-  const [phase, setPhase] = useState<"draw"|"flash"|"exit">("draw");
-
-  const [msg,   setMsg]   = useState("DETECTING NEURAL SIGNAL...");
-
+  const [pct, setPct] = useState(0);
+  const [phase, setPhase] = useState<"loading" | "ready" | "exit">("loading");
+  const [msg, setMsg] = useState("DETECTING NEURAL SIGNAL...");
 
   const MSGS = [
-
     "DETECTING NEURAL SIGNAL...",
-
     "CALIBRATING GRIP SENSOR...",
-
     "LOADING THERAPY PROTOCOL...",
-
     "ESTABLISHING CLOUD LINK...",
-
     "ACTIVATING AI COMPANION...",
-
-    "SYSTEM ONLINE.",
-
+    "NEURAL LINK ESTABLISHED."
   ];
 
-
-
   useEffect(() => {
-
-    const counter  = setInterval(() => setPct(p => { if (p >= 100) { clearInterval(counter); return 100; } return p + 1; }), 28);
+    // Smoothly count to 100
+    const counter = setInterval(() => {
+      setPct((p) => {
+        if (p >= 100) { clearInterval(counter); return 100; }
+        return p + 1;
+      });
+    }, 28);
 
     let mi = 0;
+    const msgTimer = setInterval(() => {
+      mi = Math.min(mi + 1, MSGS.length - 1);
+      setMsg(MSGS[mi]);
+    }, 600);
 
-    const msgTimer = setInterval(() => { mi = Math.min(mi + 1, MSGS.length - 1); setMsg(MSGS[mi]); }, 600);
+    // Timeline triggers
+    const t1 = setTimeout(() => setPhase("ready"), 3200); // Trigger the epic glowing state
+    const t2 = setTimeout(() => setPhase("exit"), 4200);  // Hold the epic state for 1 second, then exit
+    const t3 = setTimeout(onDone, 5000);                  // Fully remove component
 
-    const t1 = setTimeout(() => setPhase("flash"), 3400);
-
-    const t2 = setTimeout(() => setPhase("exit"),  3850);
-
-    const t3 = setTimeout(onDone, 4600);
-
-    return () => { clearInterval(counter); clearInterval(msgTimer); [t1,t2,t3].forEach(clearTimeout); };
-
+    return () => { clearInterval(counter); clearInterval(msgTimer); [t1, t2, t3].forEach(clearTimeout); };
   }, [onDone]);
 
-
-
   return (
-
     <AnimatePresence>
-
       {phase !== "exit" && (
-
-        <motion.div key="pl"
-
-          exit={{ y: "-100%", transition: { duration: 1.1, ease: [0.76, 0, 0.24, 1] } }}
-
+        <motion.div
+          key="pl"
+          // Exits with a smooth upwards slide and a futuristic blur fade
+          exit={{ y: "-100%", opacity: 0, filter: "blur(10px)", transition: { duration: 0.9, ease: [0.76, 0, 0.24, 1] } }}
           style={{
-
             position: "fixed", inset: 0, zIndex: 9900,
-
             display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
+            overflow: "hidden", background: "#080f1a",
+          }}
+        >
+          {/* Dynamic Background Glow - Expands when system is "ready" */}
+          <motion.div
+            animate={{ opacity: phase === "ready" ? 0.8 : 0.4, scale: phase === "ready" ? 1.5 : 1 }}
+            transition={{ duration: 0.8, ease: "easeOut" }}
+            style={{
+              position: "absolute", inset: 0, pointerEvents: "none",
+              background: "radial-gradient(circle at center, rgba(45,212,191,0.15) 0%, transparent 60%)"
+            }}
+          />
+          
+          {/* Grid lines intensify when ready */}
+          <div className="grid-dk" style={{ position: "absolute", inset: 0, pointerEvents: "none", opacity: phase === "ready" ? 0.8 : 0.3, transition: "opacity 0.8s" }} />
 
-            overflow: "hidden",
-
-            background: phase === "flash" ? "#FFFFFF" : "#080f1a",
-
-            transition: phase === "flash" ? "background .08s" : "background .7s .2s",
-
-          }}>
-
-          <div className="grid-dk" style={{ position: "absolute", inset: 0, pointerEvents: "none" }} />
-
-          <div className="glow-breath" style={{ position: "absolute", inset: 0, pointerEvents: "none",
-
-            background: "radial-gradient(ellipse 52% 42% at 50% 52%, rgba(45,212,191,.09), transparent 62%)" }} />
-
+          {/* Framer Motion SVG Drawing (Replaces the old CSS keyframes) */}
           <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", overflow: "hidden", pointerEvents: "none" }}>
-
-            <svg width="100%" height="160" viewBox="0 0 1220 160" preserveAspectRatio="xMidYMid slice">
-
-              <path d={ECG_PATH} fill="none" stroke="#2DD4BF" strokeWidth="8"
-
-                strokeLinecap="round" strokeLinejoin="round"
-
-                style={{ filter: "blur(15px)", opacity: .45 }}
-
-                className="ecg-line" />
-
-              <path d={ECG_PATH} fill="none" stroke="#2DD4BF" strokeWidth="2.2"
-
-                strokeLinecap="round" strokeLinejoin="round"
-
-                className="ecg-line" />
-
+            <svg width="100%" height="160" viewBox="0 0 3000 160" preserveAspectRatio="none">
+              {/* Outer Blurred Glow */}
+              <motion.path d={ECG_PATH} fill="none" stroke="#2DD4BF" strokeWidth="8" strokeLinecap="round" strokeLinejoin="round"
+                style={{ filter: "blur(12px)" }}
+                initial={{ pathLength: 0, opacity: 0 }}
+                animate={{ pathLength: 1, opacity: phase === "ready" ? 0 : 0.6 }} // Fades out when ready
+                transition={{ duration: 2.8, ease: "easeInOut" }}
+              />
+              {/* Inner White Core */}
+              <motion.path d={ECG_PATH} fill="none" stroke="#FFFFFF" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
+                initial={{ pathLength: 0, opacity: 0 }}
+                animate={{ pathLength: 1, opacity: phase === "ready" ? 0 : 1 }}
+                transition={{ duration: 2.8, ease: "easeInOut" }}
+              />
             </svg>
-
           </div>
 
           <div style={{ position: "relative", zIndex: 2, textAlign: "center" }}>
-
-            <div className="heartbeat" style={{ marginBottom: 18, color: "#2DD4BF", display: "flex", justifyContent: "center" }}>
-
-              <Heart size={30} style={{ fill: "#2DD4BF" }} />
-
-            </div>
-
-            <div className="fM" style={{ fontSize: 9, color: "rgba(255,255,255,.2)", textTransform: "uppercase", letterSpacing: ".42em", marginBottom: 24 }}>
-
-              NEURO-REHABILITATION SYSTEM
-
-            </div>
-
-            <motion.div initial={{ opacity: 0, scale: .8 }} animate={{ opacity: 1, scale: 1 }}
-
-              transition={{ delay: .4, duration: .7 }}
-
-              className="fB" style={{ fontSize: "clamp(4rem,14vw,11rem)", color: "#fff", letterSpacing: ".08em", lineHeight: 1 }}>
-
-              REVIVE<span style={{ color: "#2DD4BF" }}>X</span>
-
+            {/* Heart Icon - Transitions from slow beat to hyper-pulse when ready */}
+            <motion.div
+              animate={phase === "ready" ? { scale: [1, 1.4, 1], filter: ["blur(0px)", "blur(4px)", "blur(0px)"] } : {}}
+              transition={{ repeat: phase === "ready" ? Infinity : 0, duration: 0.4 }}
+              style={{ marginBottom: 18, color: "#2DD4BF", display: "flex", justifyContent: "center" }}
+              className={phase !== "ready" ? "heartbeat" : ""}
+            >
+              <Heart size={36} style={{ fill: "#2DD4BF", filter: phase === "ready" ? "drop-shadow(0 0 20px #2DD4BF)" : "none", transition: "filter 0.5s" }} />
             </motion.div>
 
+            <div className="fM" style={{ fontSize: 9, color: "rgba(255,255,255,.3)", textTransform: "uppercase", letterSpacing: ".42em", marginBottom: 24 }}>
+              NEURO-REHABILITATION SYSTEM
+            </div>
+
+            {/* Logo - Glows intensely upon 100% */}
+            <motion.div
+              initial={{ opacity: 0, scale: .8 }}
+              animate={{ opacity: 1, scale: phase === "ready" ? 1.05 : 1, textShadow: phase === "ready" ? "0 0 50px rgba(45,212,191,0.6)" : "none" }}
+              transition={{ delay: .4, duration: .7 }}
+              className="fB" style={{ fontSize: "clamp(4rem,14vw,11rem)", color: "#fff", letterSpacing: ".08em", lineHeight: 1 }}
+            >
+              REVIVE<motion.span animate={{ color: phase === "ready" ? "#fff" : "#2DD4BF" }} transition={{ duration: 0.5 }}>X</motion.span>
+            </motion.div>
+
+            {/* Progress Numbers */}
             <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "center", gap: 4, marginTop: 28, marginBottom: 14 }}>
-
-              <span className="fM" style={{ fontSize: "3.2rem", color: "rgba(255,255,255,.85)", lineHeight: 1 }}>
-
+              <motion.span 
+                animate={{ color: phase === "ready" ? "#2DD4BF" : "rgba(255,255,255,.85)" }}
+                className="fM" style={{ fontSize: "3.2rem", lineHeight: 1 }}
+              >
                 {String(pct).padStart(3, "0")}
-
-              </span>
-
+              </motion.span>
               <span className="fM blink" style={{ fontSize: "1.6rem", color: "#2DD4BF", marginBottom: 4 }}>%</span>
-
             </div>
 
-            <div style={{ width: 200, height: 1, background: "rgba(255,255,255,.1)", margin: "0 auto 14px", overflow: "hidden" }}>
-
-              <motion.div animate={{ width: `${pct}%` }} transition={{ duration: .05 }}
-
-                style={{ height: "100%", background: "linear-gradient(90deg,#2DD4BF,#0891b2)", boxShadow: "0 0 14px rgba(45,212,191,.8)" }} />
-
+            {/* Loading Bar */}
+            <div style={{ width: 240, height: 2, background: "rgba(255,255,255,.1)", margin: "0 auto 14px", overflow: "hidden", borderRadius: 2 }}>
+              <motion.div
+                animate={{ width: `${pct}%`, background: phase === "ready" ? "#fff" : "#2DD4BF" }}
+                transition={{ duration: .05 }}
+                style={{ height: "100%", boxShadow: "0 0 14px rgba(45,212,191,.8)" }}
+              />
             </div>
 
+            {/* Subtext Status */}
             <AnimatePresence mode="wait">
-
-              <motion.div key={msg} initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }}
-
-                exit={{ opacity: 0, y: -4 }} transition={{ duration: .3 }}
-
-                className="fM" style={{ fontSize: 9, color: "rgba(255,255,255,.22)", textTransform: "uppercase", letterSpacing: ".24em" }}>
-
-                {msg}
-
+              <motion.div
+                key={phase === "ready" ? "SYSTEM ONLINE." : msg}
+                initial={{ opacity: 0, y: 6 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -4 }}
+                transition={{ duration: .3 }}
+                className="fM"
+                style={{
+                  fontSize: phase === "ready" ? 11 : 9,
+                  color: phase === "ready" ? "#2DD4BF" : "rgba(255,255,255,.3)",
+                  textTransform: "uppercase",
+                  letterSpacing: ".24em",
+                  fontWeight: phase === "ready" ? "bold" : "normal"
+                }}
+              >
+                {phase === "ready" ? "SYSTEM ONLINE. INITIALIZING UI..." : msg}
               </motion.div>
-
             </AnimatePresence>
-
           </div>
-
         </motion.div>
-
       )}
-
     </AnimatePresence>
-
   );
-
 }
-
 
 function Navbar() {
 
