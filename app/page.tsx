@@ -1229,3 +1229,192 @@ function Navbar() {
   );
 
 }
+
+
+function HeroSection() {
+
+  const router  = useRouter();
+
+  const skewY   = useVelocitySkew();
+
+  const mouse   = useMouseParallax();
+
+  const smoothX = useSpring(mouse.x, { stiffness: 90, damping: 22 });
+
+  const smoothY = useSpring(mouse.y, { stiffness: 90, damping: 22 });
+
+
+
+  const gX = useTransform(smoothX, v => v *  2);
+
+  const gY = useTransform(smoothY, v => v *  2);
+
+  const nX = useTransform(smoothX, v => v *  6);
+
+  const nY = useTransform(smoothY, v => v *  6);
+
+  const dX = useTransform(smoothX, v => v * 10);
+
+  const dY = useTransform(smoothY, v => v * 10);
+
+
+  const chip0x = useTransform(smoothX, v => -190 + v * 14 * 100); // Far Left, Top
+
+  const chip0y = useTransform(smoothY, v =>   10 + v * 14 * 100); 
+
+  const chip1x = useTransform(smoothX, v =>  190 + v * 18 * 100); // Far Right, Top
+
+  const chip1y = useTransform(smoothY, v =>   30 + v * 18 * 100); 
+
+  const chip2x = useTransform(smoothX, v => -170 + v * 12 * 100); // Far Left, Bottom
+
+  const chip2y = useTransform(smoothY, v =>  180 + v * 12 * 100); 
+
+  const chip3x = useTransform(smoothX, v =>  170 + v * 16 * 100); // Far Right, Bottom
+
+  const chip3y = useTransform(smoothY, v =>  170 + v * 16 * 100);
+
+
+
+  const chips = [
+
+    { l: "GRIP",      v: "84 kPa", c: "#2DD4BF", delay: 1.9,  cx: chip0x, cy: chip0y },
+
+    { l: "TREMOR",    v: "±0.02g", c: "#a78bfa", delay: 2.08, cx: chip1x, cy: chip1y },
+
+    { l: "ADHERENCE", v: "87%",    c: "#34d399", delay: 2.26, cx: chip2x, cy: chip2y },
+
+    { l: "XP POINTS", v: "+280",   c: "#fbbf24", delay: 2.44, cx: chip3x, cy: chip3y },
+
+  ];
+
+  return (
+
+    <section data-theme="dark" style={{
+
+      position: "relative", minHeight: "100vh",
+
+      display: "flex", flexDirection: "column",
+
+      alignItems: "center", justifyContent: "center",
+
+      overflow: "hidden", background: "#080f1a",
+
+    }}>
+
+      {/* Breathing glow */}
+
+      <motion.div style={{ x: gX, y: gY, position: "absolute", inset: 0, pointerEvents: "none" }}>
+
+        <div className="glow-breath" style={{ width: "100%", height: "100%",
+
+          background: "radial-gradient(ellipse 65% 60% at 50% 58%, rgba(45,212,191,.10), transparent 68%)" }} />
+
+      </motion.div>
+
+
+
+      <div className="grid-dk" style={{ position: "absolute", inset: 0, pointerEvents: "none" }} />
+
+
+
+      {/* Decorative diagonal lines */}
+
+      {[7, 22, 48, 74, 90].map((p, i) => (
+
+        <div key={i} style={{ position: "absolute", top: "-30%", left: `${p}%`,
+
+          width: 1, height: "180%", pointerEvents: "none",
+
+          background: `linear-gradient(to bottom,transparent,rgba(45,212,191,${.042-i*.006}),transparent)`,
+
+          transform: `rotate(${-13+i*5}deg)` }} />
+
+      ))}
+
+      <div className="scanline" />
+
+      <FloatingParticles count={20} />
+
+      {/* Neural network layer */}
+
+      <motion.div style={{ x: nX, y: nY, position: "absolute", inset: 0, pointerEvents: "none" }}>
+
+        <NeuralNetwork mouse={mouse} />
+
+      </motion.div>
+
+
+
+      {/* Main content */}
+
+      <motion.div style={{ skewY, width: "100%", maxWidth: 1280,
+
+        padding: "120px 40px 80px", display: "flex",
+
+        flexDirection: "column", alignItems: "center", position: "relative", zIndex: 10 }}>
+
+
+       {/* Badge */}
+
+        <Reveal dir="down" delay={.2}>
+
+          <div className="fM" style={{ fontSize: 9, textTransform: "uppercase", letterSpacing: ".28em",
+
+            color: "rgba(255,255,255,.38)", marginBottom: 38,
+
+            display: "flex", alignItems: "center", gap: 10,
+
+            padding: "8px 20px", borderRadius: 99,
+
+            background: "rgba(255,255,255,.03)", border: "1px solid rgba(255,255,255,.07)" }}>
+
+            <Heart size={11} style={{ color: "#2DD4BF" }} className="heartbeat" />
+
+            Democratizing Neuro-Rehabilitation · SDGP CS-09
+
+          </div>
+
+        </Reveal>
+
+
+
+        {/* Headline */}
+
+        <div style={{ textAlign: "center", lineHeight: ".88", marginBottom: 24, perspective: 900, overflow: "hidden" }}>
+
+          <div className="fB" style={{ fontSize: "clamp(4rem,12vw,11rem)", color: "#fff", letterSpacing: ".04em", overflow: "hidden" }}>
+
+            <SplitText text="REWIRING" delay={.5} stagger={.04} />
+
+          </div>
+
+          <div className="fB" style={{ fontSize: "clamp(4rem,12vw,11rem)", color: "#2DD4BF", letterSpacing: ".04em", overflow: "hidden" }}>
+
+            <SplitText text="RECOVERY." delay={.72} stagger={.04} />
+
+          </div>
+
+        </div>
+
+
+
+        {/* Tagline */}
+
+        <Reveal dir="up" delay={1.1}>
+
+          <p className="fS" style={{ color: "rgba(255,255,255,.44)", fontSize: 17,
+
+            textAlign: "center", maxWidth: 460, lineHeight: 1.68,
+
+            fontWeight: 300, marginBottom: 52 }}>
+
+            A revolutionary IoT device that turns repetitive physiotherapy into
+
+            <span style={{ color: "rgba(255,255,255,.82)", fontWeight: 500 }}> immersive games</span>
+
+            {" "}— so patients <span style={{ color: "#2DD4BF", fontWeight: 500 }}>actually want</span> to recover.
+
+          </p>
+
+        </Reveal>
