@@ -1967,3 +1967,59 @@ function DarkBridge() {
 }
 
 
+//  SOLUTION SECTION
+
+function SolutionSection() {
+  return (
+    <section id="solution" data-theme="dark" style={{ background: "#080f1a", padding: "120px 40px", position: "relative", overflow: "hidden" }}>
+      <div className="grid-dk" style={{ position: "absolute", inset: 0, pointerEvents: "none" }} />
+      <div className="scanline" />
+      <div className="glow-breath" style={{ position: "absolute", inset: 0, pointerEvents: "none", background: "radial-gradient(ellipse 52% 42% at 50% 50%, rgba(45,212,191,.07), transparent 65%)" }} />
+      <div style={{ position: "absolute", top: 0, right: 0, width: 400, height: 400, pointerEvents: "none", background: "radial-gradient(circle at top right, rgba(139,92,246,.06), transparent 70%)" }} />
+      <div style={{ position: "absolute", bottom: 0, left: 0, width: 400, height: 400, pointerEvents: "none", background: "radial-gradient(circle at bottom left, rgba(45,212,191,.04), transparent 70%)" }} />
+      
+      <div style={{ maxWidth: 1280, margin: "0 auto" }}>
+        <Reveal dir="up" style={{ textAlign: "center", marginBottom: 72 }}>
+          <div className="fM" style={{ fontSize: 9, color: "rgba(45,212,191,.55)", textTransform: "uppercase", letterSpacing: ".32em", marginBottom: 16 }}>The Innovation</div>
+          <h2 className="fB" style={{ fontSize: "clamp(3rem,8vw,7.5rem)", letterSpacing: ".03em", lineHeight: .88, color: "#fff" }}>
+            YOU DON'T DO<br /><span style={{ color: "#2DD4BF" }}>EXERCISES.</span><br />YOU <span style={{ color: "#2DD4BF" }}>PLAY GAMES.</span>
+          </h2>
+        </Reveal>
+
+        {/* EXPANDED TABLET/GAMEPLAY CONTAINER */}
+        <Reveal dir="zoom" style={{ marginBottom: 60, display: "flex", justifyContent: "center" }}>
+          <div style={{ borderRadius:36, overflow:"hidden", border:"1px solid rgba(45,212,191,.14)", boxShadow:"0 40px 100px rgba(0,0,0,.5)", width: "90vw", maxWidth: 1000 }}>
+            {/* Replace with your actual video or image */}
+            <div style={{ width: "100%", height: "460px", background: "#0a192f", display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <span className="fM" style={{ color: "#2DD4BF", opacity: 0.5 }}>[IMG:GAMEPLAY] Placeholder</span>
+            </div>
+          </div>
+        </Reveal>
+
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 18 }}>
+          {[
+            { n:"01", c:"#2DD4BF", icon:<Cpu size={26} strokeWidth={1.1}/>, tag:"Hardware", t:"$200 IoT Controller", b:"BP bulb + ESP32 + MPX10DP pressure sensor + MPU6050 gyroscope. Medical-grade data capture at the cost of a restaurant dinner." },
+            { n:"02", c:"#a78bfa", icon:<Zap size={26} strokeWidth={1.1}/>, tag:"Therapy", t:"Dual-Task Gamification", b:"Squeeze to fly the character. Recall colour sequences to pass cognitive gates. Motor + cognitive rehab simultaneously — proven to drive neuroplasticity." },
+            { n:"03", c:"#fbbf24", icon:<BarChart3 size={26} strokeWidth={1.1}/>, tag:"Cloud", t:"Remote Clinical Dashboard", b:"Every squeeze streams live to Firebase. Grip force, tremor amplitude, reaction time — your doctor adjusts therapy remotely without clinic visits." },
+          ].map((card, i) => (
+            <Reveal key={card.n} dir="zoom" delay={i * .14}>
+              <TiltCard style={{ padding: "38px 32px", borderRadius: 34, position: "relative", overflow: "hidden", height: "100%", background: "rgba(255,255,255,.025)", border: `1px solid ${card.c}1e` }}>
+                <div className="scanline" />
+                <div className="fB" style={{ position: "absolute", top: -18, right: -8, fontSize: "9rem", color: `${card.c}07`, lineHeight: 1, pointerEvents: "none" }}>{card.n}</div>
+                <div style={{ position: "relative", zIndex: 1 }}>
+                  <div style={{ width: 54, height: 54, borderRadius: 18, marginBottom: 20, display: "flex", alignItems: "center", justifyContent: "center", background: `${card.c}13`, border: `1px solid ${card.c}25`, color: card.c }}>{card.icon}</div>
+                  <div className="fM" style={{ fontSize: 8, color: `${card.c}90`, textTransform: "uppercase", letterSpacing: ".22em", marginBottom: 10 }}>{card.tag}</div>
+                  <h3 className="fB" style={{ fontSize: 26, color: "#fff", letterSpacing: ".04em", marginBottom: 14, lineHeight: 1.05 }}>{card.t}</h3>
+                  <p className="fS" style={{ fontSize: 14, color: "rgba(255,255,255,.48)", lineHeight: 1.78, fontWeight: 300 }}>{card.b}</p>
+                </div>
+                <div style={{ position: "absolute", bottom: 0, left: 24, right: 24, height: 1, background: `linear-gradient(90deg,transparent,${card.c}32,transparent)` }} />
+              </TiltCard>
+            </Reveal>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+
