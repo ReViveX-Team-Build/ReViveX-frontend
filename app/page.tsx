@@ -557,3 +557,144 @@ function MagButton({ children, onClick, style = {}, className = "", type = "butt
   );
 
 }
+
+
+function FloatingParticles({ count = 22 }: { count?: number }) {
+
+  const P = useMemo(() => Array.from({ length: count }, (_, i) => ({
+
+    id:      i,
+
+    x:       Math.random() * 100,
+
+    size:    Math.random() * 2.2 + .8,
+
+    dur:     Math.random() * 9 + 6,
+
+    delay:   Math.random() * 12,
+
+    opacity: Math.random() * 0.25 + 0.04,
+
+  })), [count]);
+
+  const vh = typeof window !== "undefined" ? window.innerHeight : 900;
+
+  return (
+
+    <div style={{ position: "absolute", inset: 0, overflow: "hidden", pointerEvents: "none" }}>
+
+      {P.map(p => (
+
+        <motion.div key={p.id}
+
+          style={{ position: "absolute", left: `${p.x}%`, bottom: -8,
+
+            width: p.size, height: p.size, borderRadius: "50%", background: "#2DD4BF" }}
+
+          animate={{ y: [0, -(vh * 1.15)], opacity: [0, p.opacity, p.opacity, 0] }}
+
+          transition={{ duration: p.dur, delay: p.delay, repeat: Infinity, ease: "linear" }} />
+
+      ))}
+
+    </div>
+
+  );
+
+}
+
+function NeuralNetwork({ mouse }: { mouse: { x: number; y: number } }) {
+
+  const nodes = useMemo(() => Array.from({ length: 18 }, (_, i) => ({
+
+    id:    i,
+
+    x:     10 + Math.random() * 82,
+
+    y:     8  + Math.random() * 82,
+
+    r:     Math.random() * 2.2 + 1.5,
+
+    speed: Math.random() * 0.04 + 0.01,
+
+  })), []);
+
+  const lines = useMemo(() => {
+
+    const pairs: { a: number; b: number; alpha: number }[] = [];
+
+    for (let i = 0; i < nodes.length; i++) {
+
+      for (let j = i + 1; j < nodes.length; j++) {
+
+        const dx = nodes[i].x - nodes[j].x;
+
+        const dy = nodes[i].y - nodes[j].y;
+
+        const d  = Math.sqrt(dx*dx + dy*dy);
+
+        if (d < 28) pairs.push({ a: i, b: j, alpha: 1 - d / 28 });
+
+      }
+
+    }
+
+    return pairs;
+
+  }, [nodes]);
+
+  return (
+
+    <svg style={{ position: "absolute", inset: 0, width: "100%", height: "100%", pointerEvents: "none" }}>
+
+      {lines.map((l, i) => {
+
+        const na = nodes[l.a], nb = nodes[l.b];
+
+        return (
+
+          <line key={i}
+
+            x1={`${na.x + mouse.x * na.speed * 100}%`} y1={`${na.y + mouse.y * na.speed * 100}%`}
+
+            x2={`${nb.x + mouse.x * nb.speed * 100}%`} y2={`${nb.y + mouse.y * nb.speed * 100}%`}
+
+            stroke={`rgba(45,212,191,${l.alpha * 0.18})`} strokeWidth={l.alpha * 1.2} />
+
+        );
+
+      })}
+
+      {nodes.map(n => {
+
+        const mx = (mouse.x + 0.5) * 100, my = (mouse.y + 0.5) * 100;
+
+        const dx = mx - (n.x + mouse.x * n.speed * 100);
+
+        const dy = my - (n.y + mouse.y * n.speed * 100);
+
+        const bright = Math.max(0, 1 - Math.sqrt(dx*dx + dy*dy) / 25);
+
+        return (
+
+          <circle key={n.id}
+
+            cx={`${n.x + mouse.x * n.speed * 100}%`}
+
+            cy={`${n.y + mouse.y * n.speed * 100}%`}
+
+            r={n.r + bright * 3}
+
+            fill={`rgba(45,212,191,${0.22 + bright * 0.55})`}
+
+            style={{ transition: "r .2s, fill .2s" }} />
+
+        );
+
+      })}
+
+    </svg>
+
+  );
+
+}
