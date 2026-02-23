@@ -1,6 +1,7 @@
 import React from 'react';
-import DoctorSidebar from '@/components/DoctorPortal/Sidebar';
-import TopNav from '@/components/DoctorPortal/TopNav';
+// Ensure these paths match where you saved your components
+import DoctorSidebar from '@/components/DoctorPortal/Sidebar'; 
+import DoctorTopbar from '@/components/DoctorPortal/Topbar';
 
 export default function DoctorLayout({
   children,
@@ -10,18 +11,25 @@ export default function DoctorLayout({
   return (
     <div className="flex min-h-screen bg-[#F3F4F6]">
       
+      {/* 1. Fixed Sidebar */}
       <DoctorSidebar />
       
+      {/* 2. Main Wrapper */}
+      {/* ml-72 creates the empty space for the sidebar to sit in */}
       <main className="flex-1 ml-72 relative flex flex-col min-w-0">
 
-        <TopNav /> 
+        {/* 3. Sticky Topbar */}
+        <DoctorTopbar /> 
 
-
-        <div className="p-8 flex-1 overflow-y-auto animate-fade-in">
-          <div className="max-w-7xl mx-auto">{children}</div>
+        {/* 4. Page Content Injection */}
+        {/* This is where your Dashboard page gets put */}
+        <div className="p-8 animate-fade-in">
+          <div className="max-w-7xl mx-auto">
+            {children}
+          </div>
         </div>
-      </main>
 
+      </main>
     </div>
   );
 }

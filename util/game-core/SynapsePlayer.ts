@@ -1,11 +1,15 @@
+// util/game-core/SynapsePlayer.ts
+import { Particle } from "./SynapseParticles";
+
+// Types
+type PlayerStatus = "swimming" | "hit_ceiling" | "hit_floor";
+type DeathReason = "" | "stung" | "dried_out" | "crushed"; 
+
 interface Obstacle {
     x: number;
     y: number;
     radius: number;
 }
-
-type PlayerStatus = "swimming" | "hit_ceiling" | "hit_floor";
-type DeathReason = "" | "stung" | "dried_out" | "crushed";
 
 export class Player {
     gameWidth: number;
@@ -16,27 +20,26 @@ export class Player {
     // VISUALS
     radius: number;
     image: HTMLImageElement;
+    rotation: number;
+    targetRotation: number;
 
-    // RHYTHMIC PUMPING
+    // PHYSICS
     velocity: number;
-    
-    // Gravity is lighter (Floaty feel)
-    weight: number;
-    
-    // Buoyancy is STRONG (Burst feel)
-    buoyancy: number;
+    weight: number = 0.18;
+    buoyancy: number = -2.2;
+    maxUpwardSpeed: number = -7;
 
-    // Max Speed Cap (Prevents flying off screen too fast)
-    maxUpwardSpeed: number;
-
-    // TIMERS
-    airTime: number;
-    floorTime: number;
-    maxTime: number;
+    // TIMERS (Safe Zones)
+    surfaceTime: number = 0; 
+    floorTime: number = 0;   
+    maxSafeTime: number = 5000; 
+    warnTime: number = 2000;    
     
-    isDead: boolean;
-    deathReason: DeathReason;
-    status: PlayerStatus;
+    isDead: boolean = false;
+    deathReason: DeathReason = ""; 
+    status: PlayerStatus = "swimming";
+
+    totalForce: number = 0; 
 
     constructor(gameWidth: number, gameHeight: number) {
         this.gameWidth = gameWidth;
@@ -44,143 +47,157 @@ export class Player {
         this.x = 100;
         this.y = gameHeight / 2;
         
-        // VISUALS
         this.radius = 30; 
         this.image = new Image();
         this.image.src = "/images/fish.png"; 
-
-        // RHYTHMIC PUMPING
-        this.velocity = 0;
-        
-        // Gravity is lighter (Floaty feel)
-        this.weight = 0.15;      
-        
-        // Buoyancy is STRONG (Burst feel)
-        this.buoyancy = -2.0;   
-
-        // Max Speed Cap (Prevents flying off screen too fast)
-        this.maxUpwardSpeed = -6; 
-
-        // TIMERS
-        this.airTime = 0;       
-        this.floorTime = 0;     
-        this.maxTime = 3000;    
-        
-        this.isDead = false;
-        this.deathReason = "";  
-        this.status = "swimming"; 
+        this.rotation = 0;
+        this.targetRotation = 0;
+        this.velocity = 0; 
     }
 
-    // ADD THIS FUNCTION INSIDE PLAYER CLASS
-    checkCollision(obstacles: Obstacle[]): boolean {
-        if (!obstacles) return false;
+    // UPDATE METHOD - THIS IS THE CRITICAL CHANGE
+    // It now accepts 'shouldSwim' (boolean) instead of checking keys itself
+    update(shouldSwim: boolean, deltaTime: number, sandHeight: number, particles: Particle[], nightFactor: number): void {
+        if (this.isDead) return;
 
-        for (let i = 0; i < obstacles.length; i++) {
-            const obs = obstacles[i];
-            
-            // Calculate distance between Player Center and Jellyfish Center
-            const dx = this.x - obs.x;
-            const dy = this.y - obs.y;
-            const distance = Math.sqrt(dx * dx + dy * dy);
+        // --- 1. PHYSICS ---
+        if (shouldSwim) {
+            this.velocity += this.buoyancy;
+            if (this.velocity < this.maxUpwardSpeed) this.velocity = this.maxUpwardSpeed;
 
-            // If circles touch (Hitbox overlap)
-            // use * 0.8 to make the hitbox slightly smaller than the image 
-            if (distance < (this.radius + obs.radius) * 0.8) {
-                this.isDead = true;
-                this.deathReason = "stung"; 
-                return true;
-            }
-        }
-        return false;
-    }
+            // Bubble Logic
+            const pressureRatio = Math.min(1, Math.abs(this.velocity) / 6);
+            this.totalForce += pressureRatio;
 
-    update(inputActive: boolean, deltaTime: number = 16.6, currentSandHeight: number = 50): void {
-        if (this.isDead) return; 
-
-        // PHYSICS ENGINE (Updated for Pump-Style)
-        this.status = "swimming"; 
-
-        if (inputActive) {
-            // APPLY STRONG BURST FORCE
-            this.velocity += this.buoyancy; 
-            
-            // Cap the speed so they don't teleport instantly
-            if (this.velocity < this.maxUpwardSpeed) {
-                this.velocity = this.maxUpwardSpeed;
+            // Spawn bubbles when swimming
+            if (Math.random() < 0.3 + (pressureRatio * 0.5)) {
+                let bubbleCount = 1;
+                if (pressureRatio > 0.8) bubbleCount = Math.floor(Math.random() * 3) + 1;
+                
+                for (let i = 0; i < bubbleCount; i++) {
+                     const angle = this.rotation;
+                     const tailX = (this.x - Math.cos(angle) * 25) + (Math.random() * 5 - 2.5);
+                     const tailY = (this.y - Math.sin(angle) * 25) + (Math.random() * 5 - 2.5);
+                     // Note: Ensure Particle class constructor supports this signature!
+                     particles.push(new Particle(tailX, tailY, pressureRatio, true));
+                }
             }
         } else {
-            // GRAVITY (Gentle sink)
-            this.velocity += this.weight;   
+            this.velocity += this.weight;
         }
 
-        // Air Resistance (Drag) slows the fish down smoothly after a burst
-        this.velocity *= 0.95; 
-
-        // Apply movement
+        this.velocity *= 0.96; 
         this.y += this.velocity;
 
-        // BOUNDARIES 
-        const waterSurface = this.gameHeight * 0.42; 
-        const floorLevel = this.gameHeight - currentSandHeight - this.radius;
+        // --- 2. BOUNDARIES ---
+        const waterLevel = this.gameHeight * 0.38; 
+        const floorLevel = this.gameHeight - sandHeight - this.radius;
+        const ceilingLimit = this.radius;
 
-        // Check Air
-        if (this.y < waterSurface) {
-            this.airTime += deltaTime;
-            this.status = "hit_ceiling"; 
-            if (this.airTime > this.maxTime) {
-                this.isDead = true;
-                this.deathReason = "dried_out";
-            }
-        } else {
-            this.airTime = 0; 
-        }
-
-        // Check Floor
-        if (this.y > floorLevel) { 
-            this.y = floorLevel; 
-            this.velocity = 0;
-            this.status = "hit_floor"; 
-            this.floorTime += deltaTime;
-            if (this.floorTime > this.maxTime) {
-                this.isDead = true;
-                this.deathReason = "crushed";
-            }
-        } else {
+        // Air
+        if (this.y < waterLevel) {
+            this.surfaceTime += deltaTime;
             this.floorTime = 0; 
+            if (this.surfaceTime > this.maxSafeTime) this.status = "hit_ceiling";
+            
+            if (this.y < ceilingLimit) {
+                this.y = ceilingLimit;
+                this.velocity = 0;
+            }
+            this.targetRotation = -0.3;
+        } 
+        // Floor
+        else if (this.y > floorLevel) {
+            this.y = floorLevel;
+            this.velocity = 0;
+            this.floorTime += deltaTime;
+            this.surfaceTime = 0; 
+            if (this.floorTime > this.maxSafeTime) this.status = "hit_floor";
+            this.targetRotation = 0.1;
+        } 
+        // Water
+        else {
+            this.floorTime = 0; 
+            this.surfaceTime = 0;
+            this.status = "swimming";
+            this.targetRotation = this.velocity * 0.1;
         }
 
-        // Ceiling Hard Stop
-        if (this.y < this.radius) {
-            this.y = this.radius;
-            this.velocity = 0;
-        }
+        this.rotation += (this.targetRotation - this.rotation) * 0.1;
     }
 
-    draw(ctx: CanvasRenderingContext2D): void {
+    draw(ctx: CanvasRenderingContext2D, nightFactor: number): void {
         ctx.save();
         ctx.translate(this.x, this.y);
 
-        // Rotation - Tilt up when swimming fast, tilt down when sinking
-        // The divider controls how much it tilts
-        const angle = this.velocity / 10; 
-        ctx.rotate(angle);
+        const warningTime = Math.max(this.surfaceTime, this.floorTime);
+        const isRedPhase = warningTime > this.warnTime; 
+        const isDangerPhase = warningTime > 4000;
 
-        // Visual Feedback for Danger
-        if (this.airTime > 2000 || this.floorTime > 2000 || this.isDead) {
-            ctx.shadowBlur = 30;
-            ctx.shadowColor = "#FF4500";
+        if (isDangerPhase) {
+            const shake = (Math.random() - 0.5) * 5;
+            ctx.translate(shake, shake);
         }
+
+        ctx.rotate(this.rotation);
 
         if (this.image.complete && this.image.naturalWidth > 0) {
             const size = this.radius * 2.8; 
+            if (isRedPhase) {
+                const pulse = (Math.sin(Date.now() * 0.01) + 1) / 2; 
+                ctx.shadowBlur = 20 + (pulse * 20);
+                ctx.shadowColor = isDangerPhase ? "#FF0000" : "#FF4500"; 
+            }
             ctx.drawImage(this.image, -size / 2, -size / 2, size, size);
+            ctx.shadowBlur = 0;
         } else {
-            ctx.fillStyle = "yellow";
+            ctx.fillStyle = isRedPhase ? "#FF4444" : "#FFD700";
             ctx.beginPath();
             ctx.arc(0, 0, this.radius, 0, Math.PI * 2);
             ctx.fill();
         }
 
+        // Accessories based on Night Factor
+        if (this.status === "hit_ceiling") {
+            if (nightFactor < 0.5) this.drawSunglasses(ctx);
+            else this.drawNightVision(ctx);
+        }
+
+        if (this.status === "hit_floor") {
+             this.drawSpeechBubble(ctx, "Zzz...");
+        }
+
+        ctx.restore();
+    }
+
+    drawSunglasses(ctx: CanvasRenderingContext2D) {
+        ctx.fillStyle = "black";
+        ctx.beginPath(); ctx.arc(12, -5, 6, 0, Math.PI*2); ctx.fill();
+        ctx.beginPath(); ctx.arc(22, -5, 6, 0, Math.PI*2); ctx.fill();
+        ctx.strokeStyle = "black"; ctx.lineWidth = 2;
+        ctx.beginPath(); ctx.moveTo(12, -5); ctx.lineTo(22, -5); ctx.stroke();
+    }
+
+    drawNightVision(ctx: CanvasRenderingContext2D) {
+        ctx.fillStyle = "#00FF00";
+        ctx.shadowBlur = 10; ctx.shadowColor = "#00FF00";
+        ctx.beginPath(); ctx.arc(12, -5, 6, 0, Math.PI*2); ctx.fill();
+        ctx.beginPath(); ctx.arc(22, -5, 6, 0, Math.PI*2); ctx.fill();
+        ctx.fillStyle = "rgba(0, 50, 0, 0.5)"; 
+        ctx.fillRect(8, -8, 20, 6);
+    }
+
+    drawSpeechBubble(ctx: CanvasRenderingContext2D, text: string) {
+        ctx.save();
+        ctx.rotate(-this.rotation); 
+        ctx.font = "bold 16px sans-serif";
+        const textWidth = ctx.measureText(text).width;
+        const bx = -textWidth/2; 
+        const by = -70;
+        ctx.fillStyle = "white";
+        ctx.fillRect(bx - 10, by - 10, textWidth + 20, 30);
+        ctx.fillStyle = "#0B1E33";
+        ctx.fillText(text, 0, by + 18);
         ctx.restore();
     }
 }
