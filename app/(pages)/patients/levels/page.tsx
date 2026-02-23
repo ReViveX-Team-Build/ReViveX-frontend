@@ -1,19 +1,20 @@
 "use client";
 
-import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { useRouter } from 'next/navigation';
+import React, { useState, useEffect, useRef, useCallback } from "react";
+import { useRouter } from "next/navigation";
 import {
   Lock, Play, Activity, Brain,
-  Zap, Calendar, CheckCircle2, Stethoscope,
+  Zap, CheckCircle2, Stethoscope,
   ChevronRight, Target, Timer, TrendingUp,
   Shield, Cpu, Radio, Waves, Sparkles,
-  Trophy, Star, Clock, BarChart3
-} from 'lucide-react';
+  Trophy, Star, Clock, BarChart3,
+  Flame, BookOpen,
+} from "lucide-react";
 
 /* ═══════════════════════════════════════════
    TYPES
 ═══════════════════════════════════════════ */
-type Category = 'ALL' | 'MOTOR' | 'COGNITIVE' | 'STRENGTH';
+type Category = "ALL" | "MOTOR" | "COGNITIVE" | "STRENGTH";
 
 interface Level {
   id: number;
@@ -41,8 +42,8 @@ const LEVELS: Level[] = [
     id: 1, title: "The Flow", category: "MOTOR",
     desc: "Baseline calibration and introductory motor control. Establishes your squeeze-force baseline for the hardware sensor.",
     locked: false, path: "/game/level-1", difficulty: "Calibration", difficultyN: 1,
-    accentHex: "#14b8a6",
-    icon: <Waves size={20} />, xp: 120, duration: "10 min",
+    accentHex: "#2DD4BF",
+    icon: <Waves size={18} />, xp: 120, duration: "10 min",
     completedSessions: 4, targetSessions: 5,
     tags: ["Sensor Setup", "Motor"],
   },
@@ -51,7 +52,7 @@ const LEVELS: Level[] = [
     desc: "Develop grip timing and fine coordination. Synchronise your squeeze cadence with oncoming pearl patterns.",
     locked: false, path: "/game/level-2", difficulty: "Medium", difficultyN: 2,
     accentHex: "#8b5cf6",
-    icon: <Radio size={20} />, xp: 280, duration: "15 min",
+    icon: <Radio size={18} />, xp: 280, duration: "15 min",
     completedSessions: 2, targetSessions: 5,
     tags: ["Timing", "Coordination"],
   },
@@ -60,7 +61,7 @@ const LEVELS: Level[] = [
     desc: "Cognitive dual-tasking protocol. Navigate while sequencing colour targets from working memory.",
     locked: true, path: "/game/level-3", difficulty: "Hard", difficultyN: 3,
     accentHex: "#f59e0b",
-    icon: <Brain size={20} />, xp: 450, duration: "20 min",
+    icon: <Brain size={18} />, xp: 450, duration: "20 min",
     completedSessions: 0, targetSessions: 5,
     tags: ["Dual-Task", "Memory"],
   },
@@ -69,7 +70,7 @@ const LEVELS: Level[] = [
     desc: "Micro-force control training. Thread the fish through sub-pixel gate windows at increasing speed.",
     locked: true, path: "/game/level-4", difficulty: "Hard", difficultyN: 4,
     accentHex: "#22c55e",
-    icon: <Target size={20} />, xp: 600, duration: "20 min",
+    icon: <Target size={18} />, xp: 600, duration: "20 min",
     completedSessions: 0, targetSessions: 5,
     tags: ["Fine Motor", "Speed"],
   },
@@ -78,7 +79,7 @@ const LEVELS: Level[] = [
     desc: "Sustained endurance protocol. Maintain consistent grip force for the full session against adaptive resistance.",
     locked: true, path: "/game/level-5", difficulty: "Expert", difficultyN: 5,
     accentHex: "#ef4444",
-    icon: <Shield size={20} />, xp: 1000, duration: "25 min",
+    icon: <Shield size={18} />, xp: 1000, duration: "25 min",
     completedSessions: 0, targetSessions: 5,
     tags: ["Endurance", "Strength"],
   },
@@ -93,80 +94,216 @@ const ASSIGNED = {
 };
 
 /* ═══════════════════════════════════════════
-   GLOBAL CSS
+   ANIMATED NUMBER
 ═══════════════════════════════════════════ */
-const GLOBAL_CSS = `
-  @keyframes shimmer {
-    0%   { transform: translateX(-200%); }
-    100% { transform: translateX(200%);  }
+function AnimNum({ to, suffix = "", delay = 0 }: { to: number; suffix?: string; delay?: number }) {
+  const [val, setVal] = useState(0);
+  useEffect(() => {
+    const t = setTimeout(() => {
+      let start: number | null = null;
+      const raf = (ts: number) => {
+        if (!start) start = ts;
+        const p = Math.min((ts - start) / 1200, 1);
+        const e = 1 - Math.pow(1 - p, 3);
+        setVal(Math.round(e * to));
+        if (p < 1) requestAnimationFrame(raf);
+        else setVal(to);
+      };
+      requestAnimationFrame(raf);
+    }, delay);
+    return () => clearTimeout(t);
+  }, [to, delay]);
+  return <>{val}{suffix}</>;
+}
+
+/* ═══════════════════════════════════════════
+   CSS
+═══════════════════════════════════════════ */
+const CSS = `
+  @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap');
+
+  .lv-dash * { font-family: 'Plus Jakarta Sans', system-ui, sans-serif; box-sizing: border-box; }
+  .lv-dash .mono { font-family: 'JetBrains Mono', monospace; }
+
+  /* ── Keyframes ────────────────────────────────────────── */
+  @keyframes fadeUp {
+    from { opacity:0; transform:translateY(22px); }
+    to   { opacity:1; transform:translateY(0); }
   }
-  @keyframes scanline {
-    0%   { top: -10%; opacity: 0; }
-    10%  { opacity: 1; }
-    90%  { opacity: 1; }
-    100% { top: 110%; opacity: 0; }
+  @keyframes cardPop {
+    0%   { opacity:0; transform:translateY(18px) scale(0.97); }
+    100% { opacity:1; transform:translateY(0)    scale(1); }
   }
-  @keyframes fadeSlideUp {
-    from { opacity: 0; transform: translateY(18px); }
-    to   { opacity: 1; transform: translateY(0);    }
+  @keyframes barShimmer {
+    0%   { transform:translateX(-100%); }
+    100% { transform:translateX(250%); }
   }
-  .anim-up         { animation: fadeSlideUp 0.55s cubic-bezier(0.4,0,0.2,1) both; }
-  .anim-up.d1      { animation-delay: 0.07s; }
-  .anim-up.d2      { animation-delay: 0.14s; }
-  .anim-up.d3      { animation-delay: 0.21s; }
-  .anim-up.d4      { animation-delay: 0.28s; }
-  .anim-up.d5      { animation-delay: 0.35s; }
+  @keyframes headerShine {
+    0%   { transform:translateX(-200%) skewX(-15deg); }
+    100% { transform:translateX(400%)  skewX(-15deg); }
+  }
+  @keyframes scanLine {
+    0%   { top:-4%;  opacity:0; }
+    6%   { opacity:1; }
+    92%  { opacity:0.6; }
+    100% { top:108%; opacity:0; }
+  }
+  @keyframes deviceGlow {
+    0%,100% { box-shadow:0 0 0 0 rgba(45,212,191,0.38); }
+    50%     { box-shadow:0 0 0 10px rgba(45,212,191,0); }
+  }
+  @keyframes pulseRing {
+    0%   { transform:scale(0.85); opacity:0.6; }
+    100% { transform:scale(2.2);  opacity:0; }
+  }
+  @keyframes statBounce {
+    0%   { opacity:0; transform:scale(0.72) translateY(12px); }
+    70%  { transform:scale(1.05) translateY(-3px); }
+    100% { opacity:1; transform:scale(1) translateY(0); }
+  }
+  @keyframes checkPop {
+    0%   { transform:scale(0) rotate(-20deg); opacity:0; }
+    60%  { transform:scale(1.2) rotate(4deg); }
+    100% { transform:scale(1)   rotate(0);    opacity:1; }
+  }
+  @keyframes dotBlink {
+    0%,100% { opacity:1; }
+    50%     { opacity:0.25; }
+  }
+  @keyframes shimmerSlide {
+    0%   { transform:translateX(-200%); }
+    100% { transform:translateX(300%);  }
+  }
+  @keyframes barFill {
+    from { width:0%; }
+    to   { width:var(--bar-w,0%); }
+  }
+
+  /* ── Card & interactive classes ─────────────────────── */
+  .lv-card {
+    transition: transform 0.28s cubic-bezier(0.22,1,0.36,1), box-shadow 0.28s ease;
+    background: #fff;
+    border-radius: 22px;
+    border: 1px solid rgba(226,232,240,0.9);
+    box-shadow: 0 2px 18px rgba(11,30,51,0.055);
+  }
+  .lv-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 22px 56px rgba(11,30,51,0.11) !important;
+  }
+  .lv-card.locked {
+    filter: grayscale(0.3);
+    opacity: 0.65;
+    cursor: not-allowed;
+  }
+  .lv-card.locked:hover { transform: none; }
+
+  .lv-cta-btn {
+    transition: all 0.25s ease;
+    position: relative; overflow: hidden;
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    border-radius: 14px; padding: 13px; width: 100%;
+    font-weight: 800; font-size: 12px; letter-spacing: 0.06em;
+    text-transform: uppercase; cursor: pointer; border: none;
+  }
+  .lv-cta-btn::after {
+    content: '';
+    position: absolute; inset: 0;
+    background: linear-gradient(90deg,transparent,rgba(255,255,255,0.25),transparent);
+    animation: headerShine 2.8s ease-in-out infinite;
+  }
+  .lv-cta-btn:hover { transform: translateY(-2px); }
+
+  .lv-filter-btn {
+    padding: 8px 16px; border-radius: 12px; border: none; cursor: pointer;
+    font-size: 9.5px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.15em;
+    transition: all 0.2s ease;
+  }
+
+  .lv-tag {
+    padding: 3px 10px; border-radius: 99px;
+    font-size: 9.5px; font-weight: 700; font-family: 'JetBrains Mono', monospace;
+  }
+
+  .lv-stat-row-item {
+    display: flex; align-items: center; gap: 5px;
+    font-size: 11px; color: #94a3b8;
+  }
+
+  /* ── Responsive Layout ───────────────────────────────── */
+  .lv-main-grid     { display:grid; grid-template-columns:1fr 380px; gap:22px; }
+  .lv-cards-grid    { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+  .lv-metrics-grid  { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; }
+  .lv-filter-strip  { display:flex; flex-wrap:wrap; gap:4px; }
+
+  /* Hide neural net on < 1024 */
+  @media (max-width:1280px) {
+    .lv-main-grid { grid-template-columns:1fr 340px; }
+  }
+  @media (max-width:1100px) {
+    .lv-main-grid { grid-template-columns:1fr; }
+    .lv-sidebar { display:none; }
+  }
+  @media (max-width:820px) {
+    .lv-cards-grid { grid-template-columns:1fr; }
+  }
+  @media (max-width:640px) {
+    .lv-dash main { padding:16px 14px !important; }
+    .lv-hero-inner { flex-direction:column !important; gap:20px !important; }
+    .lv-hero-cta   { width:100% !important; }
+    .lv-hero-badges{ flex-wrap:wrap !important; }
+    .lv-metrics-grid { grid-template-columns:1fr; gap:8px; }
+    .lv-hdr-right  { display:none !important; }
+  }
+  @media (max-width:480px) {
+    .lv-filter-strip .lv-filter-btn { padding:7px 10px !important; font-size:8.5px !important; }
+  }
 `;
 
 /* ═══════════════════════════════════════════
-   CANVAS NEURAL NETWORK
+   NEURAL NETWORK CANVAS
 ═══════════════════════════════════════════ */
 interface NNode {
-  x: number; y: number;
-  homeX: number; homeY: number;
-  vx: number; vy: number;
-  level: Level;
-  pulsePhase: number;
+  x: number; y: number; homeX: number; homeY: number;
+  vx: number; vy: number; level: Level; pulsePhase: number;
 }
 interface NEdge { from: number; to: number; progress: number; speed: number; }
 
 const NeuralNetworkCanvas: React.FC = () => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const nodesRef = useRef<NNode[]>([]);
-  const edgesRef = useRef<NEdge[]>([]);
-  const rafRef   = useRef<number>(0);
-  const tsRef    = useRef<number>(0);
+  const nodesRef  = useRef<NNode[]>([]);
+  const edgesRef  = useRef<NEdge[]>([]);
+  const rafRef    = useRef<number>(0);
+  const tsRef     = useRef<number>(0);
 
   const init = useCallback((w: number, h: number) => {
     const pos = [
-      { x: w * 0.10, y: h * 0.60 },
-      { x: w * 0.30, y: h * 0.28 },
-      { x: w * 0.52, y: h * 0.65 },
-      { x: w * 0.72, y: h * 0.25 },
+      { x: w * 0.12, y: h * 0.62 },
+      { x: w * 0.32, y: h * 0.27 },
+      { x: w * 0.54, y: h * 0.66 },
+      { x: w * 0.74, y: h * 0.24 },
       { x: w * 0.90, y: h * 0.60 },
     ];
     nodesRef.current = LEVELS.map((lvl, i) => ({
       x: pos[i].x, y: pos[i].y,
       homeX: pos[i].x, homeY: pos[i].y,
-      vx: (Math.random() - 0.5) * 0.12,
-      vy: (Math.random() - 0.5) * 0.12,
-      level: lvl,
-      pulsePhase: Math.random() * Math.PI * 2,
+      vx: (Math.random() - 0.5) * 0.14,
+      vy: (Math.random() - 0.5) * 0.14,
+      level: lvl, pulsePhase: Math.random() * Math.PI * 2,
     }));
     edgesRef.current = [
-      { from: 0, to: 1, progress: 0,   speed: 0.0028 },
-      { from: 1, to: 2, progress: 0.3, speed: 0.0022 },
-      { from: 2, to: 3, progress: 0.6, speed: 0.0025 },
-      { from: 3, to: 4, progress: 0.1, speed: 0.0020 },
-      { from: 0, to: 2, progress: 0.5, speed: 0.0015 },
-      { from: 1, to: 3, progress: 0.7, speed: 0.0018 },
+      { from: 0, to: 1, progress: 0,    speed: 0.0028 },
+      { from: 1, to: 2, progress: 0.3,  speed: 0.0022 },
+      { from: 2, to: 3, progress: 0.6,  speed: 0.0025 },
+      { from: 3, to: 4, progress: 0.1,  speed: 0.0020 },
+      { from: 0, to: 2, progress: 0.5,  speed: 0.0015 },
+      { from: 1, to: 3, progress: 0.75, speed: 0.0018 },
     ];
   }, []);
 
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
-
     let dpr = window.devicePixelRatio || 1;
 
     const resize = () => {
@@ -174,584 +311,779 @@ const NeuralNetworkCanvas: React.FC = () => {
       const rect = canvas.getBoundingClientRect();
       canvas.width  = rect.width  * dpr;
       canvas.height = rect.height * dpr;
-      const ctx = canvas.getContext('2d');
+      const ctx = canvas.getContext("2d");
       if (ctx) ctx.scale(dpr, dpr);
       init(rect.width, rect.height);
     };
-
     resize();
-    window.addEventListener('resize', resize);
+    window.addEventListener("resize", resize);
 
     const draw = (ts: number) => {
-      const ctx = canvas.getContext('2d');
+      const ctx = canvas.getContext("2d");
       if (!ctx) return;
       const rect = canvas.getBoundingClientRect();
       const W = rect.width, H = rect.height;
       tsRef.current = ts * 0.001;
-
       ctx.clearRect(0, 0, W, H);
 
-      // Edges
       edgesRef.current.forEach(edge => {
         edge.progress = (edge.progress + edge.speed) % 1;
         const n1 = nodesRef.current[edge.from];
         const n2 = nodesRef.current[edge.to];
         if (!n1 || !n2) return;
         const both = !n1.level.locked && !n2.level.locked;
-
         ctx.beginPath();
         ctx.moveTo(n1.x, n1.y);
         ctx.lineTo(n2.x, n2.y);
-        ctx.strokeStyle = both ? 'rgba(20,184,166,0.18)' : 'rgba(148,163,184,0.10)';
+        ctx.strokeStyle = both ? "rgba(45,212,191,0.20)" : "rgba(148,163,184,0.10)";
         ctx.lineWidth = 1;
         ctx.stroke();
-
         if (both) {
           const sx = n1.x + (n2.x - n1.x) * edge.progress;
           const sy = n1.y + (n2.y - n1.y) * edge.progress;
-          const grd = ctx.createRadialGradient(sx, sy, 0, sx, sy, 6);
-          grd.addColorStop(0, 'rgba(20,184,166,0.9)');
-          grd.addColorStop(1, 'rgba(20,184,166,0)');
+          const grd = ctx.createRadialGradient(sx, sy, 0, sx, sy, 7);
+          grd.addColorStop(0, "rgba(45,212,191,0.95)");
+          grd.addColorStop(1, "rgba(45,212,191,0)");
           ctx.beginPath();
-          ctx.arc(sx, sy, 6, 0, Math.PI * 2);
+          ctx.arc(sx, sy, 7, 0, Math.PI * 2);
           ctx.fillStyle = grd;
           ctx.fill();
         }
       });
 
-      // Nodes
       nodesRef.current.forEach(node => {
         node.x += node.vx;
         node.y += node.vy;
         if (Math.abs(node.x - node.homeX) > 12) node.vx *= -1;
         if (Math.abs(node.y - node.homeY) > 12) node.vy *= -1;
-
         const pulse = Math.sin(tsRef.current * 1.4 + node.pulsePhase);
         const r     = node.level.locked ? 17 : 21 + pulse * 1.5;
-        const acc   = node.level.locked ? '#94a3b8' : node.level.accentHex;
-
-        // Glow
+        const acc   = node.level.locked ? "#94a3b8" : node.level.accentHex;
         if (!node.level.locked) {
-          const gr = r + 12 + pulse * 4;
+          const gr = r + 14 + pulse * 4;
           const g  = ctx.createRadialGradient(node.x, node.y, r * 0.4, node.x, node.y, gr);
-          g.addColorStop(0, `${acc}28`);
+          g.addColorStop(0, `${acc}30`);
           g.addColorStop(1, `${acc}00`);
           ctx.beginPath();
           ctx.arc(node.x, node.y, gr, 0, Math.PI * 2);
           ctx.fillStyle = g;
           ctx.fill();
         }
-
-        // Circle fill
         const cf = ctx.createRadialGradient(node.x - r * 0.3, node.y - r * 0.3, 0, node.x, node.y, r);
-        cf.addColorStop(0, '#ffffff');
-        cf.addColorStop(1, node.level.locked ? '#f1f5f9' : `${acc}18`);
+        cf.addColorStop(0, "#ffffff");
+        cf.addColorStop(1, node.level.locked ? "#f1f5f9" : `${acc}1a`);
         ctx.beginPath();
         ctx.arc(node.x, node.y, r, 0, Math.PI * 2);
-        ctx.fillStyle = cf;
+        ctx.fillStyle   = cf;
         ctx.shadowColor = acc;
-        ctx.shadowBlur  = node.level.locked ? 0 : 12;
+        ctx.shadowBlur  = node.level.locked ? 0 : 14;
         ctx.fill();
-        ctx.shadowBlur = 0;
-
-        ctx.strokeStyle = node.level.locked ? 'rgba(148,163,184,0.35)' : `${acc}70`;
+        ctx.shadowBlur  = 0;
+        ctx.strokeStyle = node.level.locked ? "rgba(148,163,184,0.35)" : `${acc}75`;
         ctx.lineWidth   = 1.5;
         ctx.stroke();
-
-        // Number
-        ctx.fillStyle = node.level.locked ? '#94a3b8' : acc;
-        ctx.font = `bold ${Math.floor(r * 0.7)}px monospace`;
-        ctx.textAlign     = 'center';
-        ctx.textBaseline  = 'middle';
+        ctx.fillStyle  = node.level.locked ? "#94a3b8" : acc;
+        ctx.font = `800 ${Math.floor(r * 0.68)}px 'Plus Jakarta Sans', sans-serif`;
+        ctx.textAlign    = "center";
+        ctx.textBaseline = "middle";
         ctx.fillText(`${node.level.id}`, node.x, node.y);
-
-        // Label
-        ctx.fillStyle = node.level.locked ? '#94a3b8' : '#0f172a';
-        ctx.font      = 'bold 9px system-ui, sans-serif';
-        ctx.fillText(node.level.title.split(' ')[0], node.x, node.y + r + 11);
+        ctx.fillStyle = node.level.locked ? "#94a3b8" : "#0f172a";
+        ctx.font = `700 9px 'Plus Jakarta Sans', sans-serif`;
+        ctx.fillText(node.level.title.split(" ")[0], node.x, node.y + r + 12);
       });
 
       rafRef.current = requestAnimationFrame(draw);
     };
-
     rafRef.current = requestAnimationFrame(draw);
     return () => {
       cancelAnimationFrame(rafRef.current);
-      window.removeEventListener('resize', resize);
+      window.removeEventListener("resize", resize);
     };
   }, [init]);
 
-  return <canvas ref={canvasRef} className="w-full h-full block" />;
+  return <canvas ref={canvasRef} style={{ width: "100%", height: "100%", display: "block" }} />;
 };
+
+/* ═══════════════════════════════════════════
+   ANIMATED PROGRESS BAR
+═══════════════════════════════════════════ */
+function AnimBar({ value, color, delay = 0 }: { value: number; color: string; delay?: number }) {
+  const [w, setW] = useState(0);
+  useEffect(() => {
+    const t = setTimeout(() => setW(value), delay);
+    return () => clearTimeout(t);
+  }, [value, delay]);
+  return (
+    <div style={{ height: 6, background: "rgba(11,30,51,0.07)", borderRadius: 99, overflow: "hidden", position: "relative" }}>
+      <div style={{
+        height: "100%", borderRadius: 99,
+        width: `${w}%`,
+        background: color,
+        boxShadow: `0 0 8px ${color}70`,
+        transition: "width 1.2s cubic-bezier(0.22,1,0.36,1)",
+        position: "relative",
+      }}>
+        <div style={{
+          position: "absolute", inset: 0,
+          background: "linear-gradient(90deg,transparent,rgba(255,255,255,0.3),transparent)",
+          animation: "barShimmer 2.2s ease-in-out infinite",
+        }} />
+      </div>
+    </div>
+  );
+}
 
 /* ═══════════════════════════════════════════
    DIFFICULTY DOTS
 ═══════════════════════════════════════════ */
-const DifficultyDots: React.FC<{ level: Level }> = ({ level }) => (
-  <div className="flex gap-1">
-    {Array.from({ length: 5 }).map((_, i) => (
-      <div key={i} className="w-5 h-1.5 rounded-full transition-all duration-300"
-        style={{ background: i < level.difficultyN ? level.accentHex : 'rgba(0,0,0,0.08)' }} />
-    ))}
-  </div>
-);
-
-/* ═══════════════════════════════════════════
-   FILTER TAB
-═══════════════════════════════════════════ */
-const FilterTab = ({ label, active, onClick }: { label: string; active: boolean; onClick: () => void }) => (
-  <button onClick={onClick}
-    className="px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-widest transition-all duration-300"
-    style={active
-      ? { background: '#0B1E33', color: '#fff', boxShadow: '0 2px 10px rgba(11,30,51,0.2)' }
-      : { background: 'transparent', color: '#94a3b8' }
-    }>
-    {label}
-  </button>
-);
+function DiffDots({ level }: { level: Level }) {
+  return (
+    <div style={{ display: "flex", gap: 5 }}>
+      {Array.from({ length: 5 }).map((_, i) => (
+        <div key={i} style={{
+          width: 18, height: 5, borderRadius: 99,
+          background: i < level.difficultyN ? level.accentHex : "rgba(11,30,51,0.08)",
+          transition: "background 0.3s ease",
+          boxShadow: i < level.difficultyN ? `0 0 5px ${level.accentHex}60` : "none",
+        }} />
+      ))}
+    </div>
+  );
+}
 
 /* ═══════════════════════════════════════════
    LEVEL CARD
 ═══════════════════════════════════════════ */
-const LevelCard: React.FC<{ level: Level; index: number; onClick: () => void }> = ({ level, index, onClick }) => {
-  const [hovered, setHovered] = useState(false);
+function LevelCard({ level, onClick }: { level: Level; onClick: () => void }) {
+  const [hov, setHov] = useState(false);
   const prog = level.targetSessions > 0 ? (level.completedSessions / level.targetSessions) * 100 : 0;
+  const accentRgb = level.locked ? "#94a3b8" : level.accentHex;
 
   return (
     <div
       onClick={onClick}
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
-      className={`anim-up d${Math.min(index + 1, 5)} relative overflow-hidden rounded-[1.75rem] transition-all duration-400 select-none`}
+      className={`lv-card${level.locked ? " locked" : ""}`}
+      onMouseEnter={() => !level.locked && setHov(true)}
+      onMouseLeave={() => setHov(false)}
       style={{
-        cursor: level.locked ? 'not-allowed' : 'pointer',
-        background: '#ffffff',
-        border: `1.5px solid ${hovered && !level.locked ? level.accentHex + '55' : 'rgba(226,232,240,1)'}`,
-        boxShadow: hovered && !level.locked
-          ? `0 20px 50px ${level.accentHex}15, 0 4px 16px rgba(0,0,0,0.05)`
-          : '0 1px 4px rgba(0,0,0,0.04)',
-        transform: hovered && !level.locked ? 'translateY(-5px)' : 'translateY(0)',
-        filter: level.locked ? 'grayscale(0.35) opacity(0.65)' : 'none',
+        animation: "cardPop 0.55s cubic-bezier(0.22,1,0.36,1) both",
+        border: `1.5px solid ${hov ? accentRgb + "44" : "rgba(226,232,240,0.9)"}`,
+        position: "relative", overflow: "hidden",
+        cursor: level.locked ? "not-allowed" : "pointer",
       }}
     >
-      {/* Shimmer */}
-      {hovered && !level.locked && (
-        <div className="absolute inset-0 pointer-events-none overflow-hidden rounded-[1.75rem]">
+      {/* Shimmer overlay on hover */}
+      {hov && (
+        <div style={{ position: "absolute", inset: 0, pointerEvents: "none", overflow: "hidden", borderRadius: 22 }}>
           <div style={{
-            position: 'absolute', top: 0, left: 0, width: '55%', height: '100%',
-            background: `linear-gradient(105deg, transparent 35%, ${level.accentHex}10 50%, transparent 65%)`,
-            animation: 'shimmer 1.5s ease-in-out infinite',
+            position: "absolute", inset: 0, width: "55%",
+            background: `linear-gradient(105deg,transparent 30%,${level.accentHex}0e 50%,transparent 70%)`,
+            animation: "shimmerSlide 1.6s ease-in-out infinite",
           }} />
         </div>
       )}
 
-      {/* Accent stripe */}
-      <div className="h-1 w-full" style={{ background: level.locked ? '#e2e8f0' : level.accentHex }} />
+      {/* Accent top bar */}
+      <div style={{
+        height: 4, background: level.locked ? "#e2e8f0" : level.accentHex,
+        width: "100%",
+        boxShadow: level.locked ? "none" : `0 0 12px ${level.accentHex}60`,
+      }} />
 
-      <div className="p-6">
-        {/* Header */}
-        <div className="flex justify-between items-start mb-4">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl flex items-center justify-center shrink-0"
-              style={{ background: `${level.accentHex}14`, color: level.accentHex }}>
+      <div style={{ padding: "20px 20px 18px" }}>
+        {/* Header row */}
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 14 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+            <div style={{
+              width: 38, height: 38, borderRadius: 12,
+              background: `${accentRgb}14`,
+              color: accentRgb,
+              display: "flex", alignItems: "center", justifyContent: "center",
+              flexShrink: 0,
+            }}>
               {level.icon}
             </div>
             <div>
-              <div className="text-[10px] font-bold uppercase tracking-[0.18em]" style={{ color: level.accentHex }}>
+              <div className="mono" style={{ fontSize: 9, fontWeight: 700, color: accentRgb,
+                textTransform: "uppercase", letterSpacing: "0.18em", marginBottom: 3 }}>
                 {level.category}
               </div>
-              <div className="font-black text-[#0B1E33] text-base leading-tight">{level.title}</div>
+              <div style={{ fontSize: 15, fontWeight: 800, color: "#0B1E33", lineHeight: 1.2 }}>{level.title}</div>
             </div>
           </div>
+
           {level.locked ? (
-            <div className="flex items-center gap-1 bg-slate-100 px-2.5 py-1 rounded-full">
-              <Lock size={10} className="text-slate-400" />
-              <span className="text-[9px] text-slate-400 font-bold uppercase tracking-wide">Locked</span>
+            <div style={{
+              display: "flex", alignItems: "center", gap: 5,
+              background: "rgba(148,163,184,0.10)",
+              border: "1px solid rgba(148,163,184,0.20)",
+              borderRadius: 99, padding: "3px 10px",
+            }}>
+              <Lock size={10} color="#94a3b8" />
+              <span className="mono" style={{ fontSize: 8.5, color: "#94a3b8", fontWeight: 700, letterSpacing: "0.10em" }}>LOCKED</span>
             </div>
           ) : (
-            <span className="text-[10px] font-black text-slate-300 font-mono">#{String(level.id).padStart(2,'0')}</span>
+            <span className="mono" style={{ fontSize: 10, color: "#cbd5e1", fontWeight: 600 }}>
+              #{String(level.id).padStart(2, "0")}
+            </span>
           )}
         </div>
 
-        <p className="text-slate-500 text-xs leading-relaxed mb-4">{level.desc}</p>
+        {/* Description */}
+        <p style={{ fontSize: 12, color: "#64748b", lineHeight: 1.65, marginBottom: 14 }}>{level.desc}</p>
 
         {/* Tags */}
-        <div className="flex flex-wrap gap-1.5 mb-4">
+        <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 14 }}>
           {level.tags.map(tag => (
-            <span key={tag} className="px-2.5 py-0.5 rounded-full text-[10px] font-bold"
-              style={{ background: `${level.accentHex}10`, color: level.accentHex }}>
-              {tag}
-            </span>
+            <span key={tag} className="lv-tag" style={{
+              background: `${accentRgb}10`, color: accentRgb,
+            }}>{tag}</span>
           ))}
         </div>
 
         {/* Difficulty */}
-        <div className="mb-4">
-          <div className="flex justify-between items-center mb-1.5">
-            <span className="text-[10px] text-slate-400 uppercase tracking-wider font-bold">Difficulty</span>
-            <span className="text-[10px] font-bold" style={{ color: level.accentHex }}>{level.difficulty}</span>
+        <div style={{ marginBottom: 14 }}>
+          <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 7 }}>
+            <span className="mono" style={{ fontSize: 8.5, color: "#94a3b8", textTransform: "uppercase", letterSpacing: "0.14em", fontWeight: 700 }}>
+              Difficulty
+            </span>
+            <span className="mono" style={{ fontSize: 8.5, color: accentRgb, fontWeight: 700 }}>{level.difficulty}</span>
           </div>
-          <DifficultyDots level={level} />
+          <DiffDots level={level} />
         </div>
 
-        {/* Stats */}
-        <div className="flex items-center gap-4 mb-5 pt-4 border-t border-slate-100">
-          <div className="flex items-center gap-1.5 text-[11px] text-slate-500">
-            <Clock size={11} className="text-slate-400" /> {level.duration}
-          </div>
-          <div className="flex items-center gap-1.5 text-[11px] text-slate-500">
-            <Zap size={11} className="text-slate-400" /> {level.xp} XP
-          </div>
-          <div className="flex items-center gap-1.5 text-[11px] text-slate-500">
-            <CheckCircle2 size={11} className="text-slate-400" /> {level.completedSessions}/{level.targetSessions}
+        {/* Stats row */}
+        <div style={{
+          display: "flex", alignItems: "center", gap: 16,
+          paddingTop: 12, paddingBottom: 12,
+          borderTop: "1px solid rgba(226,232,240,0.8)",
+          borderBottom: "1px solid rgba(226,232,240,0.8)",
+          marginBottom: 14,
+        }}>
+          <div className="lv-stat-row-item"><Clock size={11} color="#cbd5e1" />{level.duration}</div>
+          <div className="lv-stat-row-item"><Zap size={11} color="#cbd5e1" />{level.xp} XP</div>
+          <div className="lv-stat-row-item">
+            <CheckCircle2 size={11} color={level.completedSessions > 0 ? accentRgb : "#cbd5e1"} />
+            {level.completedSessions}/{level.targetSessions}
           </div>
         </div>
 
         {/* Progress bar */}
         {!level.locked && (
-          <div className="mb-5">
-            <div className="w-full h-1.5 rounded-full bg-slate-100 overflow-hidden">
-              <div className="h-full rounded-full transition-all duration-700"
-                style={{ width: `${prog}%`, background: level.accentHex }} />
-            </div>
+          <div style={{ marginBottom: 14 }}>
+            <AnimBar value={prog} color={level.accentHex} delay={200} />
           </div>
         )}
 
         {/* CTA */}
         {!level.locked && (
           <button
-            className="w-full py-2.5 rounded-xl text-xs font-bold uppercase tracking-widest flex items-center justify-center gap-2 transition-all duration-300"
-            style={hovered
-              ? { background: level.accentHex, color: '#fff', boxShadow: `0 8px 24px ${level.accentHex}40` }
-              : { background: `${level.accentHex}0f`, color: level.accentHex }
-            }>
-            {hovered ? <Play size={12} fill="currentColor" /> : <ChevronRight size={12} />}
-            {hovered ? 'Launch Protocol' : 'Replay Level'}
+            className="lv-cta-btn"
+            style={{
+              background: hov ? `linear-gradient(135deg,${level.accentHex},${level.accentHex}cc)` : `${level.accentHex}10`,
+              color: hov ? (level.accentHex === "#2DD4BF" ? "#0B1E33" : "#fff") : level.accentHex,
+              boxShadow: hov ? `0 8px 28px ${level.accentHex}40` : "none",
+            }}
+          >
+            {hov ? <Play size={13} fill="currentColor" style={{ position: "relative", zIndex: 2 }} /> : <ChevronRight size={13} style={{ position: "relative", zIndex: 2 }} />}
+            <span style={{ position: "relative", zIndex: 2 }}>
+              {hov ? "Launch Protocol" : "Replay Level"}
+            </span>
           </button>
         )}
       </div>
     </div>
   );
-};
+}
+
+/* ═══════════════════════════════════════════
+   FILTER TAB
+═══════════════════════════════════════════ */
+function FilterTab({ label, active, onClick }: { label: string; active: boolean; onClick: () => void }) {
+  return (
+    <button
+      className="lv-filter-btn mono"
+      onClick={onClick}
+      style={active
+        ? { background: "#0B1E33", color: "#fff", boxShadow: "0 2px 12px rgba(11,30,51,0.18)" }
+        : { background: "transparent", color: "#94a3b8" }
+      }
+    >
+      {label}
+    </button>
+  );
+}
 
 /* ═══════════════════════════════════════════
    MAIN PAGE
 ═══════════════════════════════════════════ */
-const LevelsPage: React.FC = () => {
+export default function LevelsPage() {
   const router = useRouter();
-  const [activeCategory, setActiveCategory] = useState<Category>('ALL');
-  const [clock, setClock] = useState('');
+  const [activeCategory, setActiveCategory] = useState<Category>("ALL");
+  const [clock, setClock] = useState("");
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    const fmt = () => new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    setMounted(true);
+    const fmt = () => new Date().toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", second: "2-digit" });
     setClock(fmt());
     const id = setInterval(() => setClock(fmt()), 1000);
     return () => clearInterval(id);
   }, []);
 
-  const filteredLevels = activeCategory === 'ALL' ? LEVELS : LEVELS.filter(l => l.category === activeCategory);
+  if (!mounted) return null;
+
+  const filteredLevels = activeCategory === "ALL" ? LEVELS : LEVELS.filter(l => l.category === activeCategory);
   const assigned = LEVELS.find(l => l.id === ASSIGNED.levelId)!;
 
   return (
-    <div className="min-h-screen bg-[#F0F4F8] text-slate-800 pb-16 selection:bg-teal-500/30 overflow-x-hidden">
-      <style>{GLOBAL_CSS}</style>
+    <div className="lv-dash" style={{ minHeight: "100vh", background: "#F0F4F8", paddingBottom: 52 }}>
+      <style>{CSS}</style>
 
-      {/* Ambient glows — same as home page */}
-      <div className="fixed inset-0 pointer-events-none overflow-hidden">
-        <div className="absolute top-0 left-1/4 w-[900px] h-[900px] bg-teal-400/5 rounded-full blur-[120px] -translate-y-1/2" />
-        <div className="absolute bottom-0 right-0 w-[700px] h-[700px] bg-violet-500/5 rounded-full blur-[100px] translate-y-1/3" />
+      {/* ── Ambient BG ───────────────────────────────────────────── */}
+      <div style={{ position: "fixed", inset: 0, pointerEvents: "none", zIndex: 0, overflow: "hidden" }}>
+        <div style={{ position: "absolute", top: "-8%", right: "8%", width: 750, height: 750,
+          background: "radial-gradient(circle,rgba(45,212,191,0.055) 0%,transparent 65%)", borderRadius: "50%" }} />
+        <div style={{ position: "absolute", bottom: "-8%", left: "4%", width: 600, height: 600,
+          background: "radial-gradient(circle,rgba(139,92,246,0.04) 0%,transparent 65%)", borderRadius: "50%" }} />
+        <div style={{ position: "absolute", inset: 0,
+          backgroundImage: "linear-gradient(rgba(11,30,51,0.022) 1px,transparent 1px),linear-gradient(90deg,rgba(11,30,51,0.022) 1px,transparent 1px)",
+          backgroundSize: "52px 52px" }} />
       </div>
 
-      <main className="max-w-7xl mx-auto p-6 md:p-10 relative z-10">
+      <main style={{ maxWidth: 1200, margin: "0 auto", padding: "28px 24px", position: "relative", zIndex: 1 }}>
 
-        {/* ── HEADER ── */}
-        <header className="anim-up flex flex-col md:flex-row justify-between items-end mb-10">
-          <div>
-            <span className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-1">Mission Control</span>
-            <h1 className="text-4xl md:text-5xl font-black text-[#0B1E33] tracking-tight mb-2">
-              Your Roadmap.
+        {/* ════════════════════════════════════════════════════════
+            HEADER
+        ════════════════════════════════════════════════════════ */}
+        <div style={{
+          animation: "fadeUp 0.6s cubic-bezier(0.22,1,0.36,1) both",
+          background: "#fff",
+          borderRadius: 22, padding: "20px 28px",
+          marginBottom: 24,
+          border: "1.5px solid rgba(45,212,191,0.22)",
+          boxShadow: "0 4px 32px rgba(11,30,51,0.07)",
+          display: "flex", alignItems: "center", justifyContent: "space-between",
+          flexWrap: "wrap", gap: 16, position: "relative", overflow: "hidden",
+        }}>
+          {/* Glow + shimmer */}
+          <div style={{ position: "absolute", top: -30, left: -30, width: 180, height: 180,
+            background: "radial-gradient(circle,rgba(45,212,191,0.08),transparent 70%)" }} />
+          <div style={{ position: "absolute", inset: 0, overflow: "hidden", pointerEvents: "none" }}>
+            <div style={{ position: "absolute", inset: 0,
+              background: "linear-gradient(90deg,transparent,rgba(45,212,191,0.06),transparent)",
+              animation: "headerShine 4s ease-in-out infinite" }} />
+          </div>
+
+          {/* Left */}
+          <div style={{ position: "relative", zIndex: 2 }}>
+            <p className="mono" style={{ fontSize: 9.5, color: "rgba(45,212,191,0.7)", textTransform: "uppercase",
+              letterSpacing: "0.20em", marginBottom: 4, fontWeight: 600 }}>Mission Control</p>
+            <h1 style={{ fontSize: "clamp(1.5rem,2.6vw,2rem)", fontWeight: 800, color: "#0B1E33", margin: 0, lineHeight: 1.15 }}>
+              Your <span style={{ color: "#2DD4BF" }}>Roadmap.</span>
             </h1>
-            <p className="text-slate-500 font-medium max-w-md">
-              <span className="text-teal-600 font-bold">2 levels</span> unlocked ·{" "}
-              <span className="text-violet-600 font-bold">400 XP</span> earned this week
+            <p style={{ fontSize: 13, color: "#94a3b8", marginTop: 5, fontWeight: 500 }}>
+              <span style={{ color: "#2DD4BF", fontWeight: 700 }}>2 levels</span> unlocked ·{" "}
+              <span style={{ color: "#8b5cf6", fontWeight: 700 }}>400 XP</span> earned this week
             </p>
           </div>
 
-          {/* Gamification strip — mirrors home page style exactly */}
-          <div className="flex items-center gap-4 bg-white/80 backdrop-blur-md p-2 rounded-2xl border border-white shadow-lg shadow-slate-200/50 mt-4 md:mt-0">
-            <div className="flex items-center gap-3 px-4 py-2 bg-teal-50 rounded-xl">
-              <Cpu size={18} className="text-teal-600" />
+          {/* Right: stat badges */}
+          <div className="lv-hdr-right" style={{ display: "flex", gap: 12, position: "relative", zIndex: 2 }}>
+            {/* Clock */}
+            <div style={{ display: "flex", alignItems: "center", gap: 8,
+              background: "rgba(45,212,191,0.07)", border: "1px solid rgba(45,212,191,0.18)",
+              borderRadius: 14, padding: "10px 16px" }}>
+              <Cpu size={16} color="#2DD4BF" />
               <div>
-                <p className="text-[10px] font-bold text-teal-500 uppercase">System</p>
-                <p className="text-sm font-black text-teal-700 leading-none font-mono">{clock}</p>
+                <div className="mono" style={{ fontSize: 9, color: "#2DD4BF", textTransform: "uppercase", letterSpacing: "0.14em" }}>System</div>
+                <div className="mono" style={{ fontSize: 14, fontWeight: 800, color: "#0B1E33", lineHeight: 1 }}>{clock}</div>
               </div>
             </div>
-            <div className="w-px h-8 bg-slate-200" />
-            <div className="flex items-center gap-3 px-4 py-2">
-              <Trophy size={18} className="text-[#0B1E33]" />
+
+            {/* Total XP */}
+            <div style={{ display: "flex", alignItems: "center", gap: 8,
+              background: "rgba(245,158,11,0.07)", border: "1px solid rgba(245,158,11,0.18)",
+              borderRadius: 14, padding: "10px 16px" }}>
+              <span style={{ fontSize: 17 }}>🔥</span>
               <div>
-                <p className="text-[10px] font-bold text-slate-400 uppercase">Total XP</p>
-                <p className="text-lg font-black text-[#0B1E33] leading-none">400</p>
+                <div className="mono" style={{ fontSize: 9, color: "#f59e0b", textTransform: "uppercase", letterSpacing: "0.14em" }}>Total XP</div>
+                <div style={{ fontSize: 14, fontWeight: 800, color: "#0B1E33", lineHeight: 1 }}>
+                  <AnimNum to={400} delay={300} />
+                </div>
+              </div>
+            </div>
+
+            {/* Trophy */}
+            <div style={{ display: "flex", alignItems: "center", gap: 8,
+              background: "rgba(99,102,241,0.07)", border: "1px solid rgba(99,102,241,0.18)",
+              borderRadius: 14, padding: "10px 16px" }}>
+              <Trophy size={16} color="#6366f1" />
+              <div>
+                <div className="mono" style={{ fontSize: 9, color: "#6366f1", textTransform: "uppercase", letterSpacing: "0.14em" }}>Levels</div>
+                <div style={{ fontSize: 14, fontWeight: 800, color: "#0B1E33", lineHeight: 1 }}>2 / 5</div>
               </div>
             </div>
           </div>
-        </header>
+        </div>
 
-        {/* ── MAIN GRID (matches home's 12-col layout) ── */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        {/* ════════════════════════════════════════════════════════
+            MAIN GRID
+        ════════════════════════════════════════════════════════ */}
+        <div className="lv-main-grid">
 
-          {/* LEFT — 8 cols */}
-          <div className="lg:col-span-8 flex flex-col gap-8">
+          {/* ── LEFT COLUMN ────────────────────────────────────── */}
+          <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
 
-            {/* ─ HERO: ASSIGNED SESSION (dark card — same as home's hero portal) ─ */}
-            <div className="anim-up d1 relative w-full rounded-[2.5rem] overflow-hidden shadow-2xl shadow-teal-900/10 bg-[#0B1E33]">
-
+            {/* ── HERO: ASSIGNED SESSION ────────────────────────── */}
+            <div style={{
+              animation: "cardPop 0.55s cubic-bezier(0.22,1,0.36,1) 0.08s both",
+              background: "#0B1E33",
+              borderRadius: 24, overflow: "hidden",
+              boxShadow: "0 16px 60px rgba(11,30,51,0.22), 0 0 0 1px rgba(45,212,191,0.08)",
+              position: "relative",
+            }}>
+              {/* Grid overlay */}
+              <div style={{ position: "absolute", inset: 0, pointerEvents: "none",
+                backgroundImage: "linear-gradient(rgba(45,212,191,0.04) 1px,transparent 1px),linear-gradient(90deg,rgba(45,212,191,0.04) 1px,transparent 1px)",
+                backgroundSize: "36px 36px" }} />
               {/* Scanline */}
-              <div className="absolute inset-0 pointer-events-none overflow-hidden">
+              <div style={{ position: "absolute", inset: 0, overflow: "hidden", pointerEvents: "none" }}>
                 <div style={{
-                  position: 'absolute', left: 0, right: 0, height: '15%',
-                  background: 'linear-gradient(to bottom, transparent, rgba(45,212,191,0.06), transparent)',
-                  animation: 'scanline 5s linear infinite',
+                  position: "absolute", left: 0, right: 0, height: "14%",
+                  background: "linear-gradient(to bottom,transparent,rgba(45,212,191,0.06),transparent)",
+                  animation: "scanLine 5s linear infinite",
                 }} />
               </div>
-
-              {/* Grid */}
-              <div className="absolute inset-0 pointer-events-none" style={{
-                backgroundImage: 'linear-gradient(rgba(45,212,191,0.04) 1px,transparent 1px),linear-gradient(90deg,rgba(45,212,191,0.04) 1px,transparent 1px)',
-                backgroundSize: '36px 36px',
-              }} />
-
-              {/* Diagonal accents */}
-              <div className="absolute top-0 right-0 w-1/2 h-full pointer-events-none overflow-hidden">
-                {[{ r: '-25deg', o: '10%' }, { r: '-40deg', o: '28%' }].map((a, i) => (
+              {/* Diagonal accent lines */}
+              <div style={{ position: "absolute", top: 0, right: 0, width: "50%", height: "100%", overflow: "hidden", pointerEvents: "none" }}>
+                {[{ r: "-25deg", o: "10%" }, { r: "-42deg", o: "28%" }].map((a, i) => (
                   <div key={i} style={{
-                    position: 'absolute', top: '-20%', right: a.o,
-                    width: '1px', height: '160%',
-                    background: `linear-gradient(to bottom,transparent,rgba(45,212,191,${0.10 - i * 0.04}),transparent)`,
+                    position: "absolute", top: "-20%", right: a.o,
+                    width: 1, height: "160%",
+                    background: `linear-gradient(to bottom,transparent,rgba(45,212,191,${0.09 - i * 0.04}),transparent)`,
                     transform: `rotate(${a.r})`,
                   }} />
                 ))}
               </div>
 
-              <div className="relative z-10 p-8 md:p-10">
-                {/* Top */}
-                <div className="flex justify-between items-center mb-8">
-                  <div className="flex items-center gap-2 bg-white/10 backdrop-blur-md border border-white/10 px-4 py-1.5 rounded-full">
-                    <div className="w-2 h-2 bg-teal-400 rounded-full animate-pulse" />
-                    <span className="text-white/90 text-xs font-bold tracking-wider uppercase">Today's Assignment</span>
+              <div style={{ position: "relative", zIndex: 2, padding: "28px 28px 24px" }}>
+                {/* Top badge + duration */}
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 24 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8,
+                    background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.10)",
+                    borderRadius: 99, padding: "6px 16px" }}>
+                    <div style={{ width: 7, height: 7, borderRadius: "50%", background: "#2DD4BF",
+                      boxShadow: "0 0 6px #2DD4BF", animation: "dotBlink 2s ease-in-out infinite" }} />
+                    <span className="mono" style={{ fontSize: 9.5, color: "rgba(255,255,255,0.80)",
+                      fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.16em" }}>
+                      Today's Assignment
+                    </span>
                   </div>
-                  <div className="flex items-center gap-2 text-white/50 text-xs font-medium">
-                    <Clock size={14} /> {ASSIGNED.duration}
+                  <div style={{ display: "flex", alignItems: "center", gap: 6, color: "rgba(255,255,255,0.35)" }}>
+                    <Clock size={13} />
+                    <span className="mono" style={{ fontSize: 11, fontWeight: 500 }}>{ASSIGNED.duration}</span>
                   </div>
                 </div>
 
-                <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-8">
-                  <div className="space-y-4 flex-1">
-                    <div>
-                      <h2 className="text-4xl md:text-5xl font-black text-white tracking-tight leading-none">
-                        {ASSIGNED.title}<span className="text-teal-400"> Protocol</span>
+                {/* Main content */}
+                <div className="lv-hero-inner" style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 28 }}>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ marginBottom: 16 }}>
+                      <h2 style={{ fontSize: "clamp(1.8rem,3.2vw,2.6rem)", fontWeight: 800, color: "#fff",
+                        letterSpacing: "-0.02em", lineHeight: 1.1, margin: 0 }}>
+                        {ASSIGNED.title}<span style={{ color: "#2DD4BF" }}> Protocol</span>
                       </h2>
-                      <div className="text-[11px] uppercase tracking-[0.2em] text-white/40 mt-2 font-mono">
+                      <div className="mono" style={{ fontSize: 10, color: "rgba(255,255,255,0.30)",
+                        textTransform: "uppercase", letterSpacing: "0.20em", marginTop: 8 }}>
                         Level 02 · Motor · {assigned.duration}
                       </div>
                     </div>
 
-                    <div className="flex items-start gap-3 bg-white/[0.05] border border-white/[0.08] rounded-2xl px-4 py-3 max-w-lg">
-                      <Stethoscope size={15} className="text-teal-400 shrink-0 mt-0.5" />
-                      <p className="text-sm text-white/70 leading-relaxed">
-                        <span className="text-teal-400 font-bold">Dr. Note: </span>{ASSIGNED.doctorNote}
+                    {/* Doctor note */}
+                    <div style={{
+                      background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.08)",
+                      borderRadius: 14, padding: "12px 16px", marginBottom: 18,
+                      display: "flex", alignItems: "flex-start", gap: 10,
+                    }}>
+                      <Stethoscope size={14} color="#2DD4BF" style={{ flexShrink: 0, marginTop: 2 }} />
+                      <p style={{ fontSize: 12.5, color: "rgba(255,255,255,0.60)", lineHeight: 1.65, margin: 0 }}>
+                        <span style={{ color: "#2DD4BF", fontWeight: 700 }}>Dr. Note: </span>
+                        {ASSIGNED.doctorNote}
                       </p>
                     </div>
 
-                    <div className="flex flex-wrap gap-3">
+                    {/* Stat badges */}
+                    <div className="lv-hero-badges" style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
                       {[
-                        { icon: <Activity size={13} />, label: 'Focus', val: 'Timing',  c: '#fbbf24' },
-                        { icon: <Brain    size={13} />, label: 'Type',  val: 'Motor',   c: '#a78bfa' },
-                        { icon: <Zap      size={13} />, label: 'XP',    val: '+280',    c: '#2DD4BF' },
+                        { icon: <Activity size={12} />, label: "Focus",  val: "Timing",  c: "#fbbf24" },
+                        { icon: <Brain    size={12} />, label: "Type",   val: "Motor",   c: "#a78bfa" },
+                        { icon: <Zap      size={12} />, label: "XP",     val: "+280",    c: "#2DD4BF" },
                       ].map(s => (
-                        <div key={s.label}
-                          className="flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs text-white/70 border border-white/[0.08] bg-white/[0.04]">
+                        <div key={s.label} style={{
+                          display: "flex", alignItems: "center", gap: 7,
+                          background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.08)",
+                          borderRadius: 10, padding: "7px 12px",
+                        }}>
                           <span style={{ color: s.c }}>{s.icon}</span>
-                          <span className="text-white/30 text-[10px] uppercase tracking-wide">{s.label}:</span>
-                          <span className="font-bold text-white/80">{s.val}</span>
+                          <span className="mono" style={{ fontSize: 9, color: "rgba(255,255,255,0.28)",
+                            textTransform: "uppercase", letterSpacing: "0.12em" }}>{s.label}:</span>
+                          <span style={{ fontSize: 12, fontWeight: 700, color: "rgba(255,255,255,0.80)" }}>{s.val}</span>
                         </div>
                       ))}
                     </div>
                   </div>
 
-                  {/* CTA — same shimmer button as home */}
-                  <div className="shrink-0">
+                  {/* CTA */}
+                  <div className="lv-hero-cta" style={{ flexShrink: 0 }}>
                     <button
                       onClick={() => router.push(ASSIGNED.path)}
-                      className="relative overflow-hidden bg-teal-500 hover:bg-teal-400 text-[#0B1E33] px-10 py-5 rounded-2xl font-black text-lg flex items-center gap-3 transition-all shadow-[0_0_40px_rgba(20,184,166,0.35)] hover:shadow-[0_0_60px_rgba(20,184,166,0.55)] hover:scale-105 active:scale-95"
+                      className="lv-cta-btn"
+                      style={{
+                        background: "linear-gradient(135deg,#2DD4BF,#0891b2)",
+                        color: "#0B1E33",
+                        padding: "16px 32px", width: "auto", borderRadius: 18,
+                        fontSize: 15, fontWeight: 800, letterSpacing: "0.04em",
+                        boxShadow: "0 0 40px rgba(45,212,191,0.38)",
+                      }}
                     >
-                      <div className="absolute inset-0 bg-white/30 skew-x-12"
-                        style={{ animation: 'shimmer 2s ease-in-out infinite' }} />
-                      <Play size={22} className="fill-[#0B1E33] relative z-10" />
-                      <span className="relative z-10">START</span>
+                      <Play size={20} fill="#0B1E33" style={{ position: "relative", zIndex: 2 }} />
+                      <span style={{ position: "relative", zIndex: 2 }}>START</span>
                     </button>
-                    <p className="text-center text-white/25 text-[10px] mt-2 uppercase tracking-widest">Mandatory</p>
+                    <div className="mono" style={{ textAlign: "center", fontSize: 9, color: "rgba(255,255,255,0.22)",
+                      textTransform: "uppercase", letterSpacing: "0.18em", marginTop: 8 }}>
+                      Mandatory Session
+                    </div>
                   </div>
                 </div>
 
-                {/* Progress */}
-                <div className="mt-8 pt-6 border-t border-white/[0.07]">
-                  <div className="flex justify-between text-[10px] text-white/30 uppercase tracking-widest mb-2">
-                    <span>Session Progress</span>
-                    <span className="text-teal-400">40%</span>
+                {/* Session progress */}
+                <div style={{ marginTop: 22, paddingTop: 18, borderTop: "1px solid rgba(255,255,255,0.07)" }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 8 }}>
+                    <span className="mono" style={{ fontSize: 9, color: "rgba(255,255,255,0.28)",
+                      textTransform: "uppercase", letterSpacing: "0.16em" }}>Session Progress</span>
+                    <span className="mono" style={{ fontSize: 9, color: "#2DD4BF", fontWeight: 700 }}>40%</span>
                   </div>
-                  <div className="h-1.5 bg-white/[0.07] rounded-full overflow-hidden">
-                    <div className="h-full w-[40%] bg-gradient-to-r from-teal-400/70 to-teal-400 rounded-full"
-                      style={{ boxShadow: '0 0 12px rgba(45,212,191,0.5)' }} />
+                  <div style={{ height: 6, background: "rgba(255,255,255,0.06)", borderRadius: 99, overflow: "hidden" }}>
+                    <div style={{
+                      height: "100%", width: "40%", borderRadius: 99,
+                      background: "linear-gradient(90deg,rgba(45,212,191,0.7),#2DD4BF)",
+                      boxShadow: "0 0 12px rgba(45,212,191,0.5)",
+                    }} />
                   </div>
                 </div>
               </div>
             </div>
 
-            {/* ─ LIBRARY HEADER + FILTERS ─ */}
-            <div className="anim-up d2 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+            {/* ── LIBRARY HEADER + FILTERS ─────────────────────── */}
+            <div style={{
+              animation: "cardPop 0.55s cubic-bezier(0.22,1,0.36,1) 0.16s both",
+              display: "flex", alignItems: "center", justifyContent: "space-between",
+              flexWrap: "wrap", gap: 14,
+            }}>
               <div>
-                <h3 className="text-xl font-black text-[#0B1E33] tracking-tight">Module Library</h3>
-                <p className="text-xs text-slate-400 uppercase tracking-wider mt-0.5 font-bold">
+                <h3 style={{ fontSize: 17, fontWeight: 800, color: "#0B1E33", margin: 0 }}>Module Library</h3>
+                <p className="mono" style={{ fontSize: 9.5, color: "#94a3b8", textTransform: "uppercase",
+                  letterSpacing: "0.16em", marginTop: 4, fontWeight: 700 }}>
                   Replay unlocked levels · Accumulate XP
                 </p>
               </div>
-              <div className="flex gap-1 bg-white/70 backdrop-blur-md p-1 rounded-2xl border border-white shadow-sm">
-                {(['ALL', 'MOTOR', 'COGNITIVE', 'STRENGTH'] as Category[]).map(cat => (
+              <div className="lv-filter-strip" style={{
+                background: "rgba(255,255,255,0.85)", border: "1px solid rgba(226,232,240,0.8)",
+                borderRadius: 16, padding: "4px",
+                boxShadow: "0 2px 12px rgba(11,30,51,0.06)",
+              }}>
+                {(["ALL","MOTOR","COGNITIVE","STRENGTH"] as Category[]).map(cat => (
                   <FilterTab key={cat} label={cat} active={activeCategory === cat} onClick={() => setActiveCategory(cat)} />
                 ))}
               </div>
             </div>
 
-            {/* ─ LEVEL CARDS ─ */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-              {filteredLevels.map((level, i) => (
-                <LevelCard key={level.id} level={level} index={i}
-                  onClick={() => !level.locked && router.push(level.path)} />
+            {/* ── LEVEL CARDS GRID ──────────────────────────────── */}
+            <div className="lv-cards-grid" style={{ animation: "cardPop 0.55s cubic-bezier(0.22,1,0.36,1) 0.22s both" }}>
+              {filteredLevels.map(level => (
+                <LevelCard
+                  key={level.id}
+                  level={level}
+                  onClick={() => !level.locked && router.push(level.path)}
+                />
               ))}
             </div>
           </div>
 
-          {/* RIGHT — 4 cols */}
-          <div className="lg:col-span-4 flex flex-col gap-6">
+          {/* ── RIGHT SIDEBAR ──────────────────────────────────── */}
+          <div className="lv-sidebar" style={{ display: "flex", flexDirection: "column", gap: 18 }}>
 
-            {/* ─ NEURAL NETWORK VISUALISER (new unique element) ─ */}
-            <div className="anim-up d1 bg-white rounded-[2.5rem] border border-slate-100 shadow-sm overflow-hidden">
-              <div className="flex items-center justify-between px-6 pt-6 pb-2">
+            {/* Neural Network Visualiser */}
+            <div className="lv-card" style={{
+              animation: "cardPop 0.55s cubic-bezier(0.22,1,0.36,1) 0.10s both",
+              overflow: "hidden",
+            }}>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between",
+                padding: "20px 20px 8px" }}>
                 <div>
-                  <h3 className="font-black text-[#0B1E33] text-sm">Progression Map</h3>
-                  <p className="text-[10px] text-slate-400 uppercase tracking-wider font-bold mt-0.5">Neural pathway visualiser</p>
+                  <h3 style={{ fontSize: 14, fontWeight: 800, color: "#0B1E33", margin: 0 }}>Progression Map</h3>
+                  <p className="mono" style={{ fontSize: 8.5, color: "#94a3b8", textTransform: "uppercase",
+                    letterSpacing: "0.14em", marginTop: 3, fontWeight: 700 }}>Neural pathway visualiser</p>
                 </div>
-                <div className="flex items-center gap-1.5 px-3 py-1.5 bg-teal-50 rounded-xl">
-                  <div className="w-1.5 h-1.5 bg-teal-500 rounded-full animate-pulse" />
-                  <span className="text-[10px] text-teal-600 font-bold uppercase tracking-wider">Live</span>
+                <div style={{ display: "flex", alignItems: "center", gap: 6,
+                  background: "rgba(45,212,191,0.08)", border: "1px solid rgba(45,212,191,0.18)",
+                  borderRadius: 10, padding: "5px 10px" }}>
+                  <div style={{ width: 6, height: 6, borderRadius: "50%", background: "#2DD4BF",
+                    animation: "dotBlink 2s ease-in-out infinite" }} />
+                  <span className="mono" style={{ fontSize: 9, color: "#2DD4BF", fontWeight: 700, letterSpacing: "0.10em" }}>LIVE</span>
                 </div>
               </div>
-              <div style={{ height: 210 }}>
-                <NeuralNetworkCanvas />
-              </div>
-              <div className="flex items-center justify-center gap-5 px-6 pb-5 pt-1">
-                {[{ c: '#14b8a6', l: 'Unlocked' }, { c: '#94a3b8', l: 'Locked' }].map(item => (
-                  <div key={item.l} className="flex items-center gap-1.5">
-                    <div className="w-2 h-2 rounded-full" style={{ background: item.c }} />
-                    <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">{item.l}</span>
+              <div style={{ height: 200 }}><NeuralNetworkCanvas /></div>
+              <div style={{ display: "flex", justifyContent: "center", gap: 20,
+                padding: "6px 20px 16px", borderTop: "1px solid rgba(226,232,240,0.6)", flexWrap: "wrap" }}>
+                {[{ c: "#2DD4BF", l: "Unlocked" }, { c: "#94a3b8", l: "Locked" }].map(item => (
+                  <div key={item.l} style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                    <div style={{ width: 8, height: 8, borderRadius: "50%", background: item.c }} />
+                    <span className="mono" style={{ fontSize: 8.5, color: "#94a3b8", fontWeight: 700,
+                      textTransform: "uppercase", letterSpacing: "0.10em" }}>{item.l}</span>
                   </div>
                 ))}
-                <div className="flex items-center gap-1.5">
-                  <div className="w-4 h-0.5 bg-teal-400 rounded-full" />
-                  <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Signal</span>
+                <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                  <div style={{ width: 16, height: 2.5, background: "#2DD4BF", borderRadius: 99 }} />
+                  <span className="mono" style={{ fontSize: 8.5, color: "#94a3b8", fontWeight: 700,
+                    textTransform: "uppercase", letterSpacing: "0.10em" }}>Signal</span>
                 </div>
               </div>
             </div>
 
-            {/* ─ AI INSIGHT (mirrors home page style exactly) ─ */}
-            <div className="anim-up d2 relative overflow-hidden bg-gradient-to-b from-white to-slate-50 p-6 rounded-[2.5rem] border border-white shadow-xl shadow-indigo-100/50">
-              <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-500/10 rounded-full blur-3xl -mr-10 -mt-10 pointer-events-none" />
-              <div className="relative z-10">
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="w-10 h-10 rounded-xl bg-indigo-600 text-white flex items-center justify-center shadow-lg shadow-indigo-500/30">
-                    <Sparkles size={20} />
+            {/* AI Clinical Insight */}
+            <div className="lv-card" style={{
+              animation: "cardPop 0.55s cubic-bezier(0.22,1,0.36,1) 0.20s both",
+              background: "linear-gradient(135deg,#f8f7ff 0%,#f0f0ff 100%)",
+              border: "1.5px solid rgba(99,102,241,0.18)",
+              boxShadow: "0 4px 20px rgba(99,102,241,0.08)",
+              padding: "22px", position: "relative", overflow: "hidden",
+            }}>
+              <div style={{ position: "absolute", top: -20, right: -20, width: 100, height: 100,
+                background: "radial-gradient(circle,rgba(99,102,241,0.10),transparent 70%)" }} />
+              <div style={{ position: "relative", zIndex: 2 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14 }}>
+                  <div style={{ width: 36, height: 36, borderRadius: 11,
+                    background: "linear-gradient(135deg,#6366f1,#8b5cf6)",
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                    boxShadow: "0 4px 16px rgba(99,102,241,0.30)" }}>
+                    <Sparkles size={17} color="#fff" />
                   </div>
-                  <h3 className="font-bold text-[#0B1E33]">Clinical Insight</h3>
+                  <div>
+                    <h3 style={{ fontSize: 14, fontWeight: 800, color: "#0B1E33", margin: 0 }}>Clinical Insight</h3>
+                    <div className="mono" style={{ fontSize: 8.5, color: "rgba(99,102,241,0.7)",
+                      textTransform: "uppercase", letterSpacing: "0.14em", marginTop: 2, fontWeight: 600 }}>AI Generated</div>
+                  </div>
                 </div>
-                <p className="text-sm text-slate-600 leading-relaxed font-medium mb-4">
-                  Your <span className="text-indigo-600 font-bold">grip consistency</span> improved 12% since last week. Dr. Perera notes you're ready for Memory Trench — complete one more Rhythm Reef session to unlock it.
+                <p style={{ fontSize: 12.5, color: "#475569", lineHeight: 1.7, marginBottom: 14 }}>
+                  Your <span style={{ color: "#6366f1", fontWeight: 700 }}>grip consistency</span> improved 12% since last week. Dr. Perera notes you're ready for Memory Trench — complete one more Rhythm Reef session to unlock it.
                 </p>
-                <button className="w-full py-3 rounded-xl bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-xs font-bold transition-colors uppercase tracking-wider">
-                  View Full Analysis
-                </button>
+                <button style={{
+                  width: "100%", padding: "11px", borderRadius: 13,
+                  background: "rgba(99,102,241,0.08)", border: "1px solid rgba(99,102,241,0.20)",
+                  color: "#6366f1", fontSize: 11, fontWeight: 800, cursor: "pointer",
+                  fontFamily: "'JetBrains Mono', monospace", letterSpacing: "0.10em",
+                  textTransform: "uppercase", transition: "all 0.2s ease",
+                }}>View Full Analysis</button>
               </div>
             </div>
 
-            {/* ─ SESSION METRICS (dark card — mirrors home's System Status) ─ */}
-            <div className="anim-up d3 bg-[#0B1E33] rounded-[2.5rem] p-6 text-white relative overflow-hidden">
-              <div className="absolute inset-0 pointer-events-none overflow-hidden">
+            {/* Clinical Metrics — dark card */}
+            <div style={{
+              animation: "cardPop 0.55s cubic-bezier(0.22,1,0.36,1) 0.30s both",
+              background: "#0B1E33", borderRadius: 22,
+              border: "1px solid rgba(45,212,191,0.10)",
+              boxShadow: "0 8px 36px rgba(11,30,51,0.18)",
+              padding: "22px", position: "relative", overflow: "hidden",
+            }}>
+              <div style={{ position: "absolute", inset: 0, overflow: "hidden", pointerEvents: "none" }}>
                 <div style={{
-                  position: 'absolute', left: 0, right: 0, height: '20%',
-                  background: 'linear-gradient(to bottom, transparent, rgba(45,212,191,0.06), transparent)',
-                  animation: 'scanline 4s linear infinite',
+                  position: "absolute", left: 0, right: 0, height: "20%",
+                  background: "linear-gradient(to bottom,transparent,rgba(45,212,191,0.05),transparent)",
+                  animation: "scanLine 4s linear infinite",
                 }} />
               </div>
-
-              <div className="relative z-10">
-                <div className="flex justify-between items-center mb-6">
-                  <h3 className="font-bold flex items-center gap-2 text-sm">
-                    <BarChart3 size={16} className="text-teal-400" /> Clinical Metrics
-                  </h3>
-                  <span className="px-2 py-1 bg-teal-500/20 text-teal-400 text-[10px] font-bold rounded uppercase border border-teal-500/30">
-                    This Week
-                  </span>
+              <div style={{ position: "relative", zIndex: 2 }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                    <BarChart3 size={15} color="#2DD4BF" />
+                    <span style={{ fontSize: 13, fontWeight: 800, color: "#fff" }}>Clinical Metrics</span>
+                  </div>
+                  <div className="mono" style={{
+                    fontSize: 8.5, color: "#2DD4BF", fontWeight: 700, letterSpacing: "0.10em",
+                    textTransform: "uppercase", background: "rgba(45,212,191,0.12)",
+                    border: "1px solid rgba(45,212,191,0.22)", borderRadius: 8, padding: "4px 10px",
+                  }}>This Week</div>
                 </div>
 
-                <div className="space-y-4">
+                <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
                   {[
-                    { label: 'Grip Accuracy',  val: 84, color: '#2DD4BF', icon: <Activity size={13} /> },
-                    { label: 'Reaction Speed', val: 71, color: '#a78bfa', icon: <Zap       size={13} /> },
-                    { label: 'Session Streak', val: 60, color: '#fbbf24', icon: <Star      size={13} /> },
-                  ].map(m => (
+                    { label: "Grip Accuracy",  val: 84, color: "#2DD4BF", icon: <Activity size={12} /> },
+                    { label: "Reaction Speed", val: 71, color: "#a78bfa", icon: <Zap       size={12} /> },
+                    { label: "Session Streak", val: 60, color: "#fbbf24", icon: <Star      size={12} /> },
+                  ].map((m, i) => (
                     <div key={m.label}>
-                      <div className="flex justify-between items-center mb-1.5">
-                        <div className="flex items-center gap-2 text-xs text-white/60">
-                          <span style={{ color: m.color }}>{m.icon}</span>{m.label}
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 11, color: "rgba(255,255,255,0.50)" }}>
+                          <span style={{ color: m.color }}>{m.icon}</span>
+                          {m.label}
                         </div>
-                        <span className="text-xs font-black font-mono" style={{ color: m.color }}>{m.val}%</span>
+                        <span className="mono" style={{ fontSize: 11, fontWeight: 800, color: m.color }}>{m.val}%</span>
                       </div>
-                      <div className="h-1.5 bg-white/[0.07] rounded-full overflow-hidden">
-                        <div className="h-full rounded-full"
-                          style={{
-                            width: `${m.val}%`, background: m.color,
-                            boxShadow: `0 0 8px ${m.color}80`,
-                            transition: 'width 1.2s cubic-bezier(0.4,0,0.2,1)',
-                          }} />
-                      </div>
+                      <AnimBar value={m.val} color={m.color} delay={400 + i * 120} />
                     </div>
                   ))}
                 </div>
 
-                <div className="mt-6 pt-5 border-t border-white/[0.07] flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-xl bg-teal-500/20 flex items-center justify-center shrink-0">
-                    <Stethoscope size={13} className="text-teal-400" />
+                {/* Next review */}
+                <div style={{ marginTop: 18, paddingTop: 16, borderTop: "1px solid rgba(255,255,255,0.07)",
+                  display: "flex", alignItems: "center", gap: 12 }}>
+                  <div style={{ width: 34, height: 34, borderRadius: 11,
+                    background: "rgba(45,212,191,0.12)",
+                    display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                    <Stethoscope size={14} color="#2DD4BF" />
                   </div>
                   <div>
-                    <div className="text-[10px] font-bold text-white/80">Next Review</div>
-                    <div className="text-[10px] text-white/40 uppercase tracking-wider">Friday · Dr. Perera · 09:00</div>
+                    <div style={{ fontSize: 11, fontWeight: 700, color: "rgba(255,255,255,0.75)" }}>Next Review</div>
+                    <div className="mono" style={{ fontSize: 9, color: "rgba(255,255,255,0.30)",
+                      textTransform: "uppercase", letterSpacing: "0.12em", marginTop: 2 }}>
+                      Friday · Dr. Perera · 09:00
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
 
-            {/* ─ LOCKED TEASER (mirrors home's lock card) ─ */}
-            <div className="anim-up d4 p-6 rounded-[2rem] border border-slate-200 border-dashed text-center bg-white/50">
-              <div className="w-12 h-12 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-3">
-                <Lock size={20} className="text-slate-400" />
+            {/* Locked Teaser */}
+            <div style={{
+              animation: "cardPop 0.55s cubic-bezier(0.22,1,0.36,1) 0.38s both",
+              background: "#fff",
+              borderRadius: 20, padding: "22px",
+              border: "1.5px dashed rgba(139,92,246,0.25)",
+              textAlign: "center",
+              boxShadow: "0 2px 14px rgba(139,92,246,0.06)",
+            }}>
+              <div style={{
+                width: 44, height: 44, borderRadius: "50%",
+                background: "rgba(139,92,246,0.08)",
+                border: "1px solid rgba(139,92,246,0.16)",
+                display: "flex", alignItems: "center", justifyContent: "center",
+                margin: "0 auto 12px",
+              }}>
+                <Lock size={18} color="#8b5cf6" />
               </div>
-              <p className="text-sm font-black text-slate-500">Memory Trench unlocks soon</p>
-              <p className="text-xs text-slate-400 mt-1">Complete 1 more Rhythm Reef session</p>
-              <div className="mt-3 h-1.5 bg-slate-100 rounded-full overflow-hidden">
-                <div className="h-full w-4/5 rounded-full"
-                  style={{ background: 'linear-gradient(to right, #c4b5fd, #8b5cf6)' }} />
+              <p style={{ fontSize: 13, fontWeight: 800, color: "#0B1E33", margin: "0 0 6px" }}>Memory Trench unlocks soon</p>
+              <p style={{ fontSize: 11, color: "#94a3b8", margin: "0 0 14px" }}>Complete 1 more Rhythm Reef session</p>
+              <div style={{ height: 6, background: "rgba(139,92,246,0.10)", borderRadius: 99, overflow: "hidden", marginBottom: 8 }}>
+                <div style={{
+                  height: "100%", width: "80%", borderRadius: 99,
+                  background: "linear-gradient(90deg,#c4b5fd,#8b5cf6)",
+                  boxShadow: "0 0 8px rgba(139,92,246,0.4)",
+                }} />
               </div>
-              <p className="text-[10px] text-slate-400 mt-1.5 font-bold">4 / 5 sessions</p>
+              <span className="mono" style={{ fontSize: 9, color: "#8b5cf6", fontWeight: 700,
+                textTransform: "uppercase", letterSpacing: "0.14em" }}>4 / 5 sessions</span>
             </div>
 
           </div>
@@ -759,6 +1091,4 @@ const LevelsPage: React.FC = () => {
       </main>
     </div>
   );
-};
-
-export default LevelsPage;
+}
