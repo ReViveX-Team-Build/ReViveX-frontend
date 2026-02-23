@@ -204,22 +204,25 @@ export default function PatientTopbar() {
   const showSugg = (searchFocused && searchVal.length === 0) || filteredSugg.length > 0;
 
   return (
-    <div className="ptb" style={{ position: "sticky", top: 0, zIndex: 400 }}>
+    // FIX: Outer div acts as a placeholder so content doesn't jump underneath
+    <div className="ptb" style={{ width: "100%", height: 64 }}>
       <style>{STYLES}</style>
 
-      <header style={{
+      {/* FIX: Position fixed and added class so it attaches to sidebar mathematically */}
+      <header className="pat-main-offset" style={{
+        position: "fixed",
+        top: 0, left: 0, right: 0, zIndex: 400,
         background: scrolled
           ? "linear-gradient(to right,rgba(11,30,51,0.97),rgba(13,36,66,0.97))"
           : "linear-gradient(to right,#0B1E33,#0d2442)",
         backdropFilter: scrolled ? "blur(20px)" : "none",
         borderBottom: "1px solid rgba(255,255,255,0.07)",
         boxShadow: scrolled ? "0 4px 32px rgba(0,0,0,0.30)" : "none",
-        transition: "all 0.3s ease",
+        transition: "background 0.3s ease, box-shadow 0.3s ease",
         padding: "0 24px",
         height: 64,
         display: "flex", alignItems: "center", gap: 14,
         animation: "ptbSlideDown 0.5s cubic-bezier(0.22,1,0.36,1) both",
-        position: "relative",
       }}>
 
         {/* Teal left accent */}
@@ -513,18 +516,18 @@ export default function PatientTopbar() {
             )}
           </div>
         </div>
-      </header>
 
-      {/* Mobile search panel */}
-      {mobileSearchOpen && (
-        <div className="ptb-mobile-search">
-          <div style={{ position: "relative" }}>
-            <Search size={16} color="rgba(255,255,255,0.35)"
-              style={{ position: "absolute", left: 14, top: "50%", transform: "translateY(-50%)" }} />
-            <input className="ptb-search-input" placeholder="Search records, schedules…" autoFocus />
+        {/* FIX: Moved Mobile Search Panel INSIDE the fixed header so it drops down properly */}
+        {mobileSearchOpen && (
+          <div className="ptb-mobile-search">
+            <div style={{ position: "relative" }}>
+              <Search size={16} color="rgba(255,255,255,0.35)"
+                style={{ position: "absolute", left: 14, top: "50%", transform: "translateY(-50%)" }} />
+              <input className="ptb-search-input" placeholder="Search records, schedules…" autoFocus />
+            </div>
           </div>
-        </div>
-      )}
+        )}
+      </header>
 
       {/* Responsive */}
       <style>{`
