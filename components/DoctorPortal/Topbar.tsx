@@ -198,18 +198,24 @@ export default function DoctorTopbar() {
     : [];
 
   return (
-    <div className="dtb">
+    // FIX: Outer div acts as a 64px placeholder so content below doesn't slide under the fixed header
+    <div className="dtb" style={{ width: "100%", height: 64 }}>
       <style>{STYLES}</style>
 
-      <header style={{
-        position: "sticky", top: 0, zIndex: 400,
+      {/* FIX: Changed to position: fixed and added doc-main-offset so it perfectly attaches to sidebar */}
+      <header className="doc-main-offset" style={{
+        position: "fixed", 
+        top: 0, 
+        left: 0, 
+        right: 0, 
+        zIndex: 400,
         background: scrolled
           ? "linear-gradient(to right,rgba(11,30,51,0.97),rgba(13,36,66,0.97))"
           : "linear-gradient(to right,#0B1E33,#0d2442)",
         backdropFilter: scrolled ? "blur(20px)" : "none",
         borderBottom: "1px solid rgba(255,255,255,0.07)",
         boxShadow: scrolled ? "0 4px 32px rgba(0,0,0,0.30)" : "none",
-        transition: "all 0.3s ease",
+        transition: "background 0.3s ease, box-shadow 0.3s ease", // Kept CSS transition separate from margin-left transition
         padding: "0 24px",
         height: 64,
         display: "flex", alignItems: "center", gap: 16,
@@ -448,18 +454,18 @@ export default function DoctorTopbar() {
             )}
           </div>
         </div>
-      </header>
 
-      {/* Mobile search panel */}
-      {mobileSearchOpen && (
-        <div className="dtb-mobile-search">
-          <div style={{ position: "relative" }}>
-            <Search size={16} color="rgba(255,255,255,0.35)"
-              style={{ position: "absolute", left: 14, top: "50%", transform: "translateY(-50%)" }} />
-            <input className="dtb-search-input" placeholder="Search patients, sessions…" autoFocus />
+        {/* FIX: Mobile search panel moved INSIDE the fixed header so it stays attached */}
+        {mobileSearchOpen && (
+          <div className="dtb-mobile-search">
+            <div style={{ position: "relative" }}>
+              <Search size={16} color="rgba(255,255,255,0.35)"
+                style={{ position: "absolute", left: 14, top: "50%", transform: "translateY(-50%)" }} />
+              <input className="dtb-search-input" placeholder="Search patients, sessions…" autoFocus />
+            </div>
           </div>
-        </div>
-      )}
+        )}
+      </header>
 
       {/* Responsive overrides */}
       <style>{`
