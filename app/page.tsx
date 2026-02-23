@@ -1182,7 +1182,6 @@ function Navbar() {
   );
 
 }
-
 function HeroSection() {
   const router  = useRouter();
   const skewY   = useVelocitySkew();
@@ -1216,6 +1215,10 @@ function HeroSection() {
     { l: "ADHERENCE",  v: "87%",    c: "#34d399", delay: 2.26, cx: chip2x, cy: chip2y, icon: <TrendingUp size={12} /> },
     { l: "NEURAL XP",  v: "+280",   c: "#fbbf24", delay: 2.44, cx: chip3x, cy: chip3y, icon: <Star size={12} /> },
   ];
+
+  // Track hover states for the liquid fill buttons
+  const [hoverP, setHoverP] = useState(false);
+  const [hoverD, setHoverD] = useState(false);
 
   return (
     <section data-theme="dark" style={{
@@ -1325,19 +1328,78 @@ function HeroSection() {
 
         {/* 4. DUAL CALL-TO-ACTION PILL */}
         <Reveal dir="up" delay={1.8}>
-          <div style={{ display: "flex", flexDirection: "row", alignItems: "center", gap: 12, padding: 10, borderRadius: 36, background: "rgba(255,255,255,.02)", border: "1px solid rgba(255,255,255,.08)", backdropFilter: "blur(30px)", boxShadow: "0 30px 60px rgba(0,0,0,.4), inset 0 1px 0 rgba(255,255,255,.05)" }}>
-            <MagButton onClick={() => router.push("/patients/home")} className="btn-shim fB" style={{ position: "relative", overflow: "hidden", display: "flex", alignItems: "center", gap: 12, padding: "18px 48px", borderRadius: 28, fontSize: 16, letterSpacing: ".12em", background: "#2DD4BF", color: "#0F172A", border: "none", boxShadow: "0 0 40px rgba(45,212,191,.3)" }}>
-              <Play size={16} style={{ fill: "#0F172A", position: "relative", zIndex: 1 }} />
-              <span style={{ position: "relative", zIndex: 1 }}>Patient Portal</span>
+          <div style={{
+            display: "flex", flexDirection: "row", alignItems: "center", gap: 8, padding: 10,
+            borderRadius: 40, background: "rgba(15, 23, 42, 0.5)",
+            border: "1px solid rgba(148, 163, 184, 0.15)",
+            backdropFilter: "blur(30px)", 
+            boxShadow: "0 30px 60px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.05)"
+          }}>
+            
+            {/* PRIMARY: PATIENT PORTAL */}
+            <MagButton
+              onClick={() => router.push("/patients/home")}
+              onMouseEnter={() => setHoverP(true)}
+              onMouseLeave={() => setHoverP(false)}
+              className="fB"
+              style={{ 
+                position: "relative", overflow: "hidden", display: "flex", alignItems: "center", 
+                gap: 12, padding: "18px 48px", borderRadius: 32, border: "none", cursor: "pointer",
+                boxShadow: "0 0 40px rgba(45,212,191,.2)" 
+              }}
+            >
+              <div style={{ position: "absolute", inset: 0, background: "#2DD4BF", zIndex: 0 }} />
+              
+              <motion.div
+                initial={{ x: "-100%" }}
+                animate={{ x: hoverP ? "0%" : "-100%" }}
+                transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }} 
+                style={{ position: "absolute", inset: 0, background: "#0F766E", zIndex: 1 }}
+              />
+
+              <motion.div
+                animate={{ color: hoverP ? "#F8FAFC" : "#0F172A" }}
+                transition={{ duration: 0.3 }}
+                style={{ position: "relative", zIndex: 2, display: "flex", alignItems: "center", gap: 12, fontSize: 16, letterSpacing: ".12em" }}
+              >
+                <motion.div animate={{ scale: hoverP ? 1.15 : 1 }} transition={{ duration: 0.4, type: "spring" }}>
+                  <Play size={16} fill="currentColor" />
+                </motion.div>
+                <span>Patient Portal</span>
+              </motion.div>
             </MagButton>
-            
-            <div style={{ width: 1, height: 40, background: "linear-gradient(to bottom, transparent, rgba(255,255,255,.15), transparent)" }} />
-            
-            <MagButton onClick={() => router.push("/doctor/home")} className="fB" style={{ display: "flex", alignItems: "center", gap: 12, padding: "18px 48px", borderRadius: 28, fontSize: 16, letterSpacing: ".12em", background: "transparent", color: "#F8FAFC", border: "none", transition: "color 0.2s" }} onMouseEnter={(e: React.MouseEvent<HTMLButtonElement>) => { e.currentTarget.style.color = "#2DD4BF"; }} onMouseLeave={(e: React.MouseEvent<HTMLButtonElement>) => { e.currentTarget.style.color = "#F8FAFC"; }}>
-              <Stethoscope size={16} style={{ color: "#a78bfa" }} />
-              Clinician Access
-              <motion.div animate={{ x: [0, 4, 0] }} transition={{ repeat: Infinity, duration: 1.5, ease: "easeInOut" }}>
-                <ArrowRight size={14} style={{ opacity: .6 }} />
+
+            {/* Elegant Center Divider */}
+            <div style={{ width: 1, height: 32, background: "linear-gradient(to bottom, transparent, rgba(148, 163, 184, 0.3), transparent)", margin: "0 4px" }} />
+
+            {/* SECONDARY: CLINICIAN ACCESS */}
+            <MagButton
+              onClick={() => router.push("/doctor/home")}
+              onMouseEnter={() => setHoverD(true)}
+              onMouseLeave={() => setHoverD(false)}
+              className="fB"
+              style={{ 
+                position: "relative", overflow: "hidden", display: "flex", alignItems: "center", 
+                gap: 12, padding: "18px 48px", borderRadius: 32, border: "none", background: "transparent", cursor: "pointer" 
+              }}
+            >
+              <motion.div
+                initial={{ x: "-100%" }}
+                animate={{ x: hoverD ? "0%" : "-100%" }}
+                transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+                style={{ position: "absolute", inset: 0, background: "rgba(45, 212, 191, 0.12)", zIndex: 0 }}
+              />
+
+              <motion.div
+                animate={{ color: hoverD ? "#2DD4BF" : "#94A3B8" }}
+                transition={{ duration: 0.3 }}
+                style={{ position: "relative", zIndex: 2, display: "flex", alignItems: "center", gap: 12, fontSize: 16, letterSpacing: ".12em" }}
+              >
+                <Stethoscope size={16} style={{ color: hoverD ? "#2DD4BF" : "#a78bfa", transition: "color 0.3s" }} />
+                <span>Clinician Access</span>
+                <motion.div animate={{ x: hoverD ? 6 : 0, opacity: hoverD ? 1 : 0.5 }} transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}>
+                  <ArrowRight size={14} />
+                </motion.div>
               </motion.div>
             </MagButton>
           </div>
