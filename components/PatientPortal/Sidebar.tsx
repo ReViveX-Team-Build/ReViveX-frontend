@@ -18,6 +18,7 @@ import {
   Menu,
   Zap,
   Trophy,
+  Gamepad2, // ADDED: Gamepad icon for Therapy Games
 } from "lucide-react";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -26,6 +27,7 @@ type BreakPoint = "mobile" | "tablet" | "desktop";
 // ─── Data ─────────────────────────────────────────────────────────────────────
 const navItems = [
   { icon: Home,          label: "Home",           href: "/patients/home",         badge: null },
+  { icon: Gamepad2,      label: "Therapy Games",  href: "/patients/levels",       badge: null }, // ADDED: Therapy Games Link
   { icon: TrendingUp,    label: "My Progress",    href: "/patients/progress",     badge: null },
   { icon: CalendarDays,  label: "My Schedule",    href: "/patients/schedule",     badge: "2"  },
   { icon: Bot,           label: "AI Companion",   href: "/patients/ai-companion", badge: null },
@@ -192,6 +194,7 @@ const STYLES = `
   .psb-nav-animate .psb-item:nth-child(3){ animation-delay:0.15s; }
   .psb-nav-animate .psb-item:nth-child(4){ animation-delay:0.20s; }
   .psb-nav-animate .psb-item:nth-child(5){ animation-delay:0.25s; }
+  .psb-nav-animate .psb-item:nth-child(6){ animation-delay:0.30s; } /* ADDED delay for 6th item */
 
   .no-psb::-webkit-scrollbar { display:none; }
   .no-psb { -ms-overflow-style:none; scrollbar-width:none; }
