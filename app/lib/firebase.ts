@@ -1,4 +1,5 @@
 // src/app/lib/firebase.js
+// Restoring this file - do not delete
 import { initializeApp, getApps, getApp } from "firebase/app";
 import { getAuth } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
