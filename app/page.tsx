@@ -1962,8 +1962,8 @@ function DarkBridge() {
   const statsOp = useTransform(p, [0.2, 0.25, 0.40, 0.45], [0, 1, 1, 0]);
 
   // SPRING PHYSICS
-  const wordY = useSpring(rawWordY, { stiffness: 70, damping: 25 });
-  const wordScale = useSpring(rawWordScale, { stiffness: 70, damping: 25 });
+  const wordY = useSpring(rawWordY, { stiffness: 70, damping: 25, restDelta: 0.001 });
+  const wordScale = useSpring(rawWordScale, { stiffness: 70, damping: 25, restDelta: 0.001 });
 
   const absCenter: React.CSSProperties = {
     position: "absolute", top: "50%", left: "50%", transform: "translate(-50%, -50%)",
@@ -1982,7 +1982,7 @@ function DarkBridge() {
           <motion.div style={{
             position: "absolute", opacity: statsOp,
             width: "100vw", height: "100vh",
-            willChange: "opacity"
+            z: 0
           }}>
             {[
               { label: "MOTOR", x: -36, y: -18, ang: -12, c: "#2DD4BF" },
@@ -2008,8 +2008,7 @@ function DarkBridge() {
             opacity: wordOp,
             textAlign: "center",
             transformOrigin: "center center",
-            willChange: "transform, opacity",
-            transform: "translateZ(0)"
+            z: 0
           }}>
             <div className="fB" style={{ fontSize: "clamp(5rem,15vw,16rem)", letterSpacing: "0.04em", lineHeight: .88, color: "#FFFFFF" }}>
               THE<br /><span style={{ color: "#2DD4BF" }}>SOLUTION</span>
