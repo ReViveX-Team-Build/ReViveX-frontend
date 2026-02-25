@@ -287,3 +287,193 @@ const CSS = `
     .tp-btn-row { flex-direction:column !important; }
   }
 `;
+
+/* ═══════════════════════════════════════════════════════════
+   ANIMATED GAME CANVAS
+═══════════════════════════════════════════════════════════ */
+interface Pipe { x: number; gapY: number; scored: boolean; }
+
+const GameCanvas: React.FC<{ pressure: number; hand: string }> = ({ pressure, hand }) => {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const stateRef  = useRef({
+    pipes: [
+      { x: 340, gapY: 120, scored: false },
+      { x: 560, gapY: 90,  scored: false },
+    ] as Pipe[],
+    ballY:   140,
+    score:   42,
+    t:       0,
+    raf:     0,
+  });
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const dpr = window.devicePixelRatio || 1;
+
+    const resize = () => {
+      const rect = canvas.getBoundingClientRect();
+      canvas.width  = rect.width  * dpr;
+      canvas.height = rect.height * dpr;
+    };
+    resize();
+
+    const draw = () => {
+      const ctx = canvas.getContext('2d');
+      if (!ctx) return;
+      const s = stateRef.current;
+      const W = canvas.width  / dpr;
+      const H = canvas.height / dpr;
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+      s.t += 0.018;
+
+      /* ── Sky gradient ── */
+      const sky = ctx.createLinearGradient(0, 0, 0, H);
+      sky.addColorStop(0,   '#b8e4f9');
+      sky.addColorStop(1,   '#ddf0fc');
+      ctx.fillStyle = sky;
+      ctx.fillRect(0, 0, W, H);
+
+      /* ── Subtle grid ── */
+      ctx.strokeStyle = 'rgba(255,255,255,0.35)';
+      ctx.lineWidth = 0.5;
+      for (let x = 0; x < W; x += 36) {
+        ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, H); ctx.stroke();
+      }
+      for (let y = 0; y < H; y += 36) {
+        ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke();
+      }
+
+      /* ── Guide dashed line ── */
+      ctx.setLineDash([8, 5]);
+      ctx.strokeStyle = 'rgba(45,212,191,0.55)';
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.moveTo(0, H / 2);
+      ctx.lineTo(W, H / 2);
+      ctx.stroke();
+      ctx.setLineDash([]);
+
+      /* ── Pipes ── */
+      const PIPE_W  = 52;
+      const GAP     = 110;
+      const PIPE_SPD = 1.1;
+
+      s.pipes.forEach(pipe => {
+        pipe.x -= PIPE_SPD;
+        if (pipe.x < -PIPE_W) {
+          pipe.x   = W + 20;
+          pipe.gapY = 70 + Math.random() * (H - 160);
+          pipe.scored = false;
+        }
+        if (!pipe.scored && pipe.x < 80) { s.score++; pipe.scored = true; }
+
+        // Top pipe
+        const pipeGrad = ctx.createLinearGradient(pipe.x, 0, pipe.x + PIPE_W, 0);
+        pipeGrad.addColorStop(0, '#1a9a4a');
+        pipeGrad.addColorStop(0.4, '#22c55e');
+        pipeGrad.addColorStop(1, '#16a34a');
+        ctx.fillStyle = pipeGrad;
+        ctx.beginPath();
+        ctx.roundRect(pipe.x, 0, PIPE_W, pipe.gapY, [0, 0, 6, 6]);
+        ctx.fill();
+        // Cap
+        ctx.fillStyle = '#15803d';
+        ctx.beginPath();
+        ctx.roundRect(pipe.x - 4, pipe.gapY - 18, PIPE_W + 8, 18, [4, 4, 0, 0]);
+        ctx.fill();
+
+        // Bottom pipe
+        const btmY = pipe.gapY + GAP;
+        ctx.fillStyle = pipeGrad;
+        ctx.beginPath();
+        ctx.roundRect(pipe.x, btmY, PIPE_W, H - btmY, [6, 6, 0, 0]);
+        ctx.fill();
+        // Cap
+        ctx.fillStyle = '#15803d';
+        ctx.beginPath();
+        ctx.roundRect(pipe.x - 4, btmY, PIPE_W + 8, 18, [0, 0, 4, 4]);
+        ctx.fill();
+
+        // Pipe shine
+        ctx.fillStyle = 'rgba(255,255,255,0.12)';
+        ctx.fillRect(pipe.x + 8, 0, 10, pipe.gapY);
+        ctx.fillRect(pipe.x + 8, btmY, 10, H - btmY);
+      });
+
+      /* ── Ball ── */
+      const ballX = W * 0.22;
+      s.ballY = (H / 2) + Math.sin(s.t * 1.3) * 55;
+
+      // Glow
+      const glowR = ctx.createRadialGradient(ballX, s.ballY, 0, ballX, s.ballY, 28);
+      glowR.addColorStop(0, 'rgba(251,146,60,0.5)');
+      glowR.addColorStop(1, 'rgba(251,146,60,0)');
+      ctx.fillStyle = glowR;
+      ctx.beginPath(); ctx.arc(ballX, s.ballY, 28, 0, Math.PI * 2); ctx.fill();
+
+      // Ball body
+      const ballGrad = ctx.createRadialGradient(ballX - 5, s.ballY - 5, 2, ballX, s.ballY, 18);
+      ballGrad.addColorStop(0, '#fde68a');
+      ballGrad.addColorStop(0.5, '#fb923c');
+      ballGrad.addColorStop(1, '#ea580c');
+      ctx.fillStyle = ballGrad;
+      ctx.beginPath(); ctx.arc(ballX, s.ballY, 18, 0, Math.PI * 2); ctx.fill();
+
+      // Shine
+      ctx.fillStyle = 'rgba(255,255,255,0.35)';
+      ctx.beginPath(); ctx.ellipse(ballX - 5, s.ballY - 7, 7, 5, -0.5, 0, Math.PI * 2); ctx.fill();
+
+      /* ── Score ── */
+      ctx.fillStyle = 'rgba(255,255,255,0.95)';
+      ctx.font = 'bold 28px "Plus Jakarta Sans", sans-serif';
+      ctx.textAlign = 'left';
+      ctx.fillText(String(s.score), 18, 38);
+      ctx.fillStyle = 'rgba(255,255,255,0.45)';
+      ctx.font = '11px "JetBrains Mono", monospace';
+      ctx.fillText('SCORE', 18, 54);
+
+      s.raf = requestAnimationFrame(draw);
+    };
+
+    s.raf = requestAnimationFrame(draw);
+    return () => cancelAnimationFrame(stateRef.current.raf);
+  }, []);
+
+  const s = stateRef.current;
+
+  return (
+    <div style={{ position: 'relative', borderRadius: 12, overflow: 'hidden', border: '1px solid rgba(226,232,240,0.8)' }}>
+      <canvas
+        ref={canvasRef}
+        style={{ width: '100%', height: 240, display: 'block' }}
+      />
+      {/* Live Sensor Data tooltip */}
+      <div style={{
+        position: 'absolute', top: 14, right: 14,
+        background: '#0B1E33',
+        borderRadius: 10, padding: '10px 14px',
+        border: '1px solid rgba(45,212,191,0.22)',
+        boxShadow: '0 4px 20px rgba(11,30,51,0.40)',
+        minWidth: 155,
+        animation: 'tpCardPop 0.4s ease both',
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 8 }}>
+          <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#2DD4BF', boxShadow: '0 0 6px #2DD4BF', animation: 'tpDot 2s ease-in-out infinite' }} />
+          <span style={{ fontSize: 11, fontWeight: 800, color: '#fff', letterSpacing: '0.04em' }}>Live Sensor Data</span>
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 5 }}>
+          <Activity size={11} color="#2DD4BF" />
+          <span className="mono" style={{ fontSize: 11, color: '#2DD4BF', animation: 'tpSensorFlash 2.2s ease-in-out infinite' }}>
+            Pressure: {pressure}kPa
+          </span>
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
+          <Zap size={11} color="#fbbf24" />
+          <span className="mono" style={{ fontSize: 11, color: '#fbbf24' }}>Hand: {hand}</span>
+        </div>
+      </div>
+    </div>
+  );
+};
