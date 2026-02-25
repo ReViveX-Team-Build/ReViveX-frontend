@@ -494,3 +494,301 @@ function Toggle({ on, onChange, label, sub }: { on: boolean; onChange: () => voi
     </div>
   );
 }
+
+/* ═══════════════════════════════════════════════════════════
+   MAIN PAGE
+═══════════════════════════════════════════════════════════ */
+export default function TherapyProtocolsPage() {
+  const [mounted,      setMounted]      = useState(false);
+  const [game,         setGame]         = useState('synapse');
+  const [inputSrc,     setInputSrc]     = useState<'bp' | 'imu'>('bp');
+  const [hand,         setHand]         = useState<'left' | 'right'>('right');
+  const [gripForce,    setGripForce]    = useState(45);
+  const [tremor,       setTremor]       = useState(true);
+  const [difficulty,   setDifficulty]   = useState(1);
+  const [duration,     setDuration]     = useState(15);
+  const [audioHints,   setAudioHints]   = useState(true);
+  const [visualGuides, setVisualGuides] = useState(true);
+  const [pressure,     setPressure]     = useState(45);
+  const [savedMsg,     setSavedMsg]     = useState('');
+
+  useEffect(() => { setMounted(true); }, []);
+
+  // Animate live pressure value
+  useEffect(() => {
+    if (!mounted) return;
+    const iv = setInterval(() => {
+      setPressure(p => Math.max(30, Math.min(75, p + (Math.random() - 0.5) * 6)));
+    }, 1400);
+    return () => clearInterval(iv);
+  }, [mounted]);
+
+  const selectedGame = GAMES.find(g => g.value === game) ?? GAMES[0];
+  const diffLabel = DIFFICULTY_LABELS[Math.min(difficulty, 3)];
+
+  const handleSave = () => {
+    setSavedMsg('Protocol saved!');
+    setTimeout(() => setSavedMsg(''), 2000);
+  };
+
+  if (!mounted) return null;
+
+  return (
+    <div className="tp" style={{ minHeight: '100vh', background: '#F0F4F8', paddingBottom: 52 }}>
+      <style>{CSS}</style>
+
+      {/* ── Ambient BG ─────────────────────────────────────────── */}
+      <div style={{ position: 'fixed', inset: 0, pointerEvents: 'none', zIndex: 0, overflow: 'hidden' }}>
+        <div style={{ position: 'absolute', top: '-8%', right: '6%', width: 700, height: 700, background: 'radial-gradient(circle,rgba(45,212,191,0.055),transparent 65%)', borderRadius: '50%' }} />
+        <div style={{ position: 'absolute', bottom: '-10%', left: '4%', width: 600, height: 600, background: 'radial-gradient(circle,rgba(99,102,241,0.04),transparent 65%)', borderRadius: '50%' }} />
+        <div style={{ position: 'absolute', inset: 0, backgroundImage: 'linear-gradient(rgba(11,30,51,0.022) 1px,transparent 1px),linear-gradient(90deg,rgba(11,30,51,0.022) 1px,transparent 1px)', backgroundSize: '52px 52px' }} />
+      </div>
+
+      <div className="tp-outer" style={{ maxWidth: 1200, margin: '0 auto', padding: '32px 28px', position: 'relative', zIndex: 1 }}>
+
+        {/* ── Page Header ──────────────────────────────────────────── */}
+        <div style={{ marginBottom: 28, animation: 'tpFadeUp 0.55s ease both' }}>
+          <p className="mono" style={{ fontSize: 9.5, color: 'rgba(45,212,191,0.75)', textTransform: 'uppercase', letterSpacing: '0.20em', marginBottom: 5, fontWeight: 600 }}>
+            Neuro-Rehabilitation
+          </p>
+          <h1 style={{ fontSize: 'clamp(1.6rem,3vw,2.2rem)', fontWeight: 800, color: '#0B1E33', margin: 0, lineHeight: 1.15 }}>
+            Therapy Protocols &amp; <span style={{ color: '#2DD4BF' }}>Game Configuration</span>
+          </h1>
+          <p style={{ fontSize: 14, color: '#64748b', marginTop: 6, fontWeight: 500 }}>
+            Configure hardware-controlled therapeutic games for patient rehabilitation
+          </p>
+        </div>
+
+        {/* ── Main Grid ──────────────────────────────────────────────── */}
+        <div className="tp-main-grid">
+
+          {/* ═══ LEFT COLUMN ═══════════════════════════════════════════ */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+
+            {/* ── 1. Game Selection ─────────────────────────────────── */}
+            <div className="tp-card" style={{ animation: 'tpCardPop 0.55s cubic-bezier(0.22,1,0.36,1) 0.06s both' }}>
+              <div className="tp-section-title">
+                <span className="icon-wrap"><Gamepad2 size={16} /></span>
+                Game Selection
+              </div>
+
+              <select className="tp-game-select" value={game} onChange={e => setGame(e.target.value)}>
+                {GAMES.map(g => <option key={g.value} value={g.value}>{g.label}</option>)}
+              </select>
+
+              <div className="tp-benefit">
+                <div className="tp-benefit-label">Medical Benefit:</div>
+                <div className="tp-benefit-text">{selectedGame.benefit}</div>
+              </div>
+            </div>
+
+            {/* ── 2. Hardware Calibration ───────────────────────────── */}
+            <div className="tp-card" style={{ animation: 'tpCardPop 0.55s cubic-bezier(0.22,1,0.36,1) 0.13s both' }}>
+              <div className="tp-section-title">
+                <span className="icon-wrap"><Settings2 size={16} /></span>
+                Hardware Calibration
+              </div>
+
+              {/* Input Source */}
+              <div style={{ marginBottom: 20 }}>
+                <div style={{ fontSize: 13, fontWeight: 600, color: '#475569', marginBottom: 10 }}>Input Source</div>
+                <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                  <button className={`tp-pill ${inputSrc === 'bp' ? 'active' : 'inactive'}`} onClick={() => setInputSrc('bp')}>
+                    <Activity size={13} /> BP Bulb Pressure
+                  </button>
+                  <button className={`tp-pill ${inputSrc === 'imu' ? 'active' : 'inactive'}`} onClick={() => setInputSrc('imu')}>
+                    <Zap size={13} /> IMU Motion
+                  </button>
+                </div>
+              </div>
+
+              {/* Hand Selection */}
+              <div style={{ marginBottom: 22 }}>
+                <div style={{ fontSize: 13, fontWeight: 600, color: '#475569', marginBottom: 10 }}>Hand Selection</div>
+                <div style={{ display: 'flex', gap: 10 }}>
+                  <button className={`tp-hand-btn ${hand === 'left' ? 'active' : 'inactive'}`} onClick={() => setHand('left')}>
+                    <span style={{ fontSize: 17 }}>🤚</span> Left Hand
+                  </button>
+                  <button className={`tp-hand-btn ${hand === 'right' ? 'active' : 'inactive'}`} onClick={() => setHand('right')}>
+                    <span style={{ fontSize: 17 }}>✋</span> Right Hand
+                  </button>
+                </div>
+              </div>
+
+              {/* Grip Force Sensitivity */}
+              <div style={{ marginBottom: 20 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
+                  <div style={{ fontSize: 13.5, fontWeight: 700, color: '#0B1E33' }}>Grip Force Sensitivity (MVC)</div>
+                  <span className="mono" style={{ fontSize: 14, fontWeight: 800, color: '#2DD4BF' }}>{gripForce}%</span>
+                </div>
+                <input
+                  type="range" min={5} max={100} value={gripForce}
+                  className="tp-slider teal"
+                  style={{ '--val': `${gripForce}%` } as React.CSSProperties}
+                  onChange={e => setGripForce(Number(e.target.value))}
+                />
+                <p style={{ fontSize: 12, color: '#64748b', marginTop: 8, lineHeight: 1.6 }}>
+                  Set the squeeze force required to control the game (% of Maximum Voluntary Contraction)
+                </p>
+              </div>
+
+              {/* Tremor Filter */}
+              <Toggle
+                on={tremor}
+                onChange={() => setTremor(v => !v)}
+                label="Tremor Filter"
+                sub="Active stabilization to reduce tremor artifacts"
+              />
+            </div>
+
+            {/* ── 3. Game Logic Settings ────────────────────────────── */}
+            <div className="tp-card" style={{ animation: 'tpCardPop 0.55s cubic-bezier(0.22,1,0.36,1) 0.20s both' }}>
+              <div className="tp-section-title">
+                <span className="icon-wrap" style={{ background: 'rgba(99,102,241,0.10)', color: '#6366f1' }}><Brain size={16} /></span>
+                Game Logic Settings
+              </div>
+
+              {/* Speed / Difficulty */}
+              <div style={{ marginBottom: 22 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
+                  <div style={{ fontSize: 13.5, fontWeight: 700, color: '#0B1E33' }}>Speed / Difficulty</div>
+                  <span className="mono" style={{ fontSize: 13, fontWeight: 700, color: '#6366f1' }}>{diffLabel}</span>
+                </div>
+                <input
+                  type="range" min={0} max={3} value={difficulty}
+                  className="tp-slider purple"
+                  style={{ '--val': `${(difficulty / 3) * 100}%` } as React.CSSProperties}
+                  onChange={e => setDifficulty(Number(e.target.value))}
+                />
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 6 }}>
+                  {DIFFICULTY_LABELS.map((l, i) => (
+                    <span key={l} className="mono" style={{ fontSize: 9, color: i === difficulty ? '#6366f1' : '#94a3b8', fontWeight: i === difficulty ? 700 : 500, letterSpacing: '0.08em' }}>{l}</span>
+                  ))}
+                </div>
+              </div>
+
+              {/* Session Duration */}
+              <div style={{ marginBottom: 22 }}>
+                <div style={{ fontSize: 13.5, fontWeight: 700, color: '#0B1E33', marginBottom: 10 }}>Session Duration</div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                  <input
+                    type="number" min={5} max={60} value={duration}
+                    className="tp-dur-input"
+                    onChange={e => setDuration(Number(e.target.value))}
+                  />
+                  <span style={{ fontSize: 13.5, color: '#64748b', fontWeight: 500 }}>minutes</span>
+                </div>
+              </div>
+
+              {/* Assistance Cues */}
+              <div>
+                <div style={{ fontSize: 13.5, fontWeight: 700, color: '#0B1E33', marginBottom: 12 }}>Assistance Cues</div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                  <Toggle
+                    on={audioHints}
+                    onChange={() => setAudioHints(v => !v)}
+                    label="Audio Hints"
+                    sub="Voice prompts and sound cues during gameplay"
+                  />
+                  <Toggle
+                    on={visualGuides}
+                    onChange={() => setVisualGuides(v => !v)}
+                    label="Visual Path Guides"
+                    sub="Overlay guides to assist target navigation"
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* ═══ RIGHT COLUMN ══════════════════════════════════════════ */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+
+            {/* ── Live Preview ─────────────────────────────────────── */}
+            <div className="tp-card" style={{
+              animation: 'tpCardPop 0.55s cubic-bezier(0.22,1,0.36,1) 0.08s both',
+              position: 'sticky', top: 20,
+            }}>
+              <div className="tp-section-title">
+                <span className="icon-wrap" style={{ background: 'rgba(251,191,36,0.12)', color: '#f59e0b' }}>
+                  <Zap size={16} />
+                </span>
+                Live Preview
+              </div>
+
+              <GameCanvas pressure={Math.round(pressure)} hand={hand === 'right' ? 'Right' : 'Left'} />
+
+              {/* Buttons */}
+              <div className="tp-btn-row" style={{ display: 'flex', gap: 10, marginTop: 16 }}>
+                <button className="tp-btn-preview">
+                  <Play size={16} fill="currentColor" style={{ position: 'relative', zIndex: 2 }} />
+                  <span style={{ position: 'relative', zIndex: 2 }}>Preview</span>
+                </button>
+                <button className="tp-btn-assign">
+                  <Send size={15} style={{ position: 'relative', zIndex: 2 }} />
+                  <span style={{ position: 'relative', zIndex: 2 }}>Assign</span>
+                </button>
+                <button className="tp-btn-save" onClick={handleSave}>
+                  <Save size={15} />
+                  {savedMsg || 'Save'}
+                </button>
+              </div>
+            </div>
+
+            {/* ── Saved Protocols ───────────────────────────────────── */}
+            <div className="tp-card" style={{ animation: 'tpCardPop 0.55s cubic-bezier(0.22,1,0.36,1) 0.18s both' }}>
+              <div className="tp-section-title">
+                <span className="icon-wrap" style={{ background: 'rgba(99,102,241,0.10)', color: '#6366f1' }}>
+                  <BookOpen size={16} />
+                </span>
+                Saved Protocols
+              </div>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                {SAVED_PROTOCOLS.map((proto, i) => (
+                  <div
+                    key={proto.name}
+                    className="tp-protocol-item"
+                    style={{ animationDelay: `${0.22 + i * 0.07}s` }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
+                      <span style={{ fontSize: 13.5, fontWeight: 700, color: '#0B1E33' }}>{proto.name}</span>
+                      <div style={{ width: 22, height: 22, borderRadius: '50%', background: 'rgba(45,212,191,0.10)', border: '1px solid rgba(45,212,191,0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <ChevronDown size={12} color="#2DD4BF" style={{ transform: 'rotate(-90deg)' }} />
+                      </div>
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                      <span style={{ fontSize: 12, color: '#64748b', fontWeight: 500 }}>{proto.game}</span>
+                      <span style={{ fontSize: 11, color: '#94a3b8' }}>•</span>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+                        <Users size={11} color="#94a3b8" />
+                        <span className="mono" style={{ fontSize: 11, color: '#94a3b8', fontWeight: 600 }}>{proto.patients} patients assigned</span>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* New protocol CTA */}
+              <button style={{
+                width: '100%', marginTop: 14, padding: '11px',
+                borderRadius: 12, border: '1.5px dashed rgba(45,212,191,0.35)',
+                background: 'rgba(240,253,250,0.6)', color: '#0f766e',
+                fontSize: 13, fontWeight: 700, cursor: 'pointer',
+                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7,
+                transition: 'all 0.2s ease',
+                fontFamily: "'Plus Jakarta Sans', sans-serif",
+              }}
+              onMouseEnter={e => (e.currentTarget.style.background = 'rgba(45,212,191,0.12)')}
+              onMouseLeave={e => (e.currentTarget.style.background = 'rgba(240,253,250,0.6)')}
+              >
+                + Save Current as New Protocol
+              </button>
+            </div>
+
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
