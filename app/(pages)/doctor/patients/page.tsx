@@ -8,7 +8,7 @@ import { Search, Bot, Shield } from 'lucide-react';
 const ALL_PATIENTS = [
   { id: '1',  name: 'P.B. De Silva',        pid: 'P001', adherence: 45,  lastSession: '2025-11-10', status: 'Low',    sub: 'Standard',     condition: 'Stroke'       },
   { id: '2',  name: 'Anura Dissanayaka',    pid: 'P002', adherence: 92,  lastSession: '2025-11-14', status: 'High',   sub: 'AI Companion', condition: 'TBI'          },
-  { id: '3',  name: 'Isuri Alwis',          pid: 'P003', adherence: 78,  lastSession: '2025-11-13', status: 'Medium', sub: 'AI Companion', condition: 'Stroke'       },
+  { id: '3',  name: 'Saeath Watawala',          pid: 'P003', adherence: 78,  lastSession: '2025-11-13', status: 'Medium', sub: 'AI Companion', condition: 'Stroke'       },
   { id: '4',  name: 'Shifani Ameena',       pid: 'P004', adherence: 65,  lastSession: '2025-11-12', status: 'Medium', sub: 'Standard',     condition: 'Post-Surgery' },
   { id: '5',  name: 'Percy Silva',          pid: 'P005', adherence: 88,  lastSession: '2025-11-14', status: 'High',   sub: 'AI Companion', condition: 'TBI'          },
   { id: '6',  name: 'Athula Premachandra',  pid: 'P006', adherence: 52,  lastSession: '2025-11-14', status: 'Low',    sub: 'Standard',     condition: 'Stroke'       },
@@ -91,6 +91,23 @@ const CSS = `
   .mpp-tr { animation: mppRowIn 0.35s cubic-bezier(0.22,1,0.36,1) both; }
   .mpp-tr:hover td { background: rgba(45,212,191,0.028) !important; }
   .mpp-tr:last-child td { border-bottom: none !important; }
+
+  /* Message btn */
+  .mpp-msg-btn {
+    display: inline-flex; align-items: center; gap: 5px;
+    padding: 7px 16px; border-radius: 9px;
+    font-size: 12.5px; font-weight: 700;
+    border: 1.5px solid rgba(45,212,191,0.35);
+    background: rgba(45,212,191,0.07); color: #0891b2;
+    cursor: pointer; transition: all 0.18s ease;
+    text-decoration: none; white-space: nowrap;
+  }
+  .mpp-msg-btn:hover {
+    background: linear-gradient(135deg,#2DD4BF,#0891b2);
+    color: #0B1E33; border-color: transparent;
+    box-shadow: 0 4px 14px rgba(45,212,191,0.30);
+    transform: translateY(-1px);
+  }
 
   /* View Profile btn */
   .mpp-view-btn {
@@ -293,6 +310,7 @@ export default function DoctorPatientsPage() {
                   <TH>Last Session</TH>
                   <TH>Status</TH>
                   <TH>Subscription</TH>
+                  <TH>Message</TH>
                   <TH>Action</TH>
                 </tr>
               </thead>
@@ -334,6 +352,13 @@ export default function DoctorPatientsPage() {
                       <SubBadge type={p.sub} />
                     </td>
 
+                    {/* Message */}
+                    <td style={{ padding: '16px 18px', borderBottom: '1.5px dashed rgba(45,212,191,0.30)', verticalAlign: 'middle' }}>
+                      <Link href={`/doctor/patients/${p.id}/messages`} className="mpp-msg-btn">
+                        Message
+                      </Link>
+                    </td>
+
                     {/* Action */}
                     <td style={{ padding: '16px 18px', borderBottom: '1.5px dashed rgba(45,212,191,0.30)', verticalAlign: 'middle' }}>
                       <Link href={`/doctor/patients/${p.id}`} className="mpp-view-btn">
@@ -345,7 +370,7 @@ export default function DoctorPatientsPage() {
 
                 {filtered.length === 0 && (
                   <tr>
-                    <td colSpan={7} style={{ padding: '48px', textAlign: 'center', color: '#94a3b8', fontSize: 14, fontWeight: 500 }}>
+                    <td colSpan={8} style={{ padding: '48px', textAlign: 'center', color: '#94a3b8', fontSize: 14, fontWeight: 500 }}>
                       No patients match your filters.
                     </td>
                   </tr>
