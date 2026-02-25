@@ -477,3 +477,20 @@ const GameCanvas: React.FC<{ pressure: number; hand: string }> = ({ pressure, ha
     </div>
   );
 };
+
+/* ═══════════════════════════════════════════════════════════
+   TOGGLE COMPONENT
+═══════════════════════════════════════════════════════════ */
+function Toggle({ on, onChange, label, sub }: { on: boolean; onChange: () => void; label: string; sub: string }) {
+  return (
+    <div className="tp-toggle-wrap" onClick={onChange}>
+      <div>
+        <div style={{ fontSize: 13.5, fontWeight: 700, color: '#0B1E33' }}>{label}</div>
+        <div style={{ fontSize: 12, color: '#64748b', marginTop: 2 }}>{sub}</div>
+      </div>
+      <div className={`tp-toggle-track ${on ? 'on' : 'off'}`}>
+        <div className="tp-toggle-thumb" />
+      </div>
+    </div>
+  );
+}
