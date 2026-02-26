@@ -1,8 +1,12 @@
 "use client";
 
+import AnimatedBackground from "@/components/Auth/AnimatedBackground";
+
 export default function DoctorSignInPage() {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-teal-900 to-slate-900">
+    <div className="min-h-screen flex items-center justify-center relative">
+      <AnimatedBackground />
+      
       <div className="w-full max-w-6xl mx-auto px-8">
         <div className="bg-white/10 backdrop-blur-lg rounded-3xl shadow-2xl overflow-hidden border border-white/20">
           <div className="grid grid-cols-1 lg:grid-cols-2 min-h-[600px]">
