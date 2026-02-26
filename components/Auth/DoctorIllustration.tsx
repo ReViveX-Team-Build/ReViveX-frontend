@@ -1,20 +1,45 @@
 "use client";
+import { useRef } from "react";
+import { useCursorTracking } from "@/hooks/useCursorTracking";
 
-export default function DoctorIllustration() {
+interface DoctorIllustrationProps {
+  isError?: boolean;
+  isPasswordFocused?: boolean;
+}
+
+export default function DoctorIllustration({ 
+  isError = false, 
+  isPasswordFocused = false 
+}: DoctorIllustrationProps) {
+  const svgRef = useRef<SVGSVGElement>(null);
+  const { cursorPos } = useCursorTracking(svgRef);
+
+  // Calculate eye pupil movement based on cursor
+  const maxPupilMove = 4;
+  const pupilLeftX = 130 + (cursorPos.x / 100) * maxPupilMove;
+  const pupilLeftY = 118 + (cursorPos.y / 100) * maxPupilMove;
+  const pupilRightX = 170 + (cursorPos.x / 100) * maxPupilMove;
+  const pupilRightY = 118 + (cursorPos.y / 100) * maxPupilMove;
+
+  // Skin color changes to red on error
+  const skinColor = isError ? "#FF6B6B" : "#FCD6B8";
+  const skinColorDark = isError ? "#E74C3C" : "#F4A688";
+
   return (
     <svg
+      ref={svgRef}
       width="300"
       height="400"
       viewBox="0 0 300 400"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
-      className="w-full max-w-sm"
+      className="w-full max-w-sm transition-all duration-300"
     >
       {/* Neck */}
-      <rect x="135" y="155" width="30" height="25" fill="#FCD6B8" rx="5" />
+      <rect x="135" y="155" width="30" height="25" fill={skinColor} rx="5" className="transition-colors duration-300" />
 
       {/* Head */}
-      <ellipse cx="150" cy="120" rx="50" ry="60" fill="#FCD6B8" />
+      <ellipse cx="150" cy="120" rx="50" ry="60" fill={skinColor} className="transition-colors duration-300" />
 
       {/* Hair */}
       <path
@@ -23,31 +48,99 @@ export default function DoctorIllustration() {
       />
 
       {/* Ears */}
-      <ellipse cx="100" cy="120" rx="12" ry="18" fill="#FCD6B8" />
-      <ellipse cx="200" cy="120" rx="12" ry="18" fill="#FCD6B8" />
+      <ellipse cx="100" cy="120" rx="12" ry="18" fill={skinColor} className="transition-colors duration-300" />
+      <ellipse cx="200" cy="120" rx="12" ry="18" fill={skinColor} className="transition-colors duration-300" />
 
-      {/* Eyes - We'll animate these next! */}
-      <g id="left-eye">
-        <ellipse cx="130" cy="115" rx="12" ry="16" fill="white" stroke="#2D3748" strokeWidth="2" />
-        <circle cx="130" cy="118" r="6" fill="#2D3748" />
-        <circle cx="132" cy="116" r="3" fill="white" />
-      </g>
+      {/* Eyes - Closed when typing password */}
+      {isPasswordFocused ? (
+        <>
+          {/* Closed eyes */}
+          <path 
+            d="M118 115 Q130 118, 142 115" 
+            stroke="#2D3748" 
+            strokeWidth="3" 
+            fill="none" 
+            strokeLinecap="round"
+          />
+          <path 
+            d="M158 115 Q170 118, 182 115" 
+            stroke="#2D3748" 
+            strokeWidth="3" 
+            fill="none" 
+            strokeLinecap="round"
+          />
+        </>
+      ) : (
+        <>
+          {/* Open eyes with animated pupils */}
+          <g id="left-eye">
+            <ellipse cx="130" cy="115" rx="12" ry="16" fill="white" stroke="#2D3748" strokeWidth="2" />
+            <circle 
+              cx={pupilLeftX} 
+              cy={pupilLeftY} 
+              r="6" 
+              fill="#2D3748"
+              className="transition-all duration-100"
+            />
+            <circle 
+              cx={pupilLeftX + 2} 
+              cy={pupilLeftY - 2} 
+              r="3" 
+              fill="white"
+              className="transition-all duration-100"
+            />
+          </g>
 
-      <g id="right-eye">
-        <ellipse cx="170" cy="115" rx="12" ry="16" fill="white" stroke="#2D3748" strokeWidth="2" />
-        <circle cx="170" cy="118" r="6" fill="#2D3748" />
-        <circle cx="172" cy="116" r="3" fill="white" />
-      </g>
+          <g id="right-eye">
+            <ellipse cx="170" cy="115" rx="12" ry="16" fill="white" stroke="#2D3748" strokeWidth="2" />
+            <circle 
+              cx={pupilRightX} 
+              cy={pupilRightY} 
+              r="6" 
+              fill="#2D3748"
+              className="transition-all duration-100"
+            />
+            <circle 
+              cx={pupilRightX + 2} 
+              cy={pupilRightY - 2} 
+              r="3" 
+              fill="white"
+              className="transition-all duration-100"
+            />
+          </g>
+        </>
+      )}
 
-      {/* Eyebrows */}
-      <path d="M118 100 Q130 95, 142 100" stroke="#2D3748" strokeWidth="3" fill="none" strokeLinecap="round" />
-      <path d="M158 100 Q170 95, 182 100" stroke="#2D3748" strokeWidth="3" fill="none" strokeLinecap="round" />
+      {/* Eyebrows - Angry when error */}
+      <path 
+        d={isError ? "M118 105 Q130 98, 142 105" : "M118 100 Q130 95, 142 100"} 
+        stroke="#2D3748" 
+        strokeWidth="3" 
+        fill="none" 
+        strokeLinecap="round"
+        className="transition-all duration-300"
+      />
+      <path 
+        d={isError ? "M158 105 Q170 98, 182 105" : "M158 100 Q170 95, 182 100"} 
+        stroke="#2D3748" 
+        strokeWidth="3" 
+        fill="none" 
+        strokeLinecap="round"
+        className="transition-all duration-300"
+      />
 
       {/* Nose */}
-      <path d="M150 125 L145 135 L150 137 L155 135 Z" fill="#F4A688" />
+      <path d="M150 125 L145 135 L150 137 L155 135 Z" fill={skinColorDark} className="transition-colors duration-300" />
 
-      {/* Mouth - smile */}
-      <path d="M135 145 Q150 155, 165 145" stroke="#D97D6F" strokeWidth="2" fill="none" strokeLinecap="round" />
+      {/* Mouth - frown when error, smile otherwise */}
+      <path 
+        d={isError ? "M135 150 Q150 145, 165 150" : "M135 145 Q150 155, 165 145"} 
+        stroke="#D97D6F" 
+        strokeWidth="2" 
+        fill="none" 
+        strokeLinecap="round"
+        className="transition-all duration-300"
+      />
 
       {/* Doctor's coat/body */}
       <path
