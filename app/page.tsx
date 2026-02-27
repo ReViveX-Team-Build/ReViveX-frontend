@@ -597,112 +597,255 @@ function FloatingParticles({ count = 35 }: { count?: number }) {
     </div>
   );
 }
+
 function NeuralNetwork({ mouse }: { mouse: { x: number; y: number } }) {
+  const canvasRef   = useRef<HTMLCanvasElement>(null);
+  const parMouseRef = useRef(mouse);
+  const cursorRef   = useRef({ cx: -9999, cy: -9999, over: false });
 
-  const { nodes, lines } = useMemo(() => {
-    const n = Array.from({ length: 65 }, (_, i) => {
-      const z = Math.random();
-      return {
-        id: i,
-        x: Math.random() * 100,
-        y: Math.random() * 100,
-        z: z,
-        r: 0.8 + z * 2.5,
-        speed: 0.02 + z * 0.12,
-        blur: (1 - z) * 4,
-        baseAlpha: 0.05 + z * 0.25,
+  useEffect(() => { parMouseRef.current = mouse; }, [mouse]);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d")!;
+    let raf = 0;
+
+    const normV = (v: [number,number,number]): [number,number,number] => {
+      const l = Math.sqrt(v[0]*v[0]+v[1]*v[1]+v[2]*v[2]);
+      return [v[0]/l,v[1]/l,v[2]/l];
+    };
+    const buildIco = (subs: number) => {
+      const phi = (1+Math.sqrt(5))/2;
+      let verts: [number,number,number][] = [
+        [-1,phi,0],[1,phi,0],[-1,-phi,0],[1,-phi,0],
+        [0,-1,phi],[0,1,phi],[0,-1,-phi],[0,1,-phi],
+        [phi,0,-1],[phi,0,1],[-phi,0,-1],[-phi,0,1],
+      ].map(v=>normV(v as [number,number,number]));
+      let faces: [number,number,number][] = [
+        [0,11,5],[0,5,1],[0,1,7],[0,7,10],[0,10,11],
+        [1,5,9],[5,11,4],[11,10,2],[10,7,6],[7,1,8],
+        [3,9,4],[3,4,2],[3,2,6],[3,6,8],[3,8,9],
+        [4,9,5],[2,4,11],[6,2,10],[8,6,7],[9,8,1],
+      ];
+      for (let pass=0; pass<subs; pass++) {
+        const cache = new Map<string,number>();
+        const mid = (a:number,b:number)=>{
+          const k=a<b?`${a}_${b}`:`${b}_${a}`;
+          if(cache.has(k)) return cache.get(k)!;
+          const va=verts[a],vb=verts[b],idx=verts.length;
+          verts.push(normV([(va[0]+vb[0])/2,(va[1]+vb[1])/2,(va[2]+vb[2])/2]));
+          cache.set(k,idx); return idx;
+        };
+        const nf:[number,number,number][]=[];
+        faces.forEach(([a,b,c])=>{
+          const ab=mid(a,b),bc=mid(b,c),ca=mid(c,a);
+          nf.push([a,ab,ca],[b,bc,ab],[c,ca,bc],[ab,bc,ca]);
+        });
+        faces=nf;
+      }
+      const eSet=new Set<string>();
+      const edges:[number,number][]=[];
+      faces.forEach(([a,b,c])=>{
+        ([[a,b],[b,c],[c,a]] as [number,number][]).forEach(([x,y])=>{
+          const k=x<y?`${x}_${y}`:`${y}_${x}`;
+          if(!eSet.has(k)){eSet.add(k);edges.push([x,y]);}
+        });
+      });
+      return {verts,faces,edges};
+    };
+
+    // Only the inner sphere — 2 subdivisions = 162 verts, ~480 edges
+    const sphere = buildIco(2);
+    const N = sphere.verts.length;
+
+    const sx  = new Float32Array(N);
+    const sy  = new Float32Array(N);
+    const sz  = new Float32Array(N);
+    const en  = new Float32Array(N);
+    const enN = new Float32Array(N);
+
+    const adjT: number[][] = Array.from({length:N},()=>[]);
+    sphere.edges.forEach(([a,b])=>{ adjT[a].push(b); adjT[b].push(a); });
+    const adj = adjT.map(a=>new Uint8Array(a));
+
+    const voAll = Array.from({length:N},(_,i)=>i);
+
+    type Pulse = { ei:number; t:number; spd:number; };
+    const pulses: Pulse[] = [];
+
+    const resize=()=>{
+      const dpr=window.devicePixelRatio||1;
+      canvas.width =canvas.offsetWidth *dpr;
+      canvas.height=canvas.offsetHeight*dpr;
+    };
+    resize();
+    window.addEventListener("resize",resize);
+
+    const onMove=(e:MouseEvent)=>{
+      const r=canvas.getBoundingClientRect();
+      const lcx=e.clientX-r.left, lcy=e.clientY-r.top;
+      cursorRef.current={
+        cx:lcx, cy:lcy,
+        over: lcx>=0 && lcx<=r.width && lcy>=0 && lcy<=r.height,
       };
-    });
+    };
+    window.addEventListener("mousemove",onMove);
 
-    const l = [];
-    for (let i = 0; i < n.length; i++) {
-      for (let j = i + 1; j < n.length; j++) {
-        const dx = n[i].x - n[j].x;
-        const dy = n[i].y - n[j].y;
-        const dist = Math.sqrt(dx * dx + dy * dy);
+    let frame=0;
 
-        // Connect nodes if they are close on the X/Y axis AND close on the Z axis
-        if (dist < 18 && Math.abs(n[i].z - n[j].z) < 0.3) {
-          l.push({
-            a: i, b: j,
-            baseAlpha: (1 - dist / 18) * 0.2,
-            zAvg: (n[i].z + n[j].z) / 2
-          });
+    const draw=()=>{
+      frame++;
+      const par=parMouseRef.current;
+      const t=frame*0.016;
+
+      const ry=-t*0.18 + par.x*0.50;
+      const rx= t*0.055 + par.y*0.22;
+
+      const dpr=window.devicePixelRatio||1;
+      const W=canvas.width/dpr, H=canvas.height/dpr;
+      ctx.setTransform(dpr,0,0,dpr,0,0);
+      ctx.clearRect(0,0,W,H);
+
+      const cx=W*0.50, cy=H*0.50;
+      const R =Math.min(W,H)*0.44;
+
+      const cxR=Math.cos(rx),sxR=Math.sin(rx),cyR=Math.cos(ry),syR=Math.sin(ry);
+
+      for(let i=0;i<N;i++){
+        const[vx,vy,vz]=sphere.verts[i];
+        const x1= vx*cyR+vz*syR, z1=-vx*syR+vz*cyR;
+        const y2= vy*cxR-z1*sxR, z2= vy*sxR+z1*cxR;
+        sx[i]=cx+x1*R; sy[i]=cy+y2*R; sz[i]=z2;
+      }
+
+      // Cursor is the ONLY energy source
+      const{cx:mx,cy:my,over}=cursorRef.current;
+      const INJ_R =R*0.35;
+      const INJ_R2=INJ_R*INJ_R;
+      if(over){
+        for(let i=0;i<N;i++){
+          const dx=sx[i]-mx, dy=sy[i]-my;
+          const d2=dx*dx+dy*dy;
+          if(d2<INJ_R2){
+            const str=1-Math.sqrt(d2)/INJ_R;
+            const nv=en[i]+str*0.34;
+            en[i]=nv>1?1:nv;
+          }
         }
       }
-    }
-    return { nodes: n, lines: l };
-  }, []);
 
-  return (
-    <svg style={{ position: "absolute", inset: 0, width: "100%", height: "100%", pointerEvents: "none" }}>
-      <defs>
-        {/* Adds a subtle glowing filter to the synapses */}
-        <filter id="glow">
-          <feGaussianBlur stdDeviation="2" result="coloredBlur" />
-          <feMerge>
-            <feMergeNode in="coloredBlur" />
-            <feMergeNode in="SourceGraphic" />
-          </feMerge>
-        </filter>
-      </defs>
+      // Ripple along edges
+      for(let i=0;i<N;i++) enN[i]=en[i];
+      for(let i=0;i<N;i++){
+        if(en[i]>0.08){
+          const nb=adj[i];
+          for(let k=0;k<nb.length;k++){
+            const j=nb[k];
+            const nv=enN[j]+en[i]*0.050;
+            if(nv>1) enN[j]=1; else enN[j]=nv;
+          }
+        }
+      }
+      // 0.750 decay when not hovering → dark in ~200ms
+      const decay=over?0.922:0.750;
+      for(let i=0;i<N;i++) en[i]=enN[i]*decay;
 
-      {/* Render Connecting Lines */}
-      {lines.map((l, i) => {
-        const na = nodes[l.a], nb = nodes[l.b];
+      // Spawn pulses on hot edges
+      if(over && pulses.length<60 && Math.random()<0.40){
+        const ei=Math.floor(Math.random()*sphere.edges.length);
+        const[a,b]=sphere.edges[ei];
+        if((en[a]+en[b])*0.5>0.45)
+          pulses.push({ei, t:0, spd:0.018+Math.random()*0.024});
+      }
 
-        // Calculate true positions including 3D parallax
-        const ax = na.x + mouse.x * na.speed * 100;
-        const ay = na.y + mouse.y * na.speed * 100;
-        const bx = nb.x + mouse.x * nb.speed * 100;
-        const by = nb.y + mouse.y * nb.speed * 100;
+      // Edges
+      for(let k=0;k<sphere.edges.length;k++){
+        const[a,b]=sphere.edges[k];
+        if(sz[a]<-0.68&&sz[b]<-0.68) continue;
+        const e  =(en[a]+en[b])*0.5;
+        const dep=((sz[a]+sz[b])*0.5+1)*0.5;
+        ctx.beginPath();
+        ctx.moveTo(sx[a],sy[a]); ctx.lineTo(sx[b],sy[b]);
+        if(e<0.04){
+          ctx.strokeStyle=`rgba(110,150,148,${0.020+dep*0.014})`;
+          ctx.lineWidth  =0.16+dep*0.08;
+        } else {
+          ctx.strokeStyle=`rgba(45,212,191,${e*0.95+dep*0.040})`;
+          ctx.lineWidth  =0.18+e*2.20+dep*0.24;
+        }
+        ctx.stroke();
+      }
 
-        // Calculate distance from the line to the mouse cursor for illumination
-        const mx = (mouse.x + 0.5) * 100, my = (mouse.y + 0.5) * 100;
-        const midX = (ax + bx) / 2, midY = (ay + by) / 2;
-        const distToMouse = Math.sqrt(Math.pow(mx - midX, 2) + Math.pow(my - midY, 2));
+      // Synapse pulses
+      for(let pi=pulses.length-1;pi>=0;pi--){
+        const p=pulses[pi];
+        p.t+=p.spd;
+        if(p.t>1){pulses.splice(pi,1);continue;}
+        const[a,b]=sphere.edges[p.ei];
+        if(sz[a]<-0.62&&sz[b]<-0.62) continue;
+        const ppx=sx[a]+(sx[b]-sx[a])*p.t;
+        const ppy=sy[a]+(sy[b]-sy[a])*p.t;
+        const fade=Math.sin(p.t*Math.PI);
+        ctx.shadowBlur =5+fade*22;
+        ctx.shadowColor=`rgba(45,212,191,${fade*0.92})`;
+        ctx.beginPath();
+        ctx.arc(ppx,ppy,0.80+fade*2.0,0,Math.PI*2);
+        ctx.fillStyle=`rgba(255,255,255,${0.50+fade*0.50})`;
+        ctx.fill();
+      }
+      ctx.shadowBlur=0;
 
-        // If mouse is near, the line lights up and gets thicker
-        const illumination = Math.max(0, 1 - distToMouse / 20);
-        const finalAlpha = l.baseAlpha + (illumination * 0.4);
+      // Nodes depth-sorted
+      voAll.sort((a,b)=>sz[a]-sz[b]);
+      for(let ii=0;ii<N;ii++){
+        const i=voAll[ii];
+        if(sz[i]<-0.68) continue;
+        const e  =en[i];
+        const dep=(sz[i]+1)*0.5;
+        const r  =0.40+dep*0.78+e*2.85;
+        if(e>0.12){
+          ctx.shadowBlur =3+e*26;
+          ctx.shadowColor=`rgba(45,212,191,${e*0.92})`;
+        }
+        ctx.beginPath();
+        ctx.arc(sx[i],sy[i],r,0,Math.PI*2);
+        ctx.fillStyle=e<0.04
+          ?`rgba(120,158,156,${0.055+dep*0.090})`
+          :`rgba(255,255,255,${0.05+dep*0.05+e*0.90})`;
+        ctx.fill();
+        if(e>0.12) ctx.shadowBlur=0;
+      }
+      ctx.shadowBlur=0;
 
-        return (
-          <line key={`line-${i}`}
-            x1={`${ax}%`} y1={`${ay}%`}
-            x2={`${bx}%`} y2={`${by}%`}
-            stroke={`rgba(45,212,191,${finalAlpha})`}
-            strokeWidth={0.5 + (l.zAvg * 1) + (illumination * 1.5)}
-            style={{ filter: illumination > 0.2 ? "url(#glow)" : "none", transition: "stroke 0.2s, stroke-width 0.2s" }}
-          />
-        );
-      })}
+      raf=requestAnimationFrame(draw);
+    };
 
-      {/* Render Nodes */}
-      {nodes.map(n => {
-        // Apply Parallax Speed
-        const nx = n.x + mouse.x * n.speed * 100;
-        const ny = n.y + mouse.y * n.speed * 100;
+    raf=requestAnimationFrame(draw);
+    return()=>{
+      cancelAnimationFrame(raf);
+      window.removeEventListener("resize",  resize);
+      window.removeEventListener("mousemove",onMove);
+    };
+  },[]);
 
-        // Illumination math
-        const mx = (mouse.x + 0.5) * 100, my = (mouse.y + 0.5) * 100;
-        const distToMouse = Math.sqrt(Math.pow(mx - nx, 2) + Math.pow(my - ny, 2));
-        const illumination = Math.max(0, 1 - distToMouse / 15);
-
-        return (
-          <circle key={`node-${n.id}`}
-            cx={`${nx}%`}
-            cy={`${ny}%`}
-            r={n.r + (illumination * 3)}
-            fill={`rgba(45,212,191,${n.baseAlpha + illumination})`}
-            style={{
-              filter: `blur(${n.blur}px)`,
-              transition: "r 0.15s, fill 0.15s",
-              boxShadow: "0 0 10px #2DD4BF"
-            }}
-          />
-        );
-      })}
-    </svg>
+  return(
+    <canvas
+      ref={canvasRef}
+      style={{
+        position:      "absolute",
+        top:           "50%",
+        right:         "-2%",
+        transform:     "translateY(-46%)",
+        width:         "clamp(480px,52vw,820px)",
+        height:        "clamp(480px,52vw,820px)",
+        display:       "block",
+        pointerEvents: "none",
+        opacity:       0.90,
+        WebkitMaskImage:"linear-gradient(to right,transparent 0%,black 18%)",
+        maskImage:      "linear-gradient(to right,transparent 0%,black 18%)",
+      }}
+    />
   );
 }
 
@@ -1348,11 +1491,11 @@ function HeroSection() {
 
       {/* Neural network layer */}
 
-      <motion.div style={{ x: nX, y: nY, position: "absolute", inset: 0, pointerEvents: "none" }}>
+      {/* Neural network layer — 3D brain, right side */}
 
+      <div style={{ position: "absolute", inset: 0, pointerEvents: "none" }}>
         <NeuralNetwork mouse={mouse} />
-
-      </motion.div>
+      </div>
 
 
 
