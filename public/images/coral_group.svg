@@ -1,0 +1,88 @@
+<svg width="2048" height="2048" viewBox="0 0 2048 2048" xmlns="http://www.w3.org/2000/svg">
+
+<defs>
+
+<!-- Teal bioluminescent gradient -->
+<radialGradient id="tealBio" cx="50%" cy="40%" r="70%">
+  <stop offset="0%" stop-color="#8ffff1"></stop>
+  <stop offset="60%" stop-color="#2ec4b6"></stop>
+  <stop offset="100%" stop-color="#0a4f57"></stop>
+</radialGradient>
+
+<!-- Pink purple coral -->
+<radialGradient id="pinkCoral" cx="50%" cy="50%" r="70%">
+  <stop offset="0%" stop-color="#ffc2ff"></stop>
+  <stop offset="60%" stop-color="#d16bff"></stop>
+  <stop offset="100%" stop-color="#6c3cff"></stop>
+</radialGradient>
+
+<!-- Brown reef coral -->
+<radialGradient id="reefCoral" cx="50%" cy="50%" r="70%">
+  <stop offset="0%" stop-color="#e0a96d"></stop>
+  <stop offset="100%" stop-color="#6a3b1f"></stop>
+</radialGradient>
+
+<!-- Glow -->
+<filter id="glow">
+  <feGaussianBlur stdDeviation="10" result="blur"></feGaussianBlur>
+  <feMerge>
+    <feMergeNode in="blur"></feMergeNode>
+    <feMergeNode in="SourceGraphic"></feMergeNode>
+  </feMerge>
+</filter>
+
+</defs>
+
+<!-- CORAL GROUP -->
+<g id="reefGroup">
+
+<!-- Branching staghorn coral (teal) -->
+<g fill="url(#tealBio)" filter="url(#glow)">
+  <path d="M820 1500
+           C780 1380 820 1300 760 1180
+           C720 1100 760 1050 810 1120
+           C860 1200 850 1300 890 1380
+           C930 1450 900 1500 820 1500Z"></path>
+
+  <path d="M900 1500
+           C940 1380 900 1280 950 1160
+           C990 1060 1040 1100 1010 1200
+           C980 1320 970 1420 940 1500Z"></path>
+
+  <!-- polyps -->
+  <circle cx="810" cy="1120" r="12"></circle>
+  <circle cx="880" cy="1280" r="10"></circle>
+  <circle cx="960" cy="1180" r="11"></circle>
+</g>
+
+<!-- Soft bulb coral cluster (pink/purple) -->
+<g fill="url(#pinkCoral)">
+  <path d="M1200 1450
+           C1150 1380 1150 1300 1220 1280
+           C1300 1260 1350 1320 1330 1390
+           C1310 1470 1240 1480 1200 1450Z"></path>
+
+  <circle cx="1280" cy="1350" r="70"></circle>
+  <circle cx="1180" cy="1360" r="60"></circle>
+  <circle cx="1240" cy="1270" r="50"></circle>
+
+  <!-- polyp dots -->
+  <g fill="#ffd6ff" opacity="0.6">
+    <circle cx="1280" cy="1350" r="8"></circle>
+    <circle cx="1210" cy="1330" r="7"></circle>
+    <circle cx="1245" cy="1400" r="6"></circle>
+  </g>
+</g>
+
+<!-- Brain coral (brown stylized) -->
+<g fill="url(#reefCoral)">
+  <ellipse cx="980" cy="1500" rx="140" ry="110"></ellipse>
+
+  <!-- brain grooves -->
+  <path d="M900 1500 Q980 1420 1060 1500" stroke="#5a2e16" stroke-width="8" fill="none"></path>
+  <path d="M920 1550 Q980 1480 1040 1550" stroke="#5a2e16" stroke-width="8" fill="none"></path>
+  <path d="M940 1450 Q980 1400 1020 1450" stroke="#5a2e16" stroke-width="8" fill="none"></path>
+</g>
+
+</g>
+</svg>
