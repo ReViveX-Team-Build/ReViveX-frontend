@@ -1,20 +1,4 @@
-// ═══════════════════════════════════════════════════════════════════════════
-//  SynapseBackground  v5  — Bug-free, Cinematic Ocean
-//
-//  ROOT CAUSE OF YELLOW RECTANGLE — FIXED:
-//  Both the horizon glow and the sun shimmer were using ctx.scale(1, tiny)
-//  to squash a circle into a flat "ellipse". Canvas renders this as a solid
-//  rectangular bar because the coordinate transform flattens everything.
-//  v5 replaces ALL ctx.scale gradient tricks with proper linear gradients.
-//
-//  All other issues fixed:
-//  • Sun colour: smooth yellow→amber only in final descent, never harsh red
-//  • Moon: only visible when sky is truly dark (nf > 0.60)
-//  • Day/night: physically derived from sun height, perfectly in sync
-//  • Waves: smoother bezier, better step sizes for performance
-//  • God rays: clip path optimized, fewer gradient objects per frame
-//  • Particle counts reduced for better framerate
-// ═══════════════════════════════════════════════════════════════════════════
+
 
 // ─── helpers ─────────────────────────────────────────────────────────────────
 function lerpColor(a: string, b: string, t: number): string {

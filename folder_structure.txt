@@ -1,0 +1,4945 @@
+Folder PATH listing
+Volume serial number is EE8C-D2AA
+C:.
++---.next
+|   \---dev
+|       +---build
+|       |   \---chunks
+|       +---cache
+|       |   \---turbopack
+|       |       \---23c46498
+|       +---logs
+|       +---server
+|       |   +---app
+|       |   |   +---(immersive)
+|       |   |   |   \---game
+|       |   |   |       \---level-1
+|       |   |   |           \---page
+|       |   |   +---(pages)
+|       |   |   |   +---doctor
+|       |   |   |   |   +---ai-companion
+|       |   |   |   |   |   \---page
+|       |   |   |   |   +---home
+|       |   |   |   |   |   \---page
+|       |   |   |   |   +---page
+|       |   |   |   |   +---patients
+|       |   |   |   |   |   +---page
+|       |   |   |   |   |   \---[id]
+|       |   |   |   |   |       \---messages
+|       |   |   |   |   |           \---page
+|       |   |   |   |   +---protocols
+|       |   |   |   |   |   \---page
+|       |   |   |   |   +---reports
+|       |   |   |   |   |   \---page
+|       |   |   |   |   +---schedule
+|       |   |   |   |   |   \---page
+|       |   |   |   |   \---settings
+|       |   |   |   |       \---page
+|       |   |   |   \---patients
+|       |   |   |       +---ai-companion
+|       |   |   |       |   \---page
+|       |   |   |       +---home
+|       |   |   |       |   \---page
+|       |   |   |       +---levels
+|       |   |   |       |   \---page
+|       |   |   |       +---messages
+|       |   |   |       |   \---page
+|       |   |   |       +---profile
+|       |   |   |       |   \---page
+|       |   |   |       +---progress
+|       |   |   |       |   \---page
+|       |   |   |       +---schedule
+|       |   |   |       |   \---page
+|       |   |   |       +---settings
+|       |   |   |       |   \---page
+|       |   |   |       \---therapy-games
+|       |   |   |           \---page
+|       |   |   +---page
+|       |   |   \---_not-found
+|       |   |       \---page
+|       |   +---chunks
+|       |   |   \---ssr
+|       |   \---pages
+|       |       +---_app
+|       |       +---_document
+|       |       \---_error
+|       +---static
+|       |   +---chunks
+|       |   |   \---pages
+|       |   +---development
+|       |   \---media
+|       \---types
++---.vscode
++---app
+|   +---(immersive)
+|   |   \---game
+|   |       \---level-1
+|   +---(pages)
+|   |   +---doctor
+|   |   |   +---ai-companion
+|   |   |   +---home
+|   |   |   +---patients
+|   |   |   |   \---[id]
+|   |   |   |       \---messages
+|   |   |   +---protocols
+|   |   |   +---reports
+|   |   |   +---schedule
+|   |   |   \---settings
+|   |   \---patients
+|   |       +---ai-companion
+|   |       +---home
+|   |       +---levels
+|   |       +---messages
+|   |       +---profile
+|   |       +---progress
+|   |       +---schedule
+|   |       +---settings
+|   |       \---therapy-games
+|   \---lib
++---components
+|   +---DevTools
+|   +---DoctorPortal
+|   +---GameCanvas
+|   \---PatientPortal
++---node_modules
+|   +---.bin
+|   +---@alloc
+|   |   \---quick-lru
+|   +---@babel
+|   +---@emnapi
+|   |   \---runtime
+|   |       \---dist
+|   +---@eslint
+|   |   +---config-array
+|   |   |   \---dist
+|   |   |       +---cjs
+|   |   |       |   \---std__path
+|   |   |       \---esm
+|   |   |           \---std__path
+|   |   +---config-helpers
+|   |   |   \---dist
+|   |   |       +---cjs
+|   |   |       \---esm
+|   |   +---core
+|   |   |   \---dist
+|   |   |       +---cjs
+|   |   |       \---esm
+|   |   +---object-schema
+|   |   |   \---dist
+|   |   |       +---cjs
+|   |   |       \---esm
+|   |   \---plugin-kit
+|   |       \---dist
+|   |           +---cjs
+|   |           \---esm
+|   +---@eslint-community
+|   |   +---eslint-utils
+|   |   |   \---node_modules
+|   |   |       \---eslint-visitor-keys
+|   |   |           +---dist
+|   |   |           \---lib
+|   |   \---regexpp
+|   +---@firebase
+|   |   +---ai
+|   |   |   \---dist
+|   |   |       +---esm
+|   |   |       |   \---src
+|   |   |       |       +---methods
+|   |   |       |       +---models
+|   |   |       |       +---requests
+|   |   |       |       \---types
+|   |   |       |           \---imagen
+|   |   |       \---src
+|   |   |           +---methods
+|   |   |           +---models
+|   |   |           +---requests
+|   |   |           \---types
+|   |   |               \---imagen
+|   |   +---analytics
+|   |   |   \---dist
+|   |   |       +---esm
+|   |   |       |   +---src
+|   |   |       |   \---testing
+|   |   |       |       \---integration-tests
+|   |   |       +---src
+|   |   |       \---testing
+|   |   |           \---integration-tests
+|   |   +---analytics-compat
+|   |   |   \---dist
+|   |   |       +---esm
+|   |   |       |   \---src
+|   |   |       \---src
+|   |   +---analytics-types
+|   |   +---app
+|   |   |   \---dist
+|   |   |       +---app
+|   |   |       |   +---src
+|   |   |       |   \---test
+|   |   |       \---esm
+|   |   |           \---app
+|   |   |               +---src
+|   |   |               \---test
+|   |   +---app-check
+|   |   |   \---dist
+|   |   |       +---esm
+|   |   |       |   +---src
+|   |   |       |   \---test
+|   |   |       +---src
+|   |   |       \---test
+|   |   +---app-check-compat
+|   |   |   \---dist
+|   |   |       +---esm
+|   |   |       |   \---src
+|   |   |       \---src
+|   |   +---app-check-interop-types
+|   |   +---app-check-types
+|   |   +---app-compat
+|   |   |   \---dist
+|   |   |       +---esm
+|   |   |       |   +---src
+|   |   |       |   |   \---lite
+|   |   |       |   \---test
+|   |   |       +---src
+|   |   |       |   \---lite
+|   |   |       \---test
+|   |   +---app-types
+|   |   +---auth
+|   |   |   +---cordova
+|   |   |   +---dist
+|   |   |   |   +---browser-cjs
+|   |   |   |   |   +---internal
+|   |   |   |   |   +---scripts
+|   |   |   |   |   +---src
+|   |   |   |   |   |   +---api
+|   |   |   |   |   |   |   +---account_management
+|   |   |   |   |   |   |   +---authentication
+|   |   |   |   |   |   |   +---password_policy
+|   |   |   |   |   |   |   \---project_config
+|   |   |   |   |   |   +---core
+|   |   |   |   |   |   |   +---auth
+|   |   |   |   |   |   |   +---credentials
+|   |   |   |   |   |   |   +---persistence
+|   |   |   |   |   |   |   +---providers
+|   |   |   |   |   |   |   +---strategies
+|   |   |   |   |   |   |   +---user
+|   |   |   |   |   |   |   \---util
+|   |   |   |   |   |   +---mfa
+|   |   |   |   |   |   |   \---assertions
+|   |   |   |   |   |   +---model
+|   |   |   |   |   |   +---platform_browser
+|   |   |   |   |   |   |   +---iframe
+|   |   |   |   |   |   |   +---messagechannel
+|   |   |   |   |   |   |   +---mfa
+|   |   |   |   |   |   |   |   \---assertions
+|   |   |   |   |   |   |   +---persistence
+|   |   |   |   |   |   |   +---providers
+|   |   |   |   |   |   |   +---recaptcha
+|   |   |   |   |   |   |   +---strategies
+|   |   |   |   |   |   |   \---util
+|   |   |   |   |   |   +---platform_cordova
+|   |   |   |   |   |   |   +---popup_redirect
+|   |   |   |   |   |   |   \---strategies
+|   |   |   |   |   |   +---platform_node
+|   |   |   |   |   |   \---platform_react_native
+|   |   |   |   |   |       \---persistence
+|   |   |   |   |   \---test
+|   |   |   |   |       +---helpers
+|   |   |   |   |       |   +---api
+|   |   |   |   |       |   \---integration
+|   |   |   |   |       \---integration
+|   |   |   |   |           +---flows
+|   |   |   |   |           \---webdriver
+|   |   |   |   |               \---util
+|   |   |   |   +---cordova
+|   |   |   |   |   +---internal
+|   |   |   |   |   +---scripts
+|   |   |   |   |   +---src
+|   |   |   |   |   |   +---api
+|   |   |   |   |   |   |   +---account_management
+|   |   |   |   |   |   |   +---authentication
+|   |   |   |   |   |   |   +---password_policy
+|   |   |   |   |   |   |   \---project_config
+|   |   |   |   |   |   +---core
+|   |   |   |   |   |   |   +---auth
+|   |   |   |   |   |   |   +---credentials
+|   |   |   |   |   |   |   +---persistence
+|   |   |   |   |   |   |   +---providers
+|   |   |   |   |   |   |   +---strategies
+|   |   |   |   |   |   |   +---user
+|   |   |   |   |   |   |   \---util
+|   |   |   |   |   |   +---mfa
+|   |   |   |   |   |   |   \---assertions
+|   |   |   |   |   |   +---model
+|   |   |   |   |   |   +---platform_browser
+|   |   |   |   |   |   |   +---iframe
+|   |   |   |   |   |   |   +---messagechannel
+|   |   |   |   |   |   |   +---mfa
+|   |   |   |   |   |   |   |   \---assertions
+|   |   |   |   |   |   |   +---persistence
+|   |   |   |   |   |   |   +---providers
+|   |   |   |   |   |   |   +---recaptcha
+|   |   |   |   |   |   |   +---strategies
+|   |   |   |   |   |   |   \---util
+|   |   |   |   |   |   +---platform_cordova
+|   |   |   |   |   |   |   +---popup_redirect
+|   |   |   |   |   |   |   \---strategies
+|   |   |   |   |   |   +---platform_node
+|   |   |   |   |   |   \---platform_react_native
+|   |   |   |   |   |       \---persistence
+|   |   |   |   |   \---test
+|   |   |   |   |       +---helpers
+|   |   |   |   |       |   +---api
+|   |   |   |   |       |   \---integration
+|   |   |   |   |       \---integration
+|   |   |   |   |           +---flows
+|   |   |   |   |           \---webdriver
+|   |   |   |   |               \---util
+|   |   |   |   +---esm
+|   |   |   |   |   +---internal
+|   |   |   |   |   +---scripts
+|   |   |   |   |   +---src
+|   |   |   |   |   |   +---api
+|   |   |   |   |   |   |   +---account_management
+|   |   |   |   |   |   |   +---authentication
+|   |   |   |   |   |   |   +---password_policy
+|   |   |   |   |   |   |   \---project_config
+|   |   |   |   |   |   +---core
+|   |   |   |   |   |   |   +---auth
+|   |   |   |   |   |   |   +---credentials
+|   |   |   |   |   |   |   +---persistence
+|   |   |   |   |   |   |   +---providers
+|   |   |   |   |   |   |   +---strategies
+|   |   |   |   |   |   |   +---user
+|   |   |   |   |   |   |   \---util
+|   |   |   |   |   |   +---mfa
+|   |   |   |   |   |   |   \---assertions
+|   |   |   |   |   |   +---model
+|   |   |   |   |   |   +---platform_browser
+|   |   |   |   |   |   |   +---iframe
+|   |   |   |   |   |   |   +---messagechannel
+|   |   |   |   |   |   |   +---mfa
+|   |   |   |   |   |   |   |   \---assertions
+|   |   |   |   |   |   |   +---persistence
+|   |   |   |   |   |   |   +---providers
+|   |   |   |   |   |   |   +---recaptcha
+|   |   |   |   |   |   |   +---strategies
+|   |   |   |   |   |   |   \---util
+|   |   |   |   |   |   +---platform_cordova
+|   |   |   |   |   |   |   +---popup_redirect
+|   |   |   |   |   |   |   \---strategies
+|   |   |   |   |   |   +---platform_node
+|   |   |   |   |   |   \---platform_react_native
+|   |   |   |   |   |       \---persistence
+|   |   |   |   |   \---test
+|   |   |   |   |       +---helpers
+|   |   |   |   |       |   +---api
+|   |   |   |   |       |   \---integration
+|   |   |   |   |       \---integration
+|   |   |   |   |           +---flows
+|   |   |   |   |           \---webdriver
+|   |   |   |   |               \---util
+|   |   |   |   +---internal
+|   |   |   |   +---node
+|   |   |   |   |   +---internal
+|   |   |   |   |   +---scripts
+|   |   |   |   |   +---src
+|   |   |   |   |   |   +---api
+|   |   |   |   |   |   |   +---account_management
+|   |   |   |   |   |   |   +---authentication
+|   |   |   |   |   |   |   +---password_policy
+|   |   |   |   |   |   |   \---project_config
+|   |   |   |   |   |   +---core
+|   |   |   |   |   |   |   +---auth
+|   |   |   |   |   |   |   +---credentials
+|   |   |   |   |   |   |   +---persistence
+|   |   |   |   |   |   |   +---providers
+|   |   |   |   |   |   |   +---strategies
+|   |   |   |   |   |   |   +---user
+|   |   |   |   |   |   |   \---util
+|   |   |   |   |   |   +---mfa
+|   |   |   |   |   |   |   \---assertions
+|   |   |   |   |   |   +---model
+|   |   |   |   |   |   +---platform_browser
+|   |   |   |   |   |   |   +---iframe
+|   |   |   |   |   |   |   +---messagechannel
+|   |   |   |   |   |   |   +---mfa
+|   |   |   |   |   |   |   |   \---assertions
+|   |   |   |   |   |   |   +---persistence
+|   |   |   |   |   |   |   +---providers
+|   |   |   |   |   |   |   +---recaptcha
+|   |   |   |   |   |   |   +---strategies
+|   |   |   |   |   |   |   \---util
+|   |   |   |   |   |   +---platform_cordova
+|   |   |   |   |   |   |   +---popup_redirect
+|   |   |   |   |   |   |   \---strategies
+|   |   |   |   |   |   +---platform_node
+|   |   |   |   |   |   \---platform_react_native
+|   |   |   |   |   |       \---persistence
+|   |   |   |   |   \---test
+|   |   |   |   |       +---helpers
+|   |   |   |   |       |   +---api
+|   |   |   |   |       |   \---integration
+|   |   |   |   |       \---integration
+|   |   |   |   |           +---flows
+|   |   |   |   |           \---webdriver
+|   |   |   |   |               \---util
+|   |   |   |   +---node-esm
+|   |   |   |   |   +---internal
+|   |   |   |   |   +---scripts
+|   |   |   |   |   +---src
+|   |   |   |   |   |   +---api
+|   |   |   |   |   |   |   +---account_management
+|   |   |   |   |   |   |   +---authentication
+|   |   |   |   |   |   |   +---password_policy
+|   |   |   |   |   |   |   \---project_config
+|   |   |   |   |   |   +---core
+|   |   |   |   |   |   |   +---auth
+|   |   |   |   |   |   |   +---credentials
+|   |   |   |   |   |   |   +---persistence
+|   |   |   |   |   |   |   +---providers
+|   |   |   |   |   |   |   +---strategies
+|   |   |   |   |   |   |   +---user
+|   |   |   |   |   |   |   \---util
+|   |   |   |   |   |   +---mfa
+|   |   |   |   |   |   |   \---assertions
+|   |   |   |   |   |   +---model
+|   |   |   |   |   |   +---platform_browser
+|   |   |   |   |   |   |   +---iframe
+|   |   |   |   |   |   |   +---messagechannel
+|   |   |   |   |   |   |   +---mfa
+|   |   |   |   |   |   |   |   \---assertions
+|   |   |   |   |   |   |   +---persistence
+|   |   |   |   |   |   |   +---providers
+|   |   |   |   |   |   |   +---recaptcha
+|   |   |   |   |   |   |   +---strategies
+|   |   |   |   |   |   |   \---util
+|   |   |   |   |   |   +---platform_cordova
+|   |   |   |   |   |   |   +---popup_redirect
+|   |   |   |   |   |   |   \---strategies
+|   |   |   |   |   |   +---platform_node
+|   |   |   |   |   |   \---platform_react_native
+|   |   |   |   |   |       \---persistence
+|   |   |   |   |   \---test
+|   |   |   |   |       +---helpers
+|   |   |   |   |       |   +---api
+|   |   |   |   |       |   \---integration
+|   |   |   |   |       \---integration
+|   |   |   |   |           +---flows
+|   |   |   |   |           \---webdriver
+|   |   |   |   |               \---util
+|   |   |   |   +---rn
+|   |   |   |   |   +---internal
+|   |   |   |   |   +---scripts
+|   |   |   |   |   +---src
+|   |   |   |   |   |   +---api
+|   |   |   |   |   |   |   +---account_management
+|   |   |   |   |   |   |   +---authentication
+|   |   |   |   |   |   |   +---password_policy
+|   |   |   |   |   |   |   \---project_config
+|   |   |   |   |   |   +---core
+|   |   |   |   |   |   |   +---auth
+|   |   |   |   |   |   |   +---credentials
+|   |   |   |   |   |   |   +---persistence
+|   |   |   |   |   |   |   +---providers
+|   |   |   |   |   |   |   +---strategies
+|   |   |   |   |   |   |   +---user
+|   |   |   |   |   |   |   \---util
+|   |   |   |   |   |   +---mfa
+|   |   |   |   |   |   |   \---assertions
+|   |   |   |   |   |   +---model
+|   |   |   |   |   |   +---platform_browser
+|   |   |   |   |   |   |   +---iframe
+|   |   |   |   |   |   |   +---messagechannel
+|   |   |   |   |   |   |   +---mfa
+|   |   |   |   |   |   |   |   \---assertions
+|   |   |   |   |   |   |   +---persistence
+|   |   |   |   |   |   |   +---providers
+|   |   |   |   |   |   |   +---recaptcha
+|   |   |   |   |   |   |   +---strategies
+|   |   |   |   |   |   |   \---util
+|   |   |   |   |   |   +---platform_cordova
+|   |   |   |   |   |   |   +---popup_redirect
+|   |   |   |   |   |   |   \---strategies
+|   |   |   |   |   |   +---platform_node
+|   |   |   |   |   |   \---platform_react_native
+|   |   |   |   |   |       \---persistence
+|   |   |   |   |   \---test
+|   |   |   |   |       +---helpers
+|   |   |   |   |       |   +---api
+|   |   |   |   |       |   \---integration
+|   |   |   |   |       \---integration
+|   |   |   |   |           +---flows
+|   |   |   |   |           \---webdriver
+|   |   |   |   |               \---util
+|   |   |   |   +---scripts
+|   |   |   |   +---src
+|   |   |   |   |   +---api
+|   |   |   |   |   |   +---account_management
+|   |   |   |   |   |   +---authentication
+|   |   |   |   |   |   +---password_policy
+|   |   |   |   |   |   \---project_config
+|   |   |   |   |   +---core
+|   |   |   |   |   |   +---auth
+|   |   |   |   |   |   +---credentials
+|   |   |   |   |   |   +---persistence
+|   |   |   |   |   |   +---providers
+|   |   |   |   |   |   +---strategies
+|   |   |   |   |   |   +---user
+|   |   |   |   |   |   \---util
+|   |   |   |   |   +---mfa
+|   |   |   |   |   |   \---assertions
+|   |   |   |   |   +---model
+|   |   |   |   |   +---platform_browser
+|   |   |   |   |   |   +---iframe
+|   |   |   |   |   |   +---messagechannel
+|   |   |   |   |   |   +---mfa
+|   |   |   |   |   |   |   \---assertions
+|   |   |   |   |   |   +---persistence
+|   |   |   |   |   |   +---providers
+|   |   |   |   |   |   +---recaptcha
+|   |   |   |   |   |   +---strategies
+|   |   |   |   |   |   \---util
+|   |   |   |   |   +---platform_cordova
+|   |   |   |   |   |   +---popup_redirect
+|   |   |   |   |   |   \---strategies
+|   |   |   |   |   +---platform_node
+|   |   |   |   |   \---platform_react_native
+|   |   |   |   |       \---persistence
+|   |   |   |   +---test
+|   |   |   |   |   +---helpers
+|   |   |   |   |   |   +---api
+|   |   |   |   |   |   \---integration
+|   |   |   |   |   \---integration
+|   |   |   |   |       +---flows
+|   |   |   |   |       \---webdriver
+|   |   |   |   |           \---util
+|   |   |   |   +---web-extension-cjs
+|   |   |   |   |   +---internal
+|   |   |   |   |   +---scripts
+|   |   |   |   |   +---src
+|   |   |   |   |   |   +---api
+|   |   |   |   |   |   |   +---account_management
+|   |   |   |   |   |   |   +---authentication
+|   |   |   |   |   |   |   +---password_policy
+|   |   |   |   |   |   |   \---project_config
+|   |   |   |   |   |   +---core
+|   |   |   |   |   |   |   +---auth
+|   |   |   |   |   |   |   +---credentials
+|   |   |   |   |   |   |   +---persistence
+|   |   |   |   |   |   |   +---providers
+|   |   |   |   |   |   |   +---strategies
+|   |   |   |   |   |   |   +---user
+|   |   |   |   |   |   |   \---util
+|   |   |   |   |   |   +---mfa
+|   |   |   |   |   |   |   \---assertions
+|   |   |   |   |   |   +---model
+|   |   |   |   |   |   +---platform_browser
+|   |   |   |   |   |   |   +---iframe
+|   |   |   |   |   |   |   +---messagechannel
+|   |   |   |   |   |   |   +---mfa
+|   |   |   |   |   |   |   |   \---assertions
+|   |   |   |   |   |   |   +---persistence
+|   |   |   |   |   |   |   +---providers
+|   |   |   |   |   |   |   +---recaptcha
+|   |   |   |   |   |   |   +---strategies
+|   |   |   |   |   |   |   \---util
+|   |   |   |   |   |   +---platform_cordova
+|   |   |   |   |   |   |   +---popup_redirect
+|   |   |   |   |   |   |   \---strategies
+|   |   |   |   |   |   +---platform_node
+|   |   |   |   |   |   \---platform_react_native
+|   |   |   |   |   |       \---persistence
+|   |   |   |   |   \---test
+|   |   |   |   |       +---helpers
+|   |   |   |   |       |   +---api
+|   |   |   |   |       |   \---integration
+|   |   |   |   |       \---integration
+|   |   |   |   |           +---flows
+|   |   |   |   |           \---webdriver
+|   |   |   |   |               \---util
+|   |   |   |   \---web-extension-esm
+|   |   |   |       +---internal
+|   |   |   |       +---scripts
+|   |   |   |       +---src
+|   |   |   |       |   +---api
+|   |   |   |       |   |   +---account_management
+|   |   |   |       |   |   +---authentication
+|   |   |   |       |   |   +---password_policy
+|   |   |   |       |   |   \---project_config
+|   |   |   |       |   +---core
+|   |   |   |       |   |   +---auth
+|   |   |   |       |   |   +---credentials
+|   |   |   |       |   |   +---persistence
+|   |   |   |       |   |   +---providers
+|   |   |   |       |   |   +---strategies
+|   |   |   |       |   |   +---user
+|   |   |   |       |   |   \---util
+|   |   |   |       |   +---mfa
+|   |   |   |       |   |   \---assertions
+|   |   |   |       |   +---model
+|   |   |   |       |   +---platform_browser
+|   |   |   |       |   |   +---iframe
+|   |   |   |       |   |   +---messagechannel
+|   |   |   |       |   |   +---mfa
+|   |   |   |       |   |   |   \---assertions
+|   |   |   |       |   |   +---persistence
+|   |   |   |       |   |   +---providers
+|   |   |   |       |   |   +---recaptcha
+|   |   |   |       |   |   +---strategies
+|   |   |   |       |   |   \---util
+|   |   |   |       |   +---platform_cordova
+|   |   |   |       |   |   +---popup_redirect
+|   |   |   |       |   |   \---strategies
+|   |   |   |       |   +---platform_node
+|   |   |   |       |   \---platform_react_native
+|   |   |   |       |       \---persistence
+|   |   |   |       \---test
+|   |   |   |           +---helpers
+|   |   |   |           |   +---api
+|   |   |   |           |   \---integration
+|   |   |   |           \---integration
+|   |   |   |               +---flows
+|   |   |   |               \---webdriver
+|   |   |   |                   \---util
+|   |   |   +---internal
+|   |   |   \---web-extension
+|   |   +---auth-compat
+|   |   |   \---dist
+|   |   |       +---auth-compat
+|   |   |       |   +---scripts
+|   |   |       |   +---src
+|   |   |       |   \---test
+|   |   |       |       +---helpers
+|   |   |       |       \---integration
+|   |   |       |           \---flows
+|   |   |       \---esm
+|   |   |           \---auth-compat
+|   |   |               +---scripts
+|   |   |               +---src
+|   |   |               \---test
+|   |   |                   +---helpers
+|   |   |                   \---integration
+|   |   |                       \---flows
+|   |   +---auth-interop-types
+|   |   +---auth-types
+|   |   +---component
+|   |   |   \---dist
+|   |   |       +---esm
+|   |   |       |   +---src
+|   |   |       |   \---test
+|   |   |       +---src
+|   |   |       \---test
+|   |   +---data-connect
+|   |   |   \---dist
+|   |   |       +---node-esm
+|   |   |       |   \---src
+|   |   |       |       +---api
+|   |   |       |       +---core
+|   |   |       |       +---network
+|   |   |       |       |   \---transport
+|   |   |       |       \---util
+|   |   |       \---src
+|   |   |           +---api
+|   |   |           +---core
+|   |   |           +---network
+|   |   |           |   \---transport
+|   |   |           \---util
+|   |   +---database
+|   |   |   \---dist
+|   |   |       +---node-esm
+|   |   |       |   +---src
+|   |   |       |   |   +---api
+|   |   |       |   |   +---core
+|   |   |       |   |   |   +---operation
+|   |   |       |   |   |   +---snap
+|   |   |       |   |   |   |   \---indexes
+|   |   |       |   |   |   +---stats
+|   |   |       |   |   |   +---storage
+|   |   |       |   |   |   +---util
+|   |   |       |   |   |   |   \---libs
+|   |   |       |   |   |   \---view
+|   |   |       |   |   |       \---filter
+|   |   |       |   |   +---internal
+|   |   |       |   |   \---realtime
+|   |   |       |   |       \---polling
+|   |   |       |   \---test
+|   |   |       |       \---helpers
+|   |   |       +---src
+|   |   |       |   +---api
+|   |   |       |   +---core
+|   |   |       |   |   +---operation
+|   |   |       |   |   +---snap
+|   |   |       |   |   |   \---indexes
+|   |   |       |   |   +---stats
+|   |   |       |   |   +---storage
+|   |   |       |   |   +---util
+|   |   |       |   |   |   \---libs
+|   |   |       |   |   \---view
+|   |   |       |   |       \---filter
+|   |   |       |   +---internal
+|   |   |       |   \---realtime
+|   |   |       |       \---polling
+|   |   |       \---test
+|   |   |           \---helpers
+|   |   +---database-compat
+|   |   |   +---dist
+|   |   |   |   +---database-compat
+|   |   |   |   |   +---src
+|   |   |   |   |   |   +---api
+|   |   |   |   |   |   \---util
+|   |   |   |   |   \---test
+|   |   |   |   |       +---browser
+|   |   |   |   |       \---helpers
+|   |   |   |   \---node-esm
+|   |   |   |       \---database-compat
+|   |   |   |           +---src
+|   |   |   |           |   +---api
+|   |   |   |           |   \---util
+|   |   |   |           \---test
+|   |   |   |               +---browser
+|   |   |   |               \---helpers
+|   |   |   \---standalone
+|   |   +---database-types
+|   |   +---firestore
+|   |   |   +---dist
+|   |   |   |   +---firestore
+|   |   |   |   |   +---lite
+|   |   |   |   |   |   \---pipelines
+|   |   |   |   |   +---pipelines
+|   |   |   |   |   +---src
+|   |   |   |   |   |   +---api
+|   |   |   |   |   |   +---auth
+|   |   |   |   |   |   +---core
+|   |   |   |   |   |   +---index
+|   |   |   |   |   |   +---lite-api
+|   |   |   |   |   |   +---local
+|   |   |   |   |   |   +---model
+|   |   |   |   |   |   +---platform
+|   |   |   |   |   |   |   +---browser
+|   |   |   |   |   |   |   +---browser_lite
+|   |   |   |   |   |   |   +---node
+|   |   |   |   |   |   |   +---node_lite
+|   |   |   |   |   |   |   +---rn
+|   |   |   |   |   |   |   \---rn_lite
+|   |   |   |   |   |   +---protos
+|   |   |   |   |   |   +---remote
+|   |   |   |   |   |   \---util
+|   |   |   |   |   \---test
+|   |   |   |   |       +---integration
+|   |   |   |   |       |   +---api
+|   |   |   |   |       |   +---api_internal
+|   |   |   |   |       |   +---browser
+|   |   |   |   |       |   +---remote
+|   |   |   |   |       |   \---util
+|   |   |   |   |       +---lite
+|   |   |   |   |       +---unit
+|   |   |   |   |       |   +---api
+|   |   |   |   |       |   +---core
+|   |   |   |   |       |   +---index
+|   |   |   |   |       |   +---lite-api
+|   |   |   |   |       |   +---local
+|   |   |   |   |       |   +---model
+|   |   |   |   |       |   +---remote
+|   |   |   |   |       |   |   \---bloom_filter_golden_test_data
+|   |   |   |   |       |   +---specs
+|   |   |   |   |       |   \---util
+|   |   |   |   |       \---util
+|   |   |   |   +---intermediate
+|   |   |   |   |   +---firestore
+|   |   |   |   |   |   +---lite
+|   |   |   |   |   |   |   \---pipelines
+|   |   |   |   |   |   +---pipelines
+|   |   |   |   |   |   +---src
+|   |   |   |   |   |   |   +---api
+|   |   |   |   |   |   |   +---auth
+|   |   |   |   |   |   |   +---core
+|   |   |   |   |   |   |   +---index
+|   |   |   |   |   |   |   +---lite-api
+|   |   |   |   |   |   |   +---local
+|   |   |   |   |   |   |   +---model
+|   |   |   |   |   |   |   +---platform
+|   |   |   |   |   |   |   |   +---browser
+|   |   |   |   |   |   |   |   +---browser_lite
+|   |   |   |   |   |   |   |   +---node
+|   |   |   |   |   |   |   |   +---node_lite
+|   |   |   |   |   |   |   |   +---rn
+|   |   |   |   |   |   |   |   \---rn_lite
+|   |   |   |   |   |   |   +---protos
+|   |   |   |   |   |   |   +---remote
+|   |   |   |   |   |   |   \---util
+|   |   |   |   |   |   \---test
+|   |   |   |   |   |       +---integration
+|   |   |   |   |   |       |   \---util
+|   |   |   |   |   |       +---lite
+|   |   |   |   |   |       +---unit
+|   |   |   |   |   |       |   +---local
+|   |   |   |   |   |       |   +---remote
+|   |   |   |   |   |       |   |   \---bloom_filter_golden_test_data
+|   |   |   |   |   |       |   +---specs
+|   |   |   |   |   |       |   \---util
+|   |   |   |   |   |       \---util
+|   |   |   |   |   \---lite
+|   |   |   |   |       \---firestore
+|   |   |   |   |           +---lite
+|   |   |   |   |           |   \---pipelines
+|   |   |   |   |           +---pipelines
+|   |   |   |   |           +---src
+|   |   |   |   |           |   +---api
+|   |   |   |   |           |   +---auth
+|   |   |   |   |           |   +---core
+|   |   |   |   |           |   +---index
+|   |   |   |   |           |   +---lite-api
+|   |   |   |   |           |   +---local
+|   |   |   |   |           |   +---model
+|   |   |   |   |           |   +---platform
+|   |   |   |   |           |   |   +---browser
+|   |   |   |   |           |   |   +---browser_lite
+|   |   |   |   |           |   |   +---node
+|   |   |   |   |           |   |   +---node_lite
+|   |   |   |   |           |   |   +---rn
+|   |   |   |   |           |   |   \---rn_lite
+|   |   |   |   |           |   +---protos
+|   |   |   |   |           |   +---remote
+|   |   |   |   |           |   \---util
+|   |   |   |   |           \---test
+|   |   |   |   |               +---integration
+|   |   |   |   |               |   +---api
+|   |   |   |   |               |   +---api_internal
+|   |   |   |   |               |   +---browser
+|   |   |   |   |               |   +---remote
+|   |   |   |   |               |   \---util
+|   |   |   |   |               +---lite
+|   |   |   |   |               +---unit
+|   |   |   |   |               |   +---api
+|   |   |   |   |               |   +---core
+|   |   |   |   |               |   +---index
+|   |   |   |   |               |   +---lite-api
+|   |   |   |   |               |   +---local
+|   |   |   |   |               |   +---model
+|   |   |   |   |               |   +---remote
+|   |   |   |   |               |   |   \---bloom_filter_golden_test_data
+|   |   |   |   |               |   +---specs
+|   |   |   |   |               |   \---util
+|   |   |   |   |               \---util
+|   |   |   |   \---lite
+|   |   |   |       \---firestore
+|   |   |   |           +---lite
+|   |   |   |           |   \---pipelines
+|   |   |   |           +---pipelines
+|   |   |   |           +---src
+|   |   |   |           |   +---api
+|   |   |   |           |   +---auth
+|   |   |   |           |   +---core
+|   |   |   |           |   +---index
+|   |   |   |           |   +---lite-api
+|   |   |   |           |   +---local
+|   |   |   |           |   +---model
+|   |   |   |           |   +---platform
+|   |   |   |           |   |   +---browser
+|   |   |   |           |   |   +---browser_lite
+|   |   |   |           |   |   +---node
+|   |   |   |           |   |   +---node_lite
+|   |   |   |           |   |   +---rn
+|   |   |   |           |   |   \---rn_lite
+|   |   |   |           |   +---protos
+|   |   |   |           |   +---remote
+|   |   |   |           |   \---util
+|   |   |   |           \---test
+|   |   |   |               +---integration
+|   |   |   |               |   +---api
+|   |   |   |               |   +---api_internal
+|   |   |   |               |   +---browser
+|   |   |   |               |   +---remote
+|   |   |   |               |   \---util
+|   |   |   |               +---lite
+|   |   |   |               +---unit
+|   |   |   |               |   +---api
+|   |   |   |               |   +---core
+|   |   |   |               |   +---index
+|   |   |   |               |   +---lite-api
+|   |   |   |               |   +---local
+|   |   |   |               |   +---model
+|   |   |   |               |   +---remote
+|   |   |   |               |   |   \---bloom_filter_golden_test_data
+|   |   |   |               |   +---specs
+|   |   |   |               |   \---util
+|   |   |   |               \---util
+|   |   |   +---lite
+|   |   |   |   \---pipelines
+|   |   |   \---pipelines
+|   |   +---firestore-compat
+|   |   |   \---dist
+|   |   |       +---node-esm
+|   |   |       |   +---src
+|   |   |       |   |   +---api
+|   |   |       |   |   \---util
+|   |   |       |   \---test
+|   |   |       |       \---util
+|   |   |       +---src
+|   |   |       |   +---api
+|   |   |       |   \---util
+|   |   |       \---test
+|   |   |           \---util
+|   |   +---firestore-types
+|   |   +---functions
+|   |   |   \---dist
+|   |   |       +---esm
+|   |   |       |   +---src
+|   |   |       |   \---test
+|   |   |       +---src
+|   |   |       \---test
+|   |   +---functions-compat
+|   |   |   \---dist
+|   |   |       +---esm
+|   |   |       |   +---src
+|   |   |       |   \---test
+|   |   |       +---src
+|   |   |       \---test
+|   |   +---functions-types
+|   |   +---installations
+|   |   |   \---dist
+|   |   |       +---esm
+|   |   |       |   \---src
+|   |   |       |       +---api
+|   |   |       |       +---functions
+|   |   |       |       +---helpers
+|   |   |       |       +---interfaces
+|   |   |       |       +---testing
+|   |   |       |       \---util
+|   |   |       \---src
+|   |   |           +---api
+|   |   |           +---functions
+|   |   |           +---helpers
+|   |   |           +---interfaces
+|   |   |           +---testing
+|   |   |           \---util
+|   |   +---installations-compat
+|   |   |   \---dist
+|   |   |       +---esm
+|   |   |       |   \---src
+|   |   |       |       \---testing
+|   |   |       \---src
+|   |   |           \---testing
+|   |   +---installations-types
+|   |   +---logger
+|   |   |   \---dist
+|   |   |       +---esm
+|   |   |       |   +---src
+|   |   |       |   \---test
+|   |   |       +---src
+|   |   |       \---test
+|   |   +---messaging
+|   |   |   +---dist
+|   |   |   |   +---esm
+|   |   |   |   |   \---src
+|   |   |   |   |       +---api
+|   |   |   |   |       +---helpers
+|   |   |   |   |       +---interfaces
+|   |   |   |   |       +---internals
+|   |   |   |   |       +---listeners
+|   |   |   |   |       +---testing
+|   |   |   |   |       |   \---fakes
+|   |   |   |   |       \---util
+|   |   |   |   +---src
+|   |   |   |   |   +---api
+|   |   |   |   |   +---helpers
+|   |   |   |   |   +---interfaces
+|   |   |   |   |   +---internals
+|   |   |   |   |   +---listeners
+|   |   |   |   |   +---testing
+|   |   |   |   |   |   \---fakes
+|   |   |   |   |   \---util
+|   |   |   |   \---sw
+|   |   |   \---sw
+|   |   +---messaging-compat
+|   |   |   \---dist
+|   |   |       +---esm
+|   |   |       |   +---src
+|   |   |       |   \---test
+|   |   |       +---src
+|   |   |       \---test
+|   |   +---messaging-interop-types
+|   |   +---performance
+|   |   |   \---dist
+|   |   |       +---esm
+|   |   |       |   +---src
+|   |   |       |   |   +---controllers
+|   |   |       |   |   +---resources
+|   |   |       |   |   +---services
+|   |   |       |   |   \---utils
+|   |   |       |   \---test
+|   |   |       +---src
+|   |   |       |   +---controllers
+|   |   |       |   +---resources
+|   |   |       |   +---services
+|   |   |       |   \---utils
+|   |   |       \---test
+|   |   +---performance-compat
+|   |   |   \---dist
+|   |   |       +---esm
+|   |   |       |   +---src
+|   |   |       |   \---test
+|   |   |       +---src
+|   |   |       \---test
+|   |   +---performance-types
+|   |   +---remote-config
+|   |   |   \---dist
+|   |   |       +---esm
+|   |   |       |   +---src
+|   |   |       |   |   +---abt
+|   |   |       |   |   +---client
+|   |   |       |   |   \---storage
+|   |   |       |   \---test
+|   |   |       +---src
+|   |   |       |   +---abt
+|   |   |       |   +---client
+|   |   |       |   \---storage
+|   |   |       \---test
+|   |   +---remote-config-compat
+|   |   |   \---dist
+|   |   |       +---esm
+|   |   |       |   +---src
+|   |   |       |   \---test
+|   |   |       +---src
+|   |   |       \---test
+|   |   +---remote-config-types
+|   |   +---storage
+|   |   |   \---dist
+|   |   |       +---node-esm
+|   |   |       |   +---src
+|   |   |       |   |   +---implementation
+|   |   |       |   |   \---platform
+|   |   |       |   |       +---browser
+|   |   |       |   |       \---node
+|   |   |       |   \---test
+|   |   |       |       \---unit
+|   |   |       +---src
+|   |   |       |   +---implementation
+|   |   |       |   \---platform
+|   |   |       |       +---browser
+|   |   |       |       \---node
+|   |   |       \---test
+|   |   |           \---unit
+|   |   +---storage-compat
+|   |   |   \---dist
+|   |   |       +---esm
+|   |   |       |   +---src
+|   |   |       |   \---test
+|   |   |       |       +---integration
+|   |   |       |       \---unit
+|   |   |       +---src
+|   |   |       \---test
+|   |   |           +---integration
+|   |   |           \---unit
+|   |   +---storage-types
+|   |   +---util
+|   |   |   \---dist
+|   |   |       +---node-esm
+|   |   |       |   +---src
+|   |   |       |   \---test
+|   |   |       +---src
+|   |   |       \---test
+|   |   \---webchannel-wrapper
+|   |       +---bloom-blob
+|   |       +---dist
+|   |       |   +---bloom-blob
+|   |       |   |   \---esm
+|   |       |   \---webchannel-blob
+|   |       |       \---esm
+|   |       \---webchannel-blob
+|   +---@grpc
+|   |   +---grpc-js
+|   |   |   +---build
+|   |   |   |   \---src
+|   |   |   |       \---generated
+|   |   |   |           +---google
+|   |   |   |           |   \---protobuf
+|   |   |   |           \---grpc
+|   |   |   |               \---channelz
+|   |   |   |                   \---v1
+|   |   |   +---proto
+|   |   |   \---src
+|   |   |       \---generated
+|   |   |           +---google
+|   |   |           |   \---protobuf
+|   |   |           \---grpc
+|   |   |               \---channelz
+|   |   |                   \---v1
+|   |   \---proto-loader
+|   |       \---build
+|   |           +---bin
+|   |           \---src
+|   +---@humanfs
+|   |   +---core
+|   |   |   +---dist
+|   |   |   \---src
+|   |   \---node
+|   |       +---dist
+|   |       \---src
+|   +---@humanwhocodes
+|   |   +---module-importer
+|   |   |   +---dist
+|   |   |   \---src
+|   |   \---retry
+|   |       \---dist
+|   +---@img
+|   |   +---colour
+|   |   \---sharp-win32-x64
+|   |       \---lib
+|   +---@jridgewell
+|   |   +---gen-mapping
+|   |   |   +---dist
+|   |   |   |   \---types
+|   |   |   +---src
+|   |   |   \---types
+|   |   +---remapping
+|   |   |   +---dist
+|   |   |   +---src
+|   |   |   \---types
+|   |   +---resolve-uri
+|   |   |   \---dist
+|   |   |       \---types
+|   |   +---sourcemap-codec
+|   |   |   +---dist
+|   |   |   +---src
+|   |   |   \---types
+|   |   \---trace-mapping
+|   |       +---dist
+|   |       +---src
+|   |       \---types
+|   +---@napi-rs
+|   +---@next
+|   |   +---env
+|   |   |   \---dist
+|   |   \---swc-win32-x64-msvc
+|   +---@nodelib
+|   |   +---fs.scandir
+|   |   |   \---out
+|   |   |       +---adapters
+|   |   |       +---providers
+|   |   |       +---types
+|   |   |       \---utils
+|   |   +---fs.stat
+|   |   |   \---out
+|   |   |       +---adapters
+|   |   |       +---providers
+|   |   |       \---types
+|   |   \---fs.walk
+|   |       \---out
+|   |           +---providers
+|   |           +---readers
+|   |           \---types
+|   +---@nolyfill
+|   +---@protobufjs
+|   |   +---aspromise
+|   |   |   \---tests
+|   |   +---base64
+|   |   |   \---tests
+|   |   +---codegen
+|   |   |   \---tests
+|   |   +---eventemitter
+|   |   |   \---tests
+|   |   +---fetch
+|   |   |   \---tests
+|   |   +---float
+|   |   |   +---bench
+|   |   |   \---tests
+|   |   +---inquire
+|   |   |   \---tests
+|   |   |       \---data
+|   |   +---path
+|   |   |   \---tests
+|   |   +---pool
+|   |   |   \---tests
+|   |   \---utf8
+|   |       \---tests
+|   |           \---data
+|   +---@rtsao
+|   +---@swc
+|   |   \---helpers
+|   |       +---cjs
+|   |       +---esm
+|   |       +---scripts
+|   |       +---src
+|   |       \---_
+|   |           +---index
+|   |           +---_apply_decorated_descriptor
+|   |           +---_apply_decs_2203_r
+|   |           +---_array_like_to_array
+|   |           +---_array_without_holes
+|   |           +---_array_with_holes
+|   |           +---_assert_this_initialized
+|   |           +---_async_generator
+|   |           +---_async_generator_delegate
+|   |           +---_async_iterator
+|   |           +---_async_to_generator
+|   |           +---_await_async_generator
+|   |           +---_await_value
+|   |           +---_call_super
+|   |           +---_check_private_redeclaration
+|   |           +---_class_apply_descriptor_destructure
+|   |           +---_class_apply_descriptor_get
+|   |           +---_class_apply_descriptor_set
+|   |           +---_class_apply_descriptor_update
+|   |           +---_class_call_check
+|   |           +---_class_check_private_static_access
+|   |           +---_class_check_private_static_field_descriptor
+|   |           +---_class_extract_field_descriptor
+|   |           +---_class_name_tdz_error
+|   |           +---_class_private_field_destructure
+|   |           +---_class_private_field_get
+|   |           +---_class_private_field_init
+|   |           +---_class_private_field_loose_base
+|   |           +---_class_private_field_loose_key
+|   |           +---_class_private_field_set
+|   |           +---_class_private_field_update
+|   |           +---_class_private_method_get
+|   |           +---_class_private_method_init
+|   |           +---_class_private_method_set
+|   |           +---_class_static_private_field_destructure
+|   |           +---_class_static_private_field_spec_get
+|   |           +---_class_static_private_field_spec_set
+|   |           +---_class_static_private_field_update
+|   |           +---_class_static_private_method_get
+|   |           +---_construct
+|   |           +---_create_class
+|   |           +---_create_for_of_iterator_helper_loose
+|   |           +---_create_super
+|   |           +---_decorate
+|   |           +---_defaults
+|   |           +---_define_enumerable_properties
+|   |           +---_define_property
+|   |           +---_dispose
+|   |           +---_export_star
+|   |           +---_extends
+|   |           +---_get
+|   |           +---_get_prototype_of
+|   |           +---_identity
+|   |           +---_inherits
+|   |           +---_inherits_loose
+|   |           +---_initializer_define_property
+|   |           +---_initializer_warning_helper
+|   |           +---_instanceof
+|   |           +---_interop_require_default
+|   |           +---_interop_require_wildcard
+|   |           +---_is_native_function
+|   |           +---_is_native_reflect_construct
+|   |           +---_iterable_to_array
+|   |           +---_iterable_to_array_limit
+|   |           +---_iterable_to_array_limit_loose
+|   |           +---_jsx
+|   |           +---_new_arrow_check
+|   |           +---_non_iterable_rest
+|   |           +---_non_iterable_spread
+|   |           +---_object_destructuring_empty
+|   |           +---_object_spread
+|   |           +---_object_spread_props
+|   |           +---_object_without_properties
+|   |           +---_object_without_properties_loose
+|   |           +---_possible_constructor_return
+|   |           +---_read_only_error
+|   |           +---_set
+|   |           +---_set_prototype_of
+|   |           +---_skip_first_generator_next
+|   |           +---_sliced_to_array
+|   |           +---_sliced_to_array_loose
+|   |           +---_super_prop_base
+|   |           +---_tagged_template_literal
+|   |           +---_tagged_template_literal_loose
+|   |           +---_throw
+|   |           +---_to_array
+|   |           +---_to_consumable_array
+|   |           +---_to_primitive
+|   |           +---_to_property_key
+|   |           +---_ts_add_disposable_resource
+|   |           +---_ts_decorate
+|   |           +---_ts_dispose_resources
+|   |           +---_ts_generator
+|   |           +---_ts_metadata
+|   |           +---_ts_param
+|   |           +---_ts_values
+|   |           +---_type_of
+|   |           +---_unsupported_iterable_to_array
+|   |           +---_update
+|   |           +---_using
+|   |           +---_using_ctx
+|   |           +---_wrap_async_generator
+|   |           +---_wrap_native_super
+|   |           \---_write_only_error
+|   +---@tailwindcss
+|   |   +---node
+|   |   |   +---dist
+|   |   |   \---node_modules
+|   |   |       \---tailwindcss
+|   |   |           \---dist
+|   |   +---oxide
+|   |   +---oxide-win32-x64-msvc
+|   |   \---postcss
+|   |       +---dist
+|   |       \---node_modules
+|   |           \---tailwindcss
+|   |               \---dist
+|   +---@tybys
+|   +---@types
+|   |   +---esrecurse
+|   |   +---estree
+|   |   +---json-schema
+|   |   +---node
+|   |   |   +---assert
+|   |   |   +---compatibility
+|   |   |   +---dns
+|   |   |   +---fs
+|   |   |   +---readline
+|   |   |   +---stream
+|   |   |   +---timers
+|   |   |   +---ts5.6
+|   |   |   \---web-globals
+|   |   +---react
+|   |   |   \---ts5.0
+|   |   \---react-dom
+|   |       \---test-utils
+|   +---@typescript-eslint
+|   +---@unrs
+|   +---acorn
+|   |   +---bin
+|   |   \---dist
+|   +---acorn-jsx
+|   +---ajv
+|   |   +---dist
+|   |   +---lib
+|   |   |   +---compile
+|   |   |   +---dot
+|   |   |   +---dotjs
+|   |   |   \---refs
+|   |   \---scripts
+|   +---ansi-regex
+|   +---ansi-styles
+|   +---any-promise
+|   |   \---register
+|   +---anymatch
+|   +---arg
+|   +---autoprefixer
+|   |   +---bin
+|   |   +---data
+|   |   \---lib
+|   |       \---hacks
+|   +---balanced-match
+|   |   \---dist
+|   |       +---commonjs
+|   |       \---esm
+|   +---baseline-browser-mapping
+|   |   \---dist
+|   +---binary-extensions
+|   +---brace-expansion
+|   |   \---dist
+|   |       +---commonjs
+|   |       \---esm
+|   +---braces
+|   |   \---lib
+|   +---browserslist
+|   +---camelcase-css
+|   +---caniuse-lite
+|   |   +---data
+|   |   |   +---features
+|   |   |   \---regions
+|   |   \---dist
+|   |       +---lib
+|   |       \---unpacker
+|   +---chokidar
+|   |   +---lib
+|   |   +---node_modules
+|   |   |   \---glob-parent
+|   |   \---types
+|   +---client-only
+|   +---cliui
+|   |   \---build
+|   |       \---lib
+|   +---color-convert
+|   +---color-name
+|   +---commander
+|   |   \---typings
+|   +---cross-spawn
+|   |   \---lib
+|   |       \---util
+|   +---cssesc
+|   |   +---bin
+|   |   \---man
+|   +---csstype
+|   +---debug
+|   |   \---src
+|   +---deep-is
+|   |   +---example
+|   |   \---test
+|   +---detect-libc
+|   |   \---lib
+|   +---didyoumean
+|   +---dlv
+|   |   \---dist
+|   +---electron-to-chromium
+|   +---enhanced-resolve
+|   |   \---lib
+|   |       \---util
+|   +---escalade
+|   |   +---dist
+|   |   \---sync
+|   +---escape-string-regexp
+|   +---eslint
+|   |   +---bin
+|   |   +---conf
+|   |   +---lib
+|   |   |   +---cli-engine
+|   |   |   |   \---formatters
+|   |   |   +---config
+|   |   |   +---eslint
+|   |   |   +---languages
+|   |   |   |   \---js
+|   |   |   |       \---source-code
+|   |   |   |           \---token-store
+|   |   |   +---linter
+|   |   |   |   \---code-path-analysis
+|   |   |   +---rule-tester
+|   |   |   +---rules
+|   |   |   |   \---utils
+|   |   |   |       \---unicode
+|   |   |   +---services
+|   |   |   +---shared
+|   |   |   \---types
+|   |   \---messages
+|   +---eslint-config-next
+|   +---eslint-scope
+|   |   +---dist
+|   |   \---lib
+|   +---eslint-visitor-keys
+|   |   +---dist
+|   |   \---lib
+|   +---espree
+|   |   +---dist
+|   |   \---lib
+|   +---esquery
+|   |   \---dist
+|   +---esrecurse
+|   +---estraverse
+|   +---esutils
+|   |   \---lib
+|   +---fast-deep-equal
+|   |   \---es6
+|   +---fast-json-stable-stringify
+|   |   +---.github
+|   |   +---benchmark
+|   |   +---example
+|   |   \---test
+|   +---fast-levenshtein
+|   +---fastq
+|   |   \---test
+|   +---faye-websocket
+|   |   \---lib
+|   |       \---faye
+|   |           \---websocket
+|   |               \---api
+|   +---file-entry-cache
+|   +---fill-range
+|   +---find-up
+|   +---firebase
+|   |   +---ai
+|   |   |   \---dist
+|   |   |       +---ai
+|   |   |       +---analytics
+|   |   |       +---app
+|   |   |       +---app-check
+|   |   |       +---auth
+|   |   |       |   +---cordova
+|   |   |       |   \---web-extension
+|   |   |       +---compat
+|   |   |       |   +---analytics
+|   |   |       |   +---app
+|   |   |       |   +---app-check
+|   |   |       |   +---auth
+|   |   |       |   +---database
+|   |   |       |   +---firestore
+|   |   |       |   +---functions
+|   |   |       |   +---installations
+|   |   |       |   +---messaging
+|   |   |       |   +---performance
+|   |   |       |   +---remote-config
+|   |   |       |   \---storage
+|   |   |       +---data-connect
+|   |   |       +---database
+|   |   |       +---esm
+|   |   |       |   +---ai
+|   |   |       |   +---analytics
+|   |   |       |   +---app
+|   |   |       |   +---app-check
+|   |   |       |   +---auth
+|   |   |       |   |   +---cordova
+|   |   |       |   |   \---web-extension
+|   |   |       |   +---compat
+|   |   |       |   |   +---analytics
+|   |   |       |   |   +---app
+|   |   |       |   |   +---app-check
+|   |   |       |   |   +---auth
+|   |   |       |   |   +---database
+|   |   |       |   |   +---firestore
+|   |   |       |   |   +---functions
+|   |   |       |   |   +---installations
+|   |   |       |   |   +---messaging
+|   |   |       |   |   +---performance
+|   |   |       |   |   +---remote-config
+|   |   |       |   |   \---storage
+|   |   |       |   +---data-connect
+|   |   |       |   +---database
+|   |   |       |   +---firestore
+|   |   |       |   |   +---lite
+|   |   |       |   |   |   \---pipelines
+|   |   |       |   |   \---pipelines
+|   |   |       |   +---functions
+|   |   |       |   +---installations
+|   |   |       |   +---messaging
+|   |   |       |   |   \---sw
+|   |   |       |   +---performance
+|   |   |       |   +---remote-config
+|   |   |       |   \---storage
+|   |   |       +---firestore
+|   |   |       |   +---lite
+|   |   |       |   |   \---pipelines
+|   |   |       |   \---pipelines
+|   |   |       +---functions
+|   |   |       +---installations
+|   |   |       +---messaging
+|   |   |       |   \---sw
+|   |   |       +---performance
+|   |   |       +---remote-config
+|   |   |       \---storage
+|   |   +---analytics
+|   |   |   \---dist
+|   |   |       +---ai
+|   |   |       +---analytics
+|   |   |       +---app
+|   |   |       +---app-check
+|   |   |       +---auth
+|   |   |       |   +---cordova
+|   |   |       |   \---web-extension
+|   |   |       +---compat
+|   |   |       |   +---analytics
+|   |   |       |   +---app
+|   |   |       |   +---app-check
+|   |   |       |   +---auth
+|   |   |       |   +---database
+|   |   |       |   +---firestore
+|   |   |       |   +---functions
+|   |   |       |   +---installations
+|   |   |       |   +---messaging
+|   |   |       |   +---performance
+|   |   |       |   +---remote-config
+|   |   |       |   \---storage
+|   |   |       +---data-connect
+|   |   |       +---database
+|   |   |       +---esm
+|   |   |       |   +---ai
+|   |   |       |   +---analytics
+|   |   |       |   +---app
+|   |   |       |   +---app-check
+|   |   |       |   +---auth
+|   |   |       |   |   +---cordova
+|   |   |       |   |   \---web-extension
+|   |   |       |   +---compat
+|   |   |       |   |   +---analytics
+|   |   |       |   |   +---app
+|   |   |       |   |   +---app-check
+|   |   |       |   |   +---auth
+|   |   |       |   |   +---database
+|   |   |       |   |   +---firestore
+|   |   |       |   |   +---functions
+|   |   |       |   |   +---installations
+|   |   |       |   |   +---messaging
+|   |   |       |   |   +---performance
+|   |   |       |   |   +---remote-config
+|   |   |       |   |   \---storage
+|   |   |       |   +---data-connect
+|   |   |       |   +---database
+|   |   |       |   +---firestore
+|   |   |       |   |   +---lite
+|   |   |       |   |   |   \---pipelines
+|   |   |       |   |   \---pipelines
+|   |   |       |   +---functions
+|   |   |       |   +---installations
+|   |   |       |   +---messaging
+|   |   |       |   |   \---sw
+|   |   |       |   +---performance
+|   |   |       |   +---remote-config
+|   |   |       |   \---storage
+|   |   |       +---firestore
+|   |   |       |   +---lite
+|   |   |       |   |   \---pipelines
+|   |   |       |   \---pipelines
+|   |   |       +---functions
+|   |   |       +---installations
+|   |   |       +---messaging
+|   |   |       |   \---sw
+|   |   |       +---performance
+|   |   |       +---remote-config
+|   |   |       \---storage
+|   |   +---app
+|   |   |   \---dist
+|   |   |       +---ai
+|   |   |       +---analytics
+|   |   |       +---app
+|   |   |       +---app-check
+|   |   |       +---auth
+|   |   |       |   +---cordova
+|   |   |       |   \---web-extension
+|   |   |       +---compat
+|   |   |       |   +---analytics
+|   |   |       |   +---app
+|   |   |       |   +---app-check
+|   |   |       |   +---auth
+|   |   |       |   +---database
+|   |   |       |   +---firestore
+|   |   |       |   +---functions
+|   |   |       |   +---installations
+|   |   |       |   +---messaging
+|   |   |       |   +---performance
+|   |   |       |   +---remote-config
+|   |   |       |   \---storage
+|   |   |       +---data-connect
+|   |   |       +---database
+|   |   |       +---esm
+|   |   |       |   +---ai
+|   |   |       |   +---analytics
+|   |   |       |   +---app
+|   |   |       |   +---app-check
+|   |   |       |   +---auth
+|   |   |       |   |   +---cordova
+|   |   |       |   |   \---web-extension
+|   |   |       |   +---compat
+|   |   |       |   |   +---analytics
+|   |   |       |   |   +---app
+|   |   |       |   |   +---app-check
+|   |   |       |   |   +---auth
+|   |   |       |   |   +---database
+|   |   |       |   |   +---firestore
+|   |   |       |   |   +---functions
+|   |   |       |   |   +---installations
+|   |   |       |   |   +---messaging
+|   |   |       |   |   +---performance
+|   |   |       |   |   +---remote-config
+|   |   |       |   |   \---storage
+|   |   |       |   +---data-connect
+|   |   |       |   +---database
+|   |   |       |   +---firestore
+|   |   |       |   |   +---lite
+|   |   |       |   |   |   \---pipelines
+|   |   |       |   |   \---pipelines
+|   |   |       |   +---functions
+|   |   |       |   +---installations
+|   |   |       |   +---messaging
+|   |   |       |   |   \---sw
+|   |   |       |   +---performance
+|   |   |       |   +---remote-config
+|   |   |       |   \---storage
+|   |   |       +---firestore
+|   |   |       |   +---lite
+|   |   |       |   |   \---pipelines
+|   |   |       |   \---pipelines
+|   |   |       +---functions
+|   |   |       +---installations
+|   |   |       +---messaging
+|   |   |       |   \---sw
+|   |   |       +---performance
+|   |   |       +---remote-config
+|   |   |       \---storage
+|   |   +---app-check
+|   |   |   \---dist
+|   |   |       +---ai
+|   |   |       +---analytics
+|   |   |       +---app
+|   |   |       +---app-check
+|   |   |       +---auth
+|   |   |       |   +---cordova
+|   |   |       |   \---web-extension
+|   |   |       +---compat
+|   |   |       |   +---analytics
+|   |   |       |   +---app
+|   |   |       |   +---app-check
+|   |   |       |   +---auth
+|   |   |       |   +---database
+|   |   |       |   +---firestore
+|   |   |       |   +---functions
+|   |   |       |   +---installations
+|   |   |       |   +---messaging
+|   |   |       |   +---performance
+|   |   |       |   +---remote-config
+|   |   |       |   \---storage
+|   |   |       +---data-connect
+|   |   |       +---database
+|   |   |       +---esm
+|   |   |       |   +---ai
+|   |   |       |   +---analytics
+|   |   |       |   +---app
+|   |   |       |   +---app-check
+|   |   |       |   +---auth
+|   |   |       |   |   +---cordova
+|   |   |       |   |   \---web-extension
+|   |   |       |   +---compat
+|   |   |       |   |   +---analytics
+|   |   |       |   |   +---app
+|   |   |       |   |   +---app-check
+|   |   |       |   |   +---auth
+|   |   |       |   |   +---database
+|   |   |       |   |   +---firestore
+|   |   |       |   |   +---functions
+|   |   |       |   |   +---installations
+|   |   |       |   |   +---messaging
+|   |   |       |   |   +---performance
+|   |   |       |   |   +---remote-config
+|   |   |       |   |   \---storage
+|   |   |       |   +---data-connect
+|   |   |       |   +---database
+|   |   |       |   +---firestore
+|   |   |       |   |   +---lite
+|   |   |       |   |   |   \---pipelines
+|   |   |       |   |   \---pipelines
+|   |   |       |   +---functions
+|   |   |       |   +---installations
+|   |   |       |   +---messaging
+|   |   |       |   |   \---sw
+|   |   |       |   +---performance
+|   |   |       |   +---remote-config
+|   |   |       |   \---storage
+|   |   |       +---firestore
+|   |   |       |   +---lite
+|   |   |       |   |   \---pipelines
+|   |   |       |   \---pipelines
+|   |   |       +---functions
+|   |   |       +---installations
+|   |   |       +---messaging
+|   |   |       |   \---sw
+|   |   |       +---performance
+|   |   |       +---remote-config
+|   |   |       \---storage
+|   |   +---auth
+|   |   |   +---cordova
+|   |   |   |   \---dist
+|   |   |   |       +---ai
+|   |   |   |       +---analytics
+|   |   |   |       +---app
+|   |   |   |       +---app-check
+|   |   |   |       +---auth
+|   |   |   |       |   +---cordova
+|   |   |   |       |   \---web-extension
+|   |   |   |       +---compat
+|   |   |   |       |   +---analytics
+|   |   |   |       |   +---app
+|   |   |   |       |   +---app-check
+|   |   |   |       |   +---auth
+|   |   |   |       |   +---database
+|   |   |   |       |   +---firestore
+|   |   |   |       |   +---functions
+|   |   |   |       |   +---installations
+|   |   |   |       |   +---messaging
+|   |   |   |       |   +---performance
+|   |   |   |       |   +---remote-config
+|   |   |   |       |   \---storage
+|   |   |   |       +---data-connect
+|   |   |   |       +---database
+|   |   |   |       +---esm
+|   |   |   |       |   +---ai
+|   |   |   |       |   +---analytics
+|   |   |   |       |   +---app
+|   |   |   |       |   +---app-check
+|   |   |   |       |   +---auth
+|   |   |   |       |   |   +---cordova
+|   |   |   |       |   |   \---web-extension
+|   |   |   |       |   +---compat
+|   |   |   |       |   |   +---analytics
+|   |   |   |       |   |   +---app
+|   |   |   |       |   |   +---app-check
+|   |   |   |       |   |   +---auth
+|   |   |   |       |   |   +---database
+|   |   |   |       |   |   +---firestore
+|   |   |   |       |   |   +---functions
+|   |   |   |       |   |   +---installations
+|   |   |   |       |   |   +---messaging
+|   |   |   |       |   |   +---performance
+|   |   |   |       |   |   +---remote-config
+|   |   |   |       |   |   \---storage
+|   |   |   |       |   +---data-connect
+|   |   |   |       |   +---database
+|   |   |   |       |   +---firestore
+|   |   |   |       |   |   +---lite
+|   |   |   |       |   |   |   \---pipelines
+|   |   |   |       |   |   \---pipelines
+|   |   |   |       |   +---functions
+|   |   |   |       |   +---installations
+|   |   |   |       |   +---messaging
+|   |   |   |       |   |   \---sw
+|   |   |   |       |   +---performance
+|   |   |   |       |   +---remote-config
+|   |   |   |       |   \---storage
+|   |   |   |       +---firestore
+|   |   |   |       |   +---lite
+|   |   |   |       |   |   \---pipelines
+|   |   |   |       |   \---pipelines
+|   |   |   |       +---functions
+|   |   |   |       +---installations
+|   |   |   |       +---messaging
+|   |   |   |       |   \---sw
+|   |   |   |       +---performance
+|   |   |   |       +---remote-config
+|   |   |   |       \---storage
+|   |   |   +---dist
+|   |   |   |   +---ai
+|   |   |   |   +---analytics
+|   |   |   |   +---app
+|   |   |   |   +---app-check
+|   |   |   |   +---auth
+|   |   |   |   |   +---cordova
+|   |   |   |   |   \---web-extension
+|   |   |   |   +---compat
+|   |   |   |   |   +---analytics
+|   |   |   |   |   +---app
+|   |   |   |   |   +---app-check
+|   |   |   |   |   +---auth
+|   |   |   |   |   +---database
+|   |   |   |   |   +---firestore
+|   |   |   |   |   +---functions
+|   |   |   |   |   +---installations
+|   |   |   |   |   +---messaging
+|   |   |   |   |   +---performance
+|   |   |   |   |   +---remote-config
+|   |   |   |   |   \---storage
+|   |   |   |   +---data-connect
+|   |   |   |   +---database
+|   |   |   |   +---esm
+|   |   |   |   |   +---ai
+|   |   |   |   |   +---analytics
+|   |   |   |   |   +---app
+|   |   |   |   |   +---app-check
+|   |   |   |   |   +---auth
+|   |   |   |   |   |   +---cordova
+|   |   |   |   |   |   \---web-extension
+|   |   |   |   |   +---compat
+|   |   |   |   |   |   +---analytics
+|   |   |   |   |   |   +---app
+|   |   |   |   |   |   +---app-check
+|   |   |   |   |   |   +---auth
+|   |   |   |   |   |   +---database
+|   |   |   |   |   |   +---firestore
+|   |   |   |   |   |   +---functions
+|   |   |   |   |   |   +---installations
+|   |   |   |   |   |   +---messaging
+|   |   |   |   |   |   +---performance
+|   |   |   |   |   |   +---remote-config
+|   |   |   |   |   |   \---storage
+|   |   |   |   |   +---data-connect
+|   |   |   |   |   +---database
+|   |   |   |   |   +---firestore
+|   |   |   |   |   |   +---lite
+|   |   |   |   |   |   |   \---pipelines
+|   |   |   |   |   |   \---pipelines
+|   |   |   |   |   +---functions
+|   |   |   |   |   +---installations
+|   |   |   |   |   +---messaging
+|   |   |   |   |   |   \---sw
+|   |   |   |   |   +---performance
+|   |   |   |   |   +---remote-config
+|   |   |   |   |   \---storage
+|   |   |   |   +---firestore
+|   |   |   |   |   +---lite
+|   |   |   |   |   |   \---pipelines
+|   |   |   |   |   \---pipelines
+|   |   |   |   +---functions
+|   |   |   |   +---installations
+|   |   |   |   +---messaging
+|   |   |   |   |   \---sw
+|   |   |   |   +---performance
+|   |   |   |   +---remote-config
+|   |   |   |   \---storage
+|   |   |   \---web-extension
+|   |   |       \---dist
+|   |   |           +---ai
+|   |   |           +---analytics
+|   |   |           +---app
+|   |   |           +---app-check
+|   |   |           +---auth
+|   |   |           |   +---cordova
+|   |   |           |   \---web-extension
+|   |   |           +---compat
+|   |   |           |   +---analytics
+|   |   |           |   +---app
+|   |   |           |   +---app-check
+|   |   |           |   +---auth
+|   |   |           |   +---database
+|   |   |           |   +---firestore
+|   |   |           |   +---functions
+|   |   |           |   +---installations
+|   |   |           |   +---messaging
+|   |   |           |   +---performance
+|   |   |           |   +---remote-config
+|   |   |           |   \---storage
+|   |   |           +---data-connect
+|   |   |           +---database
+|   |   |           +---esm
+|   |   |           |   +---ai
+|   |   |           |   +---analytics
+|   |   |           |   +---app
+|   |   |           |   +---app-check
+|   |   |           |   +---auth
+|   |   |           |   |   +---cordova
+|   |   |           |   |   \---web-extension
+|   |   |           |   +---compat
+|   |   |           |   |   +---analytics
+|   |   |           |   |   +---app
+|   |   |           |   |   +---app-check
+|   |   |           |   |   +---auth
+|   |   |           |   |   +---database
+|   |   |           |   |   +---firestore
+|   |   |           |   |   +---functions
+|   |   |           |   |   +---installations
+|   |   |           |   |   +---messaging
+|   |   |           |   |   +---performance
+|   |   |           |   |   +---remote-config
+|   |   |           |   |   \---storage
+|   |   |           |   +---data-connect
+|   |   |           |   +---database
+|   |   |           |   +---firestore
+|   |   |           |   |   +---lite
+|   |   |           |   |   |   \---pipelines
+|   |   |           |   |   \---pipelines
+|   |   |           |   +---functions
+|   |   |           |   +---installations
+|   |   |           |   +---messaging
+|   |   |           |   |   \---sw
+|   |   |           |   +---performance
+|   |   |           |   +---remote-config
+|   |   |           |   \---storage
+|   |   |           +---firestore
+|   |   |           |   +---lite
+|   |   |           |   |   \---pipelines
+|   |   |           |   \---pipelines
+|   |   |           +---functions
+|   |   |           +---installations
+|   |   |           +---messaging
+|   |   |           |   \---sw
+|   |   |           +---performance
+|   |   |           +---remote-config
+|   |   |           \---storage
+|   |   +---compat
+|   |   |   +---analytics
+|   |   |   |   \---dist
+|   |   |   |       +---ai
+|   |   |   |       +---analytics
+|   |   |   |       +---app
+|   |   |   |       +---app-check
+|   |   |   |       +---auth
+|   |   |   |       |   +---cordova
+|   |   |   |       |   \---web-extension
+|   |   |   |       +---compat
+|   |   |   |       |   +---analytics
+|   |   |   |       |   +---app
+|   |   |   |       |   +---app-check
+|   |   |   |       |   +---auth
+|   |   |   |       |   +---database
+|   |   |   |       |   +---firestore
+|   |   |   |       |   +---functions
+|   |   |   |       |   +---installations
+|   |   |   |       |   +---messaging
+|   |   |   |       |   +---performance
+|   |   |   |       |   +---remote-config
+|   |   |   |       |   \---storage
+|   |   |   |       +---data-connect
+|   |   |   |       +---database
+|   |   |   |       +---esm
+|   |   |   |       |   +---ai
+|   |   |   |       |   +---analytics
+|   |   |   |       |   +---app
+|   |   |   |       |   +---app-check
+|   |   |   |       |   +---auth
+|   |   |   |       |   |   +---cordova
+|   |   |   |       |   |   \---web-extension
+|   |   |   |       |   +---compat
+|   |   |   |       |   |   +---analytics
+|   |   |   |       |   |   +---app
+|   |   |   |       |   |   +---app-check
+|   |   |   |       |   |   +---auth
+|   |   |   |       |   |   +---database
+|   |   |   |       |   |   +---firestore
+|   |   |   |       |   |   +---functions
+|   |   |   |       |   |   +---installations
+|   |   |   |       |   |   +---messaging
+|   |   |   |       |   |   +---performance
+|   |   |   |       |   |   +---remote-config
+|   |   |   |       |   |   \---storage
+|   |   |   |       |   +---data-connect
+|   |   |   |       |   +---database
+|   |   |   |       |   +---firestore
+|   |   |   |       |   |   +---lite
+|   |   |   |       |   |   |   \---pipelines
+|   |   |   |       |   |   \---pipelines
+|   |   |   |       |   +---functions
+|   |   |   |       |   +---installations
+|   |   |   |       |   +---messaging
+|   |   |   |       |   |   \---sw
+|   |   |   |       |   +---performance
+|   |   |   |       |   +---remote-config
+|   |   |   |       |   \---storage
+|   |   |   |       +---firestore
+|   |   |   |       |   +---lite
+|   |   |   |       |   |   \---pipelines
+|   |   |   |       |   \---pipelines
+|   |   |   |       +---functions
+|   |   |   |       +---installations
+|   |   |   |       +---messaging
+|   |   |   |       |   \---sw
+|   |   |   |       +---performance
+|   |   |   |       +---remote-config
+|   |   |   |       \---storage
+|   |   |   +---app
+|   |   |   |   \---dist
+|   |   |   |       +---ai
+|   |   |   |       +---analytics
+|   |   |   |       +---app
+|   |   |   |       +---app-check
+|   |   |   |       +---auth
+|   |   |   |       |   +---cordova
+|   |   |   |       |   \---web-extension
+|   |   |   |       +---compat
+|   |   |   |       |   +---analytics
+|   |   |   |       |   +---app
+|   |   |   |       |   +---app-check
+|   |   |   |       |   +---auth
+|   |   |   |       |   +---database
+|   |   |   |       |   +---firestore
+|   |   |   |       |   +---functions
+|   |   |   |       |   +---installations
+|   |   |   |       |   +---messaging
+|   |   |   |       |   +---performance
+|   |   |   |       |   +---remote-config
+|   |   |   |       |   \---storage
+|   |   |   |       +---data-connect
+|   |   |   |       +---database
+|   |   |   |       +---esm
+|   |   |   |       |   +---ai
+|   |   |   |       |   +---analytics
+|   |   |   |       |   +---app
+|   |   |   |       |   +---app-check
+|   |   |   |       |   +---auth
+|   |   |   |       |   |   +---cordova
+|   |   |   |       |   |   \---web-extension
+|   |   |   |       |   +---compat
+|   |   |   |       |   |   +---analytics
+|   |   |   |       |   |   +---app
+|   |   |   |       |   |   +---app-check
+|   |   |   |       |   |   +---auth
+|   |   |   |       |   |   +---database
+|   |   |   |       |   |   +---firestore
+|   |   |   |       |   |   +---functions
+|   |   |   |       |   |   +---installations
+|   |   |   |       |   |   +---messaging
+|   |   |   |       |   |   +---performance
+|   |   |   |       |   |   +---remote-config
+|   |   |   |       |   |   \---storage
+|   |   |   |       |   +---data-connect
+|   |   |   |       |   +---database
+|   |   |   |       |   +---firestore
+|   |   |   |       |   |   +---lite
+|   |   |   |       |   |   |   \---pipelines
+|   |   |   |       |   |   \---pipelines
+|   |   |   |       |   +---functions
+|   |   |   |       |   +---installations
+|   |   |   |       |   +---messaging
+|   |   |   |       |   |   \---sw
+|   |   |   |       |   +---performance
+|   |   |   |       |   +---remote-config
+|   |   |   |       |   \---storage
+|   |   |   |       +---firestore
+|   |   |   |       |   +---lite
+|   |   |   |       |   |   \---pipelines
+|   |   |   |       |   \---pipelines
+|   |   |   |       +---functions
+|   |   |   |       +---installations
+|   |   |   |       +---messaging
+|   |   |   |       |   \---sw
+|   |   |   |       +---performance
+|   |   |   |       +---remote-config
+|   |   |   |       \---storage
+|   |   |   +---app-check
+|   |   |   |   \---dist
+|   |   |   |       +---ai
+|   |   |   |       +---analytics
+|   |   |   |       +---app
+|   |   |   |       +---app-check
+|   |   |   |       +---auth
+|   |   |   |       |   +---cordova
+|   |   |   |       |   \---web-extension
+|   |   |   |       +---compat
+|   |   |   |       |   +---analytics
+|   |   |   |       |   +---app
+|   |   |   |       |   +---app-check
+|   |   |   |       |   +---auth
+|   |   |   |       |   +---database
+|   |   |   |       |   +---firestore
+|   |   |   |       |   +---functions
+|   |   |   |       |   +---installations
+|   |   |   |       |   +---messaging
+|   |   |   |       |   +---performance
+|   |   |   |       |   +---remote-config
+|   |   |   |       |   \---storage
+|   |   |   |       +---data-connect
+|   |   |   |       +---database
+|   |   |   |       +---esm
+|   |   |   |       |   +---ai
+|   |   |   |       |   +---analytics
+|   |   |   |       |   +---app
+|   |   |   |       |   +---app-check
+|   |   |   |       |   +---auth
+|   |   |   |       |   |   +---cordova
+|   |   |   |       |   |   \---web-extension
+|   |   |   |       |   +---compat
+|   |   |   |       |   |   +---analytics
+|   |   |   |       |   |   +---app
+|   |   |   |       |   |   +---app-check
+|   |   |   |       |   |   +---auth
+|   |   |   |       |   |   +---database
+|   |   |   |       |   |   +---firestore
+|   |   |   |       |   |   +---functions
+|   |   |   |       |   |   +---installations
+|   |   |   |       |   |   +---messaging
+|   |   |   |       |   |   +---performance
+|   |   |   |       |   |   +---remote-config
+|   |   |   |       |   |   \---storage
+|   |   |   |       |   +---data-connect
+|   |   |   |       |   +---database
+|   |   |   |       |   +---firestore
+|   |   |   |       |   |   +---lite
+|   |   |   |       |   |   |   \---pipelines
+|   |   |   |       |   |   \---pipelines
+|   |   |   |       |   +---functions
+|   |   |   |       |   +---installations
+|   |   |   |       |   +---messaging
+|   |   |   |       |   |   \---sw
+|   |   |   |       |   +---performance
+|   |   |   |       |   +---remote-config
+|   |   |   |       |   \---storage
+|   |   |   |       +---firestore
+|   |   |   |       |   +---lite
+|   |   |   |       |   |   \---pipelines
+|   |   |   |       |   \---pipelines
+|   |   |   |       +---functions
+|   |   |   |       +---installations
+|   |   |   |       +---messaging
+|   |   |   |       |   \---sw
+|   |   |   |       +---performance
+|   |   |   |       +---remote-config
+|   |   |   |       \---storage
+|   |   |   +---auth
+|   |   |   |   \---dist
+|   |   |   |       +---ai
+|   |   |   |       +---analytics
+|   |   |   |       +---app
+|   |   |   |       +---app-check
+|   |   |   |       +---auth
+|   |   |   |       |   +---cordova
+|   |   |   |       |   \---web-extension
+|   |   |   |       +---compat
+|   |   |   |       |   +---analytics
+|   |   |   |       |   +---app
+|   |   |   |       |   +---app-check
+|   |   |   |       |   +---auth
+|   |   |   |       |   +---database
+|   |   |   |       |   +---firestore
+|   |   |   |       |   +---functions
+|   |   |   |       |   +---installations
+|   |   |   |       |   +---messaging
+|   |   |   |       |   +---performance
+|   |   |   |       |   +---remote-config
+|   |   |   |       |   \---storage
+|   |   |   |       +---data-connect
+|   |   |   |       +---database
+|   |   |   |       +---esm
+|   |   |   |       |   +---ai
+|   |   |   |       |   +---analytics
+|   |   |   |       |   +---app
+|   |   |   |       |   +---app-check
+|   |   |   |       |   +---auth
+|   |   |   |       |   |   +---cordova
+|   |   |   |       |   |   \---web-extension
+|   |   |   |       |   +---compat
+|   |   |   |       |   |   +---analytics
+|   |   |   |       |   |   +---app
+|   |   |   |       |   |   +---app-check
+|   |   |   |       |   |   +---auth
+|   |   |   |       |   |   +---database
+|   |   |   |       |   |   +---firestore
+|   |   |   |       |   |   +---functions
+|   |   |   |       |   |   +---installations
+|   |   |   |       |   |   +---messaging
+|   |   |   |       |   |   +---performance
+|   |   |   |       |   |   +---remote-config
+|   |   |   |       |   |   \---storage
+|   |   |   |       |   +---data-connect
+|   |   |   |       |   +---database
+|   |   |   |       |   +---firestore
+|   |   |   |       |   |   +---lite
+|   |   |   |       |   |   |   \---pipelines
+|   |   |   |       |   |   \---pipelines
+|   |   |   |       |   +---functions
+|   |   |   |       |   +---installations
+|   |   |   |       |   +---messaging
+|   |   |   |       |   |   \---sw
+|   |   |   |       |   +---performance
+|   |   |   |       |   +---remote-config
+|   |   |   |       |   \---storage
+|   |   |   |       +---firestore
+|   |   |   |       |   +---lite
+|   |   |   |       |   |   \---pipelines
+|   |   |   |       |   \---pipelines
+|   |   |   |       +---functions
+|   |   |   |       +---installations
+|   |   |   |       +---messaging
+|   |   |   |       |   \---sw
+|   |   |   |       +---performance
+|   |   |   |       +---remote-config
+|   |   |   |       \---storage
+|   |   |   +---database
+|   |   |   |   \---dist
+|   |   |   |       +---ai
+|   |   |   |       +---analytics
+|   |   |   |       +---app
+|   |   |   |       +---app-check
+|   |   |   |       +---auth
+|   |   |   |       |   +---cordova
+|   |   |   |       |   \---web-extension
+|   |   |   |       +---compat
+|   |   |   |       |   +---analytics
+|   |   |   |       |   +---app
+|   |   |   |       |   +---app-check
+|   |   |   |       |   +---auth
+|   |   |   |       |   +---database
+|   |   |   |       |   +---firestore
+|   |   |   |       |   +---functions
+|   |   |   |       |   +---installations
+|   |   |   |       |   +---messaging
+|   |   |   |       |   +---performance
+|   |   |   |       |   +---remote-config
+|   |   |   |       |   \---storage
+|   |   |   |       +---data-connect
+|   |   |   |       +---database
+|   |   |   |       +---esm
+|   |   |   |       |   +---ai
+|   |   |   |       |   +---analytics
+|   |   |   |       |   +---app
+|   |   |   |       |   +---app-check
+|   |   |   |       |   +---auth
+|   |   |   |       |   |   +---cordova
+|   |   |   |       |   |   \---web-extension
+|   |   |   |       |   +---compat
+|   |   |   |       |   |   +---analytics
+|   |   |   |       |   |   +---app
+|   |   |   |       |   |   +---app-check
+|   |   |   |       |   |   +---auth
+|   |   |   |       |   |   +---database
+|   |   |   |       |   |   +---firestore
+|   |   |   |       |   |   +---functions
+|   |   |   |       |   |   +---installations
+|   |   |   |       |   |   +---messaging
+|   |   |   |       |   |   +---performance
+|   |   |   |       |   |   +---remote-config
+|   |   |   |       |   |   \---storage
+|   |   |   |       |   +---data-connect
+|   |   |   |       |   +---database
+|   |   |   |       |   +---firestore
+|   |   |   |       |   |   +---lite
+|   |   |   |       |   |   |   \---pipelines
+|   |   |   |       |   |   \---pipelines
+|   |   |   |       |   +---functions
+|   |   |   |       |   +---installations
+|   |   |   |       |   +---messaging
+|   |   |   |       |   |   \---sw
+|   |   |   |       |   +---performance
+|   |   |   |       |   +---remote-config
+|   |   |   |       |   \---storage
+|   |   |   |       +---firestore
+|   |   |   |       |   +---lite
+|   |   |   |       |   |   \---pipelines
+|   |   |   |       |   \---pipelines
+|   |   |   |       +---functions
+|   |   |   |       +---installations
+|   |   |   |       +---messaging
+|   |   |   |       |   \---sw
+|   |   |   |       +---performance
+|   |   |   |       +---remote-config
+|   |   |   |       \---storage
+|   |   |   +---dist
+|   |   |   |   +---ai
+|   |   |   |   +---analytics
+|   |   |   |   +---app
+|   |   |   |   +---app-check
+|   |   |   |   +---auth
+|   |   |   |   |   +---cordova
+|   |   |   |   |   \---web-extension
+|   |   |   |   +---compat
+|   |   |   |   |   +---analytics
+|   |   |   |   |   +---app
+|   |   |   |   |   +---app-check
+|   |   |   |   |   +---auth
+|   |   |   |   |   +---database
+|   |   |   |   |   +---firestore
+|   |   |   |   |   +---functions
+|   |   |   |   |   +---installations
+|   |   |   |   |   +---messaging
+|   |   |   |   |   +---performance
+|   |   |   |   |   +---remote-config
+|   |   |   |   |   \---storage
+|   |   |   |   +---data-connect
+|   |   |   |   +---database
+|   |   |   |   +---esm
+|   |   |   |   |   +---ai
+|   |   |   |   |   +---analytics
+|   |   |   |   |   +---app
+|   |   |   |   |   +---app-check
+|   |   |   |   |   +---auth
+|   |   |   |   |   |   +---cordova
+|   |   |   |   |   |   \---web-extension
+|   |   |   |   |   +---compat
+|   |   |   |   |   |   +---analytics
+|   |   |   |   |   |   +---app
+|   |   |   |   |   |   +---app-check
+|   |   |   |   |   |   +---auth
+|   |   |   |   |   |   +---database
+|   |   |   |   |   |   +---firestore
+|   |   |   |   |   |   +---functions
+|   |   |   |   |   |   +---installations
+|   |   |   |   |   |   +---messaging
+|   |   |   |   |   |   +---performance
+|   |   |   |   |   |   +---remote-config
+|   |   |   |   |   |   \---storage
+|   |   |   |   |   +---data-connect
+|   |   |   |   |   +---database
+|   |   |   |   |   +---firestore
+|   |   |   |   |   |   +---lite
+|   |   |   |   |   |   |   \---pipelines
+|   |   |   |   |   |   \---pipelines
+|   |   |   |   |   +---functions
+|   |   |   |   |   +---installations
+|   |   |   |   |   +---messaging
+|   |   |   |   |   |   \---sw
+|   |   |   |   |   +---performance
+|   |   |   |   |   +---remote-config
+|   |   |   |   |   \---storage
+|   |   |   |   +---firestore
+|   |   |   |   |   +---lite
+|   |   |   |   |   |   \---pipelines
+|   |   |   |   |   \---pipelines
+|   |   |   |   +---functions
+|   |   |   |   +---installations
+|   |   |   |   +---messaging
+|   |   |   |   |   \---sw
+|   |   |   |   +---performance
+|   |   |   |   +---remote-config
+|   |   |   |   \---storage
+|   |   |   +---firestore
+|   |   |   |   \---dist
+|   |   |   |       +---ai
+|   |   |   |       +---analytics
+|   |   |   |       +---app
+|   |   |   |       +---app-check
+|   |   |   |       +---auth
+|   |   |   |       |   +---cordova
+|   |   |   |       |   \---web-extension
+|   |   |   |       +---compat
+|   |   |   |       |   +---analytics
+|   |   |   |       |   +---app
+|   |   |   |       |   +---app-check
+|   |   |   |       |   +---auth
+|   |   |   |       |   +---database
+|   |   |   |       |   +---firestore
+|   |   |   |       |   +---functions
+|   |   |   |       |   +---installations
+|   |   |   |       |   +---messaging
+|   |   |   |       |   +---performance
+|   |   |   |       |   +---remote-config
+|   |   |   |       |   \---storage
+|   |   |   |       +---data-connect
+|   |   |   |       +---database
+|   |   |   |       +---esm
+|   |   |   |       |   +---ai
+|   |   |   |       |   +---analytics
+|   |   |   |       |   +---app
+|   |   |   |       |   +---app-check
+|   |   |   |       |   +---auth
+|   |   |   |       |   |   +---cordova
+|   |   |   |       |   |   \---web-extension
+|   |   |   |       |   +---compat
+|   |   |   |       |   |   +---analytics
+|   |   |   |       |   |   +---app
+|   |   |   |       |   |   +---app-check
+|   |   |   |       |   |   +---auth
+|   |   |   |       |   |   +---database
+|   |   |   |       |   |   +---firestore
+|   |   |   |       |   |   +---functions
+|   |   |   |       |   |   +---installations
+|   |   |   |       |   |   +---messaging
+|   |   |   |       |   |   +---performance
+|   |   |   |       |   |   +---remote-config
+|   |   |   |       |   |   \---storage
+|   |   |   |       |   +---data-connect
+|   |   |   |       |   +---database
+|   |   |   |       |   +---firestore
+|   |   |   |       |   |   +---lite
+|   |   |   |       |   |   |   \---pipelines
+|   |   |   |       |   |   \---pipelines
+|   |   |   |       |   +---functions
+|   |   |   |       |   +---installations
+|   |   |   |       |   +---messaging
+|   |   |   |       |   |   \---sw
+|   |   |   |       |   +---performance
+|   |   |   |       |   +---remote-config
+|   |   |   |       |   \---storage
+|   |   |   |       +---firestore
+|   |   |   |       |   +---lite
+|   |   |   |       |   |   \---pipelines
+|   |   |   |       |   \---pipelines
+|   |   |   |       +---functions
+|   |   |   |       +---installations
+|   |   |   |       +---messaging
+|   |   |   |       |   \---sw
+|   |   |   |       +---performance
+|   |   |   |       +---remote-config
+|   |   |   |       \---storage
+|   |   |   +---functions
+|   |   |   |   \---dist
+|   |   |   |       +---ai
+|   |   |   |       +---analytics
+|   |   |   |       +---app
+|   |   |   |       +---app-check
+|   |   |   |       +---auth
+|   |   |   |       |   +---cordova
+|   |   |   |       |   \---web-extension
+|   |   |   |       +---compat
+|   |   |   |       |   +---analytics
+|   |   |   |       |   +---app
+|   |   |   |       |   +---app-check
+|   |   |   |       |   +---auth
+|   |   |   |       |   +---database
+|   |   |   |       |   +---firestore
+|   |   |   |       |   +---functions
+|   |   |   |       |   +---installations
+|   |   |   |       |   +---messaging
+|   |   |   |       |   +---performance
+|   |   |   |       |   +---remote-config
+|   |   |   |       |   \---storage
+|   |   |   |       +---data-connect
+|   |   |   |       +---database
+|   |   |   |       +---esm
+|   |   |   |       |   +---ai
+|   |   |   |       |   +---analytics
+|   |   |   |       |   +---app
+|   |   |   |       |   +---app-check
+|   |   |   |       |   +---auth
+|   |   |   |       |   |   +---cordova
+|   |   |   |       |   |   \---web-extension
+|   |   |   |       |   +---compat
+|   |   |   |       |   |   +---analytics
+|   |   |   |       |   |   +---app
+|   |   |   |       |   |   +---app-check
+|   |   |   |       |   |   +---auth
+|   |   |   |       |   |   +---database
+|   |   |   |       |   |   +---firestore
+|   |   |   |       |   |   +---functions
+|   |   |   |       |   |   +---installations
+|   |   |   |       |   |   +---messaging
+|   |   |   |       |   |   +---performance
+|   |   |   |       |   |   +---remote-config
+|   |   |   |       |   |   \---storage
+|   |   |   |       |   +---data-connect
+|   |   |   |       |   +---database
+|   |   |   |       |   +---firestore
+|   |   |   |       |   |   +---lite
+|   |   |   |       |   |   |   \---pipelines
+|   |   |   |       |   |   \---pipelines
+|   |   |   |       |   +---functions
+|   |   |   |       |   +---installations
+|   |   |   |       |   +---messaging
+|   |   |   |       |   |   \---sw
+|   |   |   |       |   +---performance
+|   |   |   |       |   +---remote-config
+|   |   |   |       |   \---storage
+|   |   |   |       +---firestore
+|   |   |   |       |   +---lite
+|   |   |   |       |   |   \---pipelines
+|   |   |   |       |   \---pipelines
+|   |   |   |       +---functions
+|   |   |   |       +---installations
+|   |   |   |       +---messaging
+|   |   |   |       |   \---sw
+|   |   |   |       +---performance
+|   |   |   |       +---remote-config
+|   |   |   |       \---storage
+|   |   |   +---installations
+|   |   |   |   \---dist
+|   |   |   |       +---ai
+|   |   |   |       +---analytics
+|   |   |   |       +---app
+|   |   |   |       +---app-check
+|   |   |   |       +---auth
+|   |   |   |       |   +---cordova
+|   |   |   |       |   \---web-extension
+|   |   |   |       +---compat
+|   |   |   |       |   +---analytics
+|   |   |   |       |   +---app
+|   |   |   |       |   +---app-check
+|   |   |   |       |   +---auth
+|   |   |   |       |   +---database
+|   |   |   |       |   +---firestore
+|   |   |   |       |   +---functions
+|   |   |   |       |   +---installations
+|   |   |   |       |   +---messaging
+|   |   |   |       |   +---performance
+|   |   |   |       |   +---remote-config
+|   |   |   |       |   \---storage
+|   |   |   |       +---data-connect
+|   |   |   |       +---database
+|   |   |   |       +---esm
+|   |   |   |       |   +---ai
+|   |   |   |       |   +---analytics
+|   |   |   |       |   +---app
+|   |   |   |       |   +---app-check
+|   |   |   |       |   +---auth
+|   |   |   |       |   |   +---cordova
+|   |   |   |       |   |   \---web-extension
+|   |   |   |       |   +---compat
+|   |   |   |       |   |   +---analytics
+|   |   |   |       |   |   +---app
+|   |   |   |       |   |   +---app-check
+|   |   |   |       |   |   +---auth
+|   |   |   |       |   |   +---database
+|   |   |   |       |   |   +---firestore
+|   |   |   |       |   |   +---functions
+|   |   |   |       |   |   +---installations
+|   |   |   |       |   |   +---messaging
+|   |   |   |       |   |   +---performance
+|   |   |   |       |   |   +---remote-config
+|   |   |   |       |   |   \---storage
+|   |   |   |       |   +---data-connect
+|   |   |   |       |   +---database
+|   |   |   |       |   +---firestore
+|   |   |   |       |   |   +---lite
+|   |   |   |       |   |   |   \---pipelines
+|   |   |   |       |   |   \---pipelines
+|   |   |   |       |   +---functions
+|   |   |   |       |   +---installations
+|   |   |   |       |   +---messaging
+|   |   |   |       |   |   \---sw
+|   |   |   |       |   +---performance
+|   |   |   |       |   +---remote-config
+|   |   |   |       |   \---storage
+|   |   |   |       +---firestore
+|   |   |   |       |   +---lite
+|   |   |   |       |   |   \---pipelines
+|   |   |   |       |   \---pipelines
+|   |   |   |       +---functions
+|   |   |   |       +---installations
+|   |   |   |       +---messaging
+|   |   |   |       |   \---sw
+|   |   |   |       +---performance
+|   |   |   |       +---remote-config
+|   |   |   |       \---storage
+|   |   |   +---messaging
+|   |   |   |   \---dist
+|   |   |   |       +---ai
+|   |   |   |       +---analytics
+|   |   |   |       +---app
+|   |   |   |       +---app-check
+|   |   |   |       +---auth
+|   |   |   |       |   +---cordova
+|   |   |   |       |   \---web-extension
+|   |   |   |       +---compat
+|   |   |   |       |   +---analytics
+|   |   |   |       |   +---app
+|   |   |   |       |   +---app-check
+|   |   |   |       |   +---auth
+|   |   |   |       |   +---database
+|   |   |   |       |   +---firestore
+|   |   |   |       |   +---functions
+|   |   |   |       |   +---installations
+|   |   |   |       |   +---messaging
+|   |   |   |       |   +---performance
+|   |   |   |       |   +---remote-config
+|   |   |   |       |   \---storage
+|   |   |   |       +---data-connect
+|   |   |   |       +---database
+|   |   |   |       +---esm
+|   |   |   |       |   +---ai
+|   |   |   |       |   +---analytics
+|   |   |   |       |   +---app
+|   |   |   |       |   +---app-check
+|   |   |   |       |   +---auth
+|   |   |   |       |   |   +---cordova
+|   |   |   |       |   |   \---web-extension
+|   |   |   |       |   +---compat
+|   |   |   |       |   |   +---analytics
+|   |   |   |       |   |   +---app
+|   |   |   |       |   |   +---app-check
+|   |   |   |       |   |   +---auth
+|   |   |   |       |   |   +---database
+|   |   |   |       |   |   +---firestore
+|   |   |   |       |   |   +---functions
+|   |   |   |       |   |   +---installations
+|   |   |   |       |   |   +---messaging
+|   |   |   |       |   |   +---performance
+|   |   |   |       |   |   +---remote-config
+|   |   |   |       |   |   \---storage
+|   |   |   |       |   +---data-connect
+|   |   |   |       |   +---database
+|   |   |   |       |   +---firestore
+|   |   |   |       |   |   +---lite
+|   |   |   |       |   |   |   \---pipelines
+|   |   |   |       |   |   \---pipelines
+|   |   |   |       |   +---functions
+|   |   |   |       |   +---installations
+|   |   |   |       |   +---messaging
+|   |   |   |       |   |   \---sw
+|   |   |   |       |   +---performance
+|   |   |   |       |   +---remote-config
+|   |   |   |       |   \---storage
+|   |   |   |       +---firestore
+|   |   |   |       |   +---lite
+|   |   |   |       |   |   \---pipelines
+|   |   |   |       |   \---pipelines
+|   |   |   |       +---functions
+|   |   |   |       +---installations
+|   |   |   |       +---messaging
+|   |   |   |       |   \---sw
+|   |   |   |       +---performance
+|   |   |   |       +---remote-config
+|   |   |   |       \---storage
+|   |   |   +---performance
+|   |   |   |   \---dist
+|   |   |   |       +---ai
+|   |   |   |       +---analytics
+|   |   |   |       +---app
+|   |   |   |       +---app-check
+|   |   |   |       +---auth
+|   |   |   |       |   +---cordova
+|   |   |   |       |   \---web-extension
+|   |   |   |       +---compat
+|   |   |   |       |   +---analytics
+|   |   |   |       |   +---app
+|   |   |   |       |   +---app-check
+|   |   |   |       |   +---auth
+|   |   |   |       |   +---database
+|   |   |   |       |   +---firestore
+|   |   |   |       |   +---functions
+|   |   |   |       |   +---installations
+|   |   |   |       |   +---messaging
+|   |   |   |       |   +---performance
+|   |   |   |       |   +---remote-config
+|   |   |   |       |   \---storage
+|   |   |   |       +---data-connect
+|   |   |   |       +---database
+|   |   |   |       +---esm
+|   |   |   |       |   +---ai
+|   |   |   |       |   +---analytics
+|   |   |   |       |   +---app
+|   |   |   |       |   +---app-check
+|   |   |   |       |   +---auth
+|   |   |   |       |   |   +---cordova
+|   |   |   |       |   |   \---web-extension
+|   |   |   |       |   +---compat
+|   |   |   |       |   |   +---analytics
+|   |   |   |       |   |   +---app
+|   |   |   |       |   |   +---app-check
+|   |   |   |       |   |   +---auth
+|   |   |   |       |   |   +---database
+|   |   |   |       |   |   +---firestore
+|   |   |   |       |   |   +---functions
+|   |   |   |       |   |   +---installations
+|   |   |   |       |   |   +---messaging
+|   |   |   |       |   |   +---performance
+|   |   |   |       |   |   +---remote-config
+|   |   |   |       |   |   \---storage
+|   |   |   |       |   +---data-connect
+|   |   |   |       |   +---database
+|   |   |   |       |   +---firestore
+|   |   |   |       |   |   +---lite
+|   |   |   |       |   |   |   \---pipelines
+|   |   |   |       |   |   \---pipelines
+|   |   |   |       |   +---functions
+|   |   |   |       |   +---installations
+|   |   |   |       |   +---messaging
+|   |   |   |       |   |   \---sw
+|   |   |   |       |   +---performance
+|   |   |   |       |   +---remote-config
+|   |   |   |       |   \---storage
+|   |   |   |       +---firestore
+|   |   |   |       |   +---lite
+|   |   |   |       |   |   \---pipelines
+|   |   |   |       |   \---pipelines
+|   |   |   |       +---functions
+|   |   |   |       +---installations
+|   |   |   |       +---messaging
+|   |   |   |       |   \---sw
+|   |   |   |       +---performance
+|   |   |   |       +---remote-config
+|   |   |   |       \---storage
+|   |   |   +---remote-config
+|   |   |   |   \---dist
+|   |   |   |       +---ai
+|   |   |   |       +---analytics
+|   |   |   |       +---app
+|   |   |   |       +---app-check
+|   |   |   |       +---auth
+|   |   |   |       |   +---cordova
+|   |   |   |       |   \---web-extension
+|   |   |   |       +---compat
+|   |   |   |       |   +---analytics
+|   |   |   |       |   +---app
+|   |   |   |       |   +---app-check
+|   |   |   |       |   +---auth
+|   |   |   |       |   +---database
+|   |   |   |       |   +---firestore
+|   |   |   |       |   +---functions
+|   |   |   |       |   +---installations
+|   |   |   |       |   +---messaging
+|   |   |   |       |   +---performance
+|   |   |   |       |   +---remote-config
+|   |   |   |       |   \---storage
+|   |   |   |       +---data-connect
+|   |   |   |       +---database
+|   |   |   |       +---esm
+|   |   |   |       |   +---ai
+|   |   |   |       |   +---analytics
+|   |   |   |       |   +---app
+|   |   |   |       |   +---app-check
+|   |   |   |       |   +---auth
+|   |   |   |       |   |   +---cordova
+|   |   |   |       |   |   \---web-extension
+|   |   |   |       |   +---compat
+|   |   |   |       |   |   +---analytics
+|   |   |   |       |   |   +---app
+|   |   |   |       |   |   +---app-check
+|   |   |   |       |   |   +---auth
+|   |   |   |       |   |   +---database
+|   |   |   |       |   |   +---firestore
+|   |   |   |       |   |   +---functions
+|   |   |   |       |   |   +---installations
+|   |   |   |       |   |   +---messaging
+|   |   |   |       |   |   +---performance
+|   |   |   |       |   |   +---remote-config
+|   |   |   |       |   |   \---storage
+|   |   |   |       |   +---data-connect
+|   |   |   |       |   +---database
+|   |   |   |       |   +---firestore
+|   |   |   |       |   |   +---lite
+|   |   |   |       |   |   |   \---pipelines
+|   |   |   |       |   |   \---pipelines
+|   |   |   |       |   +---functions
+|   |   |   |       |   +---installations
+|   |   |   |       |   +---messaging
+|   |   |   |       |   |   \---sw
+|   |   |   |       |   +---performance
+|   |   |   |       |   +---remote-config
+|   |   |   |       |   \---storage
+|   |   |   |       +---firestore
+|   |   |   |       |   +---lite
+|   |   |   |       |   |   \---pipelines
+|   |   |   |       |   \---pipelines
+|   |   |   |       +---functions
+|   |   |   |       +---installations
+|   |   |   |       +---messaging
+|   |   |   |       |   \---sw
+|   |   |   |       +---performance
+|   |   |   |       +---remote-config
+|   |   |   |       \---storage
+|   |   |   \---storage
+|   |   |       \---dist
+|   |   |           +---ai
+|   |   |           +---analytics
+|   |   |           +---app
+|   |   |           +---app-check
+|   |   |           +---auth
+|   |   |           |   +---cordova
+|   |   |           |   \---web-extension
+|   |   |           +---compat
+|   |   |           |   +---analytics
+|   |   |           |   +---app
+|   |   |           |   +---app-check
+|   |   |           |   +---auth
+|   |   |           |   +---database
+|   |   |           |   +---firestore
+|   |   |           |   +---functions
+|   |   |           |   +---installations
+|   |   |           |   +---messaging
+|   |   |           |   +---performance
+|   |   |           |   +---remote-config
+|   |   |           |   \---storage
+|   |   |           +---data-connect
+|   |   |           +---database
+|   |   |           +---esm
+|   |   |           |   +---ai
+|   |   |           |   +---analytics
+|   |   |           |   +---app
+|   |   |           |   +---app-check
+|   |   |           |   +---auth
+|   |   |           |   |   +---cordova
+|   |   |           |   |   \---web-extension
+|   |   |           |   +---compat
+|   |   |           |   |   +---analytics
+|   |   |           |   |   +---app
+|   |   |           |   |   +---app-check
+|   |   |           |   |   +---auth
+|   |   |           |   |   +---database
+|   |   |           |   |   +---firestore
+|   |   |           |   |   +---functions
+|   |   |           |   |   +---installations
+|   |   |           |   |   +---messaging
+|   |   |           |   |   +---performance
+|   |   |           |   |   +---remote-config
+|   |   |           |   |   \---storage
+|   |   |           |   +---data-connect
+|   |   |           |   +---database
+|   |   |           |   +---firestore
+|   |   |           |   |   +---lite
+|   |   |           |   |   |   \---pipelines
+|   |   |           |   |   \---pipelines
+|   |   |           |   +---functions
+|   |   |           |   +---installations
+|   |   |           |   +---messaging
+|   |   |           |   |   \---sw
+|   |   |           |   +---performance
+|   |   |           |   +---remote-config
+|   |   |           |   \---storage
+|   |   |           +---firestore
+|   |   |           |   +---lite
+|   |   |           |   |   \---pipelines
+|   |   |           |   \---pipelines
+|   |   |           +---functions
+|   |   |           +---installations
+|   |   |           +---messaging
+|   |   |           |   \---sw
+|   |   |           +---performance
+|   |   |           +---remote-config
+|   |   |           \---storage
+|   |   +---data-connect
+|   |   |   \---dist
+|   |   |       +---ai
+|   |   |       +---analytics
+|   |   |       +---app
+|   |   |       +---app-check
+|   |   |       +---auth
+|   |   |       |   +---cordova
+|   |   |       |   \---web-extension
+|   |   |       +---compat
+|   |   |       |   +---analytics
+|   |   |       |   +---app
+|   |   |       |   +---app-check
+|   |   |       |   +---auth
+|   |   |       |   +---database
+|   |   |       |   +---firestore
+|   |   |       |   +---functions
+|   |   |       |   +---installations
+|   |   |       |   +---messaging
+|   |   |       |   +---performance
+|   |   |       |   +---remote-config
+|   |   |       |   \---storage
+|   |   |       +---data-connect
+|   |   |       +---database
+|   |   |       +---esm
+|   |   |       |   +---ai
+|   |   |       |   +---analytics
+|   |   |       |   +---app
+|   |   |       |   +---app-check
+|   |   |       |   +---auth
+|   |   |       |   |   +---cordova
+|   |   |       |   |   \---web-extension
+|   |   |       |   +---compat
+|   |   |       |   |   +---analytics
+|   |   |       |   |   +---app
+|   |   |       |   |   +---app-check
+|   |   |       |   |   +---auth
+|   |   |       |   |   +---database
+|   |   |       |   |   +---firestore
+|   |   |       |   |   +---functions
+|   |   |       |   |   +---installations
+|   |   |       |   |   +---messaging
+|   |   |       |   |   +---performance
+|   |   |       |   |   +---remote-config
+|   |   |       |   |   \---storage
+|   |   |       |   +---data-connect
+|   |   |       |   +---database
+|   |   |       |   +---firestore
+|   |   |       |   |   +---lite
+|   |   |       |   |   |   \---pipelines
+|   |   |       |   |   \---pipelines
+|   |   |       |   +---functions
+|   |   |       |   +---installations
+|   |   |       |   +---messaging
+|   |   |       |   |   \---sw
+|   |   |       |   +---performance
+|   |   |       |   +---remote-config
+|   |   |       |   \---storage
+|   |   |       +---firestore
+|   |   |       |   +---lite
+|   |   |       |   |   \---pipelines
+|   |   |       |   \---pipelines
+|   |   |       +---functions
+|   |   |       +---installations
+|   |   |       +---messaging
+|   |   |       |   \---sw
+|   |   |       +---performance
+|   |   |       +---remote-config
+|   |   |       \---storage
+|   |   +---database
+|   |   |   \---dist
+|   |   |       +---ai
+|   |   |       +---analytics
+|   |   |       +---app
+|   |   |       +---app-check
+|   |   |       +---auth
+|   |   |       |   +---cordova
+|   |   |       |   \---web-extension
+|   |   |       +---compat
+|   |   |       |   +---analytics
+|   |   |       |   +---app
+|   |   |       |   +---app-check
+|   |   |       |   +---auth
+|   |   |       |   +---database
+|   |   |       |   +---firestore
+|   |   |       |   +---functions
+|   |   |       |   +---installations
+|   |   |       |   +---messaging
+|   |   |       |   +---performance
+|   |   |       |   +---remote-config
+|   |   |       |   \---storage
+|   |   |       +---data-connect
+|   |   |       +---database
+|   |   |       +---esm
+|   |   |       |   +---ai
+|   |   |       |   +---analytics
+|   |   |       |   +---app
+|   |   |       |   +---app-check
+|   |   |       |   +---auth
+|   |   |       |   |   +---cordova
+|   |   |       |   |   \---web-extension
+|   |   |       |   +---compat
+|   |   |       |   |   +---analytics
+|   |   |       |   |   +---app
+|   |   |       |   |   +---app-check
+|   |   |       |   |   +---auth
+|   |   |       |   |   +---database
+|   |   |       |   |   +---firestore
+|   |   |       |   |   +---functions
+|   |   |       |   |   +---installations
+|   |   |       |   |   +---messaging
+|   |   |       |   |   +---performance
+|   |   |       |   |   +---remote-config
+|   |   |       |   |   \---storage
+|   |   |       |   +---data-connect
+|   |   |       |   +---database
+|   |   |       |   +---firestore
+|   |   |       |   |   +---lite
+|   |   |       |   |   |   \---pipelines
+|   |   |       |   |   \---pipelines
+|   |   |       |   +---functions
+|   |   |       |   +---installations
+|   |   |       |   +---messaging
+|   |   |       |   |   \---sw
+|   |   |       |   +---performance
+|   |   |       |   +---remote-config
+|   |   |       |   \---storage
+|   |   |       +---firestore
+|   |   |       |   +---lite
+|   |   |       |   |   \---pipelines
+|   |   |       |   \---pipelines
+|   |   |       +---functions
+|   |   |       +---installations
+|   |   |       +---messaging
+|   |   |       |   \---sw
+|   |   |       +---performance
+|   |   |       +---remote-config
+|   |   |       \---storage
+|   |   +---firestore
+|   |   |   +---dist
+|   |   |   |   +---ai
+|   |   |   |   +---analytics
+|   |   |   |   +---app
+|   |   |   |   +---app-check
+|   |   |   |   +---auth
+|   |   |   |   |   +---cordova
+|   |   |   |   |   \---web-extension
+|   |   |   |   +---compat
+|   |   |   |   |   +---analytics
+|   |   |   |   |   +---app
+|   |   |   |   |   +---app-check
+|   |   |   |   |   +---auth
+|   |   |   |   |   +---database
+|   |   |   |   |   +---firestore
+|   |   |   |   |   +---functions
+|   |   |   |   |   +---installations
+|   |   |   |   |   +---messaging
+|   |   |   |   |   +---performance
+|   |   |   |   |   +---remote-config
+|   |   |   |   |   \---storage
+|   |   |   |   +---data-connect
+|   |   |   |   +---database
+|   |   |   |   +---esm
+|   |   |   |   |   +---ai
+|   |   |   |   |   +---analytics
+|   |   |   |   |   +---app
+|   |   |   |   |   +---app-check
+|   |   |   |   |   +---auth
+|   |   |   |   |   |   +---cordova
+|   |   |   |   |   |   \---web-extension
+|   |   |   |   |   +---compat
+|   |   |   |   |   |   +---analytics
+|   |   |   |   |   |   +---app
+|   |   |   |   |   |   +---app-check
+|   |   |   |   |   |   +---auth
+|   |   |   |   |   |   +---database
+|   |   |   |   |   |   +---firestore
+|   |   |   |   |   |   +---functions
+|   |   |   |   |   |   +---installations
+|   |   |   |   |   |   +---messaging
+|   |   |   |   |   |   +---performance
+|   |   |   |   |   |   +---remote-config
+|   |   |   |   |   |   \---storage
+|   |   |   |   |   +---data-connect
+|   |   |   |   |   +---database
+|   |   |   |   |   +---firestore
+|   |   |   |   |   |   +---lite
+|   |   |   |   |   |   |   \---pipelines
+|   |   |   |   |   |   \---pipelines
+|   |   |   |   |   +---functions
+|   |   |   |   |   +---installations
+|   |   |   |   |   +---messaging
+|   |   |   |   |   |   \---sw
+|   |   |   |   |   +---performance
+|   |   |   |   |   +---remote-config
+|   |   |   |   |   \---storage
+|   |   |   |   +---firestore
+|   |   |   |   |   +---lite
+|   |   |   |   |   |   \---pipelines
+|   |   |   |   |   \---pipelines
+|   |   |   |   +---functions
+|   |   |   |   +---installations
+|   |   |   |   +---messaging
+|   |   |   |   |   \---sw
+|   |   |   |   +---performance
+|   |   |   |   +---remote-config
+|   |   |   |   \---storage
+|   |   |   +---lite
+|   |   |   |   +---dist
+|   |   |   |   |   +---ai
+|   |   |   |   |   +---analytics
+|   |   |   |   |   +---app
+|   |   |   |   |   +---app-check
+|   |   |   |   |   +---auth
+|   |   |   |   |   |   +---cordova
+|   |   |   |   |   |   \---web-extension
+|   |   |   |   |   +---compat
+|   |   |   |   |   |   +---analytics
+|   |   |   |   |   |   +---app
+|   |   |   |   |   |   +---app-check
+|   |   |   |   |   |   +---auth
+|   |   |   |   |   |   +---database
+|   |   |   |   |   |   +---firestore
+|   |   |   |   |   |   +---functions
+|   |   |   |   |   |   +---installations
+|   |   |   |   |   |   +---messaging
+|   |   |   |   |   |   +---performance
+|   |   |   |   |   |   +---remote-config
+|   |   |   |   |   |   \---storage
+|   |   |   |   |   +---data-connect
+|   |   |   |   |   +---database
+|   |   |   |   |   +---esm
+|   |   |   |   |   |   +---ai
+|   |   |   |   |   |   +---analytics
+|   |   |   |   |   |   +---app
+|   |   |   |   |   |   +---app-check
+|   |   |   |   |   |   +---auth
+|   |   |   |   |   |   |   +---cordova
+|   |   |   |   |   |   |   \---web-extension
+|   |   |   |   |   |   +---compat
+|   |   |   |   |   |   |   +---analytics
+|   |   |   |   |   |   |   +---app
+|   |   |   |   |   |   |   +---app-check
+|   |   |   |   |   |   |   +---auth
+|   |   |   |   |   |   |   +---database
+|   |   |   |   |   |   |   +---firestore
+|   |   |   |   |   |   |   +---functions
+|   |   |   |   |   |   |   +---installations
+|   |   |   |   |   |   |   +---messaging
+|   |   |   |   |   |   |   +---performance
+|   |   |   |   |   |   |   +---remote-config
+|   |   |   |   |   |   |   \---storage
+|   |   |   |   |   |   +---data-connect
+|   |   |   |   |   |   +---database
+|   |   |   |   |   |   +---firestore
+|   |   |   |   |   |   |   +---lite
+|   |   |   |   |   |   |   |   \---pipelines
+|   |   |   |   |   |   |   \---pipelines
+|   |   |   |   |   |   +---functions
+|   |   |   |   |   |   +---installations
+|   |   |   |   |   |   +---messaging
+|   |   |   |   |   |   |   \---sw
+|   |   |   |   |   |   +---performance
+|   |   |   |   |   |   +---remote-config
+|   |   |   |   |   |   \---storage
+|   |   |   |   |   +---firestore
+|   |   |   |   |   |   +---lite
+|   |   |   |   |   |   |   \---pipelines
+|   |   |   |   |   |   \---pipelines
+|   |   |   |   |   +---functions
+|   |   |   |   |   +---installations
+|   |   |   |   |   +---messaging
+|   |   |   |   |   |   \---sw
+|   |   |   |   |   +---performance
+|   |   |   |   |   +---remote-config
+|   |   |   |   |   \---storage
+|   |   |   |   \---pipelines
+|   |   |   |       \---dist
+|   |   |   |           +---ai
+|   |   |   |           +---analytics
+|   |   |   |           +---app
+|   |   |   |           +---app-check
+|   |   |   |           +---auth
+|   |   |   |           |   +---cordova
+|   |   |   |           |   \---web-extension
+|   |   |   |           +---compat
+|   |   |   |           |   +---analytics
+|   |   |   |           |   +---app
+|   |   |   |           |   +---app-check
+|   |   |   |           |   +---auth
+|   |   |   |           |   +---database
+|   |   |   |           |   +---firestore
+|   |   |   |           |   +---functions
+|   |   |   |           |   +---installations
+|   |   |   |           |   +---messaging
+|   |   |   |           |   +---performance
+|   |   |   |           |   +---remote-config
+|   |   |   |           |   \---storage
+|   |   |   |           +---data-connect
+|   |   |   |           +---database
+|   |   |   |           +---esm
+|   |   |   |           |   +---ai
+|   |   |   |           |   +---analytics
+|   |   |   |           |   +---app
+|   |   |   |           |   +---app-check
+|   |   |   |           |   +---auth
+|   |   |   |           |   |   +---cordova
+|   |   |   |           |   |   \---web-extension
+|   |   |   |           |   +---compat
+|   |   |   |           |   |   +---analytics
+|   |   |   |           |   |   +---app
+|   |   |   |           |   |   +---app-check
+|   |   |   |           |   |   +---auth
+|   |   |   |           |   |   +---database
+|   |   |   |           |   |   +---firestore
+|   |   |   |           |   |   +---functions
+|   |   |   |           |   |   +---installations
+|   |   |   |           |   |   +---messaging
+|   |   |   |           |   |   +---performance
+|   |   |   |           |   |   +---remote-config
+|   |   |   |           |   |   \---storage
+|   |   |   |           |   +---data-connect
+|   |   |   |           |   +---database
+|   |   |   |           |   +---firestore
+|   |   |   |           |   |   +---lite
+|   |   |   |           |   |   |   \---pipelines
+|   |   |   |           |   |   \---pipelines
+|   |   |   |           |   +---functions
+|   |   |   |           |   +---installations
+|   |   |   |           |   +---messaging
+|   |   |   |           |   |   \---sw
+|   |   |   |           |   +---performance
+|   |   |   |           |   +---remote-config
+|   |   |   |           |   \---storage
+|   |   |   |           +---firestore
+|   |   |   |           |   +---lite
+|   |   |   |           |   |   \---pipelines
+|   |   |   |           |   \---pipelines
+|   |   |   |           +---functions
+|   |   |   |           +---installations
+|   |   |   |           +---messaging
+|   |   |   |           |   \---sw
+|   |   |   |           +---performance
+|   |   |   |           +---remote-config
+|   |   |   |           \---storage
+|   |   |   \---pipelines
+|   |   |       \---dist
+|   |   |           +---ai
+|   |   |           +---analytics
+|   |   |           +---app
+|   |   |           +---app-check
+|   |   |           +---auth
+|   |   |           |   +---cordova
+|   |   |           |   \---web-extension
+|   |   |           +---compat
+|   |   |           |   +---analytics
+|   |   |           |   +---app
+|   |   |           |   +---app-check
+|   |   |           |   +---auth
+|   |   |           |   +---database
+|   |   |           |   +---firestore
+|   |   |           |   +---functions
+|   |   |           |   +---installations
+|   |   |           |   +---messaging
+|   |   |           |   +---performance
+|   |   |           |   +---remote-config
+|   |   |           |   \---storage
+|   |   |           +---data-connect
+|   |   |           +---database
+|   |   |           +---esm
+|   |   |           |   +---ai
+|   |   |           |   +---analytics
+|   |   |           |   +---app
+|   |   |           |   +---app-check
+|   |   |           |   +---auth
+|   |   |           |   |   +---cordova
+|   |   |           |   |   \---web-extension
+|   |   |           |   +---compat
+|   |   |           |   |   +---analytics
+|   |   |           |   |   +---app
+|   |   |           |   |   +---app-check
+|   |   |           |   |   +---auth
+|   |   |           |   |   +---database
+|   |   |           |   |   +---firestore
+|   |   |           |   |   +---functions
+|   |   |           |   |   +---installations
+|   |   |           |   |   +---messaging
+|   |   |           |   |   +---performance
+|   |   |           |   |   +---remote-config
+|   |   |           |   |   \---storage
+|   |   |           |   +---data-connect
+|   |   |           |   +---database
+|   |   |           |   +---firestore
+|   |   |           |   |   +---lite
+|   |   |           |   |   |   \---pipelines
+|   |   |           |   |   \---pipelines
+|   |   |           |   +---functions
+|   |   |           |   +---installations
+|   |   |           |   +---messaging
+|   |   |           |   |   \---sw
+|   |   |           |   +---performance
+|   |   |           |   +---remote-config
+|   |   |           |   \---storage
+|   |   |           +---firestore
+|   |   |           |   +---lite
+|   |   |           |   |   \---pipelines
+|   |   |           |   \---pipelines
+|   |   |           +---functions
+|   |   |           +---installations
+|   |   |           +---messaging
+|   |   |           |   \---sw
+|   |   |           +---performance
+|   |   |           +---remote-config
+|   |   |           \---storage
+|   |   +---functions
+|   |   |   \---dist
+|   |   |       +---ai
+|   |   |       +---analytics
+|   |   |       +---app
+|   |   |       +---app-check
+|   |   |       +---auth
+|   |   |       |   +---cordova
+|   |   |       |   \---web-extension
+|   |   |       +---compat
+|   |   |       |   +---analytics
+|   |   |       |   +---app
+|   |   |       |   +---app-check
+|   |   |       |   +---auth
+|   |   |       |   +---database
+|   |   |       |   +---firestore
+|   |   |       |   +---functions
+|   |   |       |   +---installations
+|   |   |       |   +---messaging
+|   |   |       |   +---performance
+|   |   |       |   +---remote-config
+|   |   |       |   \---storage
+|   |   |       +---data-connect
+|   |   |       +---database
+|   |   |       +---esm
+|   |   |       |   +---ai
+|   |   |       |   +---analytics
+|   |   |       |   +---app
+|   |   |       |   +---app-check
+|   |   |       |   +---auth
+|   |   |       |   |   +---cordova
+|   |   |       |   |   \---web-extension
+|   |   |       |   +---compat
+|   |   |       |   |   +---analytics
+|   |   |       |   |   +---app
+|   |   |       |   |   +---app-check
+|   |   |       |   |   +---auth
+|   |   |       |   |   +---database
+|   |   |       |   |   +---firestore
+|   |   |       |   |   +---functions
+|   |   |       |   |   +---installations
+|   |   |       |   |   +---messaging
+|   |   |       |   |   +---performance
+|   |   |       |   |   +---remote-config
+|   |   |       |   |   \---storage
+|   |   |       |   +---data-connect
+|   |   |       |   +---database
+|   |   |       |   +---firestore
+|   |   |       |   |   +---lite
+|   |   |       |   |   |   \---pipelines
+|   |   |       |   |   \---pipelines
+|   |   |       |   +---functions
+|   |   |       |   +---installations
+|   |   |       |   +---messaging
+|   |   |       |   |   \---sw
+|   |   |       |   +---performance
+|   |   |       |   +---remote-config
+|   |   |       |   \---storage
+|   |   |       +---firestore
+|   |   |       |   +---lite
+|   |   |       |   |   \---pipelines
+|   |   |       |   \---pipelines
+|   |   |       +---functions
+|   |   |       +---installations
+|   |   |       +---messaging
+|   |   |       |   \---sw
+|   |   |       +---performance
+|   |   |       +---remote-config
+|   |   |       \---storage
+|   |   +---installations
+|   |   |   \---dist
+|   |   |       +---ai
+|   |   |       +---analytics
+|   |   |       +---app
+|   |   |       +---app-check
+|   |   |       +---auth
+|   |   |       |   +---cordova
+|   |   |       |   \---web-extension
+|   |   |       +---compat
+|   |   |       |   +---analytics
+|   |   |       |   +---app
+|   |   |       |   +---app-check
+|   |   |       |   +---auth
+|   |   |       |   +---database
+|   |   |       |   +---firestore
+|   |   |       |   +---functions
+|   |   |       |   +---installations
+|   |   |       |   +---messaging
+|   |   |       |   +---performance
+|   |   |       |   +---remote-config
+|   |   |       |   \---storage
+|   |   |       +---data-connect
+|   |   |       +---database
+|   |   |       +---esm
+|   |   |       |   +---ai
+|   |   |       |   +---analytics
+|   |   |       |   +---app
+|   |   |       |   +---app-check
+|   |   |       |   +---auth
+|   |   |       |   |   +---cordova
+|   |   |       |   |   \---web-extension
+|   |   |       |   +---compat
+|   |   |       |   |   +---analytics
+|   |   |       |   |   +---app
+|   |   |       |   |   +---app-check
+|   |   |       |   |   +---auth
+|   |   |       |   |   +---database
+|   |   |       |   |   +---firestore
+|   |   |       |   |   +---functions
+|   |   |       |   |   +---installations
+|   |   |       |   |   +---messaging
+|   |   |       |   |   +---performance
+|   |   |       |   |   +---remote-config
+|   |   |       |   |   \---storage
+|   |   |       |   +---data-connect
+|   |   |       |   +---database
+|   |   |       |   +---firestore
+|   |   |       |   |   +---lite
+|   |   |       |   |   |   \---pipelines
+|   |   |       |   |   \---pipelines
+|   |   |       |   +---functions
+|   |   |       |   +---installations
+|   |   |       |   +---messaging
+|   |   |       |   |   \---sw
+|   |   |       |   +---performance
+|   |   |       |   +---remote-config
+|   |   |       |   \---storage
+|   |   |       +---firestore
+|   |   |       |   +---lite
+|   |   |       |   |   \---pipelines
+|   |   |       |   \---pipelines
+|   |   |       +---functions
+|   |   |       +---installations
+|   |   |       +---messaging
+|   |   |       |   \---sw
+|   |   |       +---performance
+|   |   |       +---remote-config
+|   |   |       \---storage
+|   |   +---messaging
+|   |   |   +---dist
+|   |   |   |   +---ai
+|   |   |   |   +---analytics
+|   |   |   |   +---app
+|   |   |   |   +---app-check
+|   |   |   |   +---auth
+|   |   |   |   |   +---cordova
+|   |   |   |   |   \---web-extension
+|   |   |   |   +---compat
+|   |   |   |   |   +---analytics
+|   |   |   |   |   +---app
+|   |   |   |   |   +---app-check
+|   |   |   |   |   +---auth
+|   |   |   |   |   +---database
+|   |   |   |   |   +---firestore
+|   |   |   |   |   +---functions
+|   |   |   |   |   +---installations
+|   |   |   |   |   +---messaging
+|   |   |   |   |   +---performance
+|   |   |   |   |   +---remote-config
+|   |   |   |   |   \---storage
+|   |   |   |   +---data-connect
+|   |   |   |   +---database
+|   |   |   |   +---esm
+|   |   |   |   |   +---ai
+|   |   |   |   |   +---analytics
+|   |   |   |   |   +---app
+|   |   |   |   |   +---app-check
+|   |   |   |   |   +---auth
+|   |   |   |   |   |   +---cordova
+|   |   |   |   |   |   \---web-extension
+|   |   |   |   |   +---compat
+|   |   |   |   |   |   +---analytics
+|   |   |   |   |   |   +---app
+|   |   |   |   |   |   +---app-check
+|   |   |   |   |   |   +---auth
+|   |   |   |   |   |   +---database
+|   |   |   |   |   |   +---firestore
+|   |   |   |   |   |   +---functions
+|   |   |   |   |   |   +---installations
+|   |   |   |   |   |   +---messaging
+|   |   |   |   |   |   +---performance
+|   |   |   |   |   |   +---remote-config
+|   |   |   |   |   |   \---storage
+|   |   |   |   |   +---data-connect
+|   |   |   |   |   +---database
+|   |   |   |   |   +---firestore
+|   |   |   |   |   |   +---lite
+|   |   |   |   |   |   |   \---pipelines
+|   |   |   |   |   |   \---pipelines
+|   |   |   |   |   +---functions
+|   |   |   |   |   +---installations
+|   |   |   |   |   +---messaging
+|   |   |   |   |   |   \---sw
+|   |   |   |   |   +---performance
+|   |   |   |   |   +---remote-config
+|   |   |   |   |   \---storage
+|   |   |   |   +---firestore
+|   |   |   |   |   +---lite
+|   |   |   |   |   |   \---pipelines
+|   |   |   |   |   \---pipelines
+|   |   |   |   +---functions
+|   |   |   |   +---installations
+|   |   |   |   +---messaging
+|   |   |   |   |   \---sw
+|   |   |   |   +---performance
+|   |   |   |   +---remote-config
+|   |   |   |   \---storage
+|   |   |   \---sw
+|   |   |       \---dist
+|   |   |           +---ai
+|   |   |           +---analytics
+|   |   |           +---app
+|   |   |           +---app-check
+|   |   |           +---auth
+|   |   |           |   +---cordova
+|   |   |           |   \---web-extension
+|   |   |           +---compat
+|   |   |           |   +---analytics
+|   |   |           |   +---app
+|   |   |           |   +---app-check
+|   |   |           |   +---auth
+|   |   |           |   +---database
+|   |   |           |   +---firestore
+|   |   |           |   +---functions
+|   |   |           |   +---installations
+|   |   |           |   +---messaging
+|   |   |           |   +---performance
+|   |   |           |   +---remote-config
+|   |   |           |   \---storage
+|   |   |           +---data-connect
+|   |   |           +---database
+|   |   |           +---esm
+|   |   |           |   +---ai
+|   |   |           |   +---analytics
+|   |   |           |   +---app
+|   |   |           |   +---app-check
+|   |   |           |   +---auth
+|   |   |           |   |   +---cordova
+|   |   |           |   |   \---web-extension
+|   |   |           |   +---compat
+|   |   |           |   |   +---analytics
+|   |   |           |   |   +---app
+|   |   |           |   |   +---app-check
+|   |   |           |   |   +---auth
+|   |   |           |   |   +---database
+|   |   |           |   |   +---firestore
+|   |   |           |   |   +---functions
+|   |   |           |   |   +---installations
+|   |   |           |   |   +---messaging
+|   |   |           |   |   +---performance
+|   |   |           |   |   +---remote-config
+|   |   |           |   |   \---storage
+|   |   |           |   +---data-connect
+|   |   |           |   +---database
+|   |   |           |   +---firestore
+|   |   |           |   |   +---lite
+|   |   |           |   |   |   \---pipelines
+|   |   |           |   |   \---pipelines
+|   |   |           |   +---functions
+|   |   |           |   +---installations
+|   |   |           |   +---messaging
+|   |   |           |   |   \---sw
+|   |   |           |   +---performance
+|   |   |           |   +---remote-config
+|   |   |           |   \---storage
+|   |   |           +---firestore
+|   |   |           |   +---lite
+|   |   |           |   |   \---pipelines
+|   |   |           |   \---pipelines
+|   |   |           +---functions
+|   |   |           +---installations
+|   |   |           +---messaging
+|   |   |           |   \---sw
+|   |   |           +---performance
+|   |   |           +---remote-config
+|   |   |           \---storage
+|   |   +---performance
+|   |   |   \---dist
+|   |   |       +---ai
+|   |   |       +---analytics
+|   |   |       +---app
+|   |   |       +---app-check
+|   |   |       +---auth
+|   |   |       |   +---cordova
+|   |   |       |   \---web-extension
+|   |   |       +---compat
+|   |   |       |   +---analytics
+|   |   |       |   +---app
+|   |   |       |   +---app-check
+|   |   |       |   +---auth
+|   |   |       |   +---database
+|   |   |       |   +---firestore
+|   |   |       |   +---functions
+|   |   |       |   +---installations
+|   |   |       |   +---messaging
+|   |   |       |   +---performance
+|   |   |       |   +---remote-config
+|   |   |       |   \---storage
+|   |   |       +---data-connect
+|   |   |       +---database
+|   |   |       +---esm
+|   |   |       |   +---ai
+|   |   |       |   +---analytics
+|   |   |       |   +---app
+|   |   |       |   +---app-check
+|   |   |       |   +---auth
+|   |   |       |   |   +---cordova
+|   |   |       |   |   \---web-extension
+|   |   |       |   +---compat
+|   |   |       |   |   +---analytics
+|   |   |       |   |   +---app
+|   |   |       |   |   +---app-check
+|   |   |       |   |   +---auth
+|   |   |       |   |   +---database
+|   |   |       |   |   +---firestore
+|   |   |       |   |   +---functions
+|   |   |       |   |   +---installations
+|   |   |       |   |   +---messaging
+|   |   |       |   |   +---performance
+|   |   |       |   |   +---remote-config
+|   |   |       |   |   \---storage
+|   |   |       |   +---data-connect
+|   |   |       |   +---database
+|   |   |       |   +---firestore
+|   |   |       |   |   +---lite
+|   |   |       |   |   |   \---pipelines
+|   |   |       |   |   \---pipelines
+|   |   |       |   +---functions
+|   |   |       |   +---installations
+|   |   |       |   +---messaging
+|   |   |       |   |   \---sw
+|   |   |       |   +---performance
+|   |   |       |   +---remote-config
+|   |   |       |   \---storage
+|   |   |       +---firestore
+|   |   |       |   +---lite
+|   |   |       |   |   \---pipelines
+|   |   |       |   \---pipelines
+|   |   |       +---functions
+|   |   |       +---installations
+|   |   |       +---messaging
+|   |   |       |   \---sw
+|   |   |       +---performance
+|   |   |       +---remote-config
+|   |   |       \---storage
+|   |   +---remote-config
+|   |   |   \---dist
+|   |   |       +---ai
+|   |   |       +---analytics
+|   |   |       +---app
+|   |   |       +---app-check
+|   |   |       +---auth
+|   |   |       |   +---cordova
+|   |   |       |   \---web-extension
+|   |   |       +---compat
+|   |   |       |   +---analytics
+|   |   |       |   +---app
+|   |   |       |   +---app-check
+|   |   |       |   +---auth
+|   |   |       |   +---database
+|   |   |       |   +---firestore
+|   |   |       |   +---functions
+|   |   |       |   +---installations
+|   |   |       |   +---messaging
+|   |   |       |   +---performance
+|   |   |       |   +---remote-config
+|   |   |       |   \---storage
+|   |   |       +---data-connect
+|   |   |       +---database
+|   |   |       +---esm
+|   |   |       |   +---ai
+|   |   |       |   +---analytics
+|   |   |       |   +---app
+|   |   |       |   +---app-check
+|   |   |       |   +---auth
+|   |   |       |   |   +---cordova
+|   |   |       |   |   \---web-extension
+|   |   |       |   +---compat
+|   |   |       |   |   +---analytics
+|   |   |       |   |   +---app
+|   |   |       |   |   +---app-check
+|   |   |       |   |   +---auth
+|   |   |       |   |   +---database
+|   |   |       |   |   +---firestore
+|   |   |       |   |   +---functions
+|   |   |       |   |   +---installations
+|   |   |       |   |   +---messaging
+|   |   |       |   |   +---performance
+|   |   |       |   |   +---remote-config
+|   |   |       |   |   \---storage
+|   |   |       |   +---data-connect
+|   |   |       |   +---database
+|   |   |       |   +---firestore
+|   |   |       |   |   +---lite
+|   |   |       |   |   |   \---pipelines
+|   |   |       |   |   \---pipelines
+|   |   |       |   +---functions
+|   |   |       |   +---installations
+|   |   |       |   +---messaging
+|   |   |       |   |   \---sw
+|   |   |       |   +---performance
+|   |   |       |   +---remote-config
+|   |   |       |   \---storage
+|   |   |       +---firestore
+|   |   |       |   +---lite
+|   |   |       |   |   \---pipelines
+|   |   |       |   \---pipelines
+|   |   |       +---functions
+|   |   |       +---installations
+|   |   |       +---messaging
+|   |   |       |   \---sw
+|   |   |       +---performance
+|   |   |       +---remote-config
+|   |   |       \---storage
+|   |   \---storage
+|   |       \---dist
+|   |           +---ai
+|   |           +---analytics
+|   |           +---app
+|   |           +---app-check
+|   |           +---auth
+|   |           |   +---cordova
+|   |           |   \---web-extension
+|   |           +---compat
+|   |           |   +---analytics
+|   |           |   +---app
+|   |           |   +---app-check
+|   |           |   +---auth
+|   |           |   +---database
+|   |           |   +---firestore
+|   |           |   +---functions
+|   |           |   +---installations
+|   |           |   +---messaging
+|   |           |   +---performance
+|   |           |   +---remote-config
+|   |           |   \---storage
+|   |           +---data-connect
+|   |           +---database
+|   |           +---esm
+|   |           |   +---ai
+|   |           |   +---analytics
+|   |           |   +---app
+|   |           |   +---app-check
+|   |           |   +---auth
+|   |           |   |   +---cordova
+|   |           |   |   \---web-extension
+|   |           |   +---compat
+|   |           |   |   +---analytics
+|   |           |   |   +---app
+|   |           |   |   +---app-check
+|   |           |   |   +---auth
+|   |           |   |   +---database
+|   |           |   |   +---firestore
+|   |           |   |   +---functions
+|   |           |   |   +---installations
+|   |           |   |   +---messaging
+|   |           |   |   +---performance
+|   |           |   |   +---remote-config
+|   |           |   |   \---storage
+|   |           |   +---data-connect
+|   |           |   +---database
+|   |           |   +---firestore
+|   |           |   |   +---lite
+|   |           |   |   |   \---pipelines
+|   |           |   |   \---pipelines
+|   |           |   +---functions
+|   |           |   +---installations
+|   |           |   +---messaging
+|   |           |   |   \---sw
+|   |           |   +---performance
+|   |           |   +---remote-config
+|   |           |   \---storage
+|   |           +---firestore
+|   |           |   +---lite
+|   |           |   |   \---pipelines
+|   |           |   \---pipelines
+|   |           +---functions
+|   |           +---installations
+|   |           +---messaging
+|   |           |   \---sw
+|   |           +---performance
+|   |           +---remote-config
+|   |           \---storage
+|   +---flat-cache
+|   |   \---src
+|   +---flatted
+|   |   +---cjs
+|   |   +---esm
+|   |   +---php
+|   |   +---python
+|   |   \---types
+|   +---fraction.js
+|   |   +---dist
+|   |   +---examples
+|   |   +---src
+|   |   \---tests
+|   +---framer-motion
+|   |   +---client
+|   |   +---dist
+|   |   |   +---cjs
+|   |   |   +---es
+|   |   |   |   +---animation
+|   |   |   |   |   +---animate
+|   |   |   |   |   +---animators
+|   |   |   |   |   |   \---waapi
+|   |   |   |   |   +---hooks
+|   |   |   |   |   +---optimized-appear
+|   |   |   |   |   +---sequence
+|   |   |   |   |   |   \---utils
+|   |   |   |   |   \---utils
+|   |   |   |   +---components
+|   |   |   |   |   +---AnimatePresence
+|   |   |   |   |   +---LayoutGroup
+|   |   |   |   |   +---LazyMotion
+|   |   |   |   |   +---MotionConfig
+|   |   |   |   |   \---Reorder
+|   |   |   |   |       \---utils
+|   |   |   |   +---context
+|   |   |   |   |   \---MotionContext
+|   |   |   |   +---events
+|   |   |   |   +---gestures
+|   |   |   |   |   +---drag
+|   |   |   |   |   |   \---utils
+|   |   |   |   |   \---pan
+|   |   |   |   +---motion
+|   |   |   |   |   +---features
+|   |   |   |   |   |   +---animation
+|   |   |   |   |   |   +---layout
+|   |   |   |   |   |   \---viewport
+|   |   |   |   |   \---utils
+|   |   |   |   +---projection
+|   |   |   |   +---render
+|   |   |   |   |   +---components
+|   |   |   |   |   |   +---m
+|   |   |   |   |   |   \---motion
+|   |   |   |   |   +---dom
+|   |   |   |   |   |   +---scroll
+|   |   |   |   |   |   |   +---offsets
+|   |   |   |   |   |   |   \---utils
+|   |   |   |   |   |   +---utils
+|   |   |   |   |   |   \---viewport
+|   |   |   |   |   +---html
+|   |   |   |   |   |   \---utils
+|   |   |   |   |   \---svg
+|   |   |   |   |       \---utils
+|   |   |   |   +---utils
+|   |   |   |   |   \---reduced-motion
+|   |   |   |   \---value
+|   |   |   |       +---scroll
+|   |   |   |       \---use-will-change
+|   |   |   \---types
+|   |   +---dom
+|   |   |   \---mini
+|   |   +---m
+|   |   \---mini
+|   +---function-bind
+|   |   +---.github
+|   |   \---test
+|   +---get-caller-file
+|   +---glob-parent
+|   +---graceful-fs
+|   +---hasown
+|   |   \---.github
+|   +---http-parser-js
+|   +---idb
+|   |   \---build
+|   +---ignore
+|   +---imurmurhash
+|   +---is-binary-path
+|   +---is-core-module
+|   |   \---test
+|   +---is-extglob
+|   +---is-fullwidth-code-point
+|   +---is-glob
+|   +---is-number
+|   +---isexe
+|   |   \---test
+|   +---jiti
+|   |   +---dist
+|   |   \---lib
+|   +---json-buffer
+|   |   \---test
+|   +---json-schema-traverse
+|   |   \---spec
+|   |       \---fixtures
+|   +---json-stable-stringify-without-jsonify
+|   |   +---example
+|   |   \---test
+|   +---keyv
+|   |   \---src
+|   +---lenis
+|   |   \---dist
+|   |       \---nuxt
+|   |           \---runtime
+|   +---levn
+|   |   \---lib
+|   +---lightningcss
+|   |   \---node
+|   +---lightningcss-win32-x64-msvc
+|   +---lilconfig
+|   |   \---src
+|   +---lines-and-columns
+|   |   \---build
+|   +---locate-path
+|   +---lodash.camelcase
+|   +---long
+|   |   \---umd
+|   +---lucide-react
+|   |   \---dist
+|   |       +---cjs
+|   |       +---esm
+|   |       |   +---icons
+|   |       |   \---shared
+|   |       |       \---src
+|   |       |           \---utils
+|   |       \---umd
+|   +---magic-string
+|   |   \---dist
+|   +---merge2
+|   +---micromatch
+|   +---minimatch
+|   |   \---dist
+|   |       +---commonjs
+|   |       \---esm
+|   +---motion-dom
+|   |   \---dist
+|   |       +---cjs
+|   |       \---es
+|   |           +---animation
+|   |           |   +---animate
+|   |           |   +---drivers
+|   |           |   +---generators
+|   |           |   |   +---spring
+|   |           |   |   \---utils
+|   |           |   +---interfaces
+|   |           |   +---keyframes
+|   |           |   |   +---offsets
+|   |           |   |   \---utils
+|   |           |   +---optimized-appear
+|   |           |   +---utils
+|   |           |   \---waapi
+|   |           |       +---easing
+|   |           |       +---supports
+|   |           |       \---utils
+|   |           +---effects
+|   |           |   +---attr
+|   |           |   +---prop
+|   |           |   +---style
+|   |           |   +---svg
+|   |           |   \---utils
+|   |           +---events
+|   |           +---frameloop
+|   |           +---gestures
+|   |           |   +---drag
+|   |           |   |   \---state
+|   |           |   +---press
+|   |           |   |   \---utils
+|   |           |   \---utils
+|   |           +---layout
+|   |           +---projection
+|   |           |   +---animation
+|   |           |   +---geometry
+|   |           |   +---node
+|   |           |   +---shared
+|   |           |   +---styles
+|   |           |   \---utils
+|   |           +---render
+|   |           |   +---dom
+|   |           |   |   \---utils
+|   |           |   +---html
+|   |           |   |   \---utils
+|   |           |   +---object
+|   |           |   +---svg
+|   |           |   |   \---utils
+|   |           |   \---utils
+|   |           |       \---reduced-motion
+|   |           +---resize
+|   |           +---scroll
+|   |           +---stats
+|   |           +---utils
+|   |           |   +---mix
+|   |           |   \---supports
+|   |           +---value
+|   |           |   +---types
+|   |           |   |   +---color
+|   |           |   |   +---complex
+|   |           |   |   +---maps
+|   |           |   |   +---numbers
+|   |           |   |   \---utils
+|   |           |   +---utils
+|   |           |   \---will-change
+|   |           \---view
+|   |               \---utils
+|   +---motion-utils
+|   |   \---dist
+|   |       +---cjs
+|   |       \---es
+|   |           \---easing
+|   |               +---modifiers
+|   |               \---utils
+|   +---ms
+|   +---mz
+|   +---nanoid
+|   |   +---async
+|   |   +---bin
+|   |   +---non-secure
+|   |   \---url-alphabet
+|   +---natural-compare
+|   +---next
+|   |   +---compat
+|   |   +---dist
+|   |   |   +---api
+|   |   |   +---bin
+|   |   |   +---build
+|   |   |   |   +---adapter
+|   |   |   |   +---analysis
+|   |   |   |   +---analyze
+|   |   |   |   +---babel
+|   |   |   |   |   +---loader
+|   |   |   |   |   \---plugins
+|   |   |   |   +---jest
+|   |   |   |   |   \---__mocks__
+|   |   |   |   +---manifests
+|   |   |   |   |   \---formatter
+|   |   |   |   +---next-config-ts
+|   |   |   |   +---output
+|   |   |   |   +---polyfills
+|   |   |   |   |   +---fetch
+|   |   |   |   |   \---object.assign
+|   |   |   |   +---segment-config
+|   |   |   |   |   +---app
+|   |   |   |   |   +---middleware
+|   |   |   |   |   \---pages
+|   |   |   |   +---static-paths
+|   |   |   |   |   \---app
+|   |   |   |   +---swc
+|   |   |   |   +---templates
+|   |   |   |   +---turbopack-analyze
+|   |   |   |   +---turbopack-build
+|   |   |   |   +---turborepo-access-trace
+|   |   |   |   +---webpack
+|   |   |   |   |   +---alias
+|   |   |   |   |   +---config
+|   |   |   |   |   |   \---blocks
+|   |   |   |   |   |       +---css
+|   |   |   |   |   |       |   \---loaders
+|   |   |   |   |   |       \---images
+|   |   |   |   |   +---loaders
+|   |   |   |   |   |   +---css-loader
+|   |   |   |   |   |   |   \---src
+|   |   |   |   |   |   |       +---plugins
+|   |   |   |   |   |   |       \---runtime
+|   |   |   |   |   |   +---devtool
+|   |   |   |   |   |   +---lightningcss-loader
+|   |   |   |   |   |   |   \---src
+|   |   |   |   |   |   +---metadata
+|   |   |   |   |   |   +---next-app-loader
+|   |   |   |   |   |   +---next-edge-app-route-loader
+|   |   |   |   |   |   +---next-edge-ssr-loader
+|   |   |   |   |   |   +---next-flight-loader
+|   |   |   |   |   |   +---next-font-loader
+|   |   |   |   |   |   +---next-image-loader
+|   |   |   |   |   |   +---next-route-loader
+|   |   |   |   |   |   +---next-style-loader
+|   |   |   |   |   |   |   \---runtime
+|   |   |   |   |   |   +---postcss-loader
+|   |   |   |   |   |   |   \---src
+|   |   |   |   |   |   \---resolve-url-loader
+|   |   |   |   |   |       \---lib
+|   |   |   |   |   \---plugins
+|   |   |   |   |       +---minify-webpack-plugin
+|   |   |   |   |       |   \---src
+|   |   |   |   |       +---next-types-plugin
+|   |   |   |   |       +---telemetry-plugin
+|   |   |   |   |       \---wellknown-errors-plugin
+|   |   |   |   +---webpack-build
+|   |   |   |   \---webpack-config-rules
+|   |   |   +---bundle-analyzer
+|   |   |   |   +---_next
+|   |   |   |   |   \---static
+|   |   |   |   |       +---chunks
+|   |   |   |   |       \---DFZI-lC8mGFhvCg4S1kw3
+|   |   |   |   \---_not-found
+|   |   |   +---cli
+|   |   |   |   \---internal
+|   |   |   +---client
+|   |   |   |   +---app-dir
+|   |   |   |   +---compat
+|   |   |   |   +---components
+|   |   |   |   |   +---builtin
+|   |   |   |   |   +---errors
+|   |   |   |   |   +---http-access-fallback
+|   |   |   |   |   +---router-reducer
+|   |   |   |   |   |   \---reducers
+|   |   |   |   |   +---segment-cache
+|   |   |   |   |   \---styles
+|   |   |   |   +---dev
+|   |   |   |   |   +---error-overlay
+|   |   |   |   |   \---hot-reloader
+|   |   |   |   |       +---app
+|   |   |   |   |       \---pages
+|   |   |   |   +---legacy
+|   |   |   |   +---lib
+|   |   |   |   +---portal
+|   |   |   |   +---react-client-callbacks
+|   |   |   |   +---request
+|   |   |   |   \---tracing
+|   |   |   +---compiled
+|   |   |   |   +---@babel
+|   |   |   |   |   \---runtime
+|   |   |   |   |       +---helpers
+|   |   |   |   |       |   \---esm
+|   |   |   |   |       \---regenerator
+|   |   |   |   +---@edge-runtime
+|   |   |   |   |   +---cookies
+|   |   |   |   |   +---ponyfill
+|   |   |   |   |   \---primitives
+|   |   |   |   +---@hapi
+|   |   |   |   |   \---accept
+|   |   |   |   +---@modelcontextprotocol
+|   |   |   |   |   \---sdk
+|   |   |   |   |       \---server
+|   |   |   |   +---@mswjs
+|   |   |   |   |   \---interceptors
+|   |   |   |   |       \---ClientRequest
+|   |   |   |   +---@napi-rs
+|   |   |   |   |   \---triples
+|   |   |   |   +---@next
+|   |   |   |   |   +---font
+|   |   |   |   |   |   +---dist
+|   |   |   |   |   |   |   +---fontkit
+|   |   |   |   |   |   |   +---google
+|   |   |   |   |   |   |   \---local
+|   |   |   |   |   |   +---google
+|   |   |   |   |   |   \---local
+|   |   |   |   |   \---react-refresh-utils
+|   |   |   |   |       \---dist
+|   |   |   |   |           \---internal
+|   |   |   |   +---@opentelemetry
+|   |   |   |   |   \---api
+|   |   |   |   +---@vercel
+|   |   |   |   |   +---nft
+|   |   |   |   |   +---og
+|   |   |   |   |   |   +---emoji
+|   |   |   |   |   |   +---figma
+|   |   |   |   |   |   +---language
+|   |   |   |   |   |   \---satori
+|   |   |   |   |   \---routing-utils
+|   |   |   |   +---acorn
+|   |   |   |   +---anser
+|   |   |   |   +---assert
+|   |   |   |   +---async-retry
+|   |   |   |   +---async-sema
+|   |   |   |   +---babel
+|   |   |   |   +---babel-code-frame
+|   |   |   |   +---babel-packages
+|   |   |   |   +---browserify-zlib
+|   |   |   |   +---browserslist
+|   |   |   |   +---buffer
+|   |   |   |   +---busboy
+|   |   |   |   +---bytes
+|   |   |   |   +---ci-info
+|   |   |   |   +---cli-select
+|   |   |   |   +---client-only
+|   |   |   |   +---commander
+|   |   |   |   +---comment-json
+|   |   |   |   +---compression
+|   |   |   |   +---conf
+|   |   |   |   +---constants-browserify
+|   |   |   |   +---content-disposition
+|   |   |   |   +---content-type
+|   |   |   |   +---cookie
+|   |   |   |   +---cross-spawn
+|   |   |   |   +---crypto-browserify
+|   |   |   |   +---css.escape
+|   |   |   |   +---cssnano-simple
+|   |   |   |   +---data-uri-to-buffer
+|   |   |   |   +---debug
+|   |   |   |   +---devalue
+|   |   |   |   +---domain-browser
+|   |   |   |   +---edge-runtime
+|   |   |   |   +---events
+|   |   |   |   +---find-up
+|   |   |   |   +---fresh
+|   |   |   |   +---glob
+|   |   |   |   +---gzip-size
+|   |   |   |   +---http-proxy
+|   |   |   |   +---http-proxy-agent
+|   |   |   |   +---https-browserify
+|   |   |   |   +---https-proxy-agent
+|   |   |   |   +---icss-utils
+|   |   |   |   +---ignore-loader
+|   |   |   |   +---image-detector
+|   |   |   |   +---image-size
+|   |   |   |   +---ipaddr.js
+|   |   |   |   +---is-animated
+|   |   |   |   +---is-docker
+|   |   |   |   +---is-wsl
+|   |   |   |   +---jest-worker
+|   |   |   |   +---json5
+|   |   |   |   +---jsonwebtoken
+|   |   |   |   +---loader-runner
+|   |   |   |   +---loader-utils2
+|   |   |   |   +---loader-utils3
+|   |   |   |   +---lodash.curry
+|   |   |   |   +---lru-cache
+|   |   |   |   +---mini-css-extract-plugin
+|   |   |   |   |   \---hmr
+|   |   |   |   +---nanoid
+|   |   |   |   +---native-url
+|   |   |   |   +---neo-async
+|   |   |   |   +---next-devtools
+|   |   |   |   +---next-server
+|   |   |   |   +---node-html-parser
+|   |   |   |   +---ora
+|   |   |   |   +---os-browserify
+|   |   |   |   +---p-limit
+|   |   |   |   +---p-queue
+|   |   |   |   +---path-browserify
+|   |   |   |   +---path-to-regexp
+|   |   |   |   +---picomatch
+|   |   |   |   +---postcss-flexbugs-fixes
+|   |   |   |   +---postcss-modules-extract-imports
+|   |   |   |   +---postcss-modules-local-by-default
+|   |   |   |   +---postcss-modules-scope
+|   |   |   |   +---postcss-modules-values
+|   |   |   |   +---postcss-plugin-stub-for-cssnano-simple
+|   |   |   |   +---postcss-preset-env
+|   |   |   |   +---postcss-safe-parser
+|   |   |   |   +---postcss-scss
+|   |   |   |   +---postcss-value-parser
+|   |   |   |   +---process
+|   |   |   |   +---punycode
+|   |   |   |   +---querystring-es3
+|   |   |   |   +---raw-body
+|   |   |   |   +---react
+|   |   |   |   |   \---cjs
+|   |   |   |   +---react-dom
+|   |   |   |   |   \---cjs
+|   |   |   |   +---react-dom-experimental
+|   |   |   |   |   \---cjs
+|   |   |   |   +---react-experimental
+|   |   |   |   |   \---cjs
+|   |   |   |   +---react-is
+|   |   |   |   |   \---cjs
+|   |   |   |   +---react-refresh
+|   |   |   |   |   \---cjs
+|   |   |   |   +---react-server-dom-turbopack
+|   |   |   |   |   \---cjs
+|   |   |   |   +---react-server-dom-turbopack-experimental
+|   |   |   |   |   \---cjs
+|   |   |   |   +---react-server-dom-webpack
+|   |   |   |   |   \---cjs
+|   |   |   |   +---react-server-dom-webpack-experimental
+|   |   |   |   |   \---cjs
+|   |   |   |   +---regenerator-runtime
+|   |   |   |   +---safe-stable-stringify
+|   |   |   |   +---sass-loader
+|   |   |   |   +---scheduler
+|   |   |   |   |   \---cjs
+|   |   |   |   +---scheduler-experimental
+|   |   |   |   |   \---cjs
+|   |   |   |   +---schema-utils2
+|   |   |   |   +---schema-utils3
+|   |   |   |   +---semver
+|   |   |   |   +---send
+|   |   |   |   +---serve-handler
+|   |   |   |   +---server-only
+|   |   |   |   +---setimmediate
+|   |   |   |   +---shell-quote
+|   |   |   |   +---source-map
+|   |   |   |   +---source-map08
+|   |   |   |   +---stacktrace-parser
+|   |   |   |   +---stream-browserify
+|   |   |   |   +---stream-http
+|   |   |   |   +---string-hash
+|   |   |   |   +---string_decoder
+|   |   |   |   +---strip-ansi
+|   |   |   |   +---superstruct
+|   |   |   |   +---tar
+|   |   |   |   +---terser
+|   |   |   |   +---text-table
+|   |   |   |   +---timers-browserify
+|   |   |   |   +---tty-browserify
+|   |   |   |   +---ua-parser-js
+|   |   |   |   +---unistore
+|   |   |   |   +---util
+|   |   |   |   +---vm-browserify
+|   |   |   |   +---watchpack
+|   |   |   |   +---web-vitals
+|   |   |   |   +---web-vitals-attribution
+|   |   |   |   +---webpack
+|   |   |   |   +---webpack-sources1
+|   |   |   |   +---webpack-sources3
+|   |   |   |   +---ws
+|   |   |   |   +---zod
+|   |   |   |   \---zod-validation-error
+|   |   |   +---diagnostics
+|   |   |   +---esm
+|   |   |   |   +---api
+|   |   |   |   +---build
+|   |   |   |   |   +---adapter
+|   |   |   |   |   +---analysis
+|   |   |   |   |   +---analyze
+|   |   |   |   |   +---babel
+|   |   |   |   |   |   +---loader
+|   |   |   |   |   |   \---plugins
+|   |   |   |   |   +---manifests
+|   |   |   |   |   |   \---formatter
+|   |   |   |   |   +---next-config-ts
+|   |   |   |   |   +---output
+|   |   |   |   |   +---polyfills
+|   |   |   |   |   |   +---fetch
+|   |   |   |   |   |   \---object.assign
+|   |   |   |   |   +---segment-config
+|   |   |   |   |   |   +---app
+|   |   |   |   |   |   +---middleware
+|   |   |   |   |   |   \---pages
+|   |   |   |   |   +---static-paths
+|   |   |   |   |   |   \---app
+|   |   |   |   |   +---swc
+|   |   |   |   |   +---templates
+|   |   |   |   |   +---turbopack-analyze
+|   |   |   |   |   +---turbopack-build
+|   |   |   |   |   +---turborepo-access-trace
+|   |   |   |   |   +---webpack
+|   |   |   |   |   |   +---alias
+|   |   |   |   |   |   +---config
+|   |   |   |   |   |   |   \---blocks
+|   |   |   |   |   |   |       +---css
+|   |   |   |   |   |   |       |   \---loaders
+|   |   |   |   |   |   |       \---images
+|   |   |   |   |   |   +---loaders
+|   |   |   |   |   |   |   +---css-loader
+|   |   |   |   |   |   |   |   \---src
+|   |   |   |   |   |   |   |       +---plugins
+|   |   |   |   |   |   |   |       \---runtime
+|   |   |   |   |   |   |   +---devtool
+|   |   |   |   |   |   |   +---lightningcss-loader
+|   |   |   |   |   |   |   |   \---src
+|   |   |   |   |   |   |   +---metadata
+|   |   |   |   |   |   |   +---next-app-loader
+|   |   |   |   |   |   |   +---next-edge-app-route-loader
+|   |   |   |   |   |   |   +---next-edge-ssr-loader
+|   |   |   |   |   |   |   +---next-flight-loader
+|   |   |   |   |   |   |   +---next-font-loader
+|   |   |   |   |   |   |   +---next-image-loader
+|   |   |   |   |   |   |   +---next-route-loader
+|   |   |   |   |   |   |   +---next-style-loader
+|   |   |   |   |   |   |   |   \---runtime
+|   |   |   |   |   |   |   +---postcss-loader
+|   |   |   |   |   |   |   |   \---src
+|   |   |   |   |   |   |   \---resolve-url-loader
+|   |   |   |   |   |   |       \---lib
+|   |   |   |   |   |   \---plugins
+|   |   |   |   |   |       +---minify-webpack-plugin
+|   |   |   |   |   |       |   \---src
+|   |   |   |   |   |       +---next-types-plugin
+|   |   |   |   |   |       +---telemetry-plugin
+|   |   |   |   |   |       \---wellknown-errors-plugin
+|   |   |   |   |   +---webpack-build
+|   |   |   |   |   \---webpack-config-rules
+|   |   |   |   +---client
+|   |   |   |   |   +---app-dir
+|   |   |   |   |   +---compat
+|   |   |   |   |   +---components
+|   |   |   |   |   |   +---builtin
+|   |   |   |   |   |   +---errors
+|   |   |   |   |   |   +---http-access-fallback
+|   |   |   |   |   |   +---router-reducer
+|   |   |   |   |   |   |   \---reducers
+|   |   |   |   |   |   +---segment-cache
+|   |   |   |   |   |   \---styles
+|   |   |   |   |   +---dev
+|   |   |   |   |   |   +---error-overlay
+|   |   |   |   |   |   \---hot-reloader
+|   |   |   |   |   |       +---app
+|   |   |   |   |   |       \---pages
+|   |   |   |   |   +---legacy
+|   |   |   |   |   +---lib
+|   |   |   |   |   +---portal
+|   |   |   |   |   +---react-client-callbacks
+|   |   |   |   |   +---request
+|   |   |   |   |   \---tracing
+|   |   |   |   +---export
+|   |   |   |   |   +---helpers
+|   |   |   |   |   \---routes
+|   |   |   |   +---lib
+|   |   |   |   |   +---framework
+|   |   |   |   |   +---fs
+|   |   |   |   |   +---helpers
+|   |   |   |   |   +---memory
+|   |   |   |   |   +---metadata
+|   |   |   |   |   |   +---generate
+|   |   |   |   |   |   +---resolvers
+|   |   |   |   |   |   \---types
+|   |   |   |   |   \---typescript
+|   |   |   |   +---next-devtools
+|   |   |   |   |   +---server
+|   |   |   |   |   |   \---font
+|   |   |   |   |   +---shared
+|   |   |   |   |   \---userspace
+|   |   |   |   |       +---app
+|   |   |   |   |       |   \---errors
+|   |   |   |   |       \---pages
+|   |   |   |   +---pages
+|   |   |   |   +---server
+|   |   |   |   |   +---after
+|   |   |   |   |   +---api-utils
+|   |   |   |   |   |   \---node
+|   |   |   |   |   +---app-render
+|   |   |   |   |   |   +---metadata-insertion
+|   |   |   |   |   |   +---module-loading
+|   |   |   |   |   |   \---rsc
+|   |   |   |   |   +---async-storage
+|   |   |   |   |   +---base-http
+|   |   |   |   |   +---dev
+|   |   |   |   |   |   \---browser-logs
+|   |   |   |   |   +---instrumentation
+|   |   |   |   |   +---lib
+|   |   |   |   |   |   +---cache-handlers
+|   |   |   |   |   |   +---experimental
+|   |   |   |   |   |   +---incremental-cache
+|   |   |   |   |   |   +---module-loader
+|   |   |   |   |   |   +---router-utils
+|   |   |   |   |   |   +---server-ipc
+|   |   |   |   |   |   \---trace
+|   |   |   |   |   +---mcp
+|   |   |   |   |   |   \---tools
+|   |   |   |   |   |       \---utils
+|   |   |   |   |   +---node-environment-extensions
+|   |   |   |   |   +---normalizers
+|   |   |   |   |   |   +---built
+|   |   |   |   |   |   |   +---app
+|   |   |   |   |   |   |   \---pages
+|   |   |   |   |   |   \---request
+|   |   |   |   |   +---og
+|   |   |   |   |   +---request
+|   |   |   |   |   +---response-cache
+|   |   |   |   |   +---resume-data-cache
+|   |   |   |   |   +---route-definitions
+|   |   |   |   |   +---route-matcher-managers
+|   |   |   |   |   +---route-matcher-providers
+|   |   |   |   |   |   +---dev
+|   |   |   |   |   |   |   \---helpers
+|   |   |   |   |   |   |       \---file-reader
+|   |   |   |   |   |   \---helpers
+|   |   |   |   |   |       \---manifest-loaders
+|   |   |   |   |   +---route-matchers
+|   |   |   |   |   +---route-matches
+|   |   |   |   |   +---route-modules
+|   |   |   |   |   |   +---app-page
+|   |   |   |   |   |   |   +---helpers
+|   |   |   |   |   |   |   \---vendored
+|   |   |   |   |   |   |       +---contexts
+|   |   |   |   |   |   |       +---rsc
+|   |   |   |   |   |   |       \---ssr
+|   |   |   |   |   |   +---app-route
+|   |   |   |   |   |   |   \---helpers
+|   |   |   |   |   |   +---pages
+|   |   |   |   |   |   |   +---builtin
+|   |   |   |   |   |   |   \---vendored
+|   |   |   |   |   |   |       \---contexts
+|   |   |   |   |   |   \---pages-api
+|   |   |   |   |   +---stream-utils
+|   |   |   |   |   +---typescript
+|   |   |   |   |   |   \---rules
+|   |   |   |   |   +---use-cache
+|   |   |   |   |   \---web
+|   |   |   |   |       +---exports
+|   |   |   |   |       +---sandbox
+|   |   |   |   |       \---spec-extension
+|   |   |   |   |           \---adapters
+|   |   |   |   \---shared
+|   |   |   |       \---lib
+|   |   |   |           +---errors
+|   |   |   |           +---i18n
+|   |   |   |           +---isomorphic
+|   |   |   |           +---lazy-dynamic
+|   |   |   |           +---page-path
+|   |   |   |           +---router
+|   |   |   |           |   +---routes
+|   |   |   |           |   \---utils
+|   |   |   |           +---segment-cache
+|   |   |   |           +---turbopack
+|   |   |   |           \---utils
+|   |   |   +---experimental
+|   |   |   |   +---testing
+|   |   |   |   |   \---server
+|   |   |   |   \---testmode
+|   |   |   |       +---playwright
+|   |   |   |       \---proxy
+|   |   |   +---export
+|   |   |   |   +---helpers
+|   |   |   |   \---routes
+|   |   |   +---lib
+|   |   |   |   +---framework
+|   |   |   |   +---fs
+|   |   |   |   +---helpers
+|   |   |   |   +---memory
+|   |   |   |   +---metadata
+|   |   |   |   |   +---generate
+|   |   |   |   |   +---resolvers
+|   |   |   |   |   \---types
+|   |   |   |   \---typescript
+|   |   |   +---next-devtools
+|   |   |   |   +---dev-overlay
+|   |   |   |   |   +---components
+|   |   |   |   |   |   +---call-stack
+|   |   |   |   |   |   +---call-stack-frame
+|   |   |   |   |   |   +---code-frame
+|   |   |   |   |   |   +---copy-button
+|   |   |   |   |   |   +---devtools-indicator
+|   |   |   |   |   |   |   \---hooks
+|   |   |   |   |   |   +---devtools-panel
+|   |   |   |   |   |   |   \---resize
+|   |   |   |   |   |   +---dialog
+|   |   |   |   |   |   +---errors
+|   |   |   |   |   |   |   +---dev-tools-indicator
+|   |   |   |   |   |   |   |   \---dev-tools-info
+|   |   |   |   |   |   |   +---dialog
+|   |   |   |   |   |   |   +---environment-name-label
+|   |   |   |   |   |   |   +---error-message
+|   |   |   |   |   |   |   +---error-overlay
+|   |   |   |   |   |   |   +---error-overlay-bottom-stack
+|   |   |   |   |   |   |   +---error-overlay-call-stack
+|   |   |   |   |   |   |   +---error-overlay-footer
+|   |   |   |   |   |   |   |   \---error-feedback
+|   |   |   |   |   |   |   +---error-overlay-layout
+|   |   |   |   |   |   |   +---error-overlay-nav
+|   |   |   |   |   |   |   +---error-overlay-pagination
+|   |   |   |   |   |   |   +---error-overlay-toolbar
+|   |   |   |   |   |   |   +---error-type-label
+|   |   |   |   |   |   |   \---overlay
+|   |   |   |   |   |   +---fader
+|   |   |   |   |   |   +---hot-linked-text
+|   |   |   |   |   |   +---hydration-diff
+|   |   |   |   |   |   +---overlay
+|   |   |   |   |   |   +---overview
+|   |   |   |   |   |   +---resizer
+|   |   |   |   |   |   +---terminal
+|   |   |   |   |   |   +---toast
+|   |   |   |   |   |   +---tooltip
+|   |   |   |   |   |   \---version-staleness-info
+|   |   |   |   |   +---container
+|   |   |   |   |   |   \---runtime-error
+|   |   |   |   |   +---font
+|   |   |   |   |   +---hooks
+|   |   |   |   |   +---icons
+|   |   |   |   |   |   \---thumbs
+|   |   |   |   |   +---menu
+|   |   |   |   |   +---panel
+|   |   |   |   |   +---styles
+|   |   |   |   |   \---utils
+|   |   |   |   +---server
+|   |   |   |   |   \---font
+|   |   |   |   +---shared
+|   |   |   |   \---userspace
+|   |   |   |       +---app
+|   |   |   |       |   \---errors
+|   |   |   |       \---pages
+|   |   |   +---pages
+|   |   |   +---server
+|   |   |   |   +---after
+|   |   |   |   +---api-utils
+|   |   |   |   |   \---node
+|   |   |   |   +---app-render
+|   |   |   |   |   +---metadata-insertion
+|   |   |   |   |   +---module-loading
+|   |   |   |   |   \---rsc
+|   |   |   |   +---async-storage
+|   |   |   |   +---base-http
+|   |   |   |   +---dev
+|   |   |   |   |   \---browser-logs
+|   |   |   |   +---instrumentation
+|   |   |   |   +---lib
+|   |   |   |   |   +---cache-handlers
+|   |   |   |   |   +---experimental
+|   |   |   |   |   +---incremental-cache
+|   |   |   |   |   +---module-loader
+|   |   |   |   |   +---router-utils
+|   |   |   |   |   +---server-ipc
+|   |   |   |   |   \---trace
+|   |   |   |   +---mcp
+|   |   |   |   |   \---tools
+|   |   |   |   |       \---utils
+|   |   |   |   +---node-environment-extensions
+|   |   |   |   +---normalizers
+|   |   |   |   |   +---built
+|   |   |   |   |   |   +---app
+|   |   |   |   |   |   \---pages
+|   |   |   |   |   \---request
+|   |   |   |   +---og
+|   |   |   |   +---request
+|   |   |   |   +---response-cache
+|   |   |   |   +---resume-data-cache
+|   |   |   |   +---route-definitions
+|   |   |   |   +---route-matcher-managers
+|   |   |   |   +---route-matcher-providers
+|   |   |   |   |   +---dev
+|   |   |   |   |   |   \---helpers
+|   |   |   |   |   |       \---file-reader
+|   |   |   |   |   \---helpers
+|   |   |   |   |       \---manifest-loaders
+|   |   |   |   +---route-matchers
+|   |   |   |   +---route-matches
+|   |   |   |   +---route-modules
+|   |   |   |   |   +---app-page
+|   |   |   |   |   |   +---helpers
+|   |   |   |   |   |   \---vendored
+|   |   |   |   |   |       +---contexts
+|   |   |   |   |   |       +---rsc
+|   |   |   |   |   |       \---ssr
+|   |   |   |   |   +---app-route
+|   |   |   |   |   |   \---helpers
+|   |   |   |   |   +---pages
+|   |   |   |   |   |   +---builtin
+|   |   |   |   |   |   \---vendored
+|   |   |   |   |   |       \---contexts
+|   |   |   |   |   \---pages-api
+|   |   |   |   +---stream-utils
+|   |   |   |   +---typescript
+|   |   |   |   |   \---rules
+|   |   |   |   +---use-cache
+|   |   |   |   \---web
+|   |   |   |       +---exports
+|   |   |   |       +---sandbox
+|   |   |   |       \---spec-extension
+|   |   |   |           \---adapters
+|   |   |   +---shared
+|   |   |   |   \---lib
+|   |   |   |       +---errors
+|   |   |   |       +---i18n
+|   |   |   |       +---isomorphic
+|   |   |   |       +---lazy-dynamic
+|   |   |   |       +---page-path
+|   |   |   |       +---router
+|   |   |   |       |   +---routes
+|   |   |   |       |   \---utils
+|   |   |   |       +---segment-cache
+|   |   |   |       +---turbopack
+|   |   |   |       \---utils
+|   |   |   +---styled-jsx
+|   |   |   |   \---types
+|   |   |   +---telemetry
+|   |   |   |   \---events
+|   |   |   \---trace
+|   |   |       \---report
+|   |   +---experimental
+|   |   |   +---testing
+|   |   |   \---testmode
+|   |   |       \---playwright
+|   |   +---font
+|   |   |   +---google
+|   |   |   \---local
+|   |   +---image-types
+|   |   +---legacy
+|   |   +---navigation-types
+|   |   |   \---compat
+|   |   +---node_modules
+|   |   |   \---postcss
+|   |   |       \---lib
+|   |   \---types
+|   +---node-releases
+|   |   \---data
+|   |       +---processed
+|   |       \---release-schedule
+|   +---normalize-path
+|   +---object-assign
+|   +---object-hash
+|   |   \---dist
+|   +---optionator
+|   |   \---lib
+|   +---p-limit
+|   +---p-locate
+|   +---path-exists
+|   +---path-key
+|   +---path-parse
+|   +---picocolors
+|   +---picomatch
+|   |   \---lib
+|   +---pify
+|   +---pirates
+|   |   \---lib
+|   +---postcss
+|   |   \---lib
+|   +---postcss-import
+|   |   \---lib
+|   +---postcss-js
+|   +---postcss-nested
+|   +---postcss-selector-parser
+|   |   \---dist
+|   |       +---selectors
+|   |       \---util
+|   +---postcss-value-parser
+|   |   \---lib
+|   +---prelude-ls
+|   |   \---lib
+|   +---protobufjs
+|   |   +---dist
+|   |   |   +---light
+|   |   |   \---minimal
+|   |   +---ext
+|   |   |   +---debug
+|   |   |   \---descriptor
+|   |   +---google
+|   |   |   +---api
+|   |   |   \---protobuf
+|   |   +---scripts
+|   |   \---src
+|   |       +---rpc
+|   |       \---util
+|   +---punycode
+|   +---queue-microtask
+|   +---react
+|   |   \---cjs
+|   +---react-dom
+|   |   \---cjs
+|   +---read-cache
+|   +---readdirp
+|   +---require-directory
+|   +---resolve
+|   |   +---.github
+|   |   +---bin
+|   |   +---example
+|   |   +---lib
+|   |   \---test
+|   |       +---dotdot
+|   |       |   \---abc
+|   |       +---module_dir
+|   |       |   +---xmodules
+|   |       |   |   \---aaa
+|   |       |   +---ymodules
+|   |       |   |   \---aaa
+|   |       |   \---zmodules
+|   |       |       \---bbb
+|   |       +---node_path
+|   |       |   +---x
+|   |       |   |   +---aaa
+|   |       |   |   \---ccc
+|   |       |   \---y
+|   |       |       +---bbb
+|   |       |       \---ccc
+|   |       +---pathfilter
+|   |       |   \---deep_ref
+|   |       +---precedence
+|   |       |   +---aaa
+|   |       |   \---bbb
+|   |       +---resolver
+|   |       |   +---baz
+|   |       |   +---browser_field
+|   |       |   +---dot_main
+|   |       |   +---dot_slash_main
+|   |       |   +---false_main
+|   |       |   +---incorrect_main
+|   |       |   +---invalid_main
+|   |       |   +---multirepo
+|   |       |   |   \---packages
+|   |       |   |       +---package-a
+|   |       |   |       \---package-b
+|   |       |   +---nested_symlinks
+|   |       |   |   \---mylib
+|   |       |   +---other_path
+|   |       |   |   \---lib
+|   |       |   +---quux
+|   |       |   |   \---foo
+|   |       |   +---same_names
+|   |       |   |   \---foo
+|   |       |   +---symlinked
+|   |       |   |   +---package
+|   |       |   |   \---_
+|   |       |   |       +---node_modules
+|   |       |   |       \---symlink_target
+|   |       |   \---without_basedir
+|   |       \---shadowed_core
+|   |           \---node_modules
+|   |               \---util
+|   +---reusify
+|   |   +---.github
+|   |   |   \---workflows
+|   |   \---benchmarks
+|   +---run-parallel
+|   +---safe-buffer
+|   +---scheduler
+|   |   \---cjs
+|   +---sharp
+|   |   +---install
+|   |   +---lib
+|   |   +---node_modules
+|   |   |   +---.bin
+|   |   |   \---semver
+|   |   |       +---bin
+|   |   |       +---classes
+|   |   |       +---functions
+|   |   |       +---internal
+|   |   |       \---ranges
+|   |   \---src
+|   +---shebang-command
+|   +---shebang-regex
+|   +---source-map-js
+|   |   \---lib
+|   +---string-width
+|   |   \---node_modules
+|   |       \---emoji-regex
+|   |           \---es2015
+|   +---strip-ansi
+|   +---styled-jsx
+|   |   +---dist
+|   |   |   +---babel
+|   |   |   +---index
+|   |   |   \---webpack
+|   |   \---lib
+|   +---sucrase
+|   |   +---bin
+|   |   +---dist
+|   |   |   +---esm
+|   |   |   |   +---parser
+|   |   |   |   |   +---plugins
+|   |   |   |   |   |   \---jsx
+|   |   |   |   |   +---tokenizer
+|   |   |   |   |   +---traverser
+|   |   |   |   |   \---util
+|   |   |   |   +---transformers
+|   |   |   |   \---util
+|   |   |   +---parser
+|   |   |   |   +---plugins
+|   |   |   |   |   \---jsx
+|   |   |   |   +---tokenizer
+|   |   |   |   +---traverser
+|   |   |   |   \---util
+|   |   |   +---transformers
+|   |   |   +---types
+|   |   |   |   +---parser
+|   |   |   |   |   +---plugins
+|   |   |   |   |   |   \---jsx
+|   |   |   |   |   +---tokenizer
+|   |   |   |   |   +---traverser
+|   |   |   |   |   \---util
+|   |   |   |   +---transformers
+|   |   |   |   \---util
+|   |   |   \---util
+|   |   +---register
+|   |   \---ts-node-plugin
+|   +---supports-preserve-symlinks-flag
+|   |   +---.github
+|   |   \---test
+|   +---tailwindcss
+|   |   +---lib
+|   |   |   +---cli
+|   |   |   |   +---build
+|   |   |   |   +---help
+|   |   |   |   \---init
+|   |   |   +---css
+|   |   |   +---lib
+|   |   |   +---postcss-plugins
+|   |   |   |   \---nesting
+|   |   |   +---public
+|   |   |   +---util
+|   |   |   \---value-parser
+|   |   +---nesting
+|   |   +---node_modules
+|   |   |   +---.bin
+|   |   |   +---fast-glob
+|   |   |   |   +---node_modules
+|   |   |   |   |   \---glob-parent
+|   |   |   |   \---out
+|   |   |   |       +---managers
+|   |   |   |       +---providers
+|   |   |   |       |   +---filters
+|   |   |   |       |   +---matchers
+|   |   |   |       |   \---transformers
+|   |   |   |       +---readers
+|   |   |   |       +---types
+|   |   |   |       \---utils
+|   |   |   +---jiti
+|   |   |   |   +---bin
+|   |   |   |   +---dist
+|   |   |   |   |   \---plugins
+|   |   |   |   \---lib
+|   |   |   \---postcss-load-config
+|   |   |       \---src
+|   |   +---peers
+|   |   +---scripts
+|   |   +---src
+|   |   |   +---cli
+|   |   |   |   +---build
+|   |   |   |   +---help
+|   |   |   |   \---init
+|   |   |   +---css
+|   |   |   +---lib
+|   |   |   +---postcss-plugins
+|   |   |   |   \---nesting
+|   |   |   +---public
+|   |   |   +---util
+|   |   |   \---value-parser
+|   |   +---stubs
+|   |   \---types
+|   |       \---generated
+|   +---tapable
+|   |   \---lib
+|   +---thenify
+|   +---thenify-all
+|   +---tinyglobby
+|   |   +---dist
+|   |   \---node_modules
+|   |       +---fdir
+|   |       |   \---dist
+|   |       \---picomatch
+|   |           \---lib
+|   +---to-regex-range
+|   +---ts-interface-checker
+|   |   \---dist
+|   +---tslib
+|   |   \---modules
+|   +---type-check
+|   |   \---lib
+|   +---typescript
+|   |   +---bin
+|   |   \---lib
+|   |       +---cs
+|   |       +---de
+|   |       +---es
+|   |       +---fr
+|   |       +---it
+|   |       +---ja
+|   |       +---ko
+|   |       +---pl
+|   |       +---pt-br
+|   |       +---ru
+|   |       +---tr
+|   |       +---zh-cn
+|   |       \---zh-tw
+|   +---undici-types
+|   +---update-browserslist-db
+|   +---uri-js
+|   |   \---dist
+|   |       +---es5
+|   |       \---esnext
+|   |           \---schemes
+|   +---util-deprecate
+|   +---web-vitals
+|   |   +---dist
+|   |   |   \---modules
+|   |   |       +---attribution
+|   |   |       +---lib
+|   |   |       |   \---polyfills
+|   |   |       \---types
+|   |   \---src
+|   |       +---attribution
+|   |       +---lib
+|   |       |   \---polyfills
+|   |       \---types
+|   +---websocket-driver
+|   |   \---lib
+|   |       \---websocket
+|   |           \---driver
+|   |               \---hybi
+|   +---websocket-extensions
+|   |   \---lib
+|   |       \---pipeline
+|   +---which
+|   |   \---bin
+|   +---word-wrap
+|   +---wrap-ansi
+|   +---y18n
+|   |   \---build
+|   |       \---lib
+|   |           \---platform-shims
+|   +---yaml
+|   |   +---browser
+|   |   |   \---dist
+|   |   |       +---compose
+|   |   |       +---doc
+|   |   |       +---nodes
+|   |   |       +---parse
+|   |   |       +---schema
+|   |   |       |   +---common
+|   |   |       |   +---core
+|   |   |       |   +---json
+|   |   |       |   \---yaml-1.1
+|   |   |       \---stringify
+|   |   \---dist
+|   |       +---compose
+|   |       +---doc
+|   |       +---nodes
+|   |       +---parse
+|   |       +---schema
+|   |       |   +---common
+|   |       |   +---core
+|   |       |   +---json
+|   |       |   \---yaml-1.1
+|   |       \---stringify
+|   +---yargs
+|   |   +---build
+|   |   |   \---lib
+|   |   |       +---typings
+|   |   |       \---utils
+|   |   +---helpers
+|   |   +---lib
+|   |   |   \---platform-shims
+|   |   \---locales
+|   +---yargs-parser
+|   |   \---build
+|   |       \---lib
+|   \---yocto-queue
++---public
+|   \---images
+\---util
+    \---game-core
