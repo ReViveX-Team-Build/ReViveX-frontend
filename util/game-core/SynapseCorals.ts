@@ -349,3 +349,109 @@ export class SynapseCorals {
       else                  this.addBackgroundCluster(nx);
     }
   }
+  // ─── DRAWING ──────────────────────────────────────────────────────────────
+
+  draw(ctx: CanvasRenderingContext2D, nightFactor: number): void {
+    const time = Date.now() * 0.0008;
+    // Make sure we draw back-to-front or it'll look weird
+    const sorted = [...this.items].sort((a, b) => a.layer - b.layer);
+
+    for (const item of sorted) {
+      if (item.kind === 'reef') this.drawReefGroup(ctx, item, time, nightFactor);
+      else this.drawSprite(ctx, item, time, nightFactor);
+    }
+  }
+
+  private drawReefGroup(ctx: CanvasRenderingContext2D, reef: ReefGroup, time: number, nf: number): void {
+    const lp = LAYER_PROPS[reef.layer];
+    ctx.save();
+    ctx.globalAlpha = lp.opacityRange[0] + 0.5 * (lp.opacityRange[1] - lp.opacityRange[0]);
+
+    for (const p of reef.pebbles) this.drawPebble(ctx, p.x, p.y, p.r, reef.layer, nf);
+    for (const b of reef.boulders) this.drawBoulder(ctx, b, reef.layer, nf);
+    for (const b of reef.boulders) this.drawSandShadow(ctx, b.x, reef.y, b.rx * 1.6, 7, nf);
+
+    ctx.restore();
+    for (const c of reef.corals) this.drawSprite(ctx, c, time, nf);
+  }
+
+  private drawSprite(ctx: CanvasRenderingContext2D, sprite: CoralSprite, time: number, nf: number): void {
+    if (!this.ready[sprite.asset]) return;
+    const img  = this.imgs[sprite.asset];
+    const base = ASSET_SIZE[sprite.asset];
+    const w = base.w * sprite.scale;
+    const h = base.h * sprite.scale;
+    const amp = ASSET_SWAY[sprite.asset];
+    const lp = LAYER_PROPS[sprite.layer];
+
+    // This makes the swaying look organic (stacking different speeds)
+    const sway = amp > 0
+      ? Math.sin(time * 0.55 + sprite.swayOff) * amp
+      + Math.sin(time * 1.42 + sprite.swayOff + 2.0) * amp * 0.36
+      + Math.sin(time * 3.15 + sprite.swayOff + 4.5) * amp * 0.11
+      : 0;
+
+    ctx.save();
+    // Distance blur/tint
+    if (lp.blueTint > 0) {
+      ctx.filter = `saturate(${Math.round((1 - lp.blueTint * 0.60) * 100)}%) brightness(${Math.round((1 - lp.blueTint * 0.28) * 100)}%)`;
+    }
+
+    ctx.globalAlpha = sprite.opacity;
+    if (nf > 0.08 && sprite.asset !== 'starfish') {
+      ctx.shadowBlur = 14 * nf;
+      ctx.shadowColor = ASSET_GLOW[sprite.asset];
+    }
+
+    if (sprite.layer === 2 && sprite.asset !== 'starfish') {
+      this.drawSandShadow(ctx, sprite.x, this.sandY(), w * 0.55, 10, nf);
+    }
+
+    ctx.translate(sprite.x, sprite.y);
+    ctx.transform(1, 0, sway, 1, 0, 0); // Shearing for the sway
+    ctx.drawImage(img, -w / 2, -h, w, h);
+    ctx.restore();
+  }
+
+  // Boring math for drawing boulders, pebbles, and shadows...
+  private drawBoulder(ctx: CanvasRenderingContext2D, b: Boulder, layer: DepthLayer, nf: number): void {
+    const lp = LAYER_PROPS[layer];
+    const tint = lp.blueTint;
+    const nd = 1 - nf * 0.65;
+    const r0 = Math.round(130 - tint * 40), g0 = Math.round(150 - tint * 20), b0 = Math.round(162 + tint * 30);
+    const r1 = Math.round(55 - tint * 20), g1 = Math.round(78 - tint * 10), b1 = Math.round(88 + tint * 25);
+
+    ctx.save();
+    ctx.translate(b.x, b.y);
+    ctx.rotate(b.rot);
+    const grad = ctx.createRadialGradient(-b.rx * 0.3, -b.ry * 0.3, b.rx * 0.08, 0, 0, Math.max(b.rx, b.ry));
+    grad.addColorStop(0, `rgb(${Math.round(r0*nd)},${Math.round(g0*nd)},${Math.round(b0*nd)})`);
+    grad.addColorStop(1, `rgb(${Math.round(r1*nd)},${Math.round(g1*nd)},${Math.round(b1*nd)})`);
+    ctx.beginPath(); ctx.ellipse(0, 0, b.rx, b.ry, 0, 0, Math.PI * 2);
+    ctx.fillStyle = grad; ctx.fill();
+    ctx.restore();
+  }
+
+  private drawPebble(ctx: CanvasRenderingContext2D, px: number, py: number, pr: number, layer: DepthLayer, nf: number): void {
+    const nd = 1 - nf * 0.62;
+    const h0 = Math.round((145 - LAYER_PROPS[layer].blueTint * 35) * nd);
+    ctx.save();
+    ctx.beginPath(); ctx.ellipse(px, py, pr, pr * 0.6, Math.random(), 0, Math.PI * 2);
+    ctx.fillStyle = `rgb(${h0},${h0+5},${h0+8})`; ctx.fill();
+    ctx.restore();
+  }
+
+  private drawSandShadow(ctx: CanvasRenderingContext2D, x: number, sandY: number, halfW: number, halfH: number, nf: number): void {
+    const alpha = (0.22 - nf * 0.14);
+    if (alpha <= 0) return;
+    ctx.save();
+    const g = ctx.createRadialGradient(x, sandY, 0, x, sandY, halfW);
+    g.addColorStop(0, `rgba(60,30,4,${alpha})`);
+    g.addColorStop(1, 'rgba(40,18,1,0)');
+    ctx.beginPath(); ctx.ellipse(x, sandY, halfW, halfH, 0, 0, Math.PI * 2);
+    ctx.fillStyle = g; ctx.fill();
+    ctx.restore();
+  }
+
+  private sandY(): number { return this.gameHeight - 5; }
+}
