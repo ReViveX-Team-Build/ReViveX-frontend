@@ -6,7 +6,7 @@ interface CursorPosition {
   y: number;
 }
 
-export function useCursorTracking(elementRef: RefObject<HTMLElement>) {
+export function useCursorTracking(elementRef: RefObject<SVGSVGElement | HTMLElement | null>) {
   const [cursorPos, setCursorPos] = useState<CursorPosition>({ x: 0, y: 0 });
   const [isHovering, setIsHovering] = useState(false);
 
@@ -28,14 +28,17 @@ export function useCursorTracking(elementRef: RefObject<HTMLElement>) {
       setCursorPos({ x: 0, y: 0 });
     };
 
-    element.addEventListener("mousemove", handleMouseMove);
-    element.addEventListener("mouseenter", handleMouseEnter);
-    element.addEventListener("mouseleave", handleMouseLeave);
+    // Type cast to fix TypeScript error
+    const htmlElement = element as HTMLElement;
+    
+    htmlElement.addEventListener("mousemove", handleMouseMove as EventListener);
+    htmlElement.addEventListener("mouseenter", handleMouseEnter);
+    htmlElement.addEventListener("mouseleave", handleMouseLeave);
 
     return () => {
-      element.removeEventListener("mousemove", handleMouseMove);
-      element.removeEventListener("mouseenter", handleMouseEnter);
-      element.removeEventListener("mouseleave", handleMouseLeave);
+      htmlElement.removeEventListener("mousemove", handleMouseMove as EventListener);
+      htmlElement.removeEventListener("mouseenter", handleMouseEnter);
+      htmlElement.removeEventListener("mouseleave", handleMouseLeave);
     };
   }, [elementRef]);
 
