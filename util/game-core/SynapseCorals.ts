@@ -104,3 +104,69 @@ const LANE_MIN_DIST: Record<DepthLayer, number> = {
   1: 240,
   2: 320,
 };
+
+export class SynapseCorals {
+  gameWidth:  number;
+  gameHeight: number;
+
+  private items: SceneItem[] = [];
+  private imgs:  Record<AssetKey, HTMLImageElement>;
+  private ready: Record<AssetKey, boolean>;
+  private lanePositions: Record<DepthLayer, number[]> = { 0: [], 1: [], 2: [] };
+  private scrollX = 0;
+
+  constructor(gameWidth: number, gameHeight: number) {
+    this.gameWidth  = gameWidth;
+    this.gameHeight = gameHeight;
+    this.ready = {} as Record<AssetKey, boolean>;
+
+    // Quick helper to suck in the images
+    const load = (src: string, key: AssetKey): HTMLImageElement => {
+      const img  = new Image();
+      this.ready[key] = false;
+      img.onload = () => { this.ready[key] = true; };
+      img.src    = src;
+      return img;
+    };
+
+    this.imgs = Object.fromEntries(
+      (Object.keys(ASSET_SRC) as AssetKey[]).map(k => [k, load(ASSET_SRC[k], k)])
+    ) as Record<AssetKey, HTMLImageElement>;
+
+    this.init();
+  }
+
+  private init(): void {
+    // Break the screen into 6 segments so we can spread stuff out evenly-ish
+    const W   = this.gameWidth;
+    const seg = W / 6;
+
+    // Plop down some background clusters
+    this.addBackgroundCluster(seg * 0.4);
+    this.addBackgroundCluster(seg * 1.8);
+    this.addBackgroundCluster(seg * 3.5);
+    this.addBackgroundCluster(seg * 5.2);
+
+    // Some midground solo performers
+    this.addMidgroundSolo(seg * 0.9);
+    this.addMidgroundSolo(seg * 2.6);
+    this.addMidgroundSolo(seg * 4.4);
+
+    // The "Hero" reefs in the front
+    this.addReefGroup(seg * 0.2, 2);
+    this.addReefGroup(seg * 1.5, 2);
+    this.addReefGroup(seg * 2.9, 2);
+    this.addReefGroup(seg * 4.2, 2);
+    this.addReefGroup(seg * 5.6, 2);
+
+    // Scatter some pebbles so the floor isn't boring
+    this.addPebblePatch(seg * 0.7, 2);
+    this.addPebblePatch(seg * 2.2, 2);
+    this.addPebblePatch(seg * 3.8, 2);
+    this.addPebblePatch(seg * 5.1, 2);
+
+    // Some extra flair
+    this.addSoloFeature(seg * 1.1, 2, 'tubes');
+    this.addSoloFeature(seg * 3.3, 2, 'fan');
+    this.addSoloFeature(seg * 5.8, 2, 'tubes');
+  }
