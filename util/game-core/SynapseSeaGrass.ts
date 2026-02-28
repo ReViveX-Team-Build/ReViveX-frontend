@@ -220,3 +220,143 @@ export class SeaGrass {
       case 'kelp':       this.drawKelp(ctx, c, time);        break;
     }
   }
+
+  // ─────────────────────────────────────────────────────────────────────────
+  //  TYPE 1: BLADE — organic curved seagrass with tapered pointed tip,
+  //  varying heights, natural splaying angles, rooted into sand
+  // ─────────────────────────────────────────────────────────────────────────
+  private drawBlades(ctx: CanvasRenderingContext2D, c: Cluster, time: number): void {
+    // ── Sand root mound — visually anchors the blades to the ground ──
+    ctx.save();
+    const moundW = c.baseWidth * 0.65;
+    const grad2  = ctx.createRadialGradient(c.x, c.baseY, 0, c.x, c.baseY, moundW);
+    grad2.addColorStop(0,   'rgba(185,148,85,0.55)');
+    grad2.addColorStop(0.5, 'rgba(165,128,68,0.35)');
+    grad2.addColorStop(1,   'rgba(145,110,55,0.0)');
+    
+    ctx.beginPath();
+    ctx.ellipse(c.x, c.baseY, moundW, 13, 0, 0, Math.PI);
+    ctx.fillStyle = grad2;
+    ctx.fill();
+    ctx.restore();
+
+    // Sort blades tallest-to-shortest so shorter ones overlap correctly in front
+    const sorted = [...c.stems].sort((a, b) => b.height - a.height);
+
+    sorted.forEach((stem, i) => {
+      const h = stem.height * c.scale;
+      const w = stem.width  * c.scale;
+
+      // Calculates organic movement combining baseline sway and higher frequency ripples
+      const swayMag = 8 + (h / 200) * 22;
+      const sway =
+        Math.sin(time * stem.swaySpeed + stem.swayOffset)         * swayMag +
+        Math.sin(time * stem.swaySpeed * 1.9 + stem.swayOffset + 1.2) * swayMag * 0.28;
+
+      const bx = c.x + stem.relX;
+      const by = c.baseY; 
+      const totalLean = stem.angle * h + sway + stem.lean;
+
+      // S-curve control points: firm at the base, bending at the top
+      const cp1x = bx + totalLean * 0.18;
+      const cp1y = by - h * 0.38;
+      const cp2x = bx + totalLean * 0.62;
+      const cp2y = by - h * 0.70;
+      const tipX = bx + totalLean;
+      const tipY = by - h;
+
+      const baseHalfW  = w * 0.50;
+      const midHalfW   = w * 0.32;
+      const tipHalfW   = 0.8;
+
+      // Slight hue shift per blade for natural color variation
+      const hueShift = Math.round(stem.hue * 25);
+      const grad = ctx.createLinearGradient(bx, by, tipX, tipY);
+      grad.addColorStop(0,    `rgba(${22+hueShift},${78+hueShift},${28},0.92)`);
+      grad.addColorStop(0.28, `rgba(${38+hueShift},${130+hueShift},${45},0.94)`);
+      grad.addColorStop(0.62, `rgba(${58+hueShift},${175+hueShift},${62},0.96)`);
+      grad.addColorStop(0.88, `rgba(${95+hueShift},${210+hueShift},${78},0.90)`);
+      grad.addColorStop(1,    `rgba(${145+hueShift},${230+hueShift},${100},0.55)`);
+
+      ctx.save();
+      ctx.fillStyle = grad;
+      ctx.beginPath();
+
+      // Draw the left edge upward
+      ctx.moveTo(bx - baseHalfW, by);
+      ctx.bezierCurveTo(
+        cp1x - midHalfW,  cp1y,       
+        cp2x - midHalfW,  cp2y,       
+        tipX - tipHalfW,  tipY          
+      );
+
+      // Connect the tip
+      ctx.quadraticCurveTo(tipX, tipY - 2, tipX + tipHalfW, tipY);
+
+      // Draw the right edge downward
+      ctx.bezierCurveTo(
+        cp2x + midHalfW,  cp2y,
+        cp1x + midHalfW,  cp1y,
+        bx   + baseHalfW, by
+      );
+
+      ctx.closePath();
+      ctx.fill();
+
+      // Render the structural midrib catching the light
+      ctx.beginPath();
+      ctx.moveTo(bx, by);
+      ctx.bezierCurveTo(cp1x, cp1y, cp2x, cp2y, tipX, tipY);
+      ctx.strokeStyle = `rgba(185,240,140,0.38)`;
+      ctx.lineWidth   = Math.max(0.5, w * 0.10);
+      ctx.stroke();
+
+      // Add a bright highlight rim on one side for depth
+      ctx.beginPath();
+      ctx.moveTo(bx + baseHalfW * 0.6, by);
+      ctx.bezierCurveTo(
+        cp1x + midHalfW * 0.5, cp1y,
+        cp2x + midHalfW * 0.3, cp2y,
+        tipX, tipY
+      );
+      ctx.strokeStyle = `rgba(200,250,160,0.22)`;
+      ctx.lineWidth   = Math.max(0.4, w * 0.07);
+      ctx.stroke();
+
+      ctx.restore();
+    });
+  }
+
+  // ─────────────────────────────────────────────────────────────────────────
+  //  TYPE 2: SILHOUETTE — Deep background elements providing parallax depth
+  // ─────────────────────────────────────────────────────────────────────────
+  private drawSilhouette(ctx: CanvasRenderingContext2D, c: Cluster, time: number): void {
+    c.stems.forEach(stem => {
+      const sway =
+        Math.sin(time * stem.swaySpeed + stem.swayOffset) * (8 + stem.depth * 12) +
+        Math.sin(time * stem.swaySpeed * 2.1 + stem.swayOffset + 1) * 3;
+
+      const bx   = c.x + stem.relX;
+      const by   = c.baseY;
+      const h    = stem.height * c.scale;
+      const w    = stem.width  * c.scale;
+      const tipX = bx + sway + stem.angle * h;
+      const tipY = by - h;
+
+      // Darker, less saturated gradient to simulate distance/water turbidity
+      const grad = ctx.createLinearGradient(bx, by, tipX, tipY);
+      grad.addColorStop(0,   'rgba(16,30,68,0.92)');
+      grad.addColorStop(0.5, 'rgba(26,50,105,0.82)');
+      grad.addColorStop(1,   'rgba(42,75,145,0.38)');
+
+      ctx.save();
+      ctx.fillStyle = grad;
+      ctx.beginPath();
+      ctx.moveTo(bx - w * 0.48, by);
+      ctx.quadraticCurveTo(bx + sway * 0.5, by - h * 0.50, tipX, tipY);
+      ctx.quadraticCurveTo(bx + sway * 0.3, by - h * 0.50, bx + w * 0.48, by);
+      ctx.closePath();
+      ctx.fill();
+      ctx.restore();
+    });
+  }
