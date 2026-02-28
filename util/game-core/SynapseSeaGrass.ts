@@ -360,3 +360,245 @@ export class SeaGrass {
       ctx.restore();
     });
   }
+
+  // ─────────────────────────────────────────────────────────────────────────
+  //  TYPE 3: ANEMONE — Bulbous base with rippling, splayed tentacles
+  // ─────────────────────────────────────────────────────────────────────────
+  private drawAnemone(ctx: CanvasRenderingContext2D, c: Cluster, time: number): void {
+    const bw    = c.baseWidth * c.scale;
+    const bulbR = bw * 0.50;
+    const bulbX = c.x;
+    const bulbY = c.baseY - bulbR * 0.55;
+
+    // ── Bulb Body ──
+    const bodyGrad = ctx.createRadialGradient(
+      bulbX - bulbR * 0.25, bulbY - bulbR * 0.25, bulbR * 0.05,
+      bulbX, bulbY, bulbR
+    );
+    bodyGrad.addColorStop(0,   'rgba(255,200,80,0.95)');
+    bodyGrad.addColorStop(0.5, 'rgba(220,140,40,0.90)');
+    bodyGrad.addColorStop(1,   'rgba(170,85,20,0.80)');
+
+    ctx.save();
+    ctx.beginPath();
+    ctx.ellipse(bulbX, bulbY, bulbR, bulbR * 0.72, 0, 0, Math.PI * 2);
+    ctx.fillStyle = bodyGrad;
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(200,110,30,0.50)';
+    ctx.lineWidth   = 1.5;
+    ctx.stroke();
+
+    // Speckled texture details on the bulb
+    for (let d = 0; d < 5; d++) {
+      const dx = bulbX + (Math.random() - 0.5) * bulbR * 1.2;
+      const dy = bulbY + (Math.random() - 0.5) * bulbR * 0.7;
+      ctx.beginPath();
+      ctx.arc(dx, dy, 2 + Math.random() * 2.5, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(255,240,140,0.45)';
+      ctx.fill();
+    }
+    ctx.restore();
+
+    // ── Tentacles ──
+    c.stems.forEach((stem, idx) => {
+      const totalTentacles = c.stems.length;
+      // Radially distribute tentacles across the top half of the bulb
+      const baseAngle = Math.PI + (idx / (totalTentacles - 1)) * Math.PI;
+      const tentLen   = stem.height * c.scale;
+
+      // Independent phase shifting creates a rippling effect across the anemone
+      const swayAngle =
+        Math.sin(time * stem.swaySpeed + stem.swayOffset) * 0.38 +
+        Math.sin(time * stem.swaySpeed * 1.9 + stem.swayOffset + idx) * 0.16;
+
+      const angle = baseAngle + swayAngle;
+
+      const startX = bulbX + Math.cos(baseAngle) * bulbR * 0.70;
+      const startY = bulbY + Math.sin(baseAngle) * bulbR * 0.55;
+
+      const tipX = startX + Math.cos(angle) * tentLen;
+      const tipY = startY + Math.sin(angle) * tentLen;
+
+      const ctrlX = startX + Math.cos(angle - 0.4) * tentLen * 0.55;
+      const ctrlY = startY + Math.sin(angle - 0.4) * tentLen * 0.55;
+
+      const w = stem.width * c.scale;
+
+      const tGrad = ctx.createLinearGradient(startX, startY, tipX, tipY);
+      tGrad.addColorStop(0,   'rgba(230,100,60,0.90)');
+      tGrad.addColorStop(0.5, 'rgba(255,140,80,0.80)');
+      tGrad.addColorStop(1,   'rgba(255,200,140,0.30)');
+
+      ctx.save();
+      ctx.beginPath();
+      ctx.moveTo(startX - w * 0.40, startY);
+      ctx.quadraticCurveTo(ctrlX, ctrlY, tipX, tipY);
+      ctx.quadraticCurveTo(ctrlX + w * 0.5, ctrlY, startX + w * 0.40, startY);
+      ctx.closePath();
+      ctx.fillStyle = tGrad;
+      ctx.fill();
+
+      // Rounded tip/sucker
+      ctx.beginPath();
+      ctx.arc(tipX, tipY, w * 0.65, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(255,220,160,0.75)';
+      ctx.fill();
+      ctx.restore();
+    });
+  }
+
+  // ─────────────────────────────────────────────────────────────────────────
+  //  TYPE 4: BRANCH — Recursive dark silhouette for extreme background depth
+  // ─────────────────────────────────────────────────────────────────────────
+  private drawBranch(ctx: CanvasRenderingContext2D, c: Cluster, time: number): void {
+    const stem      = c.stems[0];
+    const totalH    = stem.height * c.scale;
+    const masterSway = Math.sin(time * stem.swaySpeed + stem.swayOffset) * 0.055;
+
+    ctx.save();
+    ctx.globalAlpha = 0.28 + Math.random() * 0.18; 
+    ctx.translate(c.x, c.baseY);
+
+    // Initialize recursive rendering
+    this.drawBranchNode(
+      ctx,
+      0, 0,
+      -Math.PI / 2,
+      totalH * 0.40,
+      4,              
+      totalH,
+      masterSway,
+      1.0
+    );
+
+    ctx.restore();
+  }
+
+  // Handles the recursive logic for splitting branch segments
+  private drawBranchNode(
+    ctx: CanvasRenderingContext2D,
+    x: number, y: number,
+    angle: number,
+    segLen: number,
+    depth: number,
+    totalH: number,
+    masterSway: number,
+    swayMult: number
+  ): void {
+    if (depth <= 0 || segLen < 3) return;
+
+    const swayedAngle = angle + masterSway * swayMult;
+    const ex = x + Math.cos(swayedAngle) * segLen;
+    const ey = y + Math.sin(swayedAngle) * segLen;
+
+    const progress  = 1 - depth / 4;
+    const thickness = Math.max(0.5, depth * 1.4 - 0.3);
+
+    // Maintain a consistent deep navy tone without fancy gradients
+    const lightness = Math.round(28 + progress * 22);
+    ctx.save();
+    ctx.beginPath();
+    ctx.moveTo(x, y);
+    ctx.lineTo(ex, ey);
+    ctx.strokeStyle = `rgba(${lightness}, ${lightness + 10}, ${lightness + 35}, ${0.75 - progress * 0.25})`;
+    ctx.lineWidth   = thickness;
+    ctx.lineCap     = 'round';
+    ctx.stroke();
+    ctx.restore();
+
+    const nextLen  = segLen * 0.58;
+    const spread   = 0.50 + depth * 0.035;
+
+    // Recursively branch left and right
+    this.drawBranchNode(ctx, ex, ey, swayedAngle - spread, nextLen, depth - 1, totalH, masterSway, swayMult * 0.70);
+    this.drawBranchNode(ctx, ex, ey, swayedAngle + spread, nextLen, depth - 1, totalH, masterSway, swayMult * 0.70);
+    
+    // Occasional third central branch for natural irregularity
+    if (depth >= 3 && Math.random() > 0.42) {
+      this.drawBranchNode(ctx, ex, ey, swayedAngle + (Math.random() - 0.5) * 0.18, nextLen * 0.75, depth - 1, totalH, masterSway, swayMult * 0.50);
+    }
+  }
+
+  // ─────────────────────────────────────────────────────────────────────────
+  //  TYPE 5: KELP — Thick stalk with wide, undulating olive ribbons
+  // ─────────────────────────────────────────────────────────────────────────
+  private drawKelp(ctx: CanvasRenderingContext2D, c: Cluster, time: number): void {
+    const stalkH = 20 * c.scale;
+    
+    // Draw base stalk anchoring to the sand
+    ctx.save();
+    ctx.strokeStyle = 'rgba(75,95,25,0.82)';
+    ctx.lineWidth   = 7 * c.scale;
+    ctx.lineCap     = 'round';
+    ctx.beginPath();
+    ctx.moveTo(c.x, c.baseY);
+    ctx.lineTo(c.x, c.baseY - stalkH);
+    ctx.stroke();
+    ctx.restore();
+
+    c.stems.forEach(stem => {
+      const bx = c.x + stem.relX;
+      const by = c.baseY - stalkH;
+      const h  = stem.height * c.scale;
+      const w  = stem.width  * c.scale;
+
+      const t      = time * stem.swaySpeed;
+      // Stack multiple sine waves to create a fluid, rippling ribbon effect
+      const wave1  = Math.sin(t + stem.swayOffset)             * (12 + stem.depth * 10) + stem.lean;
+      const wave2  = Math.sin(t * 1.6 + stem.swayOffset + 1.5) * 7;
+      const wave3  = Math.sin(t * 2.4 + stem.swayOffset + 3.0) * 4;
+
+      // Calculate curve points along the length of the frond
+      const segs = 6;
+      const pts: { x: number; y: number }[] = [];
+      for (let s = 0; s <= segs; s++) {
+        const f = s / segs;
+        const wx = wave1*f + wave2*f*f + wave3*Math.sin(f * Math.PI);
+        pts.push({ x: bx + wx, y: by - h * f });
+      }
+
+      const grad = ctx.createLinearGradient(bx, by, pts[segs].x, pts[segs].y);
+      grad.addColorStop(0,    'rgba(55,85,18,0.90)');
+      grad.addColorStop(0.35, 'rgba(85,130,28,0.92)');
+      grad.addColorStop(0.70, 'rgba(105,165,38,0.88)');
+      grad.addColorStop(1,    'rgba(145,195,55,0.52)');
+
+      ctx.save();
+      ctx.fillStyle = grad;
+      ctx.beginPath();
+
+      // Plot left side upwards
+      ctx.moveTo(pts[0].x - w * 0.5, pts[0].y);
+      for (let s = 1; s <= segs; s++) {
+        const prev = pts[s-1], curr = pts[s];
+        const tapW = w * (0.5 - s * 0.03); 
+        ctx.quadraticCurveTo(
+          prev.x - tapW, (prev.y + curr.y) / 2,
+          curr.x - tapW, curr.y
+        );
+      }
+      
+      // Plot right side downwards
+      for (let s = segs; s >= 1; s--) {
+        const prev = pts[s], curr = pts[s-1];
+        const tapW = w * (0.5 - s * 0.03);
+        ctx.quadraticCurveTo(
+          prev.x + tapW + 2, (prev.y + curr.y) / 2,
+          curr.x + w * 0.5, curr.y
+        );
+      }
+      ctx.closePath();
+      ctx.fill();
+
+      // Render the central vein
+      ctx.beginPath();
+      ctx.moveTo(pts[0].x, pts[0].y);
+      pts.slice(1).forEach(p => ctx.lineTo(p.x, p.y));
+      ctx.strokeStyle = 'rgba(175,215,75,0.28)';
+      ctx.lineWidth   = Math.max(0.8, w * 0.09);
+      ctx.stroke();
+
+      ctx.restore();
+    });
+  }
+}
