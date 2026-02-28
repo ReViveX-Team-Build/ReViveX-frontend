@@ -304,3 +304,48 @@ export class SynapseCorals {
       opacity: lp.opacityRange[0] + Math.random() * (lp.opacityRange[1] - lp.opacityRange[0]),
     });
   }
+
+  // ─── HELPERS & LOOPS ───────────────────────────────────────────────────────
+
+  private laneClear(lane: DepthLayer, x: number, minDist: number): boolean {
+    return !this.lanePositions[lane].some(px => Math.abs(px - x) < minDist);
+  }
+  private pushLane(lane: DepthLayer, x: number) {
+    this.lanePositions[lane].push(x);
+  }
+
+  update(): void {
+    const scroll = 2; // How fast are we moving?
+    this.scrollX += scroll;
+
+    for (let i = this.items.length - 1; i >= 0; i--) {
+      const item = this.items[i];
+      item.x -= scroll;
+
+      // Buh-bye! If it's too far left, kill it.
+      if (item.x < -500) {
+        const lane = item.layer as DepthLayer;
+        const idx  = this.lanePositions[lane].findIndex(px => Math.abs(px - (item.x + 500)) < 20);
+        if (idx !== -1) this.lanePositions[lane].splice(idx, 1);
+        this.items.splice(i, 1);
+      } else if (item.kind === 'reef') {
+        item.boulders.forEach(b => { b.x -= scroll; });
+        item.pebbles.forEach(p  => { p.x -= scroll; });
+        item.corals.forEach(c   => { c.x -= scroll; });
+      }
+    }
+
+    // If there's a gap on the right, fill it.
+    const rightmost = this.items.reduce((m, it) => Math.max(m, it.x), 0);
+    const spawnEdge = this.gameWidth + 300;
+
+    if (rightmost < spawnEdge - 200) {
+      const nx = rightmost + 280 + Math.random() * 160;
+      const roll = Math.random();
+      if      (roll < 0.28) this.addReefGroup(nx, 2);
+      else if (roll < 0.48) this.addSoloFeature(nx, 2);
+      else if (roll < 0.62) this.addPebblePatch(nx, 2);
+      else if (roll < 0.78) this.addMidgroundSolo(nx);
+      else                  this.addBackgroundCluster(nx);
+    }
+  }
