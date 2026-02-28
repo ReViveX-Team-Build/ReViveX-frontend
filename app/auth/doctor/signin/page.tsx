@@ -3,7 +3,6 @@
 import { useState } from "react";
 import AnimatedBackground from "@/components/Auth/AnimatedBackground";
 import DoctorIllustration from "@/components/Auth/DoctorIllustration";
-import AuthInput from "@/components/Auth/AuthInput";
 import Link from "next/link";
 
 export default function DoctorSignInPage() {
@@ -22,70 +21,60 @@ export default function DoctorSignInPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center relative overflow-hidden">
+    <div className="min-h-screen flex items-center justify-center relative overflow-hidden bg-gradient-to-br from-slate-900 via-teal-900 to-slate-900">
       <AnimatedBackground />
       
-      <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="bg-white rounded-3xl shadow-2xl overflow-hidden">
-          <div className="grid grid-cols-1 lg:grid-cols-2">
-            {/* Left side - Doctor Illustration & Branding */}
-            <div className="relative bg-gradient-to-br from-teal-500 via-cyan-500 to-blue-500 p-12 flex flex-col justify-between">
+      <div className="w-full max-w-5xl mx-auto px-4 py-8 relative z-10">
+        <div className="bg-white rounded-2xl shadow-2xl overflow-hidden">
+          <div className="grid grid-cols-1 lg:grid-cols-5">
+            {/* Left side - Doctor Illustration & Branding - Takes 2 columns */}
+            <div className="lg:col-span-2 relative bg-gradient-to-br from-teal-400 via-cyan-500 to-blue-500 p-8 flex flex-col justify-between min-h-[500px]">
               {/* Decorative circles */}
-              <div className="absolute top-10 right-10 w-32 h-32 bg-white/10 rounded-full blur-2xl"></div>
-              <div className="absolute bottom-10 left-10 w-40 h-40 bg-white/10 rounded-full blur-2xl"></div>
+              <div className="absolute top-10 right-10 w-24 h-24 bg-white/10 rounded-full blur-2xl"></div>
+              <div className="absolute bottom-10 left-10 w-32 h-32 bg-white/10 rounded-full blur-2xl"></div>
               
               <div className="relative z-10">
-                {/* Logo/Brand */}
-                <div className="flex items-center gap-3 mb-8">
-                  <div className="w-12 h-12 bg-white rounded-xl flex items-center justify-center shadow-lg">
-                    <svg className="w-7 h-7 text-teal-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-                    </svg>
-                  </div>
-                  <span className="text-2xl font-bold text-white">ReViveX</span>
-                </div>
+                {/* Brand Name Only */}
+                <h3 className="text-3xl font-bold bg-gradient-to-r from-white to-teal-100 bg-clip-text text-transparent mb-6">
+                  ReViveX
+                </h3>
 
-                <h2 className="text-4xl font-bold text-white mb-4">
+                <h2 className="text-3xl font-bold text-white mb-3">
                   Welcome Back,<br />Doctor! 👋
                 </h2>
-                <p className="text-teal-50 text-lg leading-relaxed">
+                <p className="text-teal-50 text-base leading-relaxed">
                   Sign in to access your patient dashboard and continue providing excellent care.
                 </p>
               </div>
 
               {/* Animated Doctor */}
-              <div className="relative z-10 flex justify-center items-center mt-8">
+              <div className="relative z-10 flex justify-center items-center my-4">
                 <DoctorIllustration isPasswordFocused={isPasswordFocused} />
-              </div>
-
-              {/* Bottom decoration */}
-              <div className="relative z-10 text-center text-teal-50 text-sm">
-                Secure • HIPAA Compliant • Encrypted
               </div>
             </div>
 
-            {/* Right side - Sign In Form */}
-            <div className="bg-white p-12 flex items-center justify-center">
-              <div className="w-full max-w-md space-y-8">
+            {/* Right side - Sign In Form - Takes 3 columns */}
+            <div className="lg:col-span-3 bg-white p-8 flex items-center justify-center">
+              <div className="w-full max-w-md space-y-6">
                 {/* Header */}
                 <div className="text-center">
-                  <h1 className="text-3xl font-bold text-gray-900 mb-2">
+                  <h1 className="text-2xl font-bold text-gray-900 mb-1">
                     Doctor Portal
                   </h1>
-                  <p className="text-gray-600">
+                  <p className="text-gray-600 text-sm">
                     Enter your credentials to access your account
                   </p>
                 </div>
 
                 {/* Form */}
-                <form onSubmit={handleSubmit} className="space-y-6">
+                <form onSubmit={handleSubmit} className="space-y-5">
                   {/* Doctor ID Input */}
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-sm font-medium text-gray-700 mb-1.5">
                       Doctor ID
                     </label>
                     <div className="relative">
-                      <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                         <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                         </svg>
@@ -95,7 +84,7 @@ export default function DoctorSignInPage() {
                         value={doctorId}
                         onChange={(e) => setDoctorId(e.target.value)}
                         placeholder="e.g., d123"
-                        className="w-full pl-12 pr-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-teal-500 transition-colors text-gray-900 placeholder-gray-400"
+                        className="w-full pl-10 pr-4 py-2.5 border-2 border-gray-200 rounded-lg focus:outline-none focus:border-teal-500 transition-colors text-gray-900 placeholder-gray-400 text-sm"
                         required
                       />
                     </div>
@@ -103,11 +92,11 @@ export default function DoctorSignInPage() {
 
                   {/* Password Input */}
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-sm font-medium text-gray-700 mb-1.5">
                       Password
                     </label>
                     <div className="relative">
-                      <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                         <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
                         </svg>
@@ -119,13 +108,13 @@ export default function DoctorSignInPage() {
                         onFocus={() => setIsPasswordFocused(true)}
                         onBlur={() => setIsPasswordFocused(false)}
                         placeholder="Enter your password"
-                        className="w-full pl-12 pr-12 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-teal-500 transition-colors text-gray-900 placeholder-gray-400"
+                        className="w-full pl-10 pr-10 py-2.5 border-2 border-gray-200 rounded-lg focus:outline-none focus:border-teal-500 transition-colors text-gray-900 placeholder-gray-400 text-sm"
                         required
                       />
                       <button
                         type="button"
                         onClick={() => setShowPassword(!showPassword)}
-                        className="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-400 hover:text-gray-600"
+                        className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600"
                       >
                         {showPassword ? (
                           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -161,7 +150,7 @@ export default function DoctorSignInPage() {
                   <button
                     type="submit"
                     disabled={isLoading}
-                    className="w-full bg-gradient-to-r from-teal-500 to-cyan-600 text-white py-3 px-4 rounded-xl font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+                    className="w-full bg-gradient-to-r from-teal-500 to-cyan-600 text-white py-2.5 px-4 rounded-lg font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none text-sm"
                   >
                     {isLoading ? (
                       <span className="flex items-center justify-center gap-2">
@@ -184,23 +173,6 @@ export default function DoctorSignInPage() {
                     </Link>
                   </p>
                 </form>
-
-                {/* Divider */}
-                <div className="relative my-6">
-                  <div className="absolute inset-0 flex items-center">
-                    <div className="w-full border-t border-gray-200"></div>
-                  </div>
-                  <div className="relative flex justify-center text-sm">
-                    <span className="px-4 bg-white text-gray-500">Need help?</span>
-                  </div>
-                </div>
-
-                {/* Support Link */}
-                <div className="text-center">
-                  <Link href="/support" className="text-sm text-gray-600 hover:text-gray-900">
-                    Contact Support →
-                  </Link>
-                </div>
               </div>
             </div>
           </div>
