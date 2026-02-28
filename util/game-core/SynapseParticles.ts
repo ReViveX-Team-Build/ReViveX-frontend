@@ -1,13 +1,4 @@
-// ─────────────────────────────────────────────────────────────────────────────
-//  Particle  v3  — Underwater particle system
-//
-//  Types:
-//    bubble   — small translucent sphere, rises with horizontal wobble
-//    plankton — tiny slow-drifting mote
-//    sparkle  — quick bright 4-point star fleck
-//    dust     — god-ray mote, floats gently downward
-//    exhaust  — player wake bubble (fires backward, shrinks fast)
-// ─────────────────────────────────────────────────────────────────────────────
+
 
 export type ParticleType = 'bubble' | 'plankton' | 'sparkle' | 'dust' | 'exhaust';
 
