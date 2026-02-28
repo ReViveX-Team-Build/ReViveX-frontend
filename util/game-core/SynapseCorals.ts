@@ -66,3 +66,41 @@ const LAYER_PROPS: Record<DepthLayer, {
   1: { scaleRange: [0.25, 0.48], opacityRange: [0.60, 0.80], blueTint: 0.28, yOffset: 5  },
   2: { scaleRange: [0.40, 0.75], opacityRange: [0.90, 1.00], blueTint: 0.00, yOffset: 0  },
 };
+
+// ─── Data structures for our underwater world ──────────────────────────────
+
+interface CoralSprite {
+  kind:    'sprite';
+  asset:   AssetKey;
+  x:       number;
+  y:       number; // Anchored at the bottom
+  scale:   number;
+  layer:   DepthLayer;
+  swayOff: number; // Random offset so they don't all sway in sync like a cult
+  opacity: number;
+}
+
+interface Boulder {
+  x: number; y: number;
+  rx: number; ry: number; // Basically how wide/tall the rock is
+  rot: number;
+}
+
+interface ReefGroup {
+  kind:     'reef';
+  x:        number;
+  y:        number;
+  layer:    DepthLayer;
+  boulders: Boulder[];
+  corals:   CoralSprite[];
+  pebbles:  { x: number; y: number; r: number }[];
+}
+
+type SceneItem = CoralSprite | ReefGroup;
+
+// Don't let things bunch up too much
+const LANE_MIN_DIST: Record<DepthLayer, number> = {
+  0: 160,
+  1: 240,
+  2: 320,
+};
