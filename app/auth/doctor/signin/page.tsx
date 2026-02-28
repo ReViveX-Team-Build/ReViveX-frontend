@@ -1,183 +1,347 @@
 "use client";
+import { useRef, useState, useEffect } from "react";
 
-import { useState } from "react";
-import AnimatedBackground from "@/components/Auth/AnimatedBackground";
-import DoctorIllustration from "@/components/Auth/DoctorIllustration";
-import Link from "next/link";
+interface DoctorIllustrationProps {
+  isError?: boolean;
+  isPasswordFocused?: boolean;
+}
 
-export default function DoctorSignInPage() {
-  const [doctorId, setDoctorId] = useState("");
-  const [password, setPassword] = useState("");
-  const [isPasswordFocused, setIsPasswordFocused] = useState(false);
-  const [showPassword, setShowPassword] = useState(false);
-  const [rememberMe, setRememberMe] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
+export default function DoctorIllustration({ 
+  isError = false, 
+  isPasswordFocused = false 
+}: DoctorIllustrationProps) {
+  const svgRef = useRef<SVGSVGElement>(null);
+  const [cursorPos, setCursorPos] = useState({ x: 0, y: 0 });
+  const [breatheOffset, setBreatheOffset] = useState(0);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsLoading(true);
-    // Will add Firebase logic later
-    setTimeout(() => setIsLoading(false), 2000);
-  };
+  // Cursor tracking effect
+  useEffect(() => {
+    const element = svgRef.current;
+    if (!element) return;
+
+    const handleMouseMove = (e: MouseEvent) => {
+      const rect = element.getBoundingClientRect();
+      const x = e.clientX - rect.left - rect.width / 2;
+      const y = e.clientY - rect.top - rect.height / 2;
+      setCursorPos({ x, y });
+    };
+
+    const handleMouseLeave = () => {
+      setCursorPos({ x: 0, y: 0 });
+    };
+
+    element.addEventListener("mousemove", handleMouseMove);
+    element.addEventListener("mouseleave", handleMouseLeave);
+
+    return () => {
+      element.removeEventListener("mousemove", handleMouseMove);
+      element.removeEventListener("mouseleave", handleMouseLeave);
+    };
+  }, []);
+
+  // Breathing animation
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setBreatheOffset((prev) => (prev + 1) % 360);
+    }, 50);
+    return () => clearInterval(interval);
+  }, []);
+
+  const breatheY = Math.sin(breatheOffset * 0.05) * 2;
+
+  // Calculate eye pupil movement based on cursor
+  const maxPupilMove = 5;
+  const pupilLeftX = 130 + (cursorPos.x / 100) * maxPupilMove;
+  const pupilLeftY = 115 + (cursorPos.y / 100) * maxPupilMove;
+  const pupilRightX = 170 + (cursorPos.x / 100) * maxPupilMove;
+  const pupilRightY = 115 + (cursorPos.y / 100) * maxPupilMove;
+
+  // Stethoscope movement
+  const stethoscopeY = 265 + breatheY;
+
+  // Colors - more realistic skin tones
+  const skinColor = isError ? "#FF8A80" : "#FDBCB4";
+  const skinShadow = isError ? "#E74C3C" : "#F4A688";
+  const coatColor = "#E8F5F5";
+  const coatShadow = "#C8E0E0";
 
   return (
-    <div className="min-h-screen flex items-center justify-center relative overflow-hidden bg-gradient-to-br from-slate-900 via-teal-900 to-slate-900">
-      <AnimatedBackground />
-      
-      <div className="w-full max-w-5xl mx-auto px-4 py-8 relative z-10">
-        <div className="bg-white rounded-2xl shadow-2xl overflow-hidden">
-          <div className="grid grid-cols-1 lg:grid-cols-5">
-            {/* Left side - Doctor Illustration & Branding - Takes 2 columns */}
-            <div className="lg:col-span-2 relative bg-gradient-to-br from-teal-400 via-cyan-500 to-blue-500 p-8 flex flex-col justify-between min-h-[500px]">
-              {/* Decorative circles */}
-              <div className="absolute top-10 right-10 w-24 h-24 bg-white/10 rounded-full blur-2xl"></div>
-              <div className="absolute bottom-10 left-10 w-32 h-32 bg-white/10 rounded-full blur-2xl"></div>
-              
-              <div className="relative z-10">
-                {/* Brand Name Only */}
-                <h3 className="text-3xl font-bold bg-gradient-to-r from-white to-teal-100 bg-clip-text text-transparent mb-6">
-                  ReViveX
-                </h3>
+    <svg
+      ref={svgRef}
+      width="280"
+      height="380"
+      viewBox="0 0 280 380"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      className="w-full max-w-sm transition-all duration-300 drop-shadow-xl"
+    >
+      {/* Definitions for gradients and shadows */}
+      <defs>
+        {/* Skin gradient */}
+        <linearGradient id="skinGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+          <stop offset="0%" stopColor={skinColor} />
+          <stop offset="100%" stopColor={skinShadow} />
+        </linearGradient>
+        
+        {/* Coat gradient */}
+        <linearGradient id="coatGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+          <stop offset="0%" stopColor="#FFFFFF" />
+          <stop offset="50%" stopColor={coatColor} />
+          <stop offset="100%" stopColor={coatShadow} />
+        </linearGradient>
 
-                <h2 className="text-3xl font-bold text-white mb-3">
-                  Welcome Back,<br />Doctor! 👋
-                </h2>
-                <p className="text-teal-50 text-base leading-relaxed">
-                  Sign in to access your patient dashboard and continue providing excellent care.
-                </p>
-              </div>
+        {/* Hair gradient */}
+        <linearGradient id="hairGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+          <stop offset="0%" stopColor="#3A4A5A" />
+          <stop offset="100%" stopColor="#1E293B" />
+        </linearGradient>
 
-              {/* Animated Doctor */}
-              <div className="relative z-10 flex justify-center items-center my-4">
-                <DoctorIllustration isPasswordFocused={isPasswordFocused} />
-              </div>
-            </div>
+        {/* Shadow filter */}
+        <filter id="shadow">
+          <feDropShadow dx="0" dy="2" stdDeviation="3" floodOpacity="0.2"/>
+        </filter>
+      </defs>
 
-            {/* Right side - Sign In Form - Takes 3 columns */}
-            <div className="lg:col-span-3 bg-white p-8 flex items-center justify-center">
-              <div className="w-full max-w-md space-y-6">
-                {/* Header */}
-                <div className="text-center">
-                  <h1 className="text-2xl font-bold text-gray-900 mb-1">
-                    Doctor Portal
-                  </h1>
-                  <p className="text-gray-600 text-sm">
-                    Enter your credentials to access your account
-                  </p>
-                </div>
+      {/* Neck with shadow */}
+      <rect 
+        x="135" 
+        y="155" 
+        width="30" 
+        height="30" 
+        fill="url(#skinGradient)" 
+        rx="5"
+        className="transition-all duration-300"
+        filter="url(#shadow)"
+      />
 
-                {/* Form */}
-                <form onSubmit={handleSubmit} className="space-y-5">
-                  {/* Doctor ID Input */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                      Doctor ID
-                    </label>
-                    <div className="relative">
-                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                        <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                        </svg>
-                      </div>
-                      <input
-                        type="text"
-                        value={doctorId}
-                        onChange={(e) => setDoctorId(e.target.value)}
-                        placeholder="e.g., d123"
-                        className="w-full pl-10 pr-4 py-2.5 border-2 border-gray-200 rounded-lg focus:outline-none focus:border-teal-500 transition-colors text-gray-900 placeholder-gray-400 text-sm"
-                        required
-                      />
-                    </div>
-                  </div>
+      {/* Head with gradient */}
+      <ellipse 
+        cx="150" 
+        cy="115" 
+        rx="48" 
+        ry="58" 
+        fill="url(#skinGradient)" 
+        className="transition-all duration-300"
+        filter="url(#shadow)"
+      />
 
-                  {/* Password Input */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                      Password
-                    </label>
-                    <div className="relative">
-                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                        <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                        </svg>
-                      </div>
-                      <input
-                        type={showPassword ? "text" : "password"}
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        onFocus={() => setIsPasswordFocused(true)}
-                        onBlur={() => setIsPasswordFocused(false)}
-                        placeholder="Enter your password"
-                        className="w-full pl-10 pr-10 py-2.5 border-2 border-gray-200 rounded-lg focus:outline-none focus:border-teal-500 transition-colors text-gray-900 placeholder-gray-400 text-sm"
-                        required
-                      />
-                      <button
-                        type="button"
-                        onClick={() => setShowPassword(!showPassword)}
-                        className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600"
-                      >
-                        {showPassword ? (
-                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
-                          </svg>
-                        ) : (
-                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                          </svg>
-                        )}
-                      </button>
-                    </div>
-                  </div>
+      {/* Hair - More professional style */}
+      <path
+        d="M102 105 Q102 55, 150 55 Q198 55, 198 105 L198 120 Q190 115, 180 113 Q170 111, 160 110 Q150 109, 140 110 Q130 111, 120 113 Q110 115, 102 120 Z"
+        fill="url(#hairGradient)"
+        filter="url(#shadow)"
+      />
+      {/* Hair shine */}
+      <ellipse cx="130" cy="75" rx="15" ry="8" fill="white" opacity="0.15" />
 
-                  {/* Remember Me & Forgot Password */}
-                  <div className="flex items-center justify-between">
-                    <label className="flex items-center cursor-pointer">
-                      <input
-                        type="checkbox"
-                        checked={rememberMe}
-                        onChange={(e) => setRememberMe(e.target.checked)}
-                        className="w-4 h-4 text-teal-500 border-gray-300 rounded focus:ring-teal-500"
-                      />
-                      <span className="ml-2 text-sm text-gray-600">Remember me</span>
-                    </label>
-                    <Link href="/auth/doctor/forgot-password" className="text-sm text-teal-600 hover:text-teal-700 font-medium">
-                      Forgot password?
-                    </Link>
-                  </div>
+      {/* Ears with detail */}
+      <g filter="url(#shadow)">
+        <ellipse cx="102" cy="115" rx="11" ry="17" fill="url(#skinGradient)" />
+        <ellipse cx="102" cy="115" rx="6" ry="10" fill={skinShadow} opacity="0.3" />
+      </g>
+      <g filter="url(#shadow)">
+        <ellipse cx="198" cy="115" rx="11" ry="17" fill="url(#skinGradient)" />
+        <ellipse cx="198" cy="115" rx="6" ry="10" fill={skinShadow} opacity="0.3" />
+      </g>
 
-                  {/* Sign In Button */}
-                  <button
-                    type="submit"
-                    disabled={isLoading}
-                    className="w-full bg-gradient-to-r from-teal-500 to-cyan-600 text-white py-2.5 px-4 rounded-lg font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none text-sm"
-                  >
-                    {isLoading ? (
-                      <span className="flex items-center justify-center gap-2">
-                        <svg className="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
-                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                        </svg>
-                        Signing in...
-                      </span>
-                    ) : (
-                      "Sign In"
-                    )}
-                  </button>
+      {/* Face shadow for depth */}
+      <ellipse cx="150" cy="130" rx="35" ry="15" fill={skinShadow} opacity="0.1" />
 
-                  {/* Sign Up Link */}
-                  <p className="text-center text-sm text-gray-600">
-                    Don't have an account?{" "}
-                    <Link href="/auth/doctor/signup" className="text-teal-600 hover:text-teal-700 font-semibold">
-                      Sign up here
-                    </Link>
-                  </p>
-                </form>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
+      {/* Eyes - Open or closed */}
+      {isPasswordFocused ? (
+        <>
+          {/* Closed eyes */}
+          <path 
+            d="M118 115 Q130 119, 142 115" 
+            stroke="#2D3748" 
+            strokeWidth="3" 
+            fill="none" 
+            strokeLinecap="round"
+          />
+          <path 
+            d="M158 115 Q170 119, 182 115" 
+            stroke="#2D3748" 
+            strokeWidth="3" 
+            fill="none" 
+            strokeLinecap="round"
+          />
+          {/* Eyelashes */}
+          <path d="M118 115 L116 112 M130 119 L130 122 M142 115 L144 112" stroke="#2D3748" strokeWidth="1" strokeLinecap="round" />
+          <path d="M158 115 L156 112 M170 119 L170 122 M182 115 L184 112" stroke="#2D3748" strokeWidth="1" strokeLinecap="round" />
+        </>
+      ) : (
+        <>
+          {/* Open eyes with detail */}
+          <g id="left-eye">
+            {/* Eye white */}
+            <ellipse cx="130" cy="115" rx="13" ry="17" fill="white" />
+            {/* Eye outline */}
+            <ellipse cx="130" cy="115" rx="13" ry="17" fill="none" stroke="#2D3748" strokeWidth="2" />
+            {/* Iris */}
+            <circle cx={pupilLeftX} cy={pupilLeftY} r="8" fill="#4A90E2" opacity="0.9" className="transition-all duration-100" />
+            {/* Pupil */}
+            <circle cx={pupilLeftX} cy={pupilLeftY} r="5" fill="#1E293B" className="transition-all duration-100" />
+            {/* Eye shine */}
+            <circle cx={pupilLeftX + 2} cy={pupilLeftY - 2} r="2.5" fill="white" className="transition-all duration-100" />
+            {/* Subtle eyelid shadow */}
+            <ellipse cx="130" cy="107" rx="13" ry="5" fill="#2D3748" opacity="0.05" />
+          </g>
+
+          <g id="right-eye">
+            {/* Eye white */}
+            <ellipse cx="170" cy="115" rx="13" ry="17" fill="white" />
+            {/* Eye outline */}
+            <ellipse cx="170" cy="115" rx="13" ry="17" fill="none" stroke="#2D3748" strokeWidth="2" />
+            {/* Iris */}
+            <circle cx={pupilRightX} cy={pupilRightY} r="8" fill="#4A90E2" opacity="0.9" className="transition-all duration-100" />
+            {/* Pupil */}
+            <circle cx={pupilRightX} cy={pupilRightY} r="5" fill="#1E293B" className="transition-all duration-100" />
+            {/* Eye shine */}
+            <circle cx={pupilRightX + 2} cy={pupilRightY - 2} r="2.5" fill="white" className="transition-all duration-100" />
+            {/* Subtle eyelid shadow */}
+            <ellipse cx="170" cy="107" rx="13" ry="5" fill="#2D3748" opacity="0.05" />
+          </g>
+        </>
+      )}
+
+      {/* Eyebrows - More defined */}
+      <path 
+        d={isError ? "M116 103 Q130 97, 144 103" : "M116 100 Q130 96, 144 100"} 
+        stroke="#2D3748" 
+        strokeWidth="3.5" 
+        fill="none" 
+        strokeLinecap="round"
+        className="transition-all duration-300"
+        opacity="0.8"
+      />
+      <path 
+        d={isError ? "M156 103 Q170 97, 184 103" : "M156 100 Q170 96, 184 100"} 
+        stroke="#2D3748" 
+        strokeWidth="3.5" 
+        fill="none" 
+        strokeLinecap="round"
+        className="transition-all duration-300"
+        opacity="0.8"
+      />
+
+      {/* Nose with shadow */}
+      <g filter="url(#shadow)">
+        <path d="M150 120 L147 132 L150 135 L153 132 Z" fill={skinShadow} />
+        <ellipse cx="147" cy="134" rx="2" ry="3" fill={skinShadow} opacity="0.4" />
+        <ellipse cx="153" cy="134" rx="2" ry="3" fill={skinShadow} opacity="0.4" />
+      </g>
+
+      {/* Mouth - More detail */}
+      <g>
+        <path 
+          d={isError ? "M135 148 Q150 143, 165 148" : "M135 145 Q150 153, 165 145"} 
+          stroke="#D97D6F" 
+          strokeWidth="2.5" 
+          fill="none" 
+          strokeLinecap="round"
+          className="transition-all duration-300"
+        />
+        {!isError && (
+          <path d="M142 149 Q150 152, 158 149" fill="#FFB3BA" opacity="0.3" />
+        )}
+      </g>
+
+      {/* Facial structure lines for realism */}
+      <line x1="130" y1="140" x2="128" y2="145" stroke={skinShadow} strokeWidth="1" opacity="0.2" />
+      <line x1="170" y1="140" x2="172" y2="145" stroke={skinShadow} strokeWidth="1" opacity="0.2" />
+
+      {/* Doctor's coat - Professional with details */}
+      <g style={{ transform: `translateY(${breatheY}px)` }} className="transition-transform duration-1000">
+        {/* Main coat body with gradient */}
+        <path
+          d="M150 185 C122 185, 100 205, 100 245 L100 370 C100 375, 103 378, 108 378 L192 378 C197 378, 200 375, 200 370 L200 245 C200 205, 178 185, 150 185 Z"
+          fill="url(#coatGradient)"
+          stroke="#A0D8D8"
+          strokeWidth="1.5"
+          filter="url(#shadow)"
+        />
+
+        {/* Coat shadows for depth */}
+        <path
+          d="M120 220 Q150 215, 180 220"
+          stroke={coatShadow}
+          strokeWidth="2"
+          fill="none"
+          opacity="0.3"
+        />
+
+        {/* Coat collar - More defined */}
+        <g filter="url(#shadow)">
+          <path
+            d="M130 185 L122 200 L128 210 L135 205 Z"
+            fill="white"
+            stroke="#0891B2"
+            strokeWidth="1.5"
+          />
+          <path
+            d="M170 185 L178 200 L172 210 L165 205 Z"
+            fill="white"
+            stroke="#0891B2"
+            strokeWidth="1.5"
+          />
+        </g>
+
+        {/* Coat buttons */}
+        <circle cx="150" cy="220" r="4" fill="#0891B2" stroke="white" strokeWidth="1" filter="url(#shadow)" />
+        <circle cx="150" cy="250" r="4" fill="#0891B2" stroke="white" strokeWidth="1" filter="url(#shadow)" />
+        <circle cx="150" cy="280" r="4" fill="#0891B2" stroke="white" strokeWidth="1" filter="url(#shadow)" />
+        <circle cx="150" cy="310" r="4" fill="#0891B2" stroke="white" strokeWidth="1" filter="url(#shadow)" />
+
+        {/* Coat pockets */}
+        <g opacity="0.6">
+          <rect x="110" y="300" width="35" height="30" rx="3" fill="none" stroke="#0891B2" strokeWidth="1.5" />
+          <rect x="155" y="300" width="35" height="30" rx="3" fill="none" stroke="#0891B2" strokeWidth="1.5" />
+          {/* Pocket details */}
+          <line x1="115" y1="305" x2="140" y2="305" stroke="#0891B2" strokeWidth="1" />
+          <line x1="160" y1="305" x2="185" y2="305" stroke="#0891B2" strokeWidth="1" />
+        </g>
+
+        {/* Name badge */}
+        <g filter="url(#shadow)">
+          <rect x="105" y="345" width="40" height="22" rx="2" fill="white" stroke="#0891B2" strokeWidth="1.5" />
+          <text x="125" y="357" fontSize="8" fill="#0891B2" textAnchor="middle" fontWeight="600">Dr.</text>
+          <rect x="108" y="348" width="6" height="8" rx="1" fill="#0891B2" opacity="0.3" />
+        </g>
+      </g>
+
+      {/* Stethoscope - Animated */}
+      <g style={{ transform: `translateY(${stethoscopeY - 265}px)` }} className="transition-transform duration-1000">
+        {/* Stethoscope chest piece */}
+        <circle cx="150" cy={stethoscopeY + 10} r="12" fill="none" stroke="#0891B2" strokeWidth="3" filter="url(#shadow)" />
+        <circle cx="150" cy={stethoscopeY + 10} r="8" fill="#E0F2FE" stroke="#0891B2" strokeWidth="1.5" />
+        <circle cx="150" cy={stethoscopeY + 10} r="4" fill="#0891B2" />
+        
+        {/* Stethoscope tubes */}
+        <path
+          d={`M150 ${stethoscopeY - 5} Q132 ${stethoscopeY - 15}, 125 ${stethoscopeY - 25}`}
+          stroke="#0891B2"
+          strokeWidth="3"
+          fill="none"
+          strokeLinecap="round"
+          filter="url(#shadow)"
+        />
+        <path
+          d={`M150 ${stethoscopeY - 5} Q168 ${stethoscopeY - 15}, 175 ${stethoscopeY - 25}`}
+          stroke="#0891B2"
+          strokeWidth="3"
+          fill="none"
+          strokeLinecap="round"
+          filter="url(#shadow)"
+        />
+        
+        {/* Ear pieces */}
+        <circle cx="125" cy={stethoscopeY - 25} r="5" fill="#0891B2" filter="url(#shadow)" />
+        <circle cx="175" cy={stethoscopeY - 25} r="5" fill="#0891B2" filter="url(#shadow)" />
+      </g>
+
+      {/* Subtle highlights for 3D effect */}
+      <ellipse cx="135" cy="105" rx="8" ry="5" fill="white" opacity="0.1" />
+      <ellipse cx="165" cy="105" rx="8" ry="5" fill="white" opacity="0.1" />
+    </svg>
   );
 }
