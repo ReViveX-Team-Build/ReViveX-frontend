@@ -153,3 +153,70 @@ export class SeaGrass {
 
     return base;
   }
+
+  // ─────────────────────────────────────────────────────────────────────────
+  //  UPDATE LOOP
+  // ─────────────────────────────────────────────────────────────────────────
+  update(playerX: number, playerY: number, _speed: number): void {
+    for (let i = this.clusters.length - 1; i >= 0; i--) {
+      const c = this.clusters[i];
+      c.x -= 2; // Move left to simulate camera scrolling right
+      
+      // Clean up clusters that have moved completely off-screen
+      if (c.x < -220) { 
+        this.clusters.splice(i, 1); 
+        continue; 
+      }
+
+      // Repopulate off-screen to the right to keep the environment dense
+      if (this.clusters.length < 20) {
+        const types: GrassType[] = ['blade','silhouette','branch','branch','kelp','anemone'];
+        this.addCluster(
+          this.gameWidth + 100 + Math.random() * 160,
+          types[Math.floor(Math.random() * types.length)]
+        );
+      }
+
+      // Calculate interactive physics (lean) for applicable types
+      if (c.type === 'blade' || c.type === 'kelp') {
+        c.stems.forEach(stem => {
+          const sx   = c.x + stem.relX;
+          const dist = playerX - sx;
+          const nearBottom = playerY > this.gameHeight - stem.height * c.scale - 55;
+          
+          // Apply a force if the player is close, otherwise gradually return to center
+          if (Math.abs(dist) < 90 && nearBottom) {
+            stem.lean = Math.max(-44, Math.min(44, stem.lean - dist * 0.20));
+          } else {
+            stem.lean *= 0.87; // Damping factor
+          }
+        });
+      }
+    }
+  }
+
+  // ─────────────────────────────────────────────────────────────────────────
+  //  DRAW DISPATCHER
+  // ─────────────────────────────────────────────────────────────────────────
+  draw(ctx: CanvasRenderingContext2D): void {
+    const time = Date.now();
+    
+    // Explicit Z-ordering: Draw background shadows first, foreground blades last
+    const order: GrassType[] = ['branch','silhouette','kelp','anemone','blade'];
+    
+    order.forEach(type => {
+      this.clusters
+        .filter(c => c.type === type)
+        .forEach(c => this.drawCluster(ctx, c, time));
+    });
+  }
+
+  private drawCluster(ctx: CanvasRenderingContext2D, c: Cluster, time: number): void {
+    switch (c.type) {
+      case 'blade':      this.drawBlades(ctx, c, time);      break;
+      case 'silhouette': this.drawSilhouette(ctx, c, time);  break;
+      case 'anemone':    this.drawAnemone(ctx, c, time);     break;
+      case 'branch':     this.drawBranch(ctx, c, time);      break;
+      case 'kelp':       this.drawKelp(ctx, c, time);        break;
+    }
+  }
