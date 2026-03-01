@@ -22,15 +22,33 @@ export default function DoctorAICompanion() {
         setMessages((prev) => [...prev, userMessage]);
         setInput("");
 
-        // Simulate AI response (Firebase-style placeholder)
-        setTimeout(() => {
-            const aiMessage = {
-                sender: "ai" as const,
-                text:
-                    "I've analyzed the current data. Two patients show declining adherence and may need intervention. Would you like a detailed report?",
-            };
-            setMessages((prev) => [...prev, aiMessage]);
-        }, 1000);
+        const handleSend = async () => {
+            if (!input.trim()) return;
+
+            const userMessage = { sender: "user" as const, text: input };
+            setMessages((prev) => [...prev, userMessage]);
+            setInput("");
+
+            try {
+                const res = await fetch("/api/doctor-ai", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ message: userMessage.text }),
+                });
+
+                const data = await res.json();
+
+                const aiMessage = {
+                    sender: "ai" as const,
+                    text: data.reply,
+                };
+
+                setMessages((prev) => [...prev, aiMessage]);
+
+            } catch (error) {
+                console.error(error);
+            }
+        };
     };
     return (
         <div className="p-8 min-h-screen bg-gray-50">
