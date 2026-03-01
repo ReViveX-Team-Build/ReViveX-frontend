@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tube Coral Visual Test</title>
+  <style>
+    
+    body {
+      background-color: #020c1b;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+      background-image: radial-gradient(circle at center, #051628 0%, #020c1b 70%);
+    }
+    .coral-container {
+      width: 450px;
+      height: 450px;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="coral-container">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="100%" height="100%">
+      <defs>
+        <linearGradient id="tubeGradient" x1="0%" y1="100%" x2="0%" y2="0%">
+          <stop offset="0%" stop-color="#D35400" />   <stop offset="50%" stop-color="#F39C12" />  <stop offset="100%" stop-color="#F1C40F" /> </linearGradient>
+
+        <radialGradient id="innerHoleGrad" cx="50%" cy="50%" r="50%" fx="50%" fy="30%">
+          <stop offset="0%" stop-color="#5D2906" />
+          <stop offset="70%" stop-color="#2A1000" />
+          <stop offset="100%" stop-color="#110500" />
+        </radialGradient>
+        
+        <linearGradient id="tubeHighlight" x1="0%" y1="0%" x2="0%" y2="100%">
+          <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.6"/>
+          <stop offset="40%" stop-color="#FFFFFF" stop-opacity="0.15"/>
+          <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0"/>
+        </linearGradient>
+
+        <filter id="waterShadow" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="15" stdDeviation="15" flood-color="#000000" flood-opacity="0.5"/>
+        </filter>
+        
+        <filter id="glow">
+          <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+          <feMerge>
+            <feMergeNode in="coloredBlur"/>
+            <feMergeNode in="SourceGraphic"/>
+          </feMerge>
+        </filter>
+      </defs>
+
+      <g filter="url(#waterShadow)">
+        
+        <path d="M 180,880 Q 512,820 840,880 Q 880,950 512,960 Q 140,950 180,880 Z" fill="url(#tubeGradient)" />
+
+        <g>
+          <path d="M 280,900 C 300,750 280,550 220,400 L 320,380 C 380,550 380,750 380,900 Z" fill="url(#tubeGradient)" />
+          <ellipse cx="270" cy="390" rx="52" ry="20" fill="url(#innerHoleGrad)" transform="rotate(-15 270 390)" />
+          <ellipse cx="270" cy="390" rx="52" ry="20" fill="none" stroke="#FFEAA7" stroke-width="4" opacity="0.6" transform="rotate(-15 270 390)" />
+          <path d="M 300,880 C 320,750 300,550 240,400" stroke="url(#tubeHighlight)" stroke-width="12" fill="none" stroke-linecap="round" />
+        </g>
+
+        <g>
+          <path d="M 640,900 C 640,750 680,600 760,450 L 860,480 C 780,600 740,750 740,900 Z" fill="url(#tubeGradient)" />
+          <ellipse cx="810" cy="465" rx="54" ry="20" fill="url(#innerHoleGrad)" transform="rotate(15 810 465)" />
+          <ellipse cx="810" cy="465" rx="54" ry="20" fill="none" stroke="#FFEAA7" stroke-width="4" opacity="0.6" transform="rotate(15 810 465)" />
+          <path d="M 660,880 C 660,750 700,600 780,450" stroke="url(#tubeHighlight)" stroke-width="12" fill="none" stroke-linecap="round" />
+        </g>
+
+        <g>
+          <path d="M 430,900 C 450,600 460,400 450,250 L 570,250 C 560,400 570,600 590,900 Z" fill="url(#tubeGradient)" />
+          <ellipse cx="510" cy="250" rx="60" ry="22" fill="url(#innerHoleGrad)" />
+          <ellipse cx="510" cy="250" rx="60" ry="22" fill="none" stroke="#FFEAA7" stroke-width="5" opacity="0.8" />
+          <path d="M 460,880 C 480,600 490,400 480,250" stroke="url(#tubeHighlight)" stroke-width="16" fill="none" stroke-linecap="round" />
+        </g>
+
+        <g>
+          <path d="M 330,950 C 350,850 360,700 340,600 L 460,590 C 460,700 450,850 470,950 Z" fill="url(#tubeGradient)" />
+          <ellipse cx="400" cy="595" rx="60" ry="22" fill="url(#innerHoleGrad)" transform="rotate(-5 400 595)" />
+          <ellipse cx="400" cy="595" rx="60" ry="22" fill="none" stroke="#FFEAA7" stroke-width="4" opacity="0.6" transform="rotate(-5 400 595)" />
+          <path d="M 360,930 C 380,850 390,700 370,600" stroke="url(#tubeHighlight)" stroke-width="14" fill="none" stroke-linecap="round" />
+        </g>
+
+        <g>
+          <path d="M 560,950 C 570,800 600,700 660,600 L 760,630 C 680,700 650,800 640,950 Z" fill="url(#tubeGradient)" />
+          <ellipse cx="710" cy="615" rx="52" ry="18" fill="url(#innerHoleGrad)" transform="rotate(18 710 615)" />
+          <ellipse cx="710" cy="615" rx="52" ry="18" fill="none" stroke="#FFEAA7" stroke-width="4" opacity="0.6" transform="rotate(18 710 615)" />
+          <path d="M 580,930 C 590,800 620,700 680,600" stroke="url(#tubeHighlight)" stroke-width="12" fill="none" stroke-linecap="round" />
+        </g>
+
+        <g fill="#D35400" opacity="0.4">
+          <circle cx="530" cy="350" r="4" />
+          <circle cx="550" cy="400" r="3" />
+          <circle cx="510" cy="450" r="5" />
+          <circle cx="560" cy="520" r="4" />
+          <circle cx="520" cy="600" r="6" />
+          <circle cx="550" cy="680" r="4" />
+          <circle cx="530" cy="750" r="5" />
+          
+          <circle cx="430" cy="650" r="4" />
+          <circle cx="410" cy="720" r="5" />
+          <circle cx="440" cy="780" r="3" />
+          <circle cx="420" cy="850" r="6" />
+          
+          <circle cx="680" cy="680" r="4" />
+          <circle cx="710" cy="740" r="5" />
+          <circle cx="690" cy="800" r="3" />
+        </g>
+
+      </g>
+
+      <g fill="#E0FFFF" filter="url(#glow)" opacity="0.8">
+        <circle cx="510" cy="200" r="8" opacity="0.9" />
+        <circle cx="490" cy="140" r="5" opacity="0.6" />
+        <circle cx="525" cy="100" r="6" opacity="0.4" />
+        <circle cx="500" cy="40" r="4" opacity="0.2" />
+
+        <circle cx="250" cy="330" r="6" opacity="0.8" />
+        <circle cx="230" cy="260" r="4" opacity="0.5" />
+        <circle cx="260" cy="180" r="7" opacity="0.3" />
+
+        <circle cx="830" cy="400" r="7" opacity="0.7" />
+        <circle cx="850" cy="320" r="5" opacity="0.4" />
+
+        <circle cx="390" cy="530" r="8" opacity="0.8" />
+        <circle cx="370" cy="460" r="5" opacity="0.5" />
+
+        <circle cx="720" cy="560" r="6" opacity="0.7" />
+        <circle cx="740" cy="490" r="4" opacity="0.4" />
+      </g>
+
+    </svg>
+    </div>
+
+</body>
+</html>
