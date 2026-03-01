@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { generateGeminiResponse } from "@/lib/ai/gemini";
+import { askGemini } from "../../lib/ai/gemini";
 
 export async function POST(req: Request) {
     try {
@@ -14,7 +14,7 @@ export async function POST(req: Request) {
         Provide professional, analytical insight.
         `;
 
-        const response = await generateGeminiResponse(prompt);
+        const response = await askGemini(prompt);
 
         return NextResponse.json({ reply: response });
 
