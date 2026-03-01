@@ -14,41 +14,32 @@ export default function DoctorAICompanion() {
             text: "Hello Doctor 👋 I’m your AI Clinical Assistant. I can help you analyze patient progress, adherence, and therapy risks.",
         },
     ]);
-    const handleSend = () => {
+    const handleSend = async () => {
         if (!input.trim()) return;
 
-        // Add user message
         const userMessage = { sender: "user" as const, text: input };
         setMessages((prev) => [...prev, userMessage]);
         setInput("");
 
-        const handleSend = async () => {
-            if (!input.trim()) return;
+        try {
+            const res = await fetch("/api/doctor-ai", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ message: userMessage.text }),
+            });
 
-            const userMessage = { sender: "user" as const, text: input };
-            setMessages((prev) => [...prev, userMessage]);
-            setInput("");
+            const data = await res.json();
 
-            try {
-                const res = await fetch("/api/doctor-ai", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ message: userMessage.text }),
-                });
+            const aiMessage = {
+                sender: "ai" as const,
+                text: data.reply,
+            };
 
-                const data = await res.json();
+            setMessages((prev) => [...prev, aiMessage]);
 
-                const aiMessage = {
-                    sender: "ai" as const,
-                    text: data.reply,
-                };
-
-                setMessages((prev) => [...prev, aiMessage]);
-
-            } catch (error) {
-                console.error(error);
-            }
-        };
+        } catch (error) {
+            console.error("Doctor AI error:", error);
+        }
     };
     return (
         <div className="p-8 min-h-screen bg-gray-50">

@@ -1,9 +1,28 @@
 import { NextResponse } from "next/server";
+import { generateGeminiResponse } from "@/lib/ai/gemini";
 
 export async function POST(req: Request) {
-    const { message } = await req.json();
+    try {
+        const { message } = await req.json();
 
-    return NextResponse.json({
-        reply: `Doctor AI received: ${message}`
-    });
+        const prompt = `
+        You are a clinical AI assistant supporting a rehabilitation doctor.
+
+        The doctor asked:
+        "${message}"
+
+        Provide professional, analytical insight.
+        `;
+
+        const response = await generateGeminiResponse(prompt);
+
+        return NextResponse.json({ reply: response });
+
+    } catch (error) {
+        console.error(error);
+        return NextResponse.json(
+            { reply: "Error generating AI response." },
+            { status: 500 }
+        );
+    }
 }
