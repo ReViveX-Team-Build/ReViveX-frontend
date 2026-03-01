@@ -31,29 +31,9 @@ export default function PatientAICompanion() {
         }
     }, [messages]);
 
-    const getAIResponse = (input: string): string => {
-        const lower = input.toLowerCase();
 
-        if (lower.includes("pain") || lower.includes("hurt")) {
-            return "I’m sorry you’re feeling pain 💙. If it continues, it’s important to inform your therapist. Would you like me to remind you to report this?";
-        }
 
-        if (lower.includes("tired") || lower.includes("exhausted")) {
-            return "Feeling tired after therapy is normal. Make sure you rest well and stay hydrated. You’re still doing great 👍";
-        }
-
-        if (lower.includes("progress") || lower.includes("improving")) {
-            return "Great news! 🎉 Your recent sessions show steady improvement. Consistency like this really helps recovery.";
-        }
-
-        if (lower.includes("worried") || lower.includes("scared")) {
-            return "It’s completely okay to feel worried sometimes. You’re not alone in this — your care team and I are here for you 🤍";
-        }
-
-        return "Thanks for sharing 💬. Keep staying consistent with your exercises — every small step matters in recovery!";
-    };
-
-    const handleSendMessage = () => {
+    const handleSendMessage = async () => {
         if (!inputValue.trim()) return;
 
         const userMessage: Message = {
@@ -69,12 +49,21 @@ export default function PatientAICompanion() {
         setMessages((prev) => [...prev, userMessage]);
         setInputValue("");
 
-        // Simulated AI reply
-        setTimeout(() => {
+        try {
+            const res = await fetch("/api/ai-companion", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({ message: userMessage.text }),
+            });
+
+            const data = await res.json();
+
             const aiMessage: Message = {
                 id: (Date.now() + 1).toString(),
                 sender: "ai",
-                text: getAIResponse(userMessage.text),
+                text: data.reply || "No response from AI",
                 timestamp: new Date().toLocaleTimeString([], {
                     hour: "2-digit",
                     minute: "2-digit",
@@ -82,7 +71,9 @@ export default function PatientAICompanion() {
             };
 
             setMessages((prev) => [...prev, aiMessage]);
-        }, 1000);
+        } catch (error) {
+            console.error("Frontend error:", error);
+        }
     };
 
     return (

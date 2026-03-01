@@ -30,137 +30,247 @@ import {
 
 } from "lucide-react";
 
+
 const CSS = `
+
   @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500&family=Space+Mono:wght@400;700&display=swap');
 
+
+
   :root {
-    /* The New "Slate" Dark Mode (Professional, softer, less eye-strain) */
-    --dk:  #0F172A;  
-    --dk2: #1E293B;  
-    --dk3: #334155;  
-    
-    /* The Signature Clinical Teal */
-    --tl:  #2DD4BF;  
-    --tl2: #0F766E;  
-    
-    /* The New Light Mode (Cooler, softer white to reduce glare) */
-    --wh:  #F8FAFC;  
-    
-    /* Typography & Borders */
-    --bd:  #475569;  
-    --mu:  #94A3B8;  /* Lighter Muted Text for perfect readability */
+
+    --dk:  #080f1a;
+
+    --dk2: #0B1E33;
+
+    --dk3: #0d1f38;
+
+    --tl:  #2DD4BF;
+
+    --tl2: #0d9488;
+
+    --wh:  #F8F9FA;
+
+    --bd:  #374151;
+
+    --mu:  #6B7280;
+
   }
+
+
 
   *, *::before, *::after { cursor: none !important; box-sizing: border-box; margin: 0; padding: 0; }
+
   html { scroll-behavior: auto; }
-  body { overflow-x: hidden; background: var(--dk); color: #F1F5F9; }
-  ::selection { background: rgba(45,212,191,.25); color: var(--dk); }
+
+  body { overflow-x: hidden; background: var(--dk); }
+
+  ::selection { background: rgba(45,212,191,.25); color: var(--dk2); }
+
+
 
   .fB { font-family: 'Bebas Neue','Arial Black',sans-serif; }
+
   .fS { font-family: 'DM Sans',system-ui,sans-serif; }
+
   .fM { font-family: 'Space Mono',monospace; }
 
+
+
   @keyframes ecgDraw {
+
     0%   { stroke-dashoffset: 2800; opacity: 1; }
+
     72%  { stroke-dashoffset: 0;    opacity: 1; }
+
     92%  { stroke-dashoffset: 0;    opacity: 1; }
+
     100% { stroke-dashoffset: 0;    opacity: 0; }
+
   }
+
   .ecg-line {
+
     stroke-dasharray: 2800;
+
     stroke-dashoffset: 2800;
+
     animation: ecgDraw 3.4s cubic-bezier(.4,0,.2,1) forwards;
+
   }
+
+
 
   @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
+
   .blink { animation: blink .85s step-end infinite; }
 
-  /* Grids updated to perfectly match the new Slate background */
+
+
   @keyframes gridDrift { to { background-position: 44px 44px; } }
+
   .grid-dk {
+
     background-image:
-      linear-gradient(rgba(45,212,191,.035) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(45,212,191,.035) 1px, transparent 1px);
+
+      linear-gradient(rgba(45,212,191,.028) 1px, transparent 1px),
+
+      linear-gradient(90deg, rgba(45,212,191,.028) 1px, transparent 1px);
+
     background-size: 44px 44px;
+
     animation: gridDrift 6s linear infinite;
+
   }
+
   .grid-lt {
+
     background-image:
-      linear-gradient(rgba(15,23,42,.04) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(15,23,42,.04) 1px, transparent 1px);
+
+      linear-gradient(rgba(11,30,51,.042) 1px, transparent 1px),
+
+      linear-gradient(90deg, rgba(11,30,51,.042) 1px, transparent 1px);
+
     background-size: 44px 44px;
+
   }
+
+
 
   @keyframes scanDown { 0%{top:-14%;opacity:0} 8%{opacity:.7} 92%{opacity:.7} 100%{top:116%;opacity:0} }
+
   .scanline {
+
     position: absolute; left: 0; right: 0; height: 13%;
-    background: linear-gradient(to bottom, transparent, rgba(45,212,191,.05), transparent);
+
+    background: linear-gradient(to bottom, transparent, rgba(45,212,191,.045), transparent);
+
     animation: scanDown 7s linear infinite;
+
     pointer-events: none;
+
   }
+
+
 
   @keyframes shimSweep {
+
     0%   { transform: translateX(-180%) skewX(-12deg); }
+
     100% { transform: translateX(180%)  skewX(-12deg); }
+
   }
+
   .btn-shim::after {
+
     content: ''; position: absolute; inset: 0;
-    background: linear-gradient(90deg,transparent,rgba(255,255,255,.25),transparent);
+
+    background: linear-gradient(90deg,transparent,rgba(255,255,255,.3),transparent);
+
     animation: shimSweep 2.4s ease-in-out infinite;
+
   }
+
+
 
   @keyframes mLeft  { to { transform: translateX(-50%); } }
+
   @keyframes mRight { to { transform: translateX(0); } }
+
   .mqL { animation: mLeft  30s linear infinite; }
+
   .mqR { animation: mRight 30s linear infinite; transform: translateX(-50%); }
 
+
+
   @keyframes glowBreath { 0%,100%{opacity:.3;transform:scale(1)} 50%{opacity:.62;transform:scale(1.08)} }
+
   .glow-breath { animation: glowBreath 5s ease-in-out infinite; }
 
+
+
   @keyframes floatUpDown {
+
     0%,100% { transform: translateY(0) rotate(-.35deg); }
+
     50%     { transform: translateY(-20px) rotate(.35deg); }
+
   }
+
   .float-card { animation: floatUpDown 7s ease-in-out infinite; }
 
+
+
   @keyframes ringPop {
+
     0%   { transform: translate(-50%,-50%) scale(.8); opacity: .8; }
+
     100% { transform: translate(-50%,-50%) scale(2.5); opacity: 0; }
-  }
-  .ring-pop {
-    animation: ringPop 2.8s ease-out infinite;
-    position: absolute; top: 50%; left: 50%;
+
   }
 
-  /* Grain overlay softened to match the lighter slate */
-  .grain::after {
-    content: ''; position: fixed; inset: 0; z-index: 9980; pointer-events: none;
-    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.03'/%3E%3C/svg%3E");
-    opacity: .4;
+  .ring-pop {
+
+    animation: ringPop 2.8s ease-out infinite;
+
+    position: absolute; top: 50%; left: 50%;
+
   }
+
+
+
+  .grain::after {
+
+    content: ''; position: fixed; inset: 0; z-index: 9980; pointer-events: none;
+
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.04'/%3E%3C/svg%3E");
+
+    opacity: .4;
+
+  }
+
+
 
   @keyframes arcCW  { to { transform: rotate(360deg);  } }
+
   @keyframes arcCCW { to { transform: rotate(-360deg); } }
+
   .arc-cw  { animation: arcCW  3.5s linear infinite; transform-origin: center; }
+
   .arc-ccw { animation: arcCCW 2.2s linear infinite; transform-origin: center; }
 
+
+
   @keyframes heartPulse {
+
     0%,100% { transform: scale(1); }
+
     14%     { transform: scale(1.4); }
+
     28%     { transform: scale(1); }
+
     42%     { transform: scale(1.2); }
+
     56%     { transform: scale(1); }
+
   }
+
   .heartbeat { animation: heartPulse 1.4s ease-in-out infinite; }
+
+
 
   .tilt3d { transform-style: preserve-3d; will-change: transform; }
 
+
+
   @keyframes nodePulse { 0%,100%{opacity:.45} 50%{opacity:1} }
+
   input:focus, textarea:focus { outline: none; border-color: rgba(45,212,191,.5) !important; }
-  
-  /* Shadows updated to use dark slate instead of pure black for a softer, more realistic drop */
-  .stat-card:hover { transform: translateY(-4px); box-shadow: 0 20px 40px rgba(15,23,42,.12); }
+
+  .stat-card:hover { transform: translateY(-4px); box-shadow: 0 20px 50px rgba(0,0,0,.12); }
+
   .stat-card { transition: transform .3s, box-shadow .3s; }
+
 `;
 
 
@@ -178,7 +288,7 @@ function useLenis() {
 
       return () => l.destroy();
 
-    }).catch(() => {});
+    }).catch(() => { });
 
   }, []);
 
@@ -192,7 +302,7 @@ function useMouseParallax() {
 
     const h = (e: MouseEvent) => setPos({
 
-      x: e.clientX / window.innerWidth  - 0.5,
+      x: e.clientX / window.innerWidth - 0.5,
 
       y: e.clientY / window.innerHeight - 0.5,
 
@@ -223,33 +333,33 @@ function useVelocitySkew() {
 }
 
 
-type RDir = "up"|"down"|"left"|"right"|"zoom"|"zoom-tilt"|"horizon"|"flip";
+type RDir = "up" | "down" | "left" | "right" | "zoom" | "zoom-tilt" | "horizon" | "flip";
 
 function Reveal({ children, dir = "up", delay = 0, className = "", style }:
 
   { children: React.ReactNode; dir?: RDir; delay?: number; className?: string; style?: React.CSSProperties }) {
 
-  const ref  = useRef(null);
+  const ref = useRef(null);
 
   const seen = useInView(ref, { once: true, margin: "-65px" });
 
- const V: Record<RDir, Variants> = {
+  const V: Record<RDir, Variants> = {
 
-    up:          { hidden: { y: 72, opacity: 0 },                    visible: { y: 0, opacity: 1 } },
+    up: { hidden: { y: 72, opacity: 0 }, visible: { y: 0, opacity: 1 } },
 
-    down:        { hidden: { y: -50, opacity: 0 },                   visible: { y: 0, opacity: 1 } },
+    down: { hidden: { y: -50, opacity: 0 }, visible: { y: 0, opacity: 1 } },
 
-    left:        { hidden: { x: -110, opacity: 0 },                  visible: { x: 0, opacity: 1 } },
+    left: { hidden: { x: -110, opacity: 0 }, visible: { x: 0, opacity: 1 } },
 
-    right:       { hidden: { x: 110, opacity: 0 },                   visible: { x: 0, opacity: 1 } },
+    right: { hidden: { x: 110, opacity: 0 }, visible: { x: 0, opacity: 1 } },
 
-    zoom:        { hidden: { scale: .7, opacity: 0 },                 visible: { scale: 1, opacity: 1 } },
+    zoom: { hidden: { scale: .7, opacity: 0 }, visible: { scale: 1, opacity: 1 } },
 
     "zoom-tilt": { hidden: { scale: .7, rotateY: -18, opacity: 0 }, visible: { scale: 1, rotateY: 0, opacity: 1 } },
 
-    horizon:     { hidden: { scaleX: .06, scaleY: .06, opacity: 0 }, visible: { scaleX: 1, scaleY: 1, opacity: 1 } },
+    horizon: { hidden: { scaleX: .06, scaleY: .06, opacity: 0 }, visible: { scaleX: 1, scaleY: 1, opacity: 1 } },
 
-    flip:        { hidden: { rotateX: 90, opacity: 0 },              visible: { rotateX: 0, opacity: 1 } },
+    flip: { hidden: { rotateX: 90, opacity: 0 }, visible: { rotateX: 0, opacity: 1 } },
 
   };
 
@@ -275,7 +385,7 @@ function SplitText({ text, style, className = "", delay = 0, stagger = 0.03 }:
 
   { text: string; style?: React.CSSProperties; className?: string; delay?: number; stagger?: number }) {
 
-  const ref  = useRef(null);
+  const ref = useRef(null);
 
   const seen = useInView(ref, { once: true, margin: "-55px" });
 
@@ -310,7 +420,7 @@ function CountUp({ to, suffix = "", prefix = "", decimals = 0 }:
 
   { to: number; suffix?: string; prefix?: string; decimals?: number }) {
 
-  const ref    = useRef<HTMLSpanElement>(null);
+  const ref = useRef<HTMLSpanElement>(null);
 
   const inView = useInView(ref, { once: true, margin: "-50px" });
 
@@ -361,11 +471,11 @@ function TiltCard({ children, style = {}, className = "" }:
 
     const r = el.getBoundingClientRect();
 
-    const x = ((e.clientX - r.left) / r.width  - 0.5) * 2;
+    const x = ((e.clientX - r.left) / r.width - 0.5) * 2;
 
-    const y = ((e.clientY - r.top)  / r.height - 0.5) * 2;
+    const y = ((e.clientY - r.top) / r.height - 0.5) * 2;
 
-    el.style.transform  = `perspective(900px) rotateY(${x * 10}deg) rotateX(${-y * 10}deg) scale(1.018)`;
+    el.style.transform = `perspective(900px) rotateY(${x * 10}deg) rotateX(${-y * 10}deg) scale(1.018)`;
 
     el.style.transition = "transform .07s";
 
@@ -375,7 +485,7 @@ function TiltCard({ children, style = {}, className = "" }:
 
     const el = ref.current; if (!el) return;
 
-    el.style.transform  = "perspective(900px) rotateY(0) rotateX(0) scale(1)";
+    el.style.transform = "perspective(900px) rotateY(0) rotateX(0) scale(1)";
 
     el.style.transition = "transform .55s cubic-bezier(.22,1,.36,1)";
 
@@ -394,74 +504,69 @@ function TiltCard({ children, style = {}, className = "" }:
   );
 
 }
+function MagButton({ children, onClick, style = {}, className = "", type = "button" }:
 
-function MagButton({ 
-  children, 
-  onClick, 
-  style = {}, 
-  className = "", 
-  type = "button",
-  onMouseEnter,
-  onMouseLeave 
-}: { 
-  children: React.ReactNode; 
-  onClick?: () => void; 
-  style?: React.CSSProperties; 
-  className?: string; 
-  type?: "button" | "submit";
-  onMouseEnter?: (e: React.MouseEvent<HTMLButtonElement>) => void;
-  onMouseLeave?: (e: React.MouseEvent<HTMLButtonElement>) => void;
-}) {
+  { children: React.ReactNode; onClick?: () => void; style?: React.CSSProperties; className?: string; type?: "button" | "submit" }) {
+
   const ref = useRef<HTMLButtonElement>(null);
+
   const RANGE = 90, PULL = 0.36;
-  
-  const onMove = useCallback((e: React.MouseEvent<HTMLButtonElement>) => {
+
+  const onMove = useCallback((e: React.MouseEvent) => {
+
     const el = ref.current; if (!el) return;
-    const r  = el.getBoundingClientRect();
-    const dx = e.clientX - (r.left + r.width  / 2);
-    const dy = e.clientY - (r.top  + r.height / 2);
-    if (Math.sqrt(dx*dx + dy*dy) < RANGE) {
-      el.style.transform  = `translate(${dx * PULL}px, ${dy * PULL}px)`;
+
+    const r = el.getBoundingClientRect();
+
+    const dx = e.clientX - (r.left + r.width / 2);
+
+    const dy = e.clientY - (r.top + r.height / 2);
+
+    if (Math.sqrt(dx * dx + dy * dy) < RANGE) {
+
+      el.style.transform = `translate(${dx * PULL}px, ${dy * PULL}px)`;
+
       el.style.transition = "transform .15s";
+
     }
+
   }, []);
-  
-  const onLeaveGlobal = useCallback((e: React.MouseEvent<HTMLButtonElement>) => {
-    const el = ref.current; 
-    if (el) {
-      el.style.transform  = "translate(0,0)";
-      el.style.transition = "transform .55s cubic-bezier(.22,1,.36,1)";
-    }
-    // Fires your custom onMouseLeave event if you passed one in
-    if (onMouseLeave) onMouseLeave(e);
-  }, [onMouseLeave]);
+
+  const onLeave = useCallback(() => {
+
+    const el = ref.current; if (!el) return;
+
+    el.style.transform = "translate(0,0)";
+
+    el.style.transition = "transform .55s cubic-bezier(.22,1,.36,1)";
+
+  }, []);
 
   return (
-    <button 
-      ref={ref} 
-      data-mag 
-      type={type} 
-      onClick={onClick}
-      className={className} 
-      style={style}
-      onMouseMove={onMove} 
-      onMouseLeave={onLeaveGlobal}
-      onMouseEnter={onMouseEnter}
-    >
+
+    <button ref={ref} data-mag type={type} onClick={onClick}
+
+      className={className} style={style}
+
+      onMouseMove={onMove} onMouseLeave={onLeave}>
+
       {children}
+
     </button>
+
   );
+
 }
 
 function FloatingParticles({ count = 35 }: { count?: number }) {
   const P = useMemo(() => Array.from({ length: count }, (_, i) => ({
-    id:      i,
-    x:       Math.random() * 100,
-    size:    Math.random() * 2.5 + 0.5,
-    dur:     Math.random() * 12 + 8,
-    delay:   Math.random() * 15,
+    id: i,
+    x: Math.random() * 100,
+    size: Math.random() * 2.5 + 0.5,
+    dur: Math.random() * 12 + 8,
+    delay: Math.random() * 15,
     opacity: Math.random() * 0.3 + 0.05,
-    drift:   (Math.random() - 0.5) * 60, // Horizontal sway distance
+    drift: (Math.random() - 0.5) * 60, // Horizontal sway distance
   })), [count]);
 
   const vh = typeof window !== "undefined" ? window.innerHeight : 900;
@@ -470,173 +575,390 @@ function FloatingParticles({ count = 35 }: { count?: number }) {
     <div style={{ position: "absolute", inset: 0, overflow: "hidden", pointerEvents: "none" }}>
       {P.map(p => (
         <motion.div key={p.id}
-          style={{ 
+          style={{
             position: "absolute", left: `${p.x}%`, bottom: -20,
-            width: p.size, height: p.size, borderRadius: "50%", 
+            width: p.size, height: p.size, borderRadius: "50%",
             background: "#2DD4BF",
-            boxShadow: `0 0 ${p.size * 3}px rgba(45,212,191,0.8)` 
+            boxShadow: `0 0 ${p.size * 3}px rgba(45,212,191,0.8)`
           }}
-          animate={{ 
-            y: [0, -(vh * 1.2)], 
-            x: [0, p.drift, -p.drift, 0], 
-            opacity: [0, p.opacity, p.opacity, 0] 
+          animate={{
+            y: [0, -(vh * 1.2)],
+            x: [0, p.drift, -p.drift, 0],
+            opacity: [0, p.opacity, p.opacity, 0]
           }}
-          transition={{ 
-            duration: p.dur, 
-            delay: p.delay, 
-            repeat: Infinity, 
-            ease: "easeInOut" 
-          }} 
+          transition={{
+            duration: p.dur,
+            delay: p.delay,
+            repeat: Infinity,
+            ease: "easeInOut"
+          }}
         />
       ))}
     </div>
   );
 }
-
 function NeuralNetwork({ mouse }: { mouse: { x: number; y: number } }) {
-  const [mounted, setMounted] = useState(false);
-  useEffect(() => setMounted(true), []);
+  const canvasRef   = useRef<HTMLCanvasElement>(null);
+  const parMouseRef = useRef(mouse);
+  const cursorRef   = useRef({ cx: -9999, cy: -9999, over: false });
 
-  // Generate a Highly Structured Grid Lattice
-  const { nodes, lines } = useMemo(() => {
-    if (!mounted) return { nodes: [], lines: [] };
+  useEffect(() => { parMouseRef.current = mouse; }, [mouse]);
 
-    const n = [];
-    const cols = 12; // Grid Columns
-    const rows = 8;  // Grid Rows
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d")!;
+    let raf = 0;
 
-    // 1. Create nodes in a structured grid
-    for (let c = 0; c <= cols; c++) {
-      for (let r = 0; r <= rows; r++) {
-        // Skip some nodes randomly to make it look organic, not like a literal spreadsheet
-        if (Math.random() > 0.85) continue;
+    // ─────────────────────────────────────────────────────────────────
+    // BRAIN SILHOUETTE — 32-point lateral view polygon
+    // Anatomical regions: frontal lobe, crown, parietal, occipital,
+    // brainstem taper, temporal lobe, Sylvian fissure notch
+    // Raw [0,1] → centered by subtracting bbox-center (0.495, 0.490)
+    // ─────────────────────────────────────────────────────────────────
+    const rawOutline: [number,number][] = [
+      // Frontal inferior base → ascent
+      [0.15,0.44],[0.09,0.35],[0.07,0.24],[0.10,0.13],[0.16,0.06],
+      // Crown — vertex slightly left of center
+      [0.24,0.01],[0.36,0.00],[0.50,0.01],[0.63,0.05],
+      // Parietal → Occipital dome (right hemisphere)
+      [0.74,0.12],[0.84,0.22],[0.90,0.34],[0.92,0.46],[0.88,0.57],
+      // Brainstem junction then NARROW TAPER to single point
+      [0.82,0.63],[0.76,0.69],[0.71,0.76],[0.67,0.82],
+      [0.63,0.88],[0.59,0.94],[0.56,0.98],  // ← brainstem tip
+      // Back up left side of brainstem
+      [0.51,0.96],[0.47,0.88],[0.43,0.80],[0.39,0.72],
+      // Temporal lobe posterior → pole (FAR LEFT)
+      [0.34,0.67],[0.26,0.65],[0.17,0.63],[0.09,0.60],
+      // Sylvian fissure (notch between temporal and frontal)
+      [0.07,0.55],[0.09,0.50],[0.15,0.47],
+    ];
+    const BX = 0.495, BY = 0.490; // bbox center
+    const POLY: [number,number][] = rawOutline.map(([x,y]) => [x-BX, y-BY]);
 
-        const z = Math.random(); // Depth for 3D parallax
-        n.push({
-          id: `${c}-${r}`,
-          col: c,
-          row: r,
-          // Base position + a tiny 4% jitter for organic feel
-          x: (c / cols) * 100 + (Math.random() - 0.5) * 4,
-          y: (r / rows) * 100 + (Math.random() - 0.5) * 4,
-          z: z,
-          radius: 0.8 + z * 2.2,           
-          speed: 0.01 + z * 0.08,     // Slower, elegant parallax
-          blur: (1 - z) * 3.5,        // Depth of Field
-          baseAlpha: 0.05 + z * 0.2, 
+    // Ray-cast point-in-polygon
+    const inBrain = (nx: number, ny: number): boolean => {
+      let inside = false;
+      for (let i = 0, j = POLY.length - 1; i < POLY.length; j = i++) {
+        const [xi,yi] = POLY[i], [xj,yj] = POLY[j];
+        if (((yi > ny) !== (yj > ny)) && nx < ((xj-xi)*(ny-yi))/(yj-yi)+xi)
+          inside = !inside;
+      }
+      return inside;
+    };
+
+    // ─────────────────────────────────────────────────────────────────
+    // SEED NODES — uniform 2D distribution inside brain + z-depth
+    // ─────────────────────────────────────────────────────────────────
+    type BNode = {
+      ox:number; oy:number; oz:number;
+      vx:number; vy:number; vz:number;
+      r:number; crown:boolean;
+    };
+    const nodes: BNode[] = [];
+
+    // 155 interior nodes via rejection sampling
+    let attempts = 0;
+    while (nodes.length < 155 && attempts < 8000) {
+      attempts++;
+      const nx = (Math.random()-0.5)*0.92;
+      const ny = (Math.random()-0.5)*1.02;
+      if (inBrain(nx, ny)) {
+        nodes.push({
+          ox: nx, oy: ny,
+          oz: (Math.random()-0.5)*0.22, // z gives 3D depth
+          vx: (Math.random()-0.5)*0.00028,
+          vy: (Math.random()-0.5)*0.00028,
+          vz: (Math.random()-0.5)*0.00015,
+          r:  0.70 + Math.random()*1.55,
+          crown: false,
         });
       }
     }
 
-    // 2. Connect only immediate neighbors (Creates the clean lattice structure)
-    const l = [];
-    for (let i = 0; i < n.length; i++) {
-      for (let j = i + 1; j < n.length; j++) {
-        const colDist = Math.abs(n[i].col - n[j].col);
-        const rowDist = Math.abs(n[i].row - n[j].row);
-        
-        // ONLY connect if they are exactly adjacent in the grid (max 1 step away)
-        // AND they are roughly on the same 3D depth plane
-        if (colDist <= 1 && rowDist <= 1 && Math.abs(n[i].z - n[j].z) < 0.35) {
-          // Calculate visual distance to set line opacity
-          const dx = n[i].x - n[j].x;
-          const dy = n[i].y - n[j].y;
-          const dist = Math.sqrt(dx * dx + dy * dy);
-          
-          l.push({ 
-            a: i, 
-            b: j, 
-            baseAlpha: (1 - dist / 25) * 0.25, // Lines fade out smoothly
-            zAvg: (n[i].z + n[j].z) / 2 
-          });
+    // 18 crown-scatter nodes — float just ABOVE the brain outline
+    // These recreate the "dissolving" top edge from the reference image
+    for (let i = 0; i < 18; i++) {
+      const angle = Math.PI * (0.18 + Math.random()*0.64); // top arc
+      const spread = 0.390 + Math.random()*0.055;
+      nodes.push({
+        ox: Math.cos(angle)*spread*0.88 + (Math.random()-0.5)*0.04,
+        oy: -0.290 - Math.abs(Math.sin(angle))*0.055 + (Math.random()-0.5)*0.02,
+        oz: (Math.random()-0.5)*0.12,
+        vx: (Math.random()-0.5)*0.00020,
+        vy: (Math.random()-0.5)*0.00020,
+        vz: (Math.random()-0.5)*0.00010,
+        r:  0.35 + Math.random()*0.90,
+        crown: true,
+      });
+    }
+
+    const N = nodes.length;
+
+    // ─────────────────────────────────────────────────────────────────
+    // EDGES — max 4 connections per node (prevents clutter)
+    // Sort candidates by distance, pick shortest first
+    // ─────────────────────────────────────────────────────────────────
+    const CONN = 0.200, CONN2 = CONN*CONN;
+    const cands: [number,number,number][] = []; // [i, j, dist²]
+    for (let i = 0; i < N; i++) {
+      for (let j = i+1; j < N; j++) {
+        const dx=nodes[i].ox-nodes[j].ox;
+        const dy=nodes[i].oy-nodes[j].oy;
+        const dz=nodes[i].oz-nodes[j].oz;
+        const d2=dx*dx+dy*dy+dz*dz;
+        if (d2 < CONN2) cands.push([i, j, d2]);
+      }
+    }
+    cands.sort((a,b) => a[2]-b[2]); // shortest first
+
+    const deg = new Uint8Array(N);
+    const MAX_DEG = 4; // hard cap per node — keeps mesh clean
+    const edges: [number,number][] = [];
+    const nbr: number[][] = Array.from({length:N}, ()=>[]);
+    for (const [i,j] of cands) {
+      if (deg[i] < MAX_DEG && deg[j] < MAX_DEG) {
+        edges.push([i,j]);
+        nbr[i].push(j); nbr[j].push(i);
+        deg[i]++; deg[j]++;
+      }
+    }
+
+    // Sparse triangles — only where 3 nodes are mutually connected
+    const tris: [number,number,number][] = [];
+    const nbrSet = nbr.map(a => new Set(a));
+    for (let i = 0; i < N; i++) {
+      for (const j of nbr[i]) {
+        if (j <= i) continue;
+        for (const k of nbr[j]) {
+          if (k <= j) continue;
+          if (nbrSet[i].has(k) && Math.random() < 0.30)
+            tris.push([i,j,k]);
         }
       }
     }
-    return { nodes: n, lines: l };
-  }, [mounted]);
 
-  if (!mounted) return null;
+    // ─────────────────────────────────────────────────────────────────
+    // TYPED ARRAYS — zero heap allocation in draw loop
+    // ─────────────────────────────────────────────────────────────────
+    const sx  = new Float32Array(N);
+    const sy  = new Float32Array(N);
+    const sz_ = new Float32Array(N);
+    const lx  = new Float32Array(N); // live drifting positions
+    const ly  = new Float32Array(N);
+    const lz  = new Float32Array(N);
+    const en  = new Float32Array(N); // energy — ZERO until cursor injects
+    const enN = new Float32Array(N);
+    for (let i = 0; i < N; i++) {
+      lx[i]=nodes[i].ox; ly[i]=nodes[i].oy; lz[i]=nodes[i].oz;
+    }
+
+    const adj  = nbr.map(a => new Uint8Array(a));
+    const vord = Array.from({length:N}, (_,i)=>i); // depth-sort buffer
+
+    type Pulse = {ei:number; t:number; spd:number;};
+    const pulses: Pulse[] = [];
+
+    const resize = () => {
+      const dpr = window.devicePixelRatio||1;
+      canvas.width  = canvas.offsetWidth *dpr;
+      canvas.height = canvas.offsetHeight*dpr;
+    };
+    resize();
+    window.addEventListener("resize", resize);
+
+    // ─────────────────────────────────────────────────────────────────
+    // MOUSE — window-level tracking (canvas is pointerEvents:none)
+    // ─────────────────────────────────────────────────────────────────
+    const onMove = (e: MouseEvent) => {
+      const r = canvas.getBoundingClientRect();
+      const lcx = e.clientX - r.left;
+      const lcy = e.clientY - r.top;
+      cursorRef.current = {
+        cx: lcx, cy: lcy,
+        over: lcx>=0 && lcx<=r.width && lcy>=0 && lcy<=r.height,
+      };
+    };
+    window.addEventListener("mousemove", onMove);
+
+    let frame = 0;
+
+    // ─────────────────────────────────────────────────────────────────
+    const draw = () => {
+      frame++;
+      const par = parMouseRef.current;
+
+      // Subtle rotation — keeps brain silhouette readable
+      // ±14° max yaw from mouse, tiny auto-breathe
+      const ry = par.x*0.24 + Math.sin(frame*0.0006)*0.028;
+      const rx = -0.12 + par.y*-0.08; // fixed forward tilt + minor mouse pitch
+
+      const dpr = window.devicePixelRatio||1;
+      const W = canvas.width/dpr, H = canvas.height/dpr;
+      ctx.setTransform(dpr,0,0,dpr,0,0);
+      ctx.clearRect(0,0,W,H);
+
+      const ccx = W*0.50, ccy = H*0.50;
+      const sc  = Math.min(W,H)*0.44;
+
+      const cosX=Math.cos(rx), sinX=Math.sin(rx);
+      const cosY=Math.cos(ry), sinY=Math.sin(ry);
+
+      // Project + micro-drift
+      for (let i = 0; i < N; i++) {
+        const n = nodes[i];
+        lx[i]+=n.vx; ly[i]+=n.vy; lz[i]+=n.vz;
+        if (Math.abs(lx[i]-n.ox)>0.09) n.vx*=-1;
+        if (Math.abs(ly[i]-n.oy)>0.09) n.vy*=-1;
+        if (Math.abs(lz[i]-n.oz)>0.13) n.vz*=-1;
+        const vx=lx[i], vy=ly[i], vz=lz[i];
+        const x1= vx*cosY+vz*sinY, z1=-vx*sinY+vz*cosY;
+        const y2= vy*cosX-z1*sinX, z2= vy*sinX+z1*cosX;
+        sx[i]=ccx+x1*sc; sy[i]=ccy+y2*sc; sz_[i]=z2;
+      }
+
+      // ── CURSOR = ONLY ENERGY SOURCE ────────────────────────────────
+      const {cx:mx, cy:my, over} = cursorRef.current;
+      const INJ_R  = sc*0.30;
+      const INJ_R2 = INJ_R*INJ_R;
+      if (over) {
+        for (let i = 0; i < N; i++) {
+          const dx=sx[i]-mx, dy=sy[i]-my;
+          const d2=dx*dx+dy*dy;
+          if (d2 < INJ_R2) {
+            const str = 1 - Math.sqrt(d2)/INJ_R;
+            const nv = en[i]+str*0.32;
+            en[i] = nv>1?1:nv;
+          }
+        }
+      }
+
+      // Ripple through brain network
+      for (let i = 0; i < N; i++) enN[i]=en[i];
+      for (let i = 0; i < N; i++) {
+        if (en[i] > 0.07) {
+          const nb = adj[i];
+          for (let k = 0; k < nb.length; k++) {
+            const j = nb[k];
+            const nv = enN[j]+en[i]*0.050;
+            if (nv>1) enN[j]=1; else enN[j]=nv;
+          }
+        }
+      }
+      // 0.740 decay when not hovering → fully dark in ~140ms
+      const decay = over ? 0.920 : 0.740;
+      for (let i = 0; i < N; i++) en[i]=enN[i]*decay;
+
+      // Spawn synapse pulses on hot edges
+      if (over && pulses.length < 55 && Math.random()<0.35) {
+        const ei = Math.floor(Math.random()*edges.length);
+        const [a,b] = edges[ei];
+        if ((en[a]+en[b])*0.5 > 0.46)
+          pulses.push({ei, t:0, spd:0.018+Math.random()*0.022});
+      }
+
+      // Depth sort — back to front
+      vord.sort((a,b) => sz_[a]-sz_[b]);
+
+      // ── 1. TRIANGLE FILLS — only render when lit ──────────────────
+      for (let ti = 0; ti < tris.length; ti++) {
+        const [a,b,c] = tris[ti];
+        const e = (en[a]+en[b]+en[c])/3;
+        if (e < 0.12) continue; // invisible when unlit
+        const dep = ((sz_[a]+sz_[b]+sz_[c])/3+1)*0.5;
+        ctx.beginPath();
+        ctx.moveTo(sx[a],sy[a]); ctx.lineTo(sx[b],sy[b]); ctx.lineTo(sx[c],sy[c]);
+        ctx.closePath();
+        ctx.fillStyle = `rgba(20,184,166,${e*0.062+dep*0.006})`;
+        ctx.fill();
+      }
+
+      // ── 2. EDGES ─────────────────────────────────────────────────
+      for (let k = 0; k < edges.length; k++) {
+        const [a,b] = edges[k];
+        const e   = (en[a]+en[b])*0.5;
+        const dep = ((sz_[a]+sz_[b])*0.5+1)*0.5;
+        ctx.beginPath();
+        ctx.moveTo(sx[a],sy[a]); ctx.lineTo(sx[b],sy[b]);
+        if (e < 0.04) {
+          // DARK: near-invisible ghost — just enough to hint the shape
+          ctx.strokeStyle = `rgba(95,132,130,${0.016+dep*0.012})`;
+          ctx.lineWidth   = 0.14+dep*0.06;
+        } else {
+          // LIT: vivid teal
+          ctx.strokeStyle = `rgba(45,212,191,${e*0.95+dep*0.036})`;
+          ctx.lineWidth   = 0.16+e*2.10+dep*0.22;
+        }
+        ctx.stroke();
+      }
+
+      // ── 3. SYNAPSE PULSES ────────────────────────────────────────
+      for (let pi = pulses.length-1; pi >= 0; pi--) {
+        const p = pulses[pi];
+        p.t += p.spd;
+        if (p.t > 1) { pulses.splice(pi,1); continue; }
+        const [a,b] = edges[p.ei];
+        const ppx = sx[a]+(sx[b]-sx[a])*p.t;
+        const ppy = sy[a]+(sy[b]-sy[a])*p.t;
+        const fade = Math.sin(p.t*Math.PI); // bell peak at midpoint
+        ctx.shadowBlur  = 4+fade*20;
+        ctx.shadowColor = `rgba(45,212,191,${fade*0.90})`;
+        ctx.beginPath();
+        ctx.arc(ppx, ppy, 0.70+fade*1.80, 0, Math.PI*2);
+        ctx.fillStyle = `rgba(255,255,255,${0.45+fade*0.55})`;
+        ctx.fill();
+      }
+      ctx.shadowBlur = 0;
+
+      // ── 4. NODES — depth-sorted, dark by default ─────────────────
+      for (let ii = 0; ii < N; ii++) {
+        const i   = vord[ii];
+        const e   = en[i];
+        const dep = (sz_[i]+1)*0.5;
+        const r   = nodes[i].r*(0.40+dep*0.72) + e*2.70;
+
+        if (e > 0.10) {
+          ctx.shadowBlur  = 3+e*24;
+          ctx.shadowColor = `rgba(45,212,191,${e*0.90})`;
+        }
+        ctx.beginPath();
+        ctx.arc(sx[i], sy[i], r, 0, Math.PI*2);
+        ctx.fillStyle = e < 0.04
+          ? `rgba(95,130,128,${0.042+dep*0.076})`       // ghost: barely there
+          : `rgba(255,255,255,${0.04+dep*0.04+e*0.92})`; // lit: clean white
+        ctx.fill();
+        if (e > 0.10) ctx.shadowBlur = 0;
+      }
+      ctx.shadowBlur = 0;
+
+      raf = requestAnimationFrame(draw);
+    };
+
+    raf = requestAnimationFrame(draw);
+    return () => {
+      cancelAnimationFrame(raf);
+      window.removeEventListener("resize",    resize);
+      window.removeEventListener("mousemove", onMove);
+    };
+  }, []);
 
   return (
-    <svg 
-      style={{ 
-        position: "absolute", 
-        inset: 0, 
-        width: "100%", 
-        height: "100%", 
-        pointerEvents: "none", 
-        zIndex: 0 // Forces it deep into the background
+    <canvas
+      ref={canvasRef}
+      style={{
+        position:       "absolute",
+        top:            "50%",
+        right:          "-2%",
+        transform:      "translateY(-46%)",
+        width:          "clamp(480px,52vw,820px)",
+        height:         "clamp(480px,52vw,820px)",
+        display:        "block",
+        pointerEvents:  "none",
+        opacity:        0.92,
+        WebkitMaskImage:"linear-gradient(to right,transparent 0%,black 18%)",
+        maskImage:      "linear-gradient(to right,transparent 0%,black 18%)",
       }}
-    >
-      <defs>
-        {/* Soft elegant glow for the active intersections */}
-        <filter id="latticeGlow">
-          <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
-          <feMerge>
-            <feMergeNode in="coloredBlur"/>
-            <feMergeNode in="SourceGraphic"/>
-          </feMerge>
-        </filter>
-      </defs>
-
-      {/* Render Connecting Lines */}
-      {lines.map((l, i) => {
-        const na = nodes[l.a], nb = nodes[l.b];
-        
-        // Parallax offset
-        const ax = na.x + mouse.x * na.speed * 100;
-        const ay = na.y + mouse.y * na.speed * 100;
-        const bx = nb.x + mouse.x * nb.speed * 100;
-        const by = nb.y + mouse.y * nb.speed * 100;
-
-        // Proximity Illumination (Glows when cursor is near)
-        const mx = (mouse.x + 0.5) * 100, my = (mouse.y + 0.5) * 100;
-        const midX = (ax + bx) / 2, midY = (ay + by) / 2;
-        const distToMouse = Math.sqrt(Math.pow(mx - midX, 2) + Math.pow(my - midY, 2));
-        
-        const illumination = Math.max(0, 1 - distToMouse / 22);
-        // Uses the Slate-Teal palette theme 
-        const finalAlpha = l.baseAlpha + (illumination * 0.5);
-
-        return (
-          <line key={`line-${i}`}
-            x1={`${ax}%`} y1={`${ay}%`}
-            x2={`${bx}%`} y2={`${by}%`}
-            stroke={`rgba(45,212,191,${finalAlpha})`} 
-            strokeWidth={0.5 + (l.zAvg * 1) + (illumination * 1.5)} 
-            style={{ 
-              filter: illumination > 0.2 ? "url(#latticeGlow)" : "none", 
-              transition: "stroke 0.3s, stroke-width 0.3s" 
-            }}
-          />
-        );
-      })}
-
-      {/* Render Nodes */}
-      {nodes.map(n => {
-        // Parallax offset
-        const nx = n.x + mouse.x * n.speed * 100;
-        const ny = n.y + mouse.y * n.speed * 100;
-
-        // Illumination math
-        const mx = (mouse.x + 0.5) * 100, my = (mouse.y + 0.5) * 100;
-        const distToMouse = Math.sqrt(Math.pow(mx - nx, 2) + Math.pow(my - ny, 2));
-        const illumination = Math.max(0, 1 - distToMouse / 18);
-
-        return (
-          <circle key={`node-${n.id}`}
-            cx={`${nx}%`}
-            cy={`${ny}%`}
-            r={n.radius + (illumination * 2.5)}
-            fill={`rgba(${illumination > 0.3 ? "248,250,252" : "45,212,191"}, ${n.baseAlpha + illumination})`}
-            style={{ 
-              filter: `blur(${n.blur}px)`, 
-              transition: "r 0.2s, fill 0.2s",
-            }} 
-          />
-        );
-      })}
-    </svg>
+    />
   );
 }
 
@@ -644,17 +966,17 @@ function MedicalCursor() {
 
   const crossRef = useRef<HTMLDivElement>(null);
 
-  const ringRef  = useRef<HTMLDivElement>(null);
+  const ringRef = useRef<HTMLDivElement>(null);
 
   const trailRef = useRef<Array<HTMLDivElement | null>>([]);
 
-  const histRef  = useRef<Array<{ x: number; y: number }>>([]);
+  const histRef = useRef<Array<{ x: number; y: number }>>([]);
 
-  const TRAIL    = 8;
+  const TRAIL = 8;
 
 
 
-  const [mode,  setMode]  = useState<"default"|"hover"|"click">("default");
+  const [mode, setMode] = useState<"default" | "hover" | "click">("default");
 
   const [light, setLight] = useState(false);
 
@@ -674,9 +996,9 @@ function MedicalCursor() {
 
       while (el) {
 
-        if (el.dataset?.theme === "light") { setLight(true);  break; }
+        if (el.dataset?.theme === "light") { setLight(true); break; }
 
-        if (el.dataset?.theme === "dark")  { setLight(false); break; }
+        if (el.dataset?.theme === "dark") { setLight(false); break; }
 
         el = el.parentElement;
 
@@ -686,11 +1008,11 @@ function MedicalCursor() {
 
     const onDown = () => setMode("click");
 
-    const onUp   = () => setMode(m => m === "click" ? "default" : m);
+    const onUp = () => setMode(m => m === "click" ? "default" : m);
 
-    const onIn   = () => setMode("hover");
+    const onIn = () => setMode("hover");
 
-    const onOut  = () => setMode("default");
+    const onOut = () => setMode("default");
 
 
 
@@ -698,7 +1020,7 @@ function MedicalCursor() {
 
     document.addEventListener("mousedown", onDown);
 
-    document.addEventListener("mouseup",   onUp);
+    document.addEventListener("mouseup", onUp);
 
     document.querySelectorAll("button,a,[data-mag]").forEach(el => {
 
@@ -716,7 +1038,7 @@ function MedicalCursor() {
 
         crossRef.current.style.left = `${mx}px`;
 
-        crossRef.current.style.top  = `${my}px`;
+        crossRef.current.style.top = `${my}px`;
 
       }
 
@@ -726,7 +1048,7 @@ function MedicalCursor() {
 
         ringRef.current.style.left = `${rx}px`;
 
-        ringRef.current.style.top  = `${ry}px`;
+        ringRef.current.style.top = `${ry}px`;
 
       }
 
@@ -740,9 +1062,9 @@ function MedicalCursor() {
 
         if (!dot || !p) return;
 
-        dot.style.left    = `${p.x}px`;
+        dot.style.left = `${p.x}px`;
 
-        dot.style.top     = `${p.y}px`;
+        dot.style.top = `${p.y}px`;
 
         dot.style.opacity = `${(1 - i / TRAIL) * 0.32}`;
 
@@ -766,7 +1088,7 @@ function MedicalCursor() {
 
       document.removeEventListener("mousedown", onDown);
 
-      document.removeEventListener("mouseup",   onUp);
+      document.removeEventListener("mouseup", onUp);
 
       cancelAnimationFrame(raf);
 
@@ -776,7 +1098,7 @@ function MedicalCursor() {
 
 
 
-  const C  = light ? "#0B1E33" : "#2DD4BF";
+  const C = light ? "#0B1E33" : "#2DD4BF";
 
   const sz = mode === "hover" ? 54 : mode === "click" ? 22 : 32;
 
@@ -790,9 +1112,11 @@ function MedicalCursor() {
 
         <div key={i} ref={el => { trailRef.current[i] = el; }}
 
-          style={{ position: "fixed", zIndex: 99990, pointerEvents: "none",
+          style={{
+            position: "fixed", zIndex: 99990, pointerEvents: "none",
 
-            width: 4, height: 4, borderRadius: "50%", background: C, transform: "translate(-50%,-50%)" }} />
+            width: 4, height: 4, borderRadius: "50%", background: C, transform: "translate(-50%,-50%)"
+          }} />
 
       ))}
 
@@ -800,7 +1124,7 @@ function MedicalCursor() {
 
         position: "fixed", zIndex: 99997, pointerEvents: "none",
 
-        width:  mode === "hover" ? 64 : mode === "click" ? 14 : 42,
+        width: mode === "hover" ? 64 : mode === "click" ? 14 : 42,
 
         height: mode === "hover" ? 64 : mode === "click" ? 14 : 42,
 
@@ -826,15 +1150,15 @@ function MedicalCursor() {
 
           style={{ display: "block", transition: "width .22s, height .22s" }}>
 
-          <line x1="-17" y1="0"   x2="-7"  y2="0"   stroke={C} strokeWidth={mode==="click"?1:1.5} strokeLinecap="round" />
+          <line x1="-17" y1="0" x2="-7" y2="0" stroke={C} strokeWidth={mode === "click" ? 1 : 1.5} strokeLinecap="round" />
 
-          <line x1="7"   y1="0"   x2="17"  y2="0"   stroke={C} strokeWidth={mode==="click"?1:1.5} strokeLinecap="round" />
+          <line x1="7" y1="0" x2="17" y2="0" stroke={C} strokeWidth={mode === "click" ? 1 : 1.5} strokeLinecap="round" />
 
-          <line x1="0"   y1="-17" x2="0"   y2="-7"  stroke={C} strokeWidth={mode==="click"?1:1.5} strokeLinecap="round" />
+          <line x1="0" y1="-17" x2="0" y2="-7" stroke={C} strokeWidth={mode === "click" ? 1 : 1.5} strokeLinecap="round" />
 
-          <line x1="0"   y1="7"   x2="0"   y2="17"  stroke={C} strokeWidth={mode==="click"?1:1.5} strokeLinecap="round" />
+          <line x1="0" y1="7" x2="0" y2="17" stroke={C} strokeWidth={mode === "click" ? 1 : 1.5} strokeLinecap="round" />
 
-          <circle cx="0" cy="0" r={mode==="click" ? 1.2 : 1.9} fill={C} />
+          <circle cx="0" cy="0" r={mode === "click" ? 1.2 : 1.9} fill={C} />
 
           <g className="arc-cw">
 
@@ -852,11 +1176,11 @@ function MedicalCursor() {
 
           <line x1="-13" y1="-13" x2="-10" y2="-10" stroke={C} strokeWidth=".7" opacity=".4" />
 
-          <line x1="13"  y1="-13" x2="10"  y2="-10" stroke={C} strokeWidth=".7" opacity=".4" />
+          <line x1="13" y1="-13" x2="10" y2="-10" stroke={C} strokeWidth=".7" opacity=".4" />
 
-          <line x1="-13" y1="13"  x2="-10" y2="10"  stroke={C} strokeWidth=".7" opacity=".4" />
+          <line x1="-13" y1="13" x2="-10" y2="10" stroke={C} strokeWidth=".7" opacity=".4" />
 
-          <line x1="13"  y1="13"  x2="10"  y2="10"  stroke={C} strokeWidth=".7" opacity=".4" />
+          <line x1="13" y1="13" x2="10" y2="10" stroke={C} strokeWidth=".7" opacity=".4" />
 
           {mode === "hover" && (
 
@@ -864,11 +1188,11 @@ function MedicalCursor() {
 
               <path d="M-17,-17 L-10,-17 M-17,-17 L-17,-10" stroke={C} strokeWidth="1.5" fill="none" />
 
-              <path d="M17,-17 L10,-17 M17,-17 L17,-10"     stroke={C} strokeWidth="1.5" fill="none" />
+              <path d="M17,-17 L10,-17 M17,-17 L17,-10" stroke={C} strokeWidth="1.5" fill="none" />
 
-              <path d="M-17,17 L-10,17 M-17,17 L-17,10"     stroke={C} strokeWidth="1.5" fill="none" />
+              <path d="M-17,17 L-10,17 M-17,17 L-17,10" stroke={C} strokeWidth="1.5" fill="none" />
 
-              <path d="M17,17 L10,17 M17,17 L17,10"         stroke={C} strokeWidth="1.5" fill="none" />
+              <path d="M17,17 L10,17 M17,17 L17,10" stroke={C} strokeWidth="1.5" fill="none" />
 
             </>
 
@@ -902,14 +1226,13 @@ const ECG_PATH = `
 
 //  PRELOADER (Procedural Neural Signal Generator)
 
-
 function Preloader({ onDone }: { onDone: () => void }) {
   const [pct, setPct] = useState(0);
   const [phase, setPhase] = useState<"loading" | "ready" | "exit">("loading");
   const [msg, setMsg] = useState("DETECTING NEURAL SIGNAL...");
-  
+
   // 1. Static initial state for Server-Side Rendering (Fixes Hydration Error)
-  const [ecgPath, setEcgPath] = useState("M-50 80 L3000 80"); 
+  const [ecgPath, setEcgPath] = useState("M-50 80 L3000 80");
 
   const MSGS = [
     "DETECTING NEURAL SIGNAL...",
@@ -968,7 +1291,7 @@ function Preloader({ onDone }: { onDone: () => void }) {
     const t2 = setTimeout(() => setPhase("exit"), 4200);
     const t3 = setTimeout(onDone, 5000);
 
-    return () => { clearInterval(counter); clearInterval(msgTimer); [t1, t2, t3].forEach(clearTimeout); };
+    return () => { clearInterval(counter); clearInterval(msgTimer);[t1, t2, t3].forEach(clearTimeout); };
   }, [onDone]);
 
   return (
@@ -976,76 +1299,66 @@ function Preloader({ onDone }: { onDone: () => void }) {
       {phase !== "exit" && (
         <motion.div
           key="pl"
-          exit={{ y: "-100%", opacity: 0, filter: "blur(12px)", transition: { duration: 0.9, ease: [0.76, 0, 0.24, 1] } }}
+          exit={{ y: "-100%", opacity: 0, filter: "blur(10px)", transition: { duration: 0.9, ease: [0.76, 0, 0.24, 1] } }}
           style={{
             position: "fixed", inset: 0, zIndex: 9900,
             display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
-            overflow: "hidden", 
-            background: "#0F172A", // Deep Slate background instead of harsh black
+            overflow: "hidden", background: "#080f1a",
           }}
         >
-          {/* Subtle Ambient Aura */}
           <motion.div
-            animate={{ opacity: phase === "ready" ? 0.6 : 0.2, scale: phase === "ready" ? 1.4 : 1 }}
-            transition={{ duration: 1.2, ease: "easeOut" }}
+            animate={{ opacity: phase === "ready" ? 0.8 : 0.4, scale: phase === "ready" ? 1.5 : 1 }}
+            transition={{ duration: 0.8, ease: "easeOut" }}
             style={{
               position: "absolute", inset: 0, pointerEvents: "none",
-              background: "radial-gradient(circle at center, rgba(45,212,191,0.12) 0%, transparent 60%)"
+              background: "radial-gradient(circle at center, rgba(45,212,191,0.18) 0%, transparent 60%)"
             }}
           />
-          
-          {/* Grid Overlay */}
-          <div className="grid-dk" style={{ position: "absolute", inset: 0, pointerEvents: "none", opacity: phase === "ready" ? 0.8 : 0.4, transition: "opacity 1s" }} />
 
-          {/* Procedural ECG Signal */}
+          <div className="grid-dk" style={{ position: "absolute", inset: 0, pointerEvents: "none", opacity: phase === "ready" ? 0.8 : 0.3, transition: "opacity 0.8s" }} />
+
           <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", overflow: "hidden", pointerEvents: "none" }}>
             <svg width="100%" height="160" viewBox="0 0 3000 160" preserveAspectRatio="none">
               <motion.path d={ecgPath} fill="none" stroke="#2DD4BF" strokeWidth="6" strokeLinecap="round" strokeLinejoin="bevel"
-                style={{ filter: "blur(8px)" }}
+                style={{ filter: "blur(10px)" }}
                 initial={{ pathLength: 0, opacity: 0 }}
-                animate={{ pathLength: 1, opacity: phase === "ready" ? 0 : 0.5 }}
+                animate={{ pathLength: 1, opacity: phase === "ready" ? 0 : 0.7 }}
                 transition={{ duration: 2.8, ease: "linear" }}
               />
-              <motion.path d={ecgPath} fill="none" stroke="#F8FAFC" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="bevel"
+              <motion.path d={ecgPath} fill="none" stroke="#FFFFFF" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="bevel"
                 initial={{ pathLength: 0, opacity: 0 }}
-                animate={{ pathLength: 1, opacity: phase === "ready" ? 0 : 0.9 }}
+                animate={{ pathLength: 1, opacity: phase === "ready" ? 0 : 1 }}
                 transition={{ duration: 2.8, ease: "linear" }}
               />
             </svg>
           </div>
 
-          {/* UI Content */}
           <div style={{ position: "relative", zIndex: 2, textAlign: "center" }}>
-            
-            {/* Heartbeat Icon */}
             <motion.div
-              animate={phase === "ready" ? { scale: [1, 1.4, 1], filter: ["drop-shadow(0 0 10px #2DD4BF)", "drop-shadow(0 0 25px #2DD4BF)", "drop-shadow(0 0 10px #2DD4BF)"] } : {}}
+              animate={phase === "ready" ? { scale: [1, 1.5, 1], filter: ["blur(0px)", "blur(6px)", "blur(0px)"] } : {}}
               transition={{ repeat: phase === "ready" ? Infinity : 0, duration: 0.4 }}
               style={{ marginBottom: 18, color: "#2DD4BF", display: "flex", justifyContent: "center" }}
               className={phase !== "ready" ? "heartbeat" : ""}
             >
-              <Heart size={34} style={{ fill: "#2DD4BF", filter: "drop-shadow(0 0 8px rgba(45,212,191,0.4))", transition: "filter 0.5s" }} />
+              <Heart size={36} style={{ fill: "#2DD4BF", filter: phase === "ready" ? "drop-shadow(0 0 25px #2DD4BF)" : "none", transition: "filter 0.5s" }} />
             </motion.div>
 
-            {/* Subtitle */}
-            <div className="fM" style={{ fontSize: 9, color: "#94A3B8", textTransform: "uppercase", letterSpacing: ".42em", marginBottom: 24 }}>
+            <div className="fM" style={{ fontSize: 9, color: "rgba(255,255,255,.3)", textTransform: "uppercase", letterSpacing: ".42em", marginBottom: 24 }}>
               NEURO-REHABILITATION SYSTEM
             </div>
 
-            {/* Main Logo */}
             <motion.div
               initial={{ opacity: 0, scale: .8 }}
-              animate={{ opacity: 1, scale: phase === "ready" ? 1.05 : 1, textShadow: phase === "ready" ? "0 0 50px rgba(45,212,191,0.4)" : "none" }}
+              animate={{ opacity: 1, scale: phase === "ready" ? 1.05 : 1, textShadow: phase === "ready" ? "0 0 60px rgba(45,212,191,0.8)" : "none" }}
               transition={{ delay: .4, duration: .7 }}
-              className="fB" style={{ fontSize: "clamp(4rem,14vw,11rem)", color: "#F8FAFC", letterSpacing: ".08em", lineHeight: 1 }}
+              className="fB" style={{ fontSize: "clamp(4rem,14vw,11rem)", color: "#fff", letterSpacing: ".08em", lineHeight: 1 }}
             >
-              REVIVE<motion.span animate={{ color: phase === "ready" ? "#F8FAFC" : "#2DD4BF" }} transition={{ duration: 0.5 }}>X</motion.span>
+              REVIVE<motion.span animate={{ color: phase === "ready" ? "#fff" : "#2DD4BF" }} transition={{ duration: 0.5 }}>X</motion.span>
             </motion.div>
 
-            {/* Progress Percentage */}
             <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "center", gap: 4, marginTop: 28, marginBottom: 14 }}>
-              <motion.span 
-                animate={{ color: phase === "ready" ? "#2DD4BF" : "#F1F5F9" }}
+              <motion.span
+                animate={{ color: phase === "ready" ? "#2DD4BF" : "rgba(255,255,255,.85)" }}
                 className="fM" style={{ fontSize: "3.2rem", lineHeight: 1 }}
               >
                 {String(pct).padStart(3, "0")}
@@ -1053,21 +1366,14 @@ function Preloader({ onDone }: { onDone: () => void }) {
               <span className="fM blink" style={{ fontSize: "1.6rem", color: "#2DD4BF", marginBottom: 4 }}>%</span>
             </div>
 
-            {/* Laser Loading Bar */}
-            <div style={{ width: 260, height: 2, background: "#1E293B", margin: "0 auto 14px", overflow: "hidden", borderRadius: 2 }}>
+            <div style={{ width: 240, height: 2, background: "rgba(255,255,255,.1)", margin: "0 auto 14px", overflow: "hidden", borderRadius: 2 }}>
               <motion.div
-                animate={{ width: `${pct}%`, background: phase === "ready" ? "#F8FAFC" : "#2DD4BF" }}
+                animate={{ width: `${pct}%`, background: phase === "ready" ? "#fff" : "#2DD4BF" }}
                 transition={{ duration: .05 }}
-                style={{ height: "100%", boxShadow: "0 0 12px rgba(45,212,191,.5)", position: "relative" }}
-              >
-                {/* Bright Laser Tip */}
-                {phase !== "ready" && (
-                  <div style={{ position: "absolute", right: 0, top: 0, bottom: 0, width: 20, background: "#fff", filter: "blur(2px)" }} />
-                )}
-              </motion.div>
+                style={{ height: "100%", boxShadow: "0 0 14px rgba(45,212,191,.8)" }}
+              />
             </div>
 
-            {/* Status Messages */}
             <AnimatePresence mode="wait">
               <motion.div
                 key={phase === "ready" ? "SYSTEM ONLINE." : msg}
@@ -1078,7 +1384,7 @@ function Preloader({ onDone }: { onDone: () => void }) {
                 className="fM"
                 style={{
                   fontSize: phase === "ready" ? 11 : 9,
-                  color: phase === "ready" ? "#2DD4BF" : "#94A3B8",
+                  color: phase === "ready" ? "#2DD4BF" : "rgba(255,255,255,.3)",
                   textTransform: "uppercase",
                   letterSpacing: ".24em",
                   fontWeight: phase === "ready" ? "bold" : "normal"
@@ -1087,7 +1393,6 @@ function Preloader({ onDone }: { onDone: () => void }) {
                 {phase === "ready" ? "SYSTEM ONLINE. INITIALIZING UI..." : msg}
               </motion.div>
             </AnimatePresence>
-
           </div>
         </motion.div>
       )}
@@ -1123,11 +1428,11 @@ function Navbar() {
 
         padding: "18px 40px",
 
-        background:     scrolled ? "rgba(8,15,26,.9)" : "transparent",
+        background: scrolled ? "rgba(8,15,26,.9)" : "transparent",
 
-        backdropFilter: scrolled ? "blur(22px)"       : "none",
+        backdropFilter: scrolled ? "blur(22px)" : "none",
 
-        borderBottom:   scrolled ? "1px solid rgba(45,212,191,.07)" : "none",
+        borderBottom: scrolled ? "1px solid rgba(45,212,191,.07)" : "none",
 
         transition: "background .4s, backdrop-filter .4s, border .4s",
 
@@ -1141,13 +1446,15 @@ function Navbar() {
 
       <div style={{ display: "flex", gap: 28, alignItems: "center" }}>
 
-        {[["Problem","#problem"],["Solution","#solution"],["Offer","#offer"],["Why Us","#why"],["Contact","#contact"]].map(([l,h]) => (
+        {[["Problem", "#problem"], ["Solution", "#solution"], ["Offer", "#offer"], ["Why Us", "#why"], ["Contact", "#contact"]].map(([l, h]) => (
 
           <a key={l} href={h} data-mag className="fM"
 
-            style={{ fontSize: 9, textTransform: "uppercase", letterSpacing: ".22em",
+            style={{
+              fontSize: 9, textTransform: "uppercase", letterSpacing: ".22em",
 
-              color: "rgba(255,255,255,.38)", textDecoration: "none", transition: "color .3s" }}
+              color: "rgba(255,255,255,.38)", textDecoration: "none", transition: "color .3s"
+            }}
 
             onMouseEnter={e => (e.currentTarget.style.color = "rgba(255,255,255,.85)")}
 
@@ -1163,11 +1470,13 @@ function Navbar() {
 
       <a href="#contact" data-mag className="fM"
 
-        style={{ fontSize: 9, textTransform: "uppercase", letterSpacing: ".2em",
+        style={{
+          fontSize: 9, textTransform: "uppercase", letterSpacing: ".2em",
 
           color: "#2DD4BF", padding: "8px 18px", borderRadius: 99,
 
-          border: "1px solid rgba(45,212,191,.3)", textDecoration: "none", transition: "background .3s" }}
+          border: "1px solid rgba(45,212,191,.3)", textDecoration: "none", transition: "background .3s"
+        }}
 
         onMouseEnter={e => (e.currentTarget.style.background = "rgba(45,212,191,.1)")}
 
@@ -1182,321 +1491,545 @@ function Navbar() {
   );
 
 }
-function HeroSection() {
-  const router  = useRouter();
-  const skewY   = useVelocitySkew();
-  const mouse   = useMouseParallax();
 
-  // Physics Springs for buttery smooth parallax
+
+function HeroSection() {
+
+  const router = useRouter();
+
+  const skewY = useVelocitySkew();
+
+  const mouse = useMouseParallax();
+
   const smoothX = useSpring(mouse.x, { stiffness: 90, damping: 22 });
+
   const smoothY = useSpring(mouse.y, { stiffness: 90, damping: 22 });
 
-  // Background Parallax
+
+
   const gX = useTransform(smoothX, v => v * 2);
+
   const gY = useTransform(smoothY, v => v * 2);
+
   const nX = useTransform(smoothX, v => v * 6);
+
   const nY = useTransform(smoothY, v => v * 6);
+
   const dX = useTransform(smoothX, v => v * 10);
+
   const dY = useTransform(smoothY, v => v * 10);
 
-  // Data Chip Parallax Trajectories
-  const chip0x = useTransform(smoothX, v => -210 + v * 14 * 100); 
-  const chip0y = useTransform(smoothY, v =>   10 + v * 14 * 100);  
-  const chip1x = useTransform(smoothX, v =>  210 + v * 18 * 100); 
-  const chip1y = useTransform(smoothY, v =>   30 + v * 18 * 100);  
-  const chip2x = useTransform(smoothX, v => -190 + v * 12 * 100); 
-  const chip2y = useTransform(smoothY, v =>  180 + v * 12 * 100);  
-  const chip3x = useTransform(smoothX, v =>  190 + v * 16 * 100); 
-  const chip3y = useTransform(smoothY, v =>  170 + v * 16 * 100);
+
+  const chip0x = useTransform(smoothX, v => -190 + v * 14 * 100); // Far Left, Top
+
+  const chip0y = useTransform(smoothY, v => 10 + v * 14 * 100);
+
+  const chip1x = useTransform(smoothX, v => 190 + v * 18 * 100); // Far Right, Top
+
+  const chip1y = useTransform(smoothY, v => 30 + v * 18 * 100);
+
+  const chip2x = useTransform(smoothX, v => -170 + v * 12 * 100); // Far Left, Bottom
+
+  const chip2y = useTransform(smoothY, v => 180 + v * 12 * 100);
+
+  const chip3x = useTransform(smoothX, v => 170 + v * 16 * 100); // Far Right, Bottom
+
+  const chip3y = useTransform(smoothY, v => 170 + v * 16 * 100);
+
+
 
   const chips = [
-    { l: "GRIP FORCE", v: "84 kPa", c: "#2DD4BF", delay: 1.9,  cx: chip0x, cy: chip0y, icon: <Activity size={12} /> },
-    { l: "TREMOR",     v: "±0.02g", c: "#a78bfa", delay: 2.08, cx: chip1x, cy: chip1y, icon: <Waves size={12} /> },
-    { l: "ADHERENCE",  v: "87%",    c: "#34d399", delay: 2.26, cx: chip2x, cy: chip2y, icon: <TrendingUp size={12} /> },
-    { l: "NEURAL XP",  v: "+280",   c: "#fbbf24", delay: 2.44, cx: chip3x, cy: chip3y, icon: <Star size={12} /> },
+
+    { l: "GRIP", v: "84 kPa", c: "#2DD4BF", delay: 1.9, cx: chip0x, cy: chip0y },
+
+    { l: "TREMOR", v: "±0.02g", c: "#a78bfa", delay: 2.08, cx: chip1x, cy: chip1y },
+
+    { l: "ADHERENCE", v: "87%", c: "#34d399", delay: 2.26, cx: chip2x, cy: chip2y },
+
+    { l: "XP POINTS", v: "+280", c: "#fbbf24", delay: 2.44, cx: chip3x, cy: chip3y },
+
   ];
 
-  // Track hover states for the liquid fill buttons
-  const [hoverP, setHoverP] = useState(false);
-  const [hoverD, setHoverD] = useState(false);
-
   return (
+
     <section data-theme="dark" style={{
+
       position: "relative", minHeight: "100vh",
+
       display: "flex", flexDirection: "column",
+
       alignItems: "center", justifyContent: "center",
-      overflow: "hidden", background: "#0F172A", // Deep Slate
+
+      overflow: "hidden", background: "#080f1a",
+
     }}>
-      
-      {/* 1. DYNAMIC ENVIRONMENT LIGHTING */}
+
+      {/* Breathing glow */}
+
       <motion.div style={{ x: gX, y: gY, position: "absolute", inset: 0, pointerEvents: "none" }}>
-        <div className="glow-breath" style={{ width: "100%", height: "100%", background: "radial-gradient(ellipse 65% 60% at 50% 58%, rgba(45,212,191,.08), transparent 65%)" }} />
+
+        <div className="glow-breath" style={{
+          width: "100%", height: "100%",
+
+          background: "radial-gradient(ellipse 65% 60% at 50% 58%, rgba(45,212,191,.10), transparent 68%)"
+        }} />
+
       </motion.div>
+
+
 
       <div className="grid-dk" style={{ position: "absolute", inset: 0, pointerEvents: "none" }} />
 
-      {/* Decorative 3D Light Rays */}
+
+
+      {/* Decorative diagonal lines */}
+
       {[7, 22, 48, 74, 90].map((p, i) => (
-        <div key={i} style={{ position: "absolute", top: "-30%", left: `${p}%`, width: 1, height: "180%", pointerEvents: "none", background: `linear-gradient(to bottom,transparent,rgba(45,212,191,${.04-i*.005}),transparent)`, transform: `rotate(${-13+i*5}deg)` }} />
+
+        <div key={i} style={{
+          position: "absolute", top: "-30%", left: `${p}%`,
+
+          width: 1, height: "180%", pointerEvents: "none",
+
+          background: `linear-gradient(to bottom,transparent,rgba(45,212,191,${.042 - i * .006}),transparent)`,
+
+          transform: `rotate(${-13 + i * 5}deg)`
+        }} />
+
       ))}
+
       <div className="scanline" />
-      
-      {/* Neural Network Layer */}
-      <FloatingParticles count={25} />
-      <motion.div style={{ x: nX, y: nY, position: "absolute", inset: 0, pointerEvents: "none" }}>
+
+      <FloatingParticles count={20} />
+
+      {/* Neural network layer */}
+
+      {/* Neural network layer — 3D brain, right side */}
+
+      <div style={{ position: "absolute", inset: 0, pointerEvents: "none" }}>
         <NeuralNetwork mouse={mouse} />
-      </motion.div>
+      </div>
 
-      {/* 2. MAIN CONTENT WRAPPER */}
-      <motion.div style={{ skewY, width: "100%", maxWidth: 1280, padding: "120px 40px 80px", display: "flex", flexDirection: "column", alignItems: "center", position: "relative", zIndex: 10 }}>
 
-        {/* Top Badge */}
+
+      {/* Main content */}
+
+      <motion.div style={{
+        skewY, width: "100%", maxWidth: 1280,
+
+        padding: "120px 40px 80px", display: "flex",
+
+        flexDirection: "column", alignItems: "center", position: "relative", zIndex: 10
+      }}>
+
+
+        {/* Badge */}
+
         <Reveal dir="down" delay={.2}>
-          <div className="fM" style={{ fontSize: 9, textTransform: "uppercase", letterSpacing: ".28em", color: "#94A3B8", marginBottom: 38, display: "flex", alignItems: "center", gap: 10, padding: "8px 20px", borderRadius: 99, background: "rgba(255,255,255,.03)", border: "1px solid rgba(45,212,191,.15)", boxShadow: "0 0 20px rgba(45,212,191,.05)" }}>
+
+          <div className="fM" style={{
+            fontSize: 9, textTransform: "uppercase", letterSpacing: ".28em",
+
+            color: "rgba(255,255,255,.38)", marginBottom: 38,
+
+            display: "flex", alignItems: "center", gap: 10,
+
+            padding: "8px 20px", borderRadius: 99,
+
+            background: "rgba(255,255,255,.03)", border: "1px solid rgba(255,255,255,.07)"
+          }}>
+
             <Heart size={11} style={{ color: "#2DD4BF" }} className="heartbeat" />
+
             Democratizing Neuro-Rehabilitation · SDGP CS-09
+
           </div>
+
         </Reveal>
 
-        {/* Cinematic Headline */}
-        <div style={{ position: "relative", textAlign: "center", lineHeight: ".88", marginBottom: 24, perspective: 900 }}>
-          {/* Blur Backdrop ensures text remains legible over the network lines */}
-          <div style={{ position: "absolute", top: "50%", left: "50%", transform: "translate(-50%, -50%)", width: "100%", height: "100%", background: "radial-gradient(circle, rgba(15,23,42,0.6) 0%, transparent 70%)", filter: "blur(20px)", pointerEvents: "none", zIndex: -1 }} />
-          
-          <div className="fB" style={{ fontSize: "clamp(4.5rem,12vw,12rem)", color: "#F8FAFC", letterSpacing: ".04em", overflow: "hidden" }}>
+
+
+        {/* Headline */}
+
+        <div style={{ textAlign: "center", lineHeight: ".88", marginBottom: 24, perspective: 900, overflow: "hidden" }}>
+
+          <div className="fB" style={{ fontSize: "clamp(4rem,12vw,11rem)", color: "#fff", letterSpacing: ".04em", overflow: "hidden" }}>
+
             <SplitText text="REWIRING" delay={.5} stagger={.04} />
+
           </div>
-          <div className="fB" style={{ fontSize: "clamp(4.5rem,12vw,12rem)", color: "#2DD4BF", letterSpacing: ".04em", overflow: "hidden", textShadow: "0 0 40px rgba(45,212,191,.3)" }}>
+
+          <div className="fB" style={{ fontSize: "clamp(4rem,12vw,11rem)", color: "#2DD4BF", letterSpacing: ".04em", overflow: "hidden" }}>
+
             <SplitText text="RECOVERY." delay={.72} stagger={.04} />
+
           </div>
+
         </div>
 
+
+
         {/* Tagline */}
+
         <Reveal dir="up" delay={1.1}>
-          <p className="fS" style={{ color: "#94A3B8", fontSize: 18, textAlign: "center", maxWidth: 520, lineHeight: 1.68, fontWeight: 300, marginBottom: 52 }}>
-            A revolutionary IoT device that turns repetitive physiotherapy into 
-            <span style={{ color: "#F8FAFC", fontWeight: 400, borderBottom: "1px solid rgba(45,212,191,.4)" }}> immersive games</span>
+
+          <p className="fS" style={{
+            color: "rgba(255,255,255,.44)", fontSize: 17,
+
+            textAlign: "center", maxWidth: 460, lineHeight: 1.68,
+
+            fontWeight: 300, marginBottom: 52
+          }}>
+
+            A revolutionary IoT device that turns repetitive physiotherapy into
+
+            <span style={{ color: "rgba(255,255,255,.82)", fontWeight: 500 }}> immersive games</span>
+
             {" "}— so patients <span style={{ color: "#2DD4BF", fontWeight: 500 }}>actually want</span> to recover.
+
           </p>
+
         </Reveal>
 
-        {/* 3. THE HARDWARE CORE (Enhanced 3D Visualization) */}
-        <Reveal dir="zoom" delay={.85} style={{ marginBottom: 80 }}>
-          <motion.div style={{ x: dX, y: dY, position: "relative", width: "320px", height: "260px" }}>
-            
-            {/* Spinning Radar Rings */}
-            <motion.div animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 25, ease: "linear" }} style={{ position: "absolute", top: "50%", left: "50%", width: 280, height: 280, borderRadius: "50%", border: "1px dashed rgba(45,212,191,.2)", transform: "translate(-50%,-50%)" }} />
-            <motion.div animate={{ rotate: -360 }} transition={{ repeat: Infinity, duration: 35, ease: "linear" }} style={{ position: "absolute", top: "50%", left: "50%", width: 210, height: 210, borderRadius: "50%", border: "2px dotted rgba(167,139,250,.2)", transform: "translate(-50%,-50%)" }} />
-            <div className="ring-pop" style={{ width: 190, height: 190, borderRadius: "50%", border: "2px solid rgba(45,212,191,.6)", position: "absolute", top: "50%", left: "50%", pointerEvents: "none" }} />
+        {/* Device */}
 
-            {/* The Hardware Node */}
-            <TiltCard style={{ position: "relative", zIndex: 2, width: "100%", height: "100%", borderRadius: 44, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 14 }} className="float-card">
-              <div style={{ width: "100%", height: "100%", borderRadius: 44, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 14, background: "linear-gradient(135deg, #1E293B, #0F172A)", border: "1px solid rgba(45,212,191,.3)", boxShadow: "0 20px 80px rgba(0,0,0,.6), 0 0 60px rgba(45,212,191,.15) inset" }}>
-                
-                <motion.div animate={{ opacity: [0.5, 1, 0.5], filter: ["drop-shadow(0 0 0px #2DD4BF)", "drop-shadow(0 0 15px #2DD4BF)", "drop-shadow(0 0 0px #2DD4BF)"] }} transition={{ repeat: Infinity, duration: 2, ease: "easeInOut" }}>
-                  <Cpu size={52} strokeWidth={1} style={{ color: "#2DD4BF" }} />
-                </motion.div>
-                
-                <div className="fM" style={{ fontSize: 8, color: "#94A3B8", textTransform: "uppercase", letterSpacing: ".25em", textAlign: "center", lineHeight: 1.8 }}>
-                  <span style={{ color: "#2DD4BF" }}>ReViveX</span> Core<br />ESP32 · MPX10DP
+        <Reveal dir="zoom" delay={.85} style={{ marginBottom: 80 }}>
+
+          <motion.div style={{ x: dX, y: dY, position: "relative", width: "300px", height: "240px" }}>
+
+            {[280, 210, 148].map((s, i) => (
+
+              <div key={i} style={{
+                position: "absolute", top: "50%", left: "50%",
+
+                width: s, height: s, borderRadius: "50%",
+
+                border: `1px solid rgba(45,212,191,${.04 + i * .05})`,
+
+                transform: "translate(-50%,-50%)", pointerEvents: "none"
+              }} />
+
+            ))}
+
+            <div className="ring-pop" style={{
+              width: 190, height: 190, borderRadius: "50%",
+
+              border: "1px solid rgba(45,212,191,.55)", pointerEvents: "none"
+            }} />
+
+
+
+            <TiltCard style={{
+              position: "relative", zIndex: 2, width: "100%", height: "100%",
+
+              borderRadius: 44, display: "flex", flexDirection: "column",
+
+              alignItems: "center", justifyContent: "center", gap: 14
+            }}
+
+              className="float-card">
+
+              <div style={{
+                width: "100%", height: "100%", borderRadius: 44,
+
+                display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 14,
+
+                background: "linear-gradient(145deg,rgba(45,212,191,.12),rgba(4,10,20,.94))",
+
+                border: "1px solid rgba(45,212,191,.24)",
+
+                boxShadow: "0 0 80px rgba(45,212,191,.16), inset 0 1px 0 rgba(255,255,255,.05)"
+              }}>
+
+                <Cpu size={44} strokeWidth={.9} style={{ color: "#2DD4BF", opacity: .55 }} />
+
+                <div className="fM" style={{
+                  fontSize: 7, color: "rgba(255,255,255,.2)",
+
+                  textTransform: "uppercase", letterSpacing: ".22em", textAlign: "center", lineHeight: 1.8
+                }}>
+
+                  BP BULB · ESP32<br />MPX10DP · MPU6050
+
                 </div>
-                
-                <div style={{ display: "flex", alignItems: "center", gap: 6, background: "rgba(45,212,191,.1)", padding: "4px 12px", borderRadius: 12, border: "1px solid rgba(45,212,191,.2)" }}>
-                  <div style={{ width: 6, height: 6, borderRadius: "50%", background: "#2DD4BF", animation: "blink 1s step-end infinite", boxShadow: "0 0 8px #2DD4BF" }} />
-                  <span className="fM" style={{ fontSize: 7, color: "#2DD4BF", textTransform: "uppercase", letterSpacing: ".26em" }}>STREAMING</span>
+
+                <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+
+                  <div style={{
+                    width: 6, height: 6, borderRadius: "50%",
+
+                    background: "#2DD4BF", animation: "blink 1.3s step-end infinite"
+                  }} />
+
+                  <span className="fM" style={{
+                    fontSize: 7, color: "rgba(45,212,191,.5)",
+
+                    textTransform: "uppercase", letterSpacing: ".26em"
+                  }}>LIVE</span>
+
                 </div>
+
               </div>
+
             </TiltCard>
 
-            {/* Orbiting Glassmorphic Data Chips */}
+            {/* Floating data chips */}
+
             {chips.map((chip, i) => (
-              <motion.div key={chip.l} style={{ position: "absolute", x: chip.cx, y: chip.cy, left: "50%", transform: "translateX(-50%)", zIndex: 3 }} initial={{ opacity: 0, scale: .5 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: chip.delay, duration: .55, type: "spring" }}>
-                {/* Continuous ambient floating animation */}
-                <motion.div animate={{ y: [-5, 5, -5] }} transition={{ repeat: Infinity, duration: 4 + i, ease: "easeInOut" }}>
-                  <div style={{ padding: "8px 14px", borderRadius: 16, display: "flex", flexDirection: "column", alignItems: "center", gap: 6, background: "rgba(30,41,59,.85)", border: `1px solid ${chip.c}40`, backdropFilter: "blur(20px)", boxShadow: `0 10px 30px rgba(0,0,0,.4), 0 0 20px ${chip.c}15` }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                      <div style={{ color: chip.c, opacity: 0.8 }}>{chip.icon}</div>
-                      <div className="fM" style={{ fontSize: 7, color: "#94A3B8", textTransform: "uppercase", letterSpacing: ".2em" }}>{chip.l}</div>
-                    </div>
-                    <div className="fB" style={{ fontSize: 17, color: chip.c, lineHeight: 1 }}>{chip.v}</div>
-                  </div>
-                </motion.div>
+
+              <motion.div key={chip.l}
+
+                style={{
+                  position: "absolute", x: chip.cx, y: chip.cy,
+
+                  left: "50%", transform: "translateX(-50%)"
+                }}
+
+                initial={{ opacity: 0, scale: .5 }}
+
+                animate={{ opacity: 1, scale: 1 }}
+
+                transition={{ delay: chip.delay, duration: .55 }}>
+
+                <div style={{
+                  padding: "7px 12px", borderRadius: 12, textAlign: "center",
+
+                  background: "rgba(4,10,20,.94)", border: `1px solid ${chip.c}25`,
+
+                  backdropFilter: "blur(14px)",
+
+                  boxShadow: `0 4px 24px rgba(0,0,0,.5), 0 0 12px ${chip.c}15`
+                }}>
+
+                  <div className="fM" style={{
+                    fontSize: 7, color: "rgba(255,255,255,.2)",
+
+                    textTransform: "uppercase", letterSpacing: ".2em"
+                  }}>{chip.l}</div>
+
+                  <div className="fB" style={{ fontSize: 15, color: chip.c, lineHeight: 1.2 }}>{chip.v}</div>
+
+                </div>
+
               </motion.div>
+
             ))}
+
           </motion.div>
+
         </Reveal>
 
-        {/* 4. DUAL CALL-TO-ACTION PILL */}
+
+        {/* CTA pill */}
+
         <Reveal dir="up" delay={1.8}>
+
           <div style={{
-            display: "flex", flexDirection: "row", alignItems: "center", gap: 8, padding: 10,
-            borderRadius: 40, background: "rgba(15, 23, 42, 0.5)",
-            border: "1px solid rgba(148, 163, 184, 0.15)",
-            backdropFilter: "blur(30px)", 
-            boxShadow: "0 30px 60px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.05)"
+            display: "flex", flexDirection: "row", alignItems: "center", gap: 8, padding: 8,
+
+            borderRadius: 32, background: "rgba(255,255,255,.03)",
+
+            border: "1px solid rgba(255,255,255,.07)",
+
+            backdropFilter: "blur(24px)",
+
+            boxShadow: "0 24px 64px rgba(0,0,0,.6), inset 0 1px 0 rgba(255,255,255,.04)"
           }}>
-            
-            {/* PRIMARY: PATIENT PORTAL */}
-            <MagButton
-              onClick={() => router.push("/patients/home")}
-              onMouseEnter={() => setHoverP(true)}
-              onMouseLeave={() => setHoverP(false)}
-              className="fB"
-              style={{ 
-                position: "relative", overflow: "hidden", display: "flex", alignItems: "center", 
-                gap: 12, padding: "18px 48px", borderRadius: 32, border: "none", cursor: "pointer",
-                boxShadow: "0 0 40px rgba(45,212,191,.2)" 
-              }}
-            >
-              <div style={{ position: "absolute", inset: 0, background: "#2DD4BF", zIndex: 0 }} />
-              
-              <motion.div
-                initial={{ x: "-100%" }}
-                animate={{ x: hoverP ? "0%" : "-100%" }}
-                transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }} 
-                style={{ position: "absolute", inset: 0, background: "#0F766E", zIndex: 1 }}
-              />
 
-              <motion.div
-                animate={{ color: hoverP ? "#F8FAFC" : "#0F172A" }}
-                transition={{ duration: 0.3 }}
-                style={{ position: "relative", zIndex: 2, display: "flex", alignItems: "center", gap: 12, fontSize: 16, letterSpacing: ".12em" }}
-              >
-                <motion.div animate={{ scale: hoverP ? 1.15 : 1 }} transition={{ duration: 0.4, type: "spring" }}>
-                  <Play size={16} fill="currentColor" />
-                </motion.div>
-                <span>Patient Portal</span>
-              </motion.div>
+            <MagButton onClick={() => router.push("/patients/home")}
+
+              className="btn-shim fB"
+
+              style={{
+                position: "relative", overflow: "hidden",
+
+                display: "flex", alignItems: "center", gap: 12,
+
+                padding: "18px 44px", borderRadius: 24, fontSize: 15, letterSpacing: ".12em",
+
+                background: "#2DD4BF", color: "#080f1a", border: "none",
+
+                boxShadow: "0 0 55px rgba(45,212,191,.42)"
+              }}>
+
+              <Play size={16} style={{ fill: "#080f1a", position: "relative", zIndex: 1 }} />
+
+              <span style={{ position: "relative", zIndex: 1 }}>Patient Portal</span>
+
             </MagButton>
 
-            {/* Elegant Center Divider */}
-            <div style={{ width: 1, height: 32, background: "linear-gradient(to bottom, transparent, rgba(148, 163, 184, 0.3), transparent)", margin: "0 4px" }} />
+            <div style={{ width: 1, height: 46, background: "rgba(255,255,255,.06)" }} />
 
-            {/* SECONDARY: CLINICIAN ACCESS */}
-            <MagButton
-              onClick={() => router.push("/doctor/home")}
-              onMouseEnter={() => setHoverD(true)}
-              onMouseLeave={() => setHoverD(false)}
+            <MagButton onClick={() => router.push("/doctor/home")}
+
               className="fB"
-              style={{ 
-                position: "relative", overflow: "hidden", display: "flex", alignItems: "center", 
-                gap: 12, padding: "18px 48px", borderRadius: 32, border: "none", background: "transparent", cursor: "pointer" 
-              }}
-            >
-              <motion.div
-                initial={{ x: "-100%" }}
-                animate={{ x: hoverD ? "0%" : "-100%" }}
-                transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-                style={{ position: "absolute", inset: 0, background: "rgba(45, 212, 191, 0.12)", zIndex: 0 }}
-              />
 
-              <motion.div
-                animate={{ color: hoverD ? "#2DD4BF" : "#94A3B8" }}
-                transition={{ duration: 0.3 }}
-                style={{ position: "relative", zIndex: 2, display: "flex", alignItems: "center", gap: 12, fontSize: 16, letterSpacing: ".12em" }}
-              >
-                <Stethoscope size={16} style={{ color: hoverD ? "#2DD4BF" : "#a78bfa", transition: "color 0.3s" }} />
-                <span>Clinician Access</span>
-                <motion.div animate={{ x: hoverD ? 6 : 0, opacity: hoverD ? 1 : 0.5 }} transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}>
-                  <ArrowRight size={14} />
-                </motion.div>
-              </motion.div>
+              style={{
+                display: "flex", alignItems: "center", gap: 12,
+
+                padding: "18px 44px", borderRadius: 24, fontSize: 15, letterSpacing: ".12em",
+
+                background: "transparent", color: "rgba(255,255,255,.78)", border: "none"
+              }}>
+
+              <Stethoscope size={16} />
+
+              Clinician Access
+
+              <ArrowRight size={13} style={{ opacity: .4 }} />
+
             </MagButton>
+
           </div>
+
         </Reveal>
 
-        {/* Scroll Hint */}
-        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 2.9, duration: 1 }} style={{ position: "absolute", bottom: 36, display: "flex", flexDirection: "column", alignItems: "center", gap: 8, color: "#94A3B8" }}>
-          <span className="fM" style={{ fontSize: 8, textTransform: "uppercase", letterSpacing: ".3em" }}>Scroll to Explore</span>
+        {/* Scroll hint */}
+
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+
+          transition={{ delay: 2.9, duration: 1 }}
+
+          style={{
+            position: "absolute", bottom: 36,
+
+            display: "flex", flexDirection: "column", alignItems: "center",
+
+            gap: 8, color: "rgba(255,255,255,.2)"
+          }}>
+
+          <span className="fM" style={{ fontSize: 8, textTransform: "uppercase", letterSpacing: ".3em" }}>Scroll</span>
+
           <motion.div animate={{ y: [0, 8, 0] }} transition={{ repeat: Infinity, duration: 2, ease: "easeInOut" }}>
-            <ChevronDown size={16} style={{ color: "#2DD4BF" }} />
+
+            <ChevronDown size={14} />
+
           </motion.div>
+
         </motion.div>
 
       </motion.div>
+
     </section>
+
   );
+
 }
 
 //  ROAD BRIDGE  
-
 function RoadBridge() {
   const ref = useRef<HTMLDivElement>(null);
-  const { scrollYProgress: p } = useScroll({ target: ref, offset: ["start start", "end end"] });
+  const { scrollYProgress: p } = useScroll({ target: ref, offset: ["start start", "end start"] });
 
-  const bgColor    = useTransform(p, [0, .6, .85, 1], ["#080f1a", "#080f1a", "#0B1E33", "#F8F9FA"]);
-  const sweepX     = useTransform(p, [0, .10], ["-100%", "100%"]);
-  const sweepOp    = useTransform(p, [3, .01, .10, .15], [2, 0, 0, 5]);
+  const bgColor = useTransform(p, [0, .6, .85, 1], ["#080f1a", "#080f1a", "#0B1E33", "#F8F9FA"]);
+  const sweepX = useTransform(p, [0, .10], ["-100%", "100%"]);
+  const sweepOp = useTransform(p, [3, .01, .10, .15], [2, 0, 0, 5]);
 
+  const iw = typeof window !== "undefined" ? window.innerWidth : 1440;
 
-  const theY       = useTransform(p, [0, .10, .10, .32], ["100vh", "0vh", "0vh", "0vh"]);
-  const theScale   = useTransform(p, [0, .10, .10, .32], [0.4, 1, 1.2, 20]);
-  const theOp      = useTransform(p, [0, .10, .10, .32], [0, 1, 1, 0]);
+  // ─── THE PATTERN ──────────────────────────────────────────────
+ 
+  const t1 = 0.20; // THE ends
+  const t2 = 0.40; // PROBLEM ends
+  const t3 = 0.60; // IS REAL ends
+  const t4 = 0.80; // 28% ends
 
-  const iw         = typeof window !== "undefined" ? window.innerWidth : 1440;
+  const yC = useTransform(p, [0, 1], [0, -800]);
 
-  const probX      = useTransform(p, [.10, .10], [-iw * 0.15, 0]);
-  const probOp     = useTransform(p, [.0, .10, .50, .58], [0, 1, 1, 0]);
+  // 1. THE
+  const theScale = useTransform(p, [0, t1], [1, 15]);
+  const theOp = useTransform(p, [0, t1], [1, 0]);
+
+  // 2. PROBLEM (Moves UP during t1, Zooms out during t2)
+  const probY = useTransform(p, [0, t1], [1000, 0]);
+  const probScale = useTransform(p, [t1, t2], [1, 10]);
+  const probOp = useTransform(p, [0, t1, t2], [0, 1, 0]);
+
+  // 3. IS REAL (Moves HORIZONTALLY during t2, Zooms out during t3)
+  const realX = useTransform(p, [t1, t2], [1000, 0]);
+  const realScale = useTransform(p, [t2, t3], [1, 10]);
+  const realOp = useTransform(p, [t1, t2, t3], [0, 1, 0]);
+
+  // 4. 28% & STATS (Moves UP during t3, Zooms out during t4)
+  const statY = useTransform(p, [t2, t3], [1000, 0]);
+  const statScale = useTransform(p, [t3, t4], [1, 10]);
+  const statOp = useTransform(p, [t2, t3, t4], [0, 1, 0]);
+
+  const statsY = useTransform(p, [t2, t3], [1000, 0]);
+  const statsScale = useTransform(p, [t3, t4], [1, 10]);
+  const statsOp = useTransform(p, [t2, t3, t4], [0, 1, 0]);
+
   
-  const cntY       = useTransform(p, [.0, .10], [100, 0]);
-  const cntScale   = useTransform(p, [.0, .10], [.6, 1]);
-  const cntOp      = useTransform(p, [.0, .15, .50, .58], [0, 0.15, 0.15, 0]); // Faint background
 
-  const statsY     = useTransform(p, [.10, .10], [60, 0]);
-  const statsOp    = useTransform(p, [.10, .40, .55, .62], [0, 1, 1, 0]);
+  // ──────────────────────────────────────────────────────────────
 
-  const realX      = useTransform(p, [.48, .56], [iw * 0.15, 0]);
-  const realOp     = useTransform(p, [.48, .52, .70, .78], [0, 1, 1, 0]);
-
-  const finalY     = useTransform(p, [.72, .82], [80, 0]);
-  const finalScale = useTransform(p, [.72, .82, 1], [.8, 1, 1.05]); 
-  const finalOp    = useTransform(p, [.72, .80], [0, 1]); 
-  
-  const textCol    = useTransform(p, [.72, .85], ["#FFFFFF", "#0B1E33"]);
-  const subCol     = useTransform(p, [.72, .85], ["rgba(255,255,255,.5)", "rgba(11,30,51,.6)"]);
+  const textCol = useTransform(p, [.72, .85], ["#FFFFFF", "#0B1E33"]);
+  const subCol = useTransform(p, [.72, .85], ["rgba(255,255,255,.5)", "rgba(11,30,51,.6)"]);
 
   const centerWrap: React.CSSProperties = {
-    position: "absolute", top: 0, left: 0, right: 0, bottom: 0,
-    display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
-    pointerEvents: "none"
+    position: "absolute",
+    inset: 0,
+    display: "grid",
+    placeItems: "center",
+    pointerEvents: "none",
   };
 
   return (
-    <div ref={ref} style={{ height: "220vh", position: "relative" }}>
+    <div ref={ref} style={{ height: "250vh", position: "relative" }}>
+
+      <div className="grid-dk" style={{ position: "absolute", inset: 0, pointerEvents: "none" }} />
+      <div className="scanline" />
+
       <motion.div style={{
         position: "sticky", top: 0, height: "100vh", overflow: "hidden", backgroundColor: bgColor, perspective: 1000
       }}>
-        <div className="grid-dk" style={{ position: "absolute", inset: 0, pointerEvents: "none" }} />
-        <div className="scanline" />
 
         <motion.div style={{ x: sweepX, opacity: sweepOp, position: "absolute", top: "50%", left: 0, width: "100%", height: 3, background: "linear-gradient(90deg,transparent,#2DD4BF,transparent)", boxShadow: "0 0 30px rgba(45,212,191,1)", pointerEvents: "none" }} />
 
-        {/* 28% BACKGROUND */}
-        <div style={centerWrap}>
-          <motion.div style={{ opacity: cntOp, y: cntY, scale: cntScale, willChange: "transform, opacity" }}>
-            <span className="fB" style={{ fontSize: "clamp(10rem,30vw,30rem)", color: "#ef4444", letterSpacing: ".02em", lineHeight: 1, filter: "blur(1px)" }}>28%</span>
-          </motion.div>
-        </div>
-
-        {/* PROBLEM */}
+        {/* 1. THE */}
         <div style={{ ...centerWrap, zIndex: 2 }}>
-          <motion.div style={{ x: probX, opacity: probOp, display: "flex", flexDirection: "column", alignItems: "center", willChange: "transform, opacity" }}>
+          <motion.div style={{ scale: theScale, opacity: theOp, display: "flex", flexDirection: "column", alignItems: "center", willChange: "transform, opacity" }}>
             <motion.span className="fB" style={{ fontSize: "clamp(5rem,14vw,13rem)", letterSpacing: ".05em", color: textCol, lineHeight: .9 }}>
               THE
             </motion.span>
-            <motion.div className="fM" style={{ fontSize: 10, textTransform: "uppercase", letterSpacing: ".3em", color: "rgba(45,212,191,.55)", marginTop: 14 }}>
-              Of patients quit physiotherapy at home
-            </motion.div>
           </motion.div>
         </div>
 
-        {/* STATS */}
-        <motion.div style={{ position: "absolute", inset: 0, opacity: statsOp, y: statsY, pointerEvents: "none", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 3, willChange: "transform, opacity" }}>
+        {/* 2. PROBLEM */}
+        <div style={{ ...centerWrap, zIndex: 10 }}>
+          <motion.div style={{ scale: probScale, opacity: probOp, y: probY, willChange: "transform, opacity" }}>
+            <motion.span className="fB" style={{ fontSize: "clamp(8rem,20vw,20rem)", letterSpacing: ".06em", color: textCol, lineHeight: 1 }}>PROBLEM</motion.span>
+          </motion.div>
+        </div>
+
+        {/* 3. IS REAL */}
+        <div style={{ ...centerWrap, zIndex: 4 }}>
+          
+          <motion.div style={{ x: realX, scale: realScale, opacity: realOp, willChange: "transform, opacity" }}>
+            <span className="fB" style={{ fontSize: "clamp(5rem,14vw,13rem)", letterSpacing: ".05em", color: "#ef4444", lineHeight: .9 }}>IS REAL.</span>
+          </motion.div>
+        </div>
+
+        {/* 4. 28% BACKGROUND */}
+        <div style={centerWrap}>
+        
+          <motion.div style={{ opacity: statOp, scale: statScale, y: statY, height: "50px", willChange: "transform, opacity" }}>
+            <span className="fB" style={{ fontSize: "clamp(10rem,30vw,30rem)", color: "#ef4444", letterSpacing: ".02em", lineHeight: 1, filter: "blur(1px)" }}>28%</span>
+          </motion.div>
+          
+          <motion.div className="fM" style={{ opacity: statOp, fontSize: 10, textTransform: "uppercase", letterSpacing: ".3em", color: "rgba(45,212,191,.55)", marginTop: 14 }}>
+            Of patients quit physiotherapy at home
+          </motion.div>
+        </div>
+
+        {/* 4. STATS FLOATING DATA */}
+       
+        <motion.div style={{ position: "absolute", inset: 0, scale: statsScale, opacity: statsOp, y: statsY, pointerEvents: "none", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 3, willChange: "transform, opacity" }}>
           {[
-            { v: "80%",   l: "Drop-out rate",    x: -38, y: -25 },
-            { v: "$50K+", l: "Robotic cost",     x:  38, y: -22 },
-            { v: "6–12m", l: "Recovery time",    x: -38, y:  30 },
-            { v: "3 wks", l: "Before they quit", x:  38, y:  28 },
+            { v: "80%", l: "Drop-out rate", x: -38, y: -25 },
+            { v: "$50K+", l: "Robotic cost", x: 38, y: -22 },
+            { v: "6–12m", l: "Recovery time", x: -38, y: 30 },
+            { v: "3 wks", l: "Before they quit", x: 38, y: 28 },
           ].map(s => (
             <motion.div key={s.v} style={{ position: "absolute", left: `${50 + s.x}vw`, top: `${50 + s.y}vh`, transform: "translate(-50%,-50%)" }}>
               <div style={{ textAlign: "center", padding: "10px 18px", borderRadius: 16, background: "rgba(8,15,26,.85)", border: "1px solid rgba(255,255,255,.06)", backdropFilter: "blur(12px)" }}>
@@ -1507,37 +2040,10 @@ function RoadBridge() {
           ))}
         </motion.div>
 
-        {/* THE - ZOOMS OVER EVERYTHING ELSE */}
-        <div style={{ ...centerWrap, zIndex: 10 }}>
-          <motion.div style={{ scale: theScale, opacity: theOp, y: theY, willChange: "transform, opacity" }}>
-            <motion.span className="fB" style={{ fontSize: "clamp(8rem,20vw,20rem)", letterSpacing: ".06em", color: textCol, lineHeight: 1 }}>PROBLEM</motion.span>
-          </motion.div>
-        </div>
-
-        {/* IS REAL */}
-        <div style={{ ...centerWrap, zIndex: 4 }}>
-          <motion.div style={{ x: realX, opacity: realOp, willChange: "transform, opacity" }}>
-            <span className="fB" style={{ fontSize: "clamp(5rem,14vw,13rem)", letterSpacing: ".05em", color: "#ef4444", lineHeight: .9 }}>IS REAL.</span>
-          </motion.div>
-        </div>
-
-        {/* FINAL STATEMENT */}
-        <div style={{ ...centerWrap, zIndex: 5 }}>
-          <motion.div style={{ opacity: finalOp, y: finalY, scale: finalScale, textAlign: "center", willChange: "transform, opacity" }}>
-            <motion.div className="fB" style={{ fontSize: "clamp(2.8rem,7vw,7.5rem)", letterSpacing: ".04em", color: textCol, lineHeight: .9 }}>
-              RECOVERY IS<br /><span style={{ color: "#ef4444" }}>BROKEN.</span>
-            </motion.div>
-            <motion.div className="fM" style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: ".28em", marginTop: 28, color: subCol }}>
-              ↓ Scroll to see why →
-            </motion.div>
-          </motion.div>
-        </div>
-
       </motion.div>
     </div>
   );
 }
-
 //  PROBLEM SECTION  
 
 function ProblemSection() {
@@ -1556,9 +2062,11 @@ function ProblemSection() {
 
         <Reveal dir="left">
 
-          <div className="fM" style={{ fontSize: 9, color: "rgba(11,30,51,.35)", textTransform: "uppercase",
+          <div className="fM" style={{
+            fontSize: 9, color: "rgba(11,30,51,.35)", textTransform: "uppercase",
 
-            letterSpacing: ".32em", marginBottom: 20, display: "flex", alignItems: "center", gap: 12 }}>
+            letterSpacing: ".32em", marginBottom: 20, display: "flex", alignItems: "center", gap: 12
+          }}>
 
             <span style={{ width: 32, height: 1, background: "rgba(11,30,51,.2)", display: "inline-block" }} />
 
@@ -1613,21 +2121,23 @@ function ProblemSection() {
 
               {[
 
-                { n: 28, suf: "%",  pref: "",  l: "Home adherence", sub: "quit within 3 weeks",      c: "#ef4444" },
+                { n: 28, suf: "%", pref: "", l: "Home adherence", sub: "quit within 3 weeks", c: "#ef4444" },
 
-                { n: 50, suf: "K+", pref: "$", l: "Robotic cost",   sub: "vs our $200 solution",     c: "#f97316" },
+                { n: 50, suf: "K+", pref: "$", l: "Robotic cost", sub: "vs our $200 solution", c: "#f97316" },
 
-                { n: 80, suf: "%",  pref: "",  l: "Drop-out rate",  sub: "before recovery target",   c: "#ef4444" },
+                { n: 80, suf: "%", pref: "", l: "Drop-out rate", sub: "before recovery target", c: "#ef4444" },
 
-                { n: 9,  suf: "m+", pref: "",  l: "Recovery time",  sub: "without proper adherence", c: "#f97316" },
+                { n: 9, suf: "m+", pref: "", l: "Recovery time", sub: "without proper adherence", c: "#f97316" },
 
               ].map((s, i) => (
 
                 <Reveal key={s.l} dir="zoom" delay={i * .1}>
 
-                  <TiltCard className="stat-card" style={{ padding: "20px 18px", borderRadius: 22,
+                  <TiltCard className="stat-card" style={{
+                    padding: "20px 18px", borderRadius: 22,
 
-                    background: "#fff", border: "1px solid rgba(11,30,51,.08)", boxShadow: "0 4px 24px rgba(11,30,51,.05)" }}>
+                    background: "#fff", border: "1px solid rgba(11,30,51,.08)", boxShadow: "0 4px 24px rgba(11,30,51,.05)"
+                  }}>
 
                     <div className="fB" style={{ fontSize: "2.6rem", color: s.c, lineHeight: 1, marginBottom: 4 }}>
 
@@ -1657,7 +2167,7 @@ function ProblemSection() {
 
             { t: "No Motivation", c: "#ef4444", b: "Squeezing a rubber ball 100 times with zero feedback isn't therapy — it's punishment. The brain doesn't rewire under boredom." },
 
-            { t: "No Access",     c: "#f97316", b: "Robotic exoskeletons cost more than a car. Hospital visits 3× a week for 6 months is unsustainable for almost any family." },
+            { t: "No Access", c: "#f97316", b: "Robotic exoskeletons cost more than a car. Hospital visits 3× a week for 6 months is unsustainable for almost any family." },
 
             { t: "Cognitive Gap", c: "#ef4444", b: "Every existing device only trains the hand. None address the cognitive recovery neuroscience says is essential for real neuroplasticity." },
 
@@ -1665,9 +2175,11 @@ function ProblemSection() {
 
             <Reveal key={card.t} dir="up" delay={i * .12}>
 
-              <TiltCard style={{ padding: "28px 24px", borderRadius: 26, height: "100%",
+              <TiltCard style={{
+                padding: "28px 24px", borderRadius: 26, height: "100%",
 
-                background: "#fff", borderLeft: `3px solid ${card.c}`, boxShadow: "0 4px 28px rgba(11,30,51,.06)" }}>
+                background: "#fff", borderLeft: `3px solid ${card.c}`, boxShadow: "0 4px 28px rgba(11,30,51,.06)"
+              }}>
 
                 <div className="fB" style={{ fontSize: 22, color: "#0B1E33", letterSpacing: ".04em", marginBottom: 12 }}>{card.t}</div>
 
@@ -1698,16 +2210,16 @@ function DarkBridge() {
 
   // Background transition
   const bg = useTransform(p, [0, 0.3], ["#F8F9FA", "#080f1a"]);
-  
-  const rawWordY     = useTransform(p, [0, 0.15], [300, 0]);
-  const rawWordScale = useTransform(p, [0.25, 0.45], [1, 25]); 
-  const wordOp       = useTransform(p, [0, 0.05, 0.35, 0.45], [0, 1, 1, 0]); 
-  
-  const statsOp      = useTransform(p, [0.2, 0.25, 0.40, 0.45], [0, 1, 1, 0]);
+
+  const rawWordY = useTransform(p, [0, 0.15], [300, 0]);
+  const rawWordScale = useTransform(p, [0.25, 0.45], [1, 25]);
+  const wordOp = useTransform(p, [0, 0.05, 0.35, 0.45], [0, 1, 1, 0]);
+
+  const statsOp = useTransform(p, [0.2, 0.25, 0.40, 0.45], [0, 1, 1, 0]);
 
   // SPRING PHYSICS
-  const wordY     = useSpring(rawWordY, { stiffness: 70, damping: 25 });
-  const wordScale = useSpring(rawWordScale, { stiffness: 70, damping: 25 });
+  const wordY = useSpring(rawWordY, { stiffness: 70, damping: 25, restDelta: 0.001 });
+  const wordScale = useSpring(rawWordScale, { stiffness: 70, damping: 25, restDelta: 0.001 });
 
   const absCenter: React.CSSProperties = {
     position: "absolute", top: "50%", left: "50%", transform: "translate(-50%, -50%)",
@@ -1720,19 +2232,19 @@ function DarkBridge() {
       <motion.div style={{ position: "sticky", top: 0, height: "100vh", overflow: "hidden", backgroundColor: bg }}>
         <div className="grid-dk" style={{ position: "absolute", inset: 0, pointerEvents: "none" }} />
         <div className="scanline" />
-        
+
         {/* Floating Data Points */}
         <div style={absCenter}>
-          <motion.div style={{ 
-            position: "absolute", opacity: statsOp, 
-            width: "100vw", height: "100vh", 
-            willChange: "opacity" 
+          <motion.div style={{
+            position: "absolute", opacity: statsOp,
+            width: "100vw", height: "100vh",
+            z: 0
           }}>
             {[
-              { label: "MOTOR",     x: -36, y: -18, ang: -12, c: "#2DD4BF" },
-              { label: "COGNITIVE", x:  34, y: -22, ang:  10, c: "#a78bfa" },
-              { label: "CLINICAL",  x: -32, y:  20, ang:  -8, c: "#fbbf24" },
-              { label: "REMOTE",    x:  32, y:  22, ang:   6, c: "#34d399" },
+              { label: "MOTOR", x: -36, y: -18, ang: -12, c: "#2DD4BF" },
+              { label: "COGNITIVE", x: 34, y: -22, ang: 10, c: "#a78bfa" },
+              { label: "CLINICAL", x: -32, y: 20, ang: -8, c: "#fbbf24" },
+              { label: "REMOTE", x: 32, y: 22, ang: 6, c: "#34d399" },
             ].map(d => (
               <div key={d.label} style={{ position: "absolute", left: `calc(50% + ${d.x}vw)`, top: `calc(50% + ${d.y}vh)`, transform: `translate(-50%,-50%) rotate(${d.ang}deg)` }}>
                 <div className="fM" style={{ fontSize: 10, color: d.c, textTransform: "uppercase", letterSpacing: ".24em", opacity: .8, whiteSpace: "nowrap" }}>
@@ -1742,18 +2254,17 @@ function DarkBridge() {
             ))}
           </motion.div>
         </div>
-        
+
         {/* THE SOLUTION */}
         <div style={absCenter}>
           {/* translateZ(0) forces hardware acceleration on the GPU */}
-          <motion.div style={{ 
-            y: wordY, 
-            scale: wordScale, 
-            opacity: wordOp, 
-            textAlign: "center", 
+          <motion.div style={{
+            y: wordY,
+            scale: wordScale,
+            opacity: wordOp,
+            textAlign: "center",
             transformOrigin: "center center",
-            willChange: "transform, opacity",
-            transform: "translateZ(0)"
+            z: 0
           }}>
             <div className="fB" style={{ fontSize: "clamp(5rem,15vw,16rem)", letterSpacing: "0.04em", lineHeight: .88, color: "#FFFFFF" }}>
               THE<br /><span style={{ color: "#2DD4BF" }}>SOLUTION</span>
@@ -1779,7 +2290,7 @@ function SolutionSection() {
       <div className="glow-breath" style={{ position: "absolute", inset: 0, pointerEvents: "none", background: "radial-gradient(ellipse 52% 42% at 50% 50%, rgba(45,212,191,.07), transparent 65%)" }} />
       <div style={{ position: "absolute", top: 0, right: 0, width: 400, height: 400, pointerEvents: "none", background: "radial-gradient(circle at top right, rgba(139,92,246,.06), transparent 70%)" }} />
       <div style={{ position: "absolute", bottom: 0, left: 0, width: 400, height: 400, pointerEvents: "none", background: "radial-gradient(circle at bottom left, rgba(45,212,191,.04), transparent 70%)" }} />
-      
+
       <div style={{ maxWidth: 1280, margin: "0 auto" }}>
         <Reveal dir="up" style={{ textAlign: "center", marginBottom: 72 }}>
           <div className="fM" style={{ fontSize: 9, color: "rgba(45,212,191,.55)", textTransform: "uppercase", letterSpacing: ".32em", marginBottom: 16 }}>The Innovation</div>
@@ -1790,7 +2301,7 @@ function SolutionSection() {
 
         {/* EXPANDED TABLET/GAMEPLAY CONTAINER */}
         <Reveal dir="zoom" style={{ marginBottom: 60, display: "flex", justifyContent: "center" }}>
-          <div style={{ borderRadius:36, overflow:"hidden", border:"1px solid rgba(45,212,191,.14)", boxShadow:"0 40px 100px rgba(0,0,0,.5)", width: "90vw", maxWidth: 1000 }}>
+          <div style={{ borderRadius: 36, overflow: "hidden", border: "1px solid rgba(45,212,191,.14)", boxShadow: "0 40px 100px rgba(0,0,0,.5)", width: "90vw", maxWidth: 1000 }}>
             {/* Replace with your actual video or image */}
             <div style={{ width: "100%", height: "460px", background: "#0a192f", display: "flex", alignItems: "center", justifyContent: "center" }}>
               <span className="fM" style={{ color: "#2DD4BF", opacity: 0.5 }}>[IMG:GAMEPLAY] Placeholder</span>
@@ -1800,9 +2311,9 @@ function SolutionSection() {
 
         <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 18 }}>
           {[
-            { n:"01", c:"#2DD4BF", icon:<Cpu size={26} strokeWidth={1.1}/>, tag:"Hardware", t:"$200 IoT Controller", b:"BP bulb + ESP32 + MPX10DP pressure sensor + MPU6050 gyroscope. Medical-grade data capture at the cost of a restaurant dinner." },
-            { n:"02", c:"#a78bfa", icon:<Zap size={26} strokeWidth={1.1}/>, tag:"Therapy", t:"Dual-Task Gamification", b:"Squeeze to fly the character. Recall colour sequences to pass cognitive gates. Motor + cognitive rehab simultaneously — proven to drive neuroplasticity." },
-            { n:"03", c:"#fbbf24", icon:<BarChart3 size={26} strokeWidth={1.1}/>, tag:"Cloud", t:"Remote Clinical Dashboard", b:"Every squeeze streams live to Firebase. Grip force, tremor amplitude, reaction time — your doctor adjusts therapy remotely without clinic visits." },
+            { n: "01", c: "#2DD4BF", icon: <Cpu size={26} strokeWidth={1.1} />, tag: "Hardware", t: "$200 IoT Controller", b: "BP bulb + ESP32 + MPX10DP pressure sensor + MPU6050 gyroscope. Medical-grade data capture at the cost of a restaurant dinner." },
+            { n: "02", c: "#a78bfa", icon: <Zap size={26} strokeWidth={1.1} />, tag: "Therapy", t: "Dual-Task Gamification", b: "Squeeze to fly the character. Recall colour sequences to pass cognitive gates. Motor + cognitive rehab simultaneously — proven to drive neuroplasticity." },
+            { n: "03", c: "#fbbf24", icon: <BarChart3 size={26} strokeWidth={1.1} />, tag: "Cloud", t: "Remote Clinical Dashboard", b: "Every squeeze streams live to Firebase. Grip force, tremor amplitude, reaction time — your doctor adjusts therapy remotely without clinic visits." },
           ].map((card, i) => (
             <Reveal key={card.n} dir="zoom" delay={i * .14}>
               <TiltCard style={{ padding: "38px 32px", borderRadius: 34, position: "relative", overflow: "hidden", height: "100%", background: "rgba(255,255,255,.025)", border: `1px solid ${card.c}1e` }}>
@@ -1863,17 +2374,21 @@ function OfferSection() {
 
               <div className="scanline" />
 
-              <div style={{ position: "absolute", bottom: -40, right: -40, width: 200, height: 200, borderRadius: "50%", pointerEvents: "none",
+              <div style={{
+                position: "absolute", bottom: -40, right: -40, width: 200, height: 200, borderRadius: "50%", pointerEvents: "none",
 
-                background: "radial-gradient(circle,rgba(45,212,191,.14),transparent 70%)" }} />
+                background: "radial-gradient(circle,rgba(45,212,191,.14),transparent 70%)"
+              }} />
 
               <div style={{ position: "relative", zIndex: 1 }}>
 
-                <div style={{ width: 54, height: 54, borderRadius: 18, marginBottom: 20,
+                <div style={{
+                  width: 54, height: 54, borderRadius: 18, marginBottom: 20,
 
                   display: "flex", alignItems: "center", justifyContent: "center",
 
-                  background: "rgba(45,212,191,.12)", border: "1px solid rgba(45,212,191,.24)", color: "#2DD4BF" }}>
+                  background: "rgba(45,212,191,.12)", border: "1px solid rgba(45,212,191,.24)", color: "#2DD4BF"
+                }}>
 
                   <Sparkles size={22} />
 
@@ -1905,11 +2420,13 @@ function OfferSection() {
 
             <TiltCard style={{ padding: "36px 32px", borderRadius: 34, background: "#F3F0FF", minHeight: 300, border: "1px solid rgba(139,92,246,.14)" }}>
 
-              <div style={{ width: 54, height: 54, borderRadius: 18, marginBottom: 20,
+              <div style={{
+                width: 54, height: 54, borderRadius: 18, marginBottom: 20,
 
                 display: "flex", alignItems: "center", justifyContent: "center",
 
-                background: "rgba(139,92,246,.12)", border: "1px solid rgba(139,92,246,.2)", color: "#8b5cf6" }}>
+                background: "rgba(139,92,246,.12)", border: "1px solid rgba(139,92,246,.2)", color: "#8b5cf6"
+              }}>
 
                 <Brain size={22} />
 
@@ -1953,11 +2470,13 @@ function OfferSection() {
 
             <TiltCard style={{ padding: "36px 32px", borderRadius: 34, background: "#F0FDF4", border: "1px solid rgba(52,211,153,.16)", minHeight: 260 }}>
 
-              <div style={{ width: 54, height: 54, borderRadius: 18, marginBottom: 20,
+              <div style={{
+                width: 54, height: 54, borderRadius: 18, marginBottom: 20,
 
                 display: "flex", alignItems: "center", justifyContent: "center",
 
-                background: "rgba(52,211,153,.12)", border: "1px solid rgba(52,211,153,.22)", color: "#34d399" }}>
+                background: "rgba(52,211,153,.12)", border: "1px solid rgba(52,211,153,.22)", color: "#34d399"
+              }}>
 
                 <Waves size={22} />
 
@@ -1986,11 +2505,13 @@ function OfferSection() {
             <TiltCard style={{ padding: "36px 32px", borderRadius: 34, background: "#FFFBF0", border: "1px solid rgba(251,191,36,.16)", minHeight: 260 }}>
 
 
-              <div style={{ width: 54, height: 54, borderRadius: 18, marginBottom: 20,
+              <div style={{
+                width: 54, height: 54, borderRadius: 18, marginBottom: 20,
 
                 display: "flex", alignItems: "center", justifyContent: "center",
 
-                background: "rgba(251,191,36,.10)", border: "1px solid rgba(251,191,36,.24)", color: "#fbbf24" }}>
+                background: "rgba(251,191,36,.10)", border: "1px solid rgba(251,191,36,.24)", color: "#fbbf24"
+              }}>
 
                 <BarChart3 size={22} />
 
@@ -2033,21 +2554,29 @@ function WhySection() {
 
   const POINTS = [
 
-    { n:"01", c:"#2DD4BF", dir:"left"  as const, t:"Dual-task is the only way.",
+    {
+      n: "01", c: "#2DD4BF", dir: "left" as const, t: "Dual-task is the only way.",
 
-      b:"Every other device trains motor OR cognitive. Science requires both simultaneously. ReViveX is the only system built around this clinical truth." },
+      b: "Every other device trains motor OR cognitive. Science requires both simultaneously. ReViveX is the only system built around this clinical truth."
+    },
 
-    { n:"02", c:"#a78bfa", dir:"right" as const, t:"Patients play. They don't quit.",
+    {
+      n: "02", c: "#a78bfa", dir: "right" as const, t: "Patients play. They don't quit.",
 
-      b:"Gamification is a proven adherence mechanism. When therapy feels like a game, patients return daily instead of abandoning after week two." },
+      b: "Gamification is a proven adherence mechanism. When therapy feels like a game, patients return daily instead of abandoning after week two."
+    },
 
-    { n:"03", c:"#fbbf24", dir:"left"  as const, t:"A doctor is always in the loop.",
+    {
+      n: "03", c: "#fbbf24", dir: "left" as const, t: "A doctor is always in the loop.",
 
-      b:"Unlike every home rehab app that sends data nowhere, every session streams live to a verified clinical dashboard. Real oversight drives real outcomes." },
+      b: "Unlike every home rehab app that sends data nowhere, every session streams live to a verified clinical dashboard. Real oversight drives real outcomes."
+    },
 
-    { n:"04", c:"#34d399", dir:"right" as const, t:"Priced for the world.",
+    {
+      n: "04", c: "#34d399", dir: "right" as const, t: "Priced for the world.",
 
-      b:"The entire device costs less than a single hospital physio session. Built to be reproducible, repairable, and accessible to every patient who needs it." },
+      b: "The entire device costs less than a single hospital physio session. Built to be reproducible, repairable, and accessible to every patient who needs it."
+    },
 
   ];
 
@@ -2057,9 +2586,11 @@ function WhySection() {
 
       <div className="grid-dk" style={{ position: "absolute", inset: 0, pointerEvents: "none" }} />
 
-      <div style={{ position: "absolute", top: 0, right: 0, width: 500, height: 500, pointerEvents: "none",
+      <div style={{
+        position: "absolute", top: 0, right: 0, width: 500, height: 500, pointerEvents: "none",
 
-        background: "radial-gradient(circle at top right, rgba(251,191,36,.04), transparent 65%)" }} />
+        background: "radial-gradient(circle at top right, rgba(251,191,36,.04), transparent 65%)"
+      }} />
 
       <div style={{ maxWidth: 1280, margin: "0 auto" }}>
 
@@ -2081,11 +2612,13 @@ function WhySection() {
 
             <Reveal key={pt.n} dir={pt.dir} delay={i * .1}>
 
-              <TiltCard style={{ padding: "36px 40px", borderRadius: 28,
+              <TiltCard style={{
+                padding: "36px 40px", borderRadius: 28,
 
                 display: "grid", gridTemplateColumns: "80px 1fr", gap: 32, alignItems: "center",
 
-                background: "rgba(255,255,255,.022)", borderLeft: `3px solid ${pt.c}`, position: "relative", overflow: "hidden" }}>
+                background: "rgba(255,255,255,.022)", borderLeft: `3px solid ${pt.c}`, position: "relative", overflow: "hidden"
+              }}>
 
                 <div className="fB" style={{ fontSize: "5rem", color: `${pt.c}18`, lineHeight: 1, pointerEvents: "none" }}>{pt.n}</div>
 
@@ -2120,9 +2653,9 @@ function WhySection() {
 
 function MarqueeStrip() {
 
-  const A = ["MOTOR RECOVERY","COGNITIVE TRAINING","GRIP STRENGTH","TREMOR DETECTION","DUAL-TASK PROTOCOL","AI ADAPTATION","TELE-REHABILITATION","NEUROPLASTICITY"];
+  const A = ["MOTOR RECOVERY", "COGNITIVE TRAINING", "GRIP STRENGTH", "TREMOR DETECTION", "DUAL-TASK PROTOCOL", "AI ADAPTATION", "TELE-REHABILITATION", "NEUROPLASTICITY"];
 
-  const B = ["STROKE RECOVERY","PARKINSON'S CARE","BRAIN INJURY REHAB","ADAPTIVE DIFFICULTY","REAL-TIME FEEDBACK","GAMIFIED THERAPY","HOME-BASED CARE","CLINICAL DASHBOARD"];
+  const B = ["STROKE RECOVERY", "PARKINSON'S CARE", "BRAIN INJURY REHAB", "ADAPTIVE DIFFICULTY", "REAL-TIME FEEDBACK", "GAMIFIED THERAPY", "HOME-BASED CARE", "CLINICAL DASHBOARD"];
 
   const dot = <span style={{ margin: "0 18px", color: "rgba(45,212,191,.28)" }}>·</span>;
 
@@ -2160,9 +2693,11 @@ function MarqueeStrip() {
 
   return (
 
-    <div style={{ background: "#060f1a", padding: "20px 0",
+    <div style={{
+      background: "#060f1a", padding: "20px 0",
 
-      borderTop: "1px solid rgba(255,255,255,.04)", borderBottom: "1px solid rgba(255,255,255,.04)", overflow: "hidden" }}>
+      borderTop: "1px solid rgba(255,255,255,.04)", borderBottom: "1px solid rgba(255,255,255,.04)", overflow: "hidden"
+    }}>
 
       {makeRow(A, "mqL")}
 
@@ -2190,7 +2725,7 @@ function Footer() {
 
     e.preventDefault();
 
-    console.log("Form:", form); 
+    console.log("Form:", form);
 
     setSent(true);
 
@@ -2208,17 +2743,21 @@ function Footer() {
 
     }}>
 
-      <div className="glow-breath" style={{ position: "absolute", inset: 0, pointerEvents: "none",
+      <div className="glow-breath" style={{
+        position: "absolute", inset: 0, pointerEvents: "none",
 
-        background: "radial-gradient(ellipse 55% 42% at 50% 92%, rgba(45,212,191,.06), transparent 58%)" }} />
+        background: "radial-gradient(ellipse 55% 42% at 50% 92%, rgba(45,212,191,.06), transparent 58%)"
+      }} />
 
-      <div className="fB" style={{ position: "absolute", bottom: 0, left: "50%",
+      <div className="fB" style={{
+        position: "absolute", bottom: 0, left: "50%",
 
         transform: "translateX(-50%)", fontSize: "clamp(5rem,18vw,17rem)",
 
         color: "rgba(255,255,255,.012)", letterSpacing: "-0.04em",
 
-        whiteSpace: "nowrap", lineHeight: 1, pointerEvents: "none", userSelect: "none" }}>
+        whiteSpace: "nowrap", lineHeight: 1, pointerEvents: "none", userSelect: "none"
+      }}>
 
         REVIVEX
 
@@ -2248,13 +2787,17 @@ function Footer() {
 
           <Reveal dir="left">
 
-            <div style={{ padding: "42px 38px", borderRadius: 34,
+            <div style={{
+              padding: "42px 38px", borderRadius: 34,
 
-              background: "rgba(255,255,255,.025)", border: "1px solid rgba(45,212,191,.10)" }}>
+              background: "rgba(255,255,255,.025)", border: "1px solid rgba(45,212,191,.10)"
+            }}>
 
-              <div className="fM" style={{ fontSize: 9, color: "rgba(45,212,191,.5)",
+              <div className="fM" style={{
+                fontSize: 9, color: "rgba(45,212,191,.5)",
 
-                textTransform: "uppercase", letterSpacing: ".22em", marginBottom: 28 }}>Get In Touch</div>
+                textTransform: "uppercase", letterSpacing: ".22em", marginBottom: 28
+              }}>Get In Touch</div>
 
               {sent ? (
 
@@ -2266,9 +2809,11 @@ function Footer() {
 
                   <div className="fB" style={{ fontSize: 26, color: "#fff", letterSpacing: ".06em" }}>MESSAGE RECEIVED.</div>
 
-                  <div className="fM" style={{ fontSize: 9, color: "rgba(255,255,255,.25)",
+                  <div className="fM" style={{
+                    fontSize: 9, color: "rgba(255,255,255,.25)",
 
-                    textTransform: "uppercase", letterSpacing: ".2em", marginTop: 10 }}>We'll be in touch.</div>
+                    textTransform: "uppercase", letterSpacing: ".2em", marginTop: 10
+                  }}>We'll be in touch.</div>
 
                 </motion.div>
 
@@ -2278,7 +2823,7 @@ function Footer() {
 
                   {[
 
-                    { k: "name",  l: "Name",  t: "text",  ph: "Dr. Sarah Johnson" },
+                    { k: "name", l: "Name", t: "text", ph: "Dr. Sarah Johnson" },
 
                     { k: "email", l: "Email", t: "email", ph: "hello@hospital.lk" },
 
@@ -2286,9 +2831,11 @@ function Footer() {
 
                     <div key={f.k}>
 
-                      <div className="fM" style={{ fontSize: 8, color: "rgba(255,255,255,.28)",
+                      <div className="fM" style={{
+                        fontSize: 8, color: "rgba(255,255,255,.28)",
 
-                        textTransform: "uppercase", letterSpacing: ".18em", marginBottom: 9 }}>{f.l}</div>
+                        textTransform: "uppercase", letterSpacing: ".18em", marginBottom: 9
+                      }}>{f.l}</div>
 
                       <input type={f.t} placeholder={f.ph} required
 
@@ -2298,11 +2845,13 @@ function Footer() {
 
                         className="fS"
 
-                        style={{ width: "100%", padding: "14px 16px", borderRadius: 14, fontSize: 14,
+                        style={{
+                          width: "100%", padding: "14px 16px", borderRadius: 14, fontSize: 14,
 
                           color: "rgba(255,255,255,.8)",
 
-                          background: "rgba(255,255,255,.04)", border: "1px solid rgba(255,255,255,.08)" }} />
+                          background: "rgba(255,255,255,.04)", border: "1px solid rgba(255,255,255,.08)"
+                        }} />
 
                     </div>
 
@@ -2310,9 +2859,11 @@ function Footer() {
 
                   <div>
 
-                    <div className="fM" style={{ fontSize: 8, color: "rgba(255,255,255,.28)",
+                    <div className="fM" style={{
+                      fontSize: 8, color: "rgba(255,255,255,.28)",
 
-                      textTransform: "uppercase", letterSpacing: ".18em", marginBottom: 9 }}>Message</div>
+                      textTransform: "uppercase", letterSpacing: ".18em", marginBottom: 9
+                    }}>Message</div>
 
                     <textarea rows={4} required placeholder="I'd like to learn more about ReViveX..."
 
@@ -2322,11 +2873,13 @@ function Footer() {
 
                       className="fS"
 
-                      style={{ width: "100%", padding: "14px 16px", borderRadius: 14, fontSize: 14,
+                      style={{
+                        width: "100%", padding: "14px 16px", borderRadius: 14, fontSize: 14,
 
                         color: "rgba(255,255,255,.8)", resize: "none",
 
-                        background: "rgba(255,255,255,.04)", border: "1px solid rgba(255,255,255,.08)" }} />
+                        background: "rgba(255,255,255,.04)", border: "1px solid rgba(255,255,255,.08)"
+                      }} />
 
                   </div>
 
@@ -2334,13 +2887,15 @@ function Footer() {
 
                     className="btn-shim fB"
 
-                    style={{ position: "relative", overflow: "hidden", width: "100%", padding: "18px",
+                    style={{
+                      position: "relative", overflow: "hidden", width: "100%", padding: "18px",
 
                       borderRadius: 16, fontSize: 15, letterSpacing: ".12em",
 
                       background: "#2DD4BF", color: "#080f1a", border: "none",
 
-                      boxShadow: "0 0 44px rgba(45,212,191,.3)" }}>
+                      boxShadow: "0 0 44px rgba(45,212,191,.3)"
+                    }}>
 
                     <span style={{ position: "relative", zIndex: 1 }}>SEND MESSAGE</span>
 
@@ -2360,17 +2915,21 @@ function Footer() {
 
           <Reveal dir="right" delay={.15} style={{ paddingTop: 8 }}>
 
-            <h3 className="fB" style={{ fontSize: "clamp(1.8rem,3vw,2.8rem)", color: "#fff",
+            <h3 className="fB" style={{
+              fontSize: "clamp(1.8rem,3vw,2.8rem)", color: "#fff",
 
-              letterSpacing: ".04em", lineHeight: 1.1, marginBottom: 22 }}>
+              letterSpacing: ".04em", lineHeight: 1.1, marginBottom: 22
+            }}>
 
               DESIGNED FOR PATIENTS.<br /><span style={{ color: "#2DD4BF" }}>BUILT FOR IMPACT.</span>
 
             </h3>
 
-            <p className="fS" style={{ fontSize: 15, color: "rgba(255,255,255,.42)",
+            <p className="fS" style={{
+              fontSize: 15, color: "rgba(255,255,255,.42)",
 
-              lineHeight: 1.75, fontWeight: 300, marginBottom: 42 }}>
+              lineHeight: 1.75, fontWeight: 300, marginBottom: 42
+            }}>
 
               Whether you're a clinician, a hospital administrator, or a patient wanting
 
@@ -2380,25 +2939,29 @@ function Footer() {
 
             {[
 
-              { icon: <Mail size={15}/>,  l: "Email",   v: "hello@revivex.io", href: "mailto:hello@revivex.io" },
+              { icon: <Mail size={15} />, l: "Email", v: "hello@revivex.io", href: "mailto:hello@revivex.io" },
 
-              { icon: <Phone size={15}/>, l: "Phone",   v: "+94 77 000 0000",  href: "#" },
+              { icon: <Phone size={15} />, l: "Phone", v: "+94 77 000 0000", href: "#" },
 
-              { icon: <Globe size={15}/>, l: "Website", v: "www.revivex.io",   href: "#" },
+              { icon: <Globe size={15} />, l: "Website", v: "www.revivex.io", href: "#" },
 
             ].map(c => (
 
               <a key={c.l} href={c.href} data-mag
 
-                style={{ display: "flex", alignItems: "center", gap: 16,
+                style={{
+                  display: "flex", alignItems: "center", gap: 16,
 
-                  textDecoration: "none", marginBottom: 18, color: "inherit" }}>
+                  textDecoration: "none", marginBottom: 18, color: "inherit"
+                }}>
 
-                <div style={{ width: 44, height: 44, borderRadius: 14, flexShrink: 0,
+                <div style={{
+                  width: 44, height: 44, borderRadius: 14, flexShrink: 0,
 
                   display: "flex", alignItems: "center", justifyContent: "center",
 
-                  background: "rgba(45,212,191,.08)", border: "1px solid rgba(45,212,191,.18)", color: "#2DD4BF" }}>
+                  background: "rgba(45,212,191,.08)", border: "1px solid rgba(45,212,191,.18)", color: "#2DD4BF"
+                }}>
 
                   {c.icon}
 
@@ -2406,9 +2969,11 @@ function Footer() {
 
                 <div>
 
-                  <div className="fM" style={{ fontSize: 8, color: "rgba(255,255,255,.22)",
+                  <div className="fM" style={{
+                    fontSize: 8, color: "rgba(255,255,255,.22)",
 
-                    textTransform: "uppercase", letterSpacing: ".18em" }}>{c.l}</div>
+                    textTransform: "uppercase", letterSpacing: ".18em"
+                  }}>{c.l}</div>
 
                   <div className="fS" style={{ fontSize: 14, color: "rgba(255,255,255,.65)" }}>{c.v}</div>
 
@@ -2422,9 +2987,9 @@ function Footer() {
 
               {[
 
-                { icon: <Linkedin size={17}/>,  href: "#", label: "LinkedIn"  },
+                { icon: <Linkedin size={17} />, href: "#", label: "LinkedIn" },
 
-                { icon: <Instagram size={17}/>, href: "#", label: "Instagram" },
+                { icon: <Instagram size={17} />, href: "#", label: "Instagram" },
 
               ].map(s => (
 
@@ -2432,13 +2997,15 @@ function Footer() {
 
                   whileHover={{ y: -5, scale: 1.12 }}
 
-                  style={{ width: 50, height: 50, borderRadius: 16, textDecoration: "none",
+                  style={{
+                    width: 50, height: 50, borderRadius: 16, textDecoration: "none",
 
                     display: "flex", alignItems: "center", justifyContent: "center",
 
                     background: "rgba(255,255,255,.04)", border: "1px solid rgba(255,255,255,.07)",
 
-                    color: "rgba(255,255,255,.45)" }}>
+                    color: "rgba(255,255,255,.45)"
+                  }}>
 
                   {s.icon}
 
@@ -2454,9 +3021,11 @@ function Footer() {
 
 
 
-        <div style={{ marginTop: 80, paddingTop: 32, borderTop: "1px solid rgba(255,255,255,.05)",
+        <div style={{
+          marginTop: 80, paddingTop: 32, borderTop: "1px solid rgba(255,255,255,.05)",
 
-          display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          display: "flex", justifyContent: "space-between", alignItems: "center"
+        }}>
 
           <div className="fB" style={{ fontSize: 20, letterSpacing: ".10em", color: "#fff" }}>
 
@@ -2464,9 +3033,11 @@ function Footer() {
 
           </div>
 
-          <div className="fM" style={{ fontSize: 8, color: "rgba(255,255,255,.15)",
+          <div className="fM" style={{
+            fontSize: 8, color: "rgba(255,255,255,.15)",
 
-            textTransform: "uppercase", letterSpacing: ".22em" }}>
+            textTransform: "uppercase", letterSpacing: ".22em"
+          }}>
 
             © 2025 ReViveX · SDGP CS-09 Group 22 · Neuro-Rehabilitation Technology
 
@@ -2492,7 +3063,7 @@ export default function LandingPage() {
   useLenis();
   return (
 
-    <div className="grain" style={{ overflowX: "hidden", background: "#080f1a" }}>
+    <div className="grain" style={{ background: "#080f1a" }}>
 
       <style>{CSS}</style>
 

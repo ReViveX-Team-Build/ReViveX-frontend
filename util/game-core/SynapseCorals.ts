@@ -1,321 +1,457 @@
+// ─── What are we drawing? ──────────────────────────────────────────────────
+
+// Just the names of our SVG files so we don't typo them later
+type CoralSVG = 'fan' | 'orange' | 'pipu' | 'purple' | 'pur1' | 'red' | 'tubes';
+type StarfishSVG = 'starfish';
+type AssetKey = CoralSVG | StarfishSVG;
+
+// 0 is way in the back, 2 is right in your face
+type DepthLayer = 0 | 1 | 2;
+
+// How big are these things naturally? 
+const ASSET_SIZE: Record<AssetKey, { w: number; h: number }> = {
+  fan:      { w: 200, h: 360 },
+  orange:   { w: 310, h: 510 },
+  pipu:     { w: 265, h: 300 },
+  purple:   { w: 255, h: 315 },
+  pur1:     { w: 250, h: 320 },
+  red:      { w: 255, h: 295 },
+  tubes:    { w: 200, h: 340 },
+  starfish: { w: 200, h: 200 },
+};
+
+// How much should they sway? (Starfish don't wiggle, obviously)
+const ASSET_SWAY: Record<AssetKey, number> = {
+  fan:      0.080,
+  orange:   0.045,
+  pipu:     0.055,
+  purple:   0.048,
+  pur1:     0.050,
+  red:      0.042,
+  tubes:    0.095,
+  starfish: 0.000,
+};
+
+// The "neon" look for when the sun goes down
+const ASSET_GLOW: Record<AssetKey, string> = {
+  fan:      'rgba(218,112,214,0.55)',
+  orange:   'rgba(255,160,80,0.50)',
+  pipu:     'rgba(255,100,180,0.55)',
+  purple:   'rgba(200,100,255,0.55)',
+  pur1:     'rgba(190,90,255,0.58)',
+  red:      'rgba(255,80,80,0.52)',
+  tubes:    'rgba(127,255,212,0.45)',
+  starfish: 'rgba(255,180,60,0.40)',
+};
+
+const ASSET_SRC: Record<AssetKey, string> = {
+  fan:      '/images/fan_coral.svg',
+  orange:   '/images/coral_or.svg',
+  pipu:     '/images/coral_pipu.svg',
+  purple:   '/images/coral_pur.svg',
+  pur1:     '/images/coral_pur1.svg',
+  red:      '/images/coral_red.svg',
+  tubes:    '/images/coral_tube.svg',
+  starfish: '/images/starfish.svg',
+};
+
+// Rules for the layers: back layers are small, faint, and blue-ish
+const LAYER_PROPS: Record<DepthLayer, {
+  scaleRange:   [number, number];
+  opacityRange: [number, number];
+  blueTint:     number;
+  yOffset:      number;
+}> = {
+  0: { scaleRange: [0.10, 0.28], opacityRange: [0.25, 0.45], blueTint: 0.70, yOffset: 18 },
+  1: { scaleRange: [0.25, 0.48], opacityRange: [0.60, 0.80], blueTint: 0.28, yOffset: 5  },
+  2: { scaleRange: [0.40, 0.75], opacityRange: [0.90, 1.00], blueTint: 0.00, yOffset: 0  },
+};
+
+// ─── Data structures for our underwater world ──────────────────────────────
+
+interface CoralSprite {
+  kind:    'sprite';
+  asset:   AssetKey;
+  x:       number;
+  y:       number; // Anchored at the bottom
+  scale:   number;
+  layer:   DepthLayer;
+  swayOff: number; // Random offset so they don't all sway in sync like a cult
+  opacity: number;
+}
+
 interface Boulder {
-    relX: number;
-    relY: number;
-    r: number;
-    color: string;
+  x: number; y: number;
+  rx: number; ry: number; // Basically how wide/tall the rock is
+  rot: number;
 }
 
-interface RockPile {
-    type: 'rock_pile';
-    x: number;
-    y: number;
-    boulders: Boulder[];
-    scale: number;
+interface ReefGroup {
+  kind:     'reef';
+  x:        number;
+  y:        number;
+  layer:    DepthLayer;
+  boulders: Boulder[];
+  corals:   CoralSprite[];
+  pebbles:  { x: number; y: number; r: number }[];
 }
 
-interface Branch {
-    x: number;
-    y: number;
-    length?: number;
-    angle?: number;
-    thickness: number;
-    type: 'fan_rib' | 'branch' | 'tube';
-    ex?: number;
-    ey?: number;
-    cp1x?: number;
-    cp1y?: number;
-    depth?: number;
-}
+type SceneItem = CoralSprite | ReefGroup;
 
-interface Coral {
-    type: 'fan' | 'staghorn' | 'tubes';
-    x: number;
-    y: number;
-    colorBase: string;
-    colorHighlight: string;
-    branches: Branch[];
-    swayOffset: number;
-    scale: number;
-}
-
-type CoralItem = RockPile | Coral;
-
-type Habitat = 'sand_dweller' | 'rock_dweller';
+// Don't let things bunch up too much
+const LANE_MIN_DIST: Record<DepthLayer, number> = {
+  0: 160,
+  1: 240,
+  2: 320,
+};
 
 export class SynapseCorals {
-    gameWidth: number;
-    gameHeight: number;
-    corals: CoralItem[];
+  gameWidth:  number;
+  gameHeight: number;
 
-    constructor(gameWidth: number, gameHeight: number) {
-        this.gameWidth = gameWidth;
-        this.gameHeight = gameHeight;
-        this.corals = [];
-        this.init();
+  private items: SceneItem[] = [];
+  private imgs:  Record<AssetKey, HTMLImageElement>;
+  private ready: Record<AssetKey, boolean>;
+  private lanePositions: Record<DepthLayer, number[]> = { 0: [], 1: [], 2: [] };
+  private scrollX = 0;
+
+  constructor(gameWidth: number, gameHeight: number) {
+    this.gameWidth  = gameWidth;
+    this.gameHeight = gameHeight;
+    this.ready = {} as Record<AssetKey, boolean>;
+
+    // Quick helper to suck in the images
+    const load = (src: string, key: AssetKey): HTMLImageElement => {
+      const img  = new Image();
+      this.ready[key] = false;
+      img.onload = () => { this.ready[key] = true; };
+      img.src    = src;
+      return img;
+    };
+
+    this.imgs = Object.fromEntries(
+      (Object.keys(ASSET_SRC) as AssetKey[]).map(k => [k, load(ASSET_SRC[k], k)])
+    ) as Record<AssetKey, HTMLImageElement>;
+
+    this.init();
+  }
+
+  private init(): void {
+    // Break the screen into 6 segments so we can spread stuff out evenly-ish
+    const W   = this.gameWidth;
+    const seg = W / 6;
+
+    // Plop down some background clusters
+    this.addBackgroundCluster(seg * 0.4);
+    this.addBackgroundCluster(seg * 1.8);
+    this.addBackgroundCluster(seg * 3.5);
+    this.addBackgroundCluster(seg * 5.2);
+
+    // Some midground solo performers
+    this.addMidgroundSolo(seg * 0.9);
+    this.addMidgroundSolo(seg * 2.6);
+    this.addMidgroundSolo(seg * 4.4);
+
+    // The "Hero" reefs in the front
+    this.addReefGroup(seg * 0.2, 2);
+    this.addReefGroup(seg * 1.5, 2);
+    this.addReefGroup(seg * 2.9, 2);
+    this.addReefGroup(seg * 4.2, 2);
+    this.addReefGroup(seg * 5.6, 2);
+
+    // Scatter some pebbles so the floor isn't boring
+    this.addPebblePatch(seg * 0.7, 2);
+    this.addPebblePatch(seg * 2.2, 2);
+    this.addPebblePatch(seg * 3.8, 2);
+    this.addPebblePatch(seg * 5.1, 2);
+
+    // Some extra flair
+    this.addSoloFeature(seg * 1.1, 2, 'tubes');
+    this.addSoloFeature(seg * 3.3, 2, 'fan');
+    this.addSoloFeature(seg * 5.8, 2, 'tubes');
+  }
+
+  // ─── SCENE BUILDERS ────────────────────────────────────────────────────────
+
+  private addBackgroundCluster(cx: number): void {
+    const sy   = this.sandY();
+    const lp   = LAYER_PROPS[0];
+    const types: CoralSVG[] = ['fan', 'tubes', 'orange', 'red'];
+    const count = 1 + Math.floor(Math.random() * 3);
+
+    for (let i = 0; i < count; i++) {
+      const ox    = (i - count / 2) * (30 + Math.random() * 25);
+      const scale = lp.scaleRange[0] + Math.random() * (lp.scaleRange[1] - lp.scaleRange[0]);
+      const op    = lp.opacityRange[0] + Math.random() * (lp.opacityRange[1] - lp.opacityRange[0]);
+      const type  = types[Math.floor(Math.random() * types.length)];
+      
+      if (!this.laneClear(0, cx + ox, LANE_MIN_DIST[0] * 0.5)) continue;
+      this.pushLane(0, cx + ox);
+      this.items.push({
+        kind: 'sprite', asset: type, x: cx + ox, y: sy - lp.yOffset,
+        scale, layer: 0, swayOff: Math.random() * 100, opacity: op,
+      });
+    }
+  }
+
+  private addMidgroundSolo(cx: number): void {
+    const sy   = this.sandY();
+    const lp   = LAYER_PROPS[1];
+    const types: CoralSVG[] = ['orange','pipu','purple','pur1','red','fan'];
+    const type  = types[Math.floor(Math.random() * types.length)];
+    const scale = lp.scaleRange[0] + Math.random() * (lp.scaleRange[1] - lp.scaleRange[0]);
+    const op    = lp.opacityRange[0] + Math.random() * (lp.opacityRange[1] - lp.opacityRange[0]);
+
+    if (!this.laneClear(1, cx, LANE_MIN_DIST[1])) return;
+    this.pushLane(1, cx);
+    this.items.push({
+      kind: 'sprite', asset: type, x: cx, y: sy - lp.yOffset,
+      scale, layer: 1, swayOff: Math.random() * 100, opacity: op,
+    });
+  }
+
+  private addReefGroup(cx: number, layer: DepthLayer): void {
+    if (!this.laneClear(layer, cx, LANE_MIN_DIST[layer])) return;
+    this.pushLane(layer, cx);
+
+    const sy = this.sandY();
+    const lp = LAYER_PROPS[layer];
+
+    // Build some rocks
+    const boulderCount = 2 + Math.floor(Math.random() * 3);
+    const boulders: Boulder[] = [];
+    for (let b = 0; b < boulderCount; b++) {
+      const ox = (b - boulderCount / 2) * (38 + Math.random() * 30) + (Math.random() - 0.5) * 20;
+      const rx = 28 + Math.random() * 32;
+      const ry = rx * (0.42 + Math.random() * 0.30); 
+      boulders.push({ x: cx + ox, y: sy - ry * 0.5, rx, ry, rot: (Math.random() - 0.5) * 0.4 });
     }
 
-    init(): void {
-        // Spawn fewer, but higher quality corals
-        for (let i = 0; i < 3; i++) {
-            this.spawnCluster(i * (this.gameWidth / 2.5) + 150);
-        }
+    // Throw some pebbles around
+    const pebbles: { x: number; y: number; r: number }[] = [];
+    for (let p = 0; p < 6 + Math.floor(Math.random() * 5); p++) {
+      pebbles.push({ x: cx + (Math.random() - 0.5) * 130, y: sy - 1 - Math.random() * 4, r: 3 + Math.random() * 9 });
     }
 
-    generateBoulderPile(rockGroup: RockPile): void {
-        const numBoulders = 3 + Math.floor(Math.random() * 3);
-        for (let i = 0; i < numBoulders; i++) {
-            rockGroup.boulders.push({
-                relX: (Math.random() - 0.5) * 120, // Spread width
-                relY: (Math.random() * 30) - 10,   // Height variation
-                r: 30 + Math.random() * 25,        // Radius size
-                color: Math.random() > 0.5 ? '#708090' : '#5F9EA0' // SlateGray or CadetBlue
-            });
-        }
-        // Sort by Y so lower boulders draw in front
-        rockGroup.boulders.sort((a, b) => a.relY - b.relY);
+    // Stick corals on the rocks
+    const coralTypes: CoralSVG[] = ['orange','pipu','purple','pur1','red','fan'];
+    const coralCount = 2 + Math.floor(Math.random() * 3);
+    const corals: CoralSprite[] = [];
+
+    for (let i = 0; i < coralCount; i++) {
+      const host  = boulders[i % boulders.length];
+      const ox    = (Math.random() - 0.5) * host.rx * 1.4;
+      const scale = lp.scaleRange[0] + Math.random() * (lp.scaleRange[1] - lp.scaleRange[0]);
+      const type  = coralTypes[Math.floor(Math.random() * coralTypes.length)];
+
+      corals.push({
+        kind: 'sprite', asset: type, x: host.x + ox, y: host.y - host.ry + 4,
+        scale, layer, swayOff: Math.random() * 100,
+        opacity: lp.opacityRange[0] + Math.random() * (lp.opacityRange[1] - lp.opacityRange[0]),
+      });
     }
 
-    spawnCluster(centerX: number): void {
-        // 1. Create the Anchor Rock
-        const isRockPile = Math.random() > 0.4; // 60% chance of rocks
-        
-        if (isRockPile) {
-            const rockGroup: RockPile = {
-                type: 'rock_pile',
-                x: centerX,
-                y: this.gameHeight - 15,
-                boulders: [],
-                scale: 0.0 + Math.random() * 0.5
-            };
-            
-            this.generateBoulderPile(rockGroup); 
-            this.corals.push(rockGroup);
-            
-            // GROW A "BUSH" OF CORALS ON TOP OF THE ROCK
-            const numCorals = 2 + Math.floor(Math.random() * 3);
-            for (let i = 0; i < numCorals; i++) {
-                // Find a random boulder to sit on
-                const hostBoulder = rockGroup.boulders[Math.floor(Math.random() * rockGroup.boulders.length)];
-            
-                // Calculate position relative to the group center
-                const coralX = centerX + hostBoulder.relX; 
-                const coralY = (this.gameHeight - 15) + hostBoulder.relY - (hostBoulder.r * 0.8); // Sit on top
-
-                this.createSingleCoral(coralX, coralY, 'rock_dweller');
-            }
-
-        } else {
-            // --- OPTION B: TUBES ON SAND (No Rocks) ---
-            const numTubes = 3 + Math.floor(Math.random() * 4);
-            for (let i = 0; i < numTubes; i++) {
-                const offsetX = (Math.random() - 0.5) * 80;
-                this.createSingleCoral(centerX + offsetX, this.gameHeight - 10, 'sand_dweller');
-            }
-        }
-    }
-    
-    createSingleCoral(x: number, y: number, habitat: Habitat): void {
-        let type: 'fan' | 'staghorn' | 'tubes';
-        if (habitat === 'sand_dweller') {
-            type = 'tubes'; // Tubes ONLY on sand
-        } else {
-            // Fans and Staghorns on rocks
-            type = Math.random() > 0.5 ? 'fan' : 'staghorn';
-        }
-
-        // Colors
-        const isPurple = Math.random() > 0.5;
-        const colorBase = isPurple ? '#4B0082' : '#008B8B'; 
-        const colorHighlight = isPurple ? '#DA70D6' : '#7FFFD4';
-
-        const coral: Coral = {
-            type: type,
-            x: x, 
-            y: y,
-            colorBase: colorBase,
-            colorHighlight: colorHighlight,
-            branches: [],
-            swayOffset: Math.random() * 100,
-            scale: 1.0 + Math.random() * 0.5 // Bigger scale for "Bush" look
-        };
-
-        if (type === 'fan') this.generateFan(coral);
-        else if (type === 'staghorn') this.generateBranching(coral, 0, 0, -Math.PI/2, 5, 20);
-        else this.generateTubes(coral);
-
-        this.corals.push(coral);
+    // Maybe a starfish?
+    if (Math.random() > 0.45) {
+      corals.push({
+        kind: 'sprite', asset: 'starfish', x: cx + (Math.random() - 0.5) * 100, y: sy,
+        scale: 0.18 + Math.random() * 0.22, layer, swayOff: 0, opacity: 0.90 + Math.random() * 0.10,
+      });
     }
 
-    generateFan(coral: Coral): void {
-        // Denser fan (12 ribs instead of 8)
-        const numRibs = 12;
-        for (let i = 0; i < numRibs; i++) {
-            const angle = -Math.PI + (i * (Math.PI / (numRibs - 1))); 
-            coral.branches.push({
-                x: 0, 
-                y: 0,
-                length: 90 + Math.random() * 50,
-                angle: angle * 0.8 - (Math.PI / 2 * 0.2), 
-                thickness: 5,
-                type: 'fan_rib'
-            });
-        }
+    this.items.push({ kind: 'reef', x: cx, y: sy, layer, boulders, corals, pebbles });
+  }
+
+  private addPebblePatch(cx: number, layer: DepthLayer): void {
+    const sy = this.sandY();
+    const pebbles: { x: number; y: number; r: number }[] = [];
+    for (let p = 0; p < 4 + Math.floor(Math.random() * 5); p++) {
+      pebbles.push({ x: cx + (Math.random() - 0.5) * 90, y: sy - 1 - Math.random() * 3, r: 3 + Math.random() * 8 });
     }
 
-    generateBranching(coral: Coral, x: number, y: number, angle: number, depth: number, length: number): void {
-        if (depth === 0) return;
+    const corals: CoralSprite[] = [];
+    if (Math.random() > 0.50) {
+      const types: CoralSVG[] = ['orange','red','pipu','pur1'];
+      corals.push({
+        kind: 'sprite', asset: types[Math.floor(Math.random() * types.length)],
+        x: cx + (Math.random() - 0.5) * 40, y: sy, scale: 0.22 + Math.random() * 0.28,
+        layer, swayOff: Math.random() * 100, opacity: 0.88,
+      });
+    }
+    if (Math.random() > 0.40) {
+      corals.push({
+        kind: 'sprite', asset: 'starfish', x: cx + (Math.random() - 0.5) * 70, y: sy,
+        scale: 0.15 + Math.random() * 0.18, layer, swayOff: 0, opacity: 0.92,
+      });
+    }
+    this.items.push({ kind: 'reef', x: cx, y: sy, layer, boulders: [], corals, pebbles });
+  }
 
-        const bend = (Math.random() - 0.5) * 1.5; 
-        const endX = x + Math.cos(angle + bend) * length;
-        const endY = y + Math.sin(angle + bend) * length;
+  private addSoloFeature(cx: number, layer: DepthLayer, forceType?: CoralSVG): void {
+    if (!this.laneClear(layer, cx, LANE_MIN_DIST[layer] * 0.8)) return;
+    this.pushLane(layer, cx);
 
-        coral.branches.push({
-            x: x, 
-            y: y, 
-            ex: endX, 
-            ey: endY,
-            cp1x: x + Math.cos(angle) * (length / 2), 
-            cp1y: y + Math.sin(angle) * (length / 2),
-            depth: depth,
-            thickness: depth * 1.8, // Thicker base
-            type: 'branch'
-        });
+    const sy = this.sandY();
+    const lp = LAYER_PROPS[layer];
+    const type: CoralSVG = forceType ?? (['fan','tubes','orange','pipu'] as CoralSVG[])[Math.floor(Math.random() * 4)];
+    const finalScale = Math.random() > 0.45
+      ? lp.scaleRange[0] * 0.5 + lp.scaleRange[1] * 0.5 + Math.random() * (lp.scaleRange[1] - lp.scaleRange[0]) * 0.25
+      : lp.scaleRange[0] + Math.random() * (lp.scaleRange[1] - lp.scaleRange[0]) * 0.45;
 
-        // BUSHY FIX: Always split into at least 2 branches
-        const branchCount = 2 + (Math.random() > 0.7 ? 1 : 0); 
-        
-        for (let i = 0; i < branchCount; i++) {
-            const spread = 0.7; 
-            const newAngle = angle + (Math.random() * spread - (spread / 2));
-            this.generateBranching(coral, endX, endY, newAngle, depth - 1, length * 0.85);
-        }
+    this.items.push({
+      kind: 'sprite', asset: type, x: cx, y: sy, scale: finalScale,
+      layer, swayOff: Math.random() * 100,
+      opacity: lp.opacityRange[0] + Math.random() * (lp.opacityRange[1] - lp.opacityRange[0]),
+    });
+  }
+
+  // ─── HELPERS & LOOPS ───────────────────────────────────────────────────────
+
+  private laneClear(lane: DepthLayer, x: number, minDist: number): boolean {
+    return !this.lanePositions[lane].some(px => Math.abs(px - x) < minDist);
+  }
+  private pushLane(lane: DepthLayer, x: number) {
+    this.lanePositions[lane].push(x);
+  }
+
+  update(): void {
+    const scroll = 2; // How fast are we moving?
+    this.scrollX += scroll;
+
+    for (let i = this.items.length - 1; i >= 0; i--) {
+      const item = this.items[i];
+      item.x -= scroll;
+
+      // Buh-bye! If it's too far left, kill it.
+      if (item.x < -500) {
+        const lane = item.layer as DepthLayer;
+        const idx  = this.lanePositions[lane].findIndex(px => Math.abs(px - (item.x + 500)) < 20);
+        if (idx !== -1) this.lanePositions[lane].splice(idx, 1);
+        this.items.splice(i, 1);
+      } else if (item.kind === 'reef') {
+        item.boulders.forEach(b => { b.x -= scroll; });
+        item.pebbles.forEach(p  => { p.x -= scroll; });
+        item.corals.forEach(c   => { c.x -= scroll; });
+      }
     }
 
-    generateTubes(coral: Coral): void {
-        // More tubes per bunch (8 instead of 5)
-        for (let i = 0; i < 8; i++) {
-            coral.branches.push({
-                x: (Math.random() - 0.5) * 30, // Wider bunch
-                y: 0,
-                length: 70 + Math.random() * 70,
-                thickness: 8 + Math.random() * 4,
-                type: 'tube'
-            });
-        }
+    // If there's a gap on the right, fill it.
+    const rightmost = this.items.reduce((m, it) => Math.max(m, it.x), 0);
+    const spawnEdge = this.gameWidth + 300;
+
+    if (rightmost < spawnEdge - 200) {
+      const nx = rightmost + 280 + Math.random() * 160;
+      const roll = Math.random();
+      if      (roll < 0.28) this.addReefGroup(nx, 2);
+      else if (roll < 0.48) this.addSoloFeature(nx, 2);
+      else if (roll < 0.62) this.addPebblePatch(nx, 2);
+      else if (roll < 0.78) this.addMidgroundSolo(nx);
+      else                  this.addBackgroundCluster(nx);
+    }
+  }
+  // ─── DRAWING ──────────────────────────────────────────────────────────────
+
+  draw(ctx: CanvasRenderingContext2D, nightFactor: number): void {
+    const time = Date.now() * 0.0008;
+    // Make sure we draw back-to-front or it'll look weird
+    const sorted = [...this.items].sort((a, b) => a.layer - b.layer);
+
+    for (const item of sorted) {
+      if (item.kind === 'reef') this.drawReefGroup(ctx, item, time, nightFactor);
+      else this.drawSprite(ctx, item, time, nightFactor);
+    }
+  }
+
+  private drawReefGroup(ctx: CanvasRenderingContext2D, reef: ReefGroup, time: number, nf: number): void {
+    const lp = LAYER_PROPS[reef.layer];
+    ctx.save();
+    ctx.globalAlpha = lp.opacityRange[0] + 0.5 * (lp.opacityRange[1] - lp.opacityRange[0]);
+
+    for (const p of reef.pebbles) this.drawPebble(ctx, p.x, p.y, p.r, reef.layer, nf);
+    for (const b of reef.boulders) this.drawBoulder(ctx, b, reef.layer, nf);
+    for (const b of reef.boulders) this.drawSandShadow(ctx, b.x, reef.y, b.rx * 1.6, 7, nf);
+
+    ctx.restore();
+    for (const c of reef.corals) this.drawSprite(ctx, c, time, nf);
+  }
+
+  private drawSprite(ctx: CanvasRenderingContext2D, sprite: CoralSprite, time: number, nf: number): void {
+    if (!this.ready[sprite.asset]) return;
+    const img  = this.imgs[sprite.asset];
+    const base = ASSET_SIZE[sprite.asset];
+    const w = base.w * sprite.scale;
+    const h = base.h * sprite.scale;
+    const amp = ASSET_SWAY[sprite.asset];
+    const lp = LAYER_PROPS[sprite.layer];
+
+    // This makes the swaying look organic (stacking different speeds)
+    const sway = amp > 0
+      ? Math.sin(time * 0.55 + sprite.swayOff) * amp
+      + Math.sin(time * 1.42 + sprite.swayOff + 2.0) * amp * 0.36
+      + Math.sin(time * 3.15 + sprite.swayOff + 4.5) * amp * 0.11
+      : 0;
+
+    ctx.save();
+    // Distance blur/tint
+    if (lp.blueTint > 0) {
+      ctx.filter = `saturate(${Math.round((1 - lp.blueTint * 0.60) * 100)}%) brightness(${Math.round((1 - lp.blueTint * 0.28) * 100)}%)`;
     }
 
-    update(): void {
-        // Move everything left
-        this.corals.forEach((item) => {
-            item.x -= 2; 
-        });
-
-        // Loop clusters
-        // Check the FIRST item (assuming it's a cluster leader). 
-        // If it goes too far left, remove the whole group?
-        // Simpler: Just remove individual items if they go way off screen
-        for (let i = this.corals.length - 1; i >= 0; i--) {
-            if (this.corals[i].x < -200) {
-                this.corals.splice(i, 1);
-            }
-        }
-        
-        // Spawn new clusters if we run out
-        if (this.corals.length < 5) {
-            this.spawnCluster(this.gameWidth + 100);
-        }
+    ctx.globalAlpha = sprite.opacity;
+    if (nf > 0.08 && sprite.asset !== 'starfish') {
+      ctx.shadowBlur = 14 * nf;
+      ctx.shadowColor = ASSET_GLOW[sprite.asset];
     }
 
-    draw(ctx: CanvasRenderingContext2D, nightFactor: number): void {
-        const time = Date.now() * 0.0008;
-
-        this.corals.forEach(item => {
-            ctx.save();
-            ctx.translate(item.x, item.y);
-
-            // --- DRAW ROCK ---
-            if (item.type === 'rock_pile') {
-                ctx.save();
-                ctx.scale(item.scale, item.scale);
-                
-                item.boulders.forEach(boulder => {
-                    ctx.beginPath();
-                    ctx.arc(boulder.relX, boulder.relY, boulder.r, 0, Math.PI * 2);
-                    
-                    // RADIAL GRADIENT for 3D Round Look
-                    // Light comes from top-left (-10, -10)
-                    const grad = ctx.createRadialGradient(
-                        boulder.relX - 10, boulder.relY - 10, 5, 
-                        boulder.relX, boulder.relY, boulder.r
-                    );
-                    grad.addColorStop(0, "#8daab9");
-                    grad.addColorStop(1, "#2f4f4f");
-
-                    ctx.fillStyle = grad;
-                    ctx.fill();
-
-                    ctx.strokeStyle = "rgba(0,0,0,0.3)";
-                    ctx.lineWidth = 2;
-                    ctx.stroke();
-                });
-                ctx.restore();
-            }
-            
-            // --- DRAW CORAL ---
-            else {
-                ctx.scale(item.scale, item.scale);
-                
-                // Shadow
-                ctx.shadowBlur = 5;
-                ctx.shadowColor = "rgba(0,0,0,0.5)";
-                if (nightFactor > 0.1) {
-                    ctx.shadowBlur = 15 * nightFactor;
-                    ctx.shadowColor = item.colorHighlight;
-                }
-
-                item.branches.forEach(branch => {
-                    const swayBase = Math.sin(time + item.swayOffset);
-                    const swayTip = Math.sin(time * 1.5 + item.swayOffset + 1);
-
-                    const gradient = ctx.createLinearGradient(0, 0, 0, -100);
-                    gradient.addColorStop(0, item.colorBase);       
-                    gradient.addColorStop(1, item.colorHighlight);  
-                    
-                    ctx.strokeStyle = gradient;
-                    ctx.fillStyle = gradient;
-                    ctx.lineCap = "round";
-
-                    if (item.type === 'fan') {
-                        const tipX = Math.cos(branch.angle!) * branch.length! + (swayTip * 8);
-                        const tipY = Math.sin(branch.angle!) * branch.length! + (swayBase * 4);
-                        ctx.beginPath();
-                        ctx.moveTo(0, 0);
-                        ctx.quadraticCurveTo(tipX / 2, tipY / 2 + (swayBase * 5), tipX, tipY);
-                        ctx.lineWidth = branch.thickness;
-                        ctx.stroke();
-
-                    } else if (item.type === 'staghorn') {
-                        ctx.beginPath();
-                        ctx.moveTo(branch.x, branch.y);
-                        ctx.quadraticCurveTo(branch.cp1x!, branch.cp1y!, branch.ex!, branch.ey!);
-                        ctx.lineWidth = branch.thickness;
-                        ctx.stroke();
-
-                    } else if (item.type === 'tubes') {
-                        const sway = swayBase * (branch.length! / 8);
-                        ctx.beginPath();
-                        ctx.moveTo(branch.x, branch.y);
-                        ctx.quadraticCurveTo(branch.x + sway, branch.y - (branch.length! / 2), branch.x + (sway * 1.2), branch.y - branch.length!);
-                        ctx.lineWidth = branch.thickness;
-                        ctx.stroke();
-                        ctx.fillStyle = "#0a0a1a"; 
-                        ctx.beginPath(); 
-                        ctx.arc(branch.x + (sway * 1.2), branch.y - branch.length!, branch.thickness / 2 - 1, 0, Math.PI * 2); 
-                        ctx.fill();
-                    }
-                });
-            }
-            ctx.restore();
-        });
+    if (sprite.layer === 2 && sprite.asset !== 'starfish') {
+      this.drawSandShadow(ctx, sprite.x, this.sandY(), w * 0.55, 10, nf);
     }
+
+    ctx.translate(sprite.x, sprite.y);
+    ctx.transform(1, 0, sway, 1, 0, 0); // Shearing for the sway
+    ctx.drawImage(img, -w / 2, -h, w, h);
+    ctx.restore();
+  }
+
+  // Boring math for drawing boulders, pebbles, and shadows...
+  private drawBoulder(ctx: CanvasRenderingContext2D, b: Boulder, layer: DepthLayer, nf: number): void {
+    const lp = LAYER_PROPS[layer];
+    const tint = lp.blueTint;
+    const nd = 1 - nf * 0.65;
+    const r0 = Math.round(130 - tint * 40), g0 = Math.round(150 - tint * 20), b0 = Math.round(162 + tint * 30);
+    const r1 = Math.round(55 - tint * 20), g1 = Math.round(78 - tint * 10), b1 = Math.round(88 + tint * 25);
+
+    ctx.save();
+    ctx.translate(b.x, b.y);
+    ctx.rotate(b.rot);
+    const grad = ctx.createRadialGradient(-b.rx * 0.3, -b.ry * 0.3, b.rx * 0.08, 0, 0, Math.max(b.rx, b.ry));
+    grad.addColorStop(0, `rgb(${Math.round(r0*nd)},${Math.round(g0*nd)},${Math.round(b0*nd)})`);
+    grad.addColorStop(1, `rgb(${Math.round(r1*nd)},${Math.round(g1*nd)},${Math.round(b1*nd)})`);
+    ctx.beginPath(); ctx.ellipse(0, 0, b.rx, b.ry, 0, 0, Math.PI * 2);
+    ctx.fillStyle = grad; ctx.fill();
+    ctx.restore();
+  }
+
+  private drawPebble(ctx: CanvasRenderingContext2D, px: number, py: number, pr: number, layer: DepthLayer, nf: number): void {
+    const nd = 1 - nf * 0.62;
+    const h0 = Math.round((145 - LAYER_PROPS[layer].blueTint * 35) * nd);
+    ctx.save();
+    ctx.beginPath(); ctx.ellipse(px, py, pr, pr * 0.6, Math.random(), 0, Math.PI * 2);
+    ctx.fillStyle = `rgb(${h0},${h0+5},${h0+8})`; ctx.fill();
+    ctx.restore();
+  }
+
+  private drawSandShadow(ctx: CanvasRenderingContext2D, x: number, sandY: number, halfW: number, halfH: number, nf: number): void {
+    const alpha = (0.22 - nf * 0.14);
+    if (alpha <= 0) return;
+    ctx.save();
+    const g = ctx.createRadialGradient(x, sandY, 0, x, sandY, halfW);
+    g.addColorStop(0, `rgba(60,30,4,${alpha})`);
+    g.addColorStop(1, 'rgba(40,18,1,0)');
+    ctx.beginPath(); ctx.ellipse(x, sandY, halfW, halfH, 0, 0, Math.PI * 2);
+    ctx.fillStyle = g; ctx.fill();
+    ctx.restore();
+  }
+
+  private sandY(): number { return this.gameHeight - 5; }
 }
