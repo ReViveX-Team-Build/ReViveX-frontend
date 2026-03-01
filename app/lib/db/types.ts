@@ -1,6 +1,6 @@
 import { Timestamp } from "firebase/firestore";
 
-// USERS (Patients & Doctors)
+// --- USERS (Patients & Doctors) ---
 export interface UserProfile {
   uid: string;
   role: "patient" | "doctor";
@@ -24,7 +24,7 @@ export interface PatientData extends UserProfile {
   };
 }
 
-//  THERAPY PROTOCOLS 
+// --- THERAPY PROTOCOLS ---
 export interface TherapyProtocol {
   id?: string;
   doctorId: string;
@@ -43,13 +43,13 @@ export interface TherapyProtocol {
 
 // --- GAME SESSIONS (Directly from your Metrics PDF) ---
 export interface SessionMetrics {
-  // MPX50DP (Pressure) Metrics -Synapse Racer
+  // MPX50DP (Pressure) Metrics - Synapse Racer
   reactionTimeMs?: number; 
   peakGripForce?: number;
   muscleEnduranceDropPercent?: number; 
   cognitiveAccuracyPercent?: number;
 
-  // MPU6050 (Motion) Metrics -Stability Game
+  // MPU6050 (Motion) Metrics - Stability Game
   tremorAmplitude?: number;
   driftDistance?: number;
   movementSmoothness?: number;
@@ -57,20 +57,20 @@ export interface SessionMetrics {
 
 export interface GameSession {
   id?: string;
-  patientId: string;
-  protocolId: string; // Links back to the doctor's assignment
+  userId: string;       
+  protocolId: string; 
   gameId: string;
-  date: Timestamp;
+  timestamp: Timestamp; 
   durationSeconds: number;
   targetHand: "left" | "right";
   metrics: SessionMetrics; 
   aiSummary?: string; 
 }
 
-// --- COMMUNICATIONS (Chat n alerts) ---
+// --- COMMUNICATIONS (Chat & Alerts) ---
 export interface Communication {
   id?: string;
-  senderId: string; // Could be doctor, patient, or "system" (AI)
+  senderId: string; 
   receiverId: string;
   type: "instruction" | "feedback" | "direct_message" | "ai_insight";
   content: string;
