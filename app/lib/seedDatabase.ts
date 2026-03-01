@@ -3,57 +3,83 @@ import { collection, addDoc, doc, setDoc, Timestamp } from "firebase/firestore";
 
 export const seedDatabase = async () => {
   try {
-    const confirm = window.confirm("Are you sure you want to erase/overwrite test data?");
+    const confirm = window.confirm("Are you sure you want to erase/overwrite test data with Clinical Metrics?");
     if (!confirm) return;
 
-    console.log("🌱 Starting Seed Process...");
+    console.log("🌱 Starting Clinical Seed Process...");
 
-    // 1. Create a Mock Patient
+    // 1. Create a Mock Patient (Matches the PatientData interface)
     const patientId = "patient_mock_001";
     await setDoc(doc(db, "users", patientId), {
       role: "patient",
-      name: "Alex Rehabit",
-      email: "alex@revivex.com",
-      condition: "Post-Stroke Recovery",
-      joinedAt: Timestamp.now(),
-      streak: 5,
-      totalXp: 1200
+      name: "John Smith",
+      email: "john@revivex.com",
+      condition: "Stroke",
+      assignedDoctorId: "doctor_001",
+      gamification: {
+        totalXp: 2450,
+        currentStreak: 5,
+        unlockedLevels: [1, 2]
+      },
+      hardwareStatus: {
+        deviceId: "R-103",
+        status: "connected",
+        lastSync: Timestamp.now()
+      },
+      createdAt: Timestamp.now()
     });
 
-    // 2. Create Mock Game Sessions (History)
+    // 2. Create a Mock Therapy Protocol
+    const protocolId = "prot_mock_001";
+    await setDoc(doc(db, "protocols", protocolId), {
+      doctorId: "doctor_001",
+      patientId: patientId,
+      gameId: "synapse_racer",
+      level: 2,
+      targetHand: "right",
+      hardwareFocus: "mpx_pressure",
+      assignedDate: Timestamp.now(),
+      settings: {
+        difficulty: "medium",
+        audioHints: true,
+        visualGuides: true
+      }
+    });
+
+    // 3. Create Mock Game Sessions (Based on your Clinical Metrics PDF)
+    // We will simulate 3 days of progress showing improvement in endurance
     const sessions = [
-      { level: 1, score: 450, accuracy: 65, date: new Date("2025-02-01") },
-      { level: 1, score: 700, accuracy: 80, date: new Date("2025-02-03") },
-      { level: 2, score: 1200, accuracy: 92, date: new Date("2025-02-05") },
+      { 
+        date: new Date("2025-11-13T10:30:00"), 
+        metrics: { peakGripForce: 38.5, muscleEnduranceDropPercent: 25, reactionTimeMs: 520, cognitiveAccuracyPercent: 75 },
+        aiSummary: "High endurance drop detected early in session. Recommend monitoring for fatigue."
+      },
+      { 
+        date: new Date("2025-11-14T10:30:00"), 
+        metrics: { peakGripForce: 42.1, muscleEnduranceDropPercent: 18, reactionTimeMs: 480, cognitiveAccuracyPercent: 80 },
+        aiSummary: "Notable improvement in grip stability. Endurance is increasing."
+      },
+      { 
+        date: new Date("2025-11-15T10:30:00"), 
+        metrics: { peakGripForce: 45.2, muscleEnduranceDropPercent: 12, reactionTimeMs: 420, cognitiveAccuracyPercent: 85 },
+        aiSummary: "Excellent consistency today. Motor execution and cognitive praxis are synchronizing well."
+      },
     ];
 
     for (const s of sessions) {
       await addDoc(collection(db, "game_sessions"), {
         userId: patientId,
+        protocolId: protocolId,
         gameId: "synapse_racer",
-        level: s.level,
-        score: s.score,
-        metrics: {
-          accuracy: s.accuracy,
-          avgReactionTime: 400 - (s.score / 10), 
-        },
         timestamp: Timestamp.fromDate(s.date),
-        status: "completed"
+        durationSeconds: 900, // 15 mins
+        targetHand: "right",
+        metrics: s.metrics, // Injects the MPX clinical data!
+        aiSummary: s.aiSummary
       });
     }
 
-    // 3. Create a Doctor Assignment
-    await addDoc(collection(db, "assignments"), {
-        patientId: patientId,
-        doctorId: "doctor_001",
-        gameType: "Rhythm Reef",
-        targetDuration: 15, // mins
-        status: "pending",
-        assignedDate: Timestamp.now(),
-        note: "Focus on smooth grip release."
-    });
-
-    alert("✅ Database Populated! Refresh your Firebase Console to see the data.");
+    alert("✅ Clinical Database Populated! Check your Firebase Console.");
 
   } catch (error) {
     console.error("Error seeding database:", error);

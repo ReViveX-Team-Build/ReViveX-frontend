@@ -3,7 +3,9 @@
 import React, { useRef, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Play, RotateCcw, Zap, Hand, Wifi, WifiOff } from "lucide-react";
-
+import { saveGameSession } from "../../app/lib/db/sessions";
+import { calculateCognitiveAccuracy, calculateEnduranceDrop, getPeakGripForce } from "../../util/game-core/MetricsCalculator";
+import { Timestamp } from "firebase/firestore";
 import { Player }               from "../../util/game-core/SynapsePlayer";
 import { SynapseBackground }    from "../../util/game-core/SynapseBackground";
 import { SeaGrass }             from "../../util/game-core/SynapseSeaGrass";
@@ -27,8 +29,16 @@ declare global { interface Navigator { serial?: Serial; } }
 // ── CONSTANTS ─────────────────────────────────────────────────────────────────
 const IDLE_THRESHOLD    = 0.5;
 const DANGER_THRESHOLD  = 2.0;
-type CountdownValue = number | "GO!" | null;
-interface ClinicalMetrics { accuracy: { correct: number; total: number }; missed: number; }
+
+interface ClinicalMetrics { 
+    accuracy: { correct: number; total: number }; 
+    missed: number; 
+    jumpPressures: number[]; 
+    currentSqueezePeak: number; 
+    isSqueezing: boolean;
+}
+
+type CountdownValue = number | 'GO!' | null;
 
 // ── GLOBAL CSS ────────────────────────────────────────────────────────────────
 const GAME_CSS = `
@@ -128,7 +138,13 @@ const GameCanvas: React.FC = () => {
     const [feedback,  setFeedback]  = useState<{text:string; color:string}|null>(null);
     const [pressDisp, setPressDisp] = useState(0);
 
-    const metricsRef  = useRef<ClinicalMetrics>({accuracy:{correct:0,total:0}, missed:0});
+    const metricsRef = useRef<ClinicalMetrics>({
+        accuracy: { correct: 0, total: 0 }, 
+        missed: 0,
+        jumpPressures: [],
+        currentSqueezePeak: 0,
+        isSqueezing: false
+    });
     const startRef    = useRef(0);
     const lastRef     = useRef(0);
     const cdTimerRef  = useRef<NodeJS.Timeout|null>(null);
@@ -178,7 +194,25 @@ const GameCanvas: React.FC = () => {
     };
 
     const swimUp = (): boolean => {
-        if (isConnRef.current) { const p = pressRef.current; return p > IDLE_THRESHOLD && p < DANGER_THRESHOLD; }
+        if (isConnRef.current) { 
+            const p = pressRef.current; 
+            const isSwimming = p > IDLE_THRESHOLD && p < DANGER_THRESHOLD;
+            
+            // TRACKING: Record peak pressure for endurance calculation
+            if (isSwimming) {
+                metricsRef.current.isSqueezing = true;
+                if (p > metricsRef.current.currentSqueezePeak) {
+                    metricsRef.current.currentSqueezePeak = p;
+                }
+            } else if (metricsRef.current.isSqueezing) {
+                // Squeeze released, save the peak and reset!
+                metricsRef.current.jumpPressures.push(metricsRef.current.currentSqueezePeak);
+                metricsRef.current.currentSqueezePeak = 0;
+                metricsRef.current.isSqueezing = false;
+            }
+
+            return isSwimming; 
+        }
         return inputRef.current;
     };
 
@@ -227,7 +261,7 @@ const GameCanvas: React.FC = () => {
         return () => { window.removeEventListener('keydown', kd); window.removeEventListener('keyup', ku); };
     }, []);
 
-    // ── Start ─────────────────────────────────────────────────────────────────
+    // ── Start ───────────────────────────────────────────────
     const startSession = () => {
         const c = canvasRef.current; if (!c) return;
         if (playerRef.current) {
@@ -235,7 +269,16 @@ const GameCanvas: React.FC = () => {
             playerRef.current.velocity = 0; playerRef.current.status = 'swimming';
         }
         particlesRef.current=[]; pearlsRef.current=[];
-        metricsRef.current={accuracy:{correct:0,total:0},missed:0};
+        
+     
+        metricsRef.current = {
+            accuracy: { correct: 0, total: 0 },
+            missed: 0,
+            jumpPressures: [],
+            currentSqueezePeak: 0,
+            isSqueezing: false
+        };
+        
         setScore(0); setStreak(0); setFailReason(null);
         setGs('PLAYING'); setCd(3);
         let count = 3;
@@ -368,6 +411,38 @@ const GameCanvas: React.FC = () => {
     const cancelExit = () => {
         setShowExit(false);
         if (gsRef.current==='SOFT_FAIL' && !failReason) setGs('PLAYING');
+    };
+
+    const handleSaveAndExit = async () => {
+        try {
+            const m = metricsRef.current;
+            const durationSeconds = Math.floor((Date.now() - startRef.current) / 1000);
+            
+            // Use our new calculator!
+            const accuracy = calculateCognitiveAccuracy(m.accuracy.correct, m.accuracy.total);
+            const peakForce = getPeakGripForce(m.jumpPressures);
+            const enduranceDrop = calculateEnduranceDrop(m.jumpPressures);
+
+            await saveGameSession({
+                userId: "pat_mock_123",      // TODO: Get actual logged-in user
+                protocolId: "prot_mock_456", // TODO: Get active protocol
+                gameId: "synapse_racer",
+                timestamp: Timestamp.now(),
+                durationSeconds: durationSeconds,
+                targetHand: "right",
+                metrics: {
+                    cognitiveAccuracyPercent: accuracy,
+                    peakGripForce: peakForce,
+                    muscleEnduranceDropPercent: enduranceDrop,
+                }
+            });
+
+            console.log("Session saved successfully!");
+            router.push('/patients/home');
+        } catch (error) {
+            console.error("Failed to save:", error);
+            router.push('/patients/home');
+        }
     };
 
     const pInfo  = pressureColor(pressDisp);
@@ -532,7 +607,7 @@ const GameCanvas: React.FC = () => {
                         <p style={{color:'rgba(255,255,255,0.36)',fontSize:12.5,marginBottom:26}}>Progress this session will be saved.</p>
                         <div style={{display:'flex',gap:12,justifyContent:'center'}}>
                             <button onClick={cancelExit} style={{padding:'11px 30px',background:'transparent',border:'1px solid rgba(255,255,255,0.18)',color:'#fff',borderRadius:999,fontSize:13.5,fontWeight:700,cursor:'pointer'}}>Resume</button>
-                            <button onClick={()=>router.push('/patients/home')} style={{padding:'11px 30px',background:'#EF4444',border:'none',color:'#fff',borderRadius:999,fontSize:13.5,fontWeight:700,cursor:'pointer',boxShadow:'0 0 20px rgba(239,68,68,0.40)'}}>Exit</button>
+                            <button onClick={handleSaveAndExit} style={{padding:'11px 30px',background:'#EF4444',border:'none',color:'#fff',borderRadius:999,fontSize:13.5,fontWeight:700,cursor:'pointer',boxShadow:'0 0 20px rgba(239,68,68,0.40)'}}>Save & Exit</button>
                         </div>
                     </div>
                 </div>

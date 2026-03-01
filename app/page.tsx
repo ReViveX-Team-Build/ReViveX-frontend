@@ -597,7 +597,6 @@ function FloatingParticles({ count = 35 }: { count?: number }) {
     </div>
   );
 }
-
 function NeuralNetwork({ mouse }: { mouse: { x: number; y: number } }) {
   const canvasRef   = useRef<HTMLCanvasElement>(null);
   const parMouseRef = useRef(mouse);
@@ -611,237 +610,351 @@ function NeuralNetwork({ mouse }: { mouse: { x: number; y: number } }) {
     const ctx = canvas.getContext("2d")!;
     let raf = 0;
 
-    const normV = (v: [number,number,number]): [number,number,number] => {
-      const l = Math.sqrt(v[0]*v[0]+v[1]*v[1]+v[2]*v[2]);
-      return [v[0]/l,v[1]/l,v[2]/l];
-    };
-    const buildIco = (subs: number) => {
-      const phi = (1+Math.sqrt(5))/2;
-      let verts: [number,number,number][] = [
-        [-1,phi,0],[1,phi,0],[-1,-phi,0],[1,-phi,0],
-        [0,-1,phi],[0,1,phi],[0,-1,-phi],[0,1,-phi],
-        [phi,0,-1],[phi,0,1],[-phi,0,-1],[-phi,0,1],
-      ].map(v=>normV(v as [number,number,number]));
-      let faces: [number,number,number][] = [
-        [0,11,5],[0,5,1],[0,1,7],[0,7,10],[0,10,11],
-        [1,5,9],[5,11,4],[11,10,2],[10,7,6],[7,1,8],
-        [3,9,4],[3,4,2],[3,2,6],[3,6,8],[3,8,9],
-        [4,9,5],[2,4,11],[6,2,10],[8,6,7],[9,8,1],
-      ];
-      for (let pass=0; pass<subs; pass++) {
-        const cache = new Map<string,number>();
-        const mid = (a:number,b:number)=>{
-          const k=a<b?`${a}_${b}`:`${b}_${a}`;
-          if(cache.has(k)) return cache.get(k)!;
-          const va=verts[a],vb=verts[b],idx=verts.length;
-          verts.push(normV([(va[0]+vb[0])/2,(va[1]+vb[1])/2,(va[2]+vb[2])/2]));
-          cache.set(k,idx); return idx;
-        };
-        const nf:[number,number,number][]=[];
-        faces.forEach(([a,b,c])=>{
-          const ab=mid(a,b),bc=mid(b,c),ca=mid(c,a);
-          nf.push([a,ab,ca],[b,bc,ab],[c,ca,bc],[ab,bc,ca]);
-        });
-        faces=nf;
+    // ─────────────────────────────────────────────────────────────────
+    // BRAIN SILHOUETTE — 32-point lateral view polygon
+    // Anatomical regions: frontal lobe, crown, parietal, occipital,
+    // brainstem taper, temporal lobe, Sylvian fissure notch
+    // Raw [0,1] → centered by subtracting bbox-center (0.495, 0.490)
+    // ─────────────────────────────────────────────────────────────────
+    const rawOutline: [number,number][] = [
+      // Frontal inferior base → ascent
+      [0.15,0.44],[0.09,0.35],[0.07,0.24],[0.10,0.13],[0.16,0.06],
+      // Crown — vertex slightly left of center
+      [0.24,0.01],[0.36,0.00],[0.50,0.01],[0.63,0.05],
+      // Parietal → Occipital dome (right hemisphere)
+      [0.74,0.12],[0.84,0.22],[0.90,0.34],[0.92,0.46],[0.88,0.57],
+      // Brainstem junction then NARROW TAPER to single point
+      [0.82,0.63],[0.76,0.69],[0.71,0.76],[0.67,0.82],
+      [0.63,0.88],[0.59,0.94],[0.56,0.98],  // ← brainstem tip
+      // Back up left side of brainstem
+      [0.51,0.96],[0.47,0.88],[0.43,0.80],[0.39,0.72],
+      // Temporal lobe posterior → pole (FAR LEFT)
+      [0.34,0.67],[0.26,0.65],[0.17,0.63],[0.09,0.60],
+      // Sylvian fissure (notch between temporal and frontal)
+      [0.07,0.55],[0.09,0.50],[0.15,0.47],
+    ];
+    const BX = 0.495, BY = 0.490; // bbox center
+    const POLY: [number,number][] = rawOutline.map(([x,y]) => [x-BX, y-BY]);
+
+    // Ray-cast point-in-polygon
+    const inBrain = (nx: number, ny: number): boolean => {
+      let inside = false;
+      for (let i = 0, j = POLY.length - 1; i < POLY.length; j = i++) {
+        const [xi,yi] = POLY[i], [xj,yj] = POLY[j];
+        if (((yi > ny) !== (yj > ny)) && nx < ((xj-xi)*(ny-yi))/(yj-yi)+xi)
+          inside = !inside;
       }
-      const eSet=new Set<string>();
-      const edges:[number,number][]=[];
-      faces.forEach(([a,b,c])=>{
-        ([[a,b],[b,c],[c,a]] as [number,number][]).forEach(([x,y])=>{
-          const k=x<y?`${x}_${y}`:`${y}_${x}`;
-          if(!eSet.has(k)){eSet.add(k);edges.push([x,y]);}
-        });
-      });
-      return {verts,faces,edges};
+      return inside;
     };
 
-    // Only the inner sphere — 2 subdivisions = 162 verts, ~480 edges
-    const sphere = buildIco(2);
-    const N = sphere.verts.length;
+    // ─────────────────────────────────────────────────────────────────
+    // SEED NODES — uniform 2D distribution inside brain + z-depth
+    // ─────────────────────────────────────────────────────────────────
+    type BNode = {
+      ox:number; oy:number; oz:number;
+      vx:number; vy:number; vz:number;
+      r:number; crown:boolean;
+    };
+    const nodes: BNode[] = [];
 
+    // 155 interior nodes via rejection sampling
+    let attempts = 0;
+    while (nodes.length < 155 && attempts < 8000) {
+      attempts++;
+      const nx = (Math.random()-0.5)*0.92;
+      const ny = (Math.random()-0.5)*1.02;
+      if (inBrain(nx, ny)) {
+        nodes.push({
+          ox: nx, oy: ny,
+          oz: (Math.random()-0.5)*0.22, // z gives 3D depth
+          vx: (Math.random()-0.5)*0.00028,
+          vy: (Math.random()-0.5)*0.00028,
+          vz: (Math.random()-0.5)*0.00015,
+          r:  0.70 + Math.random()*1.55,
+          crown: false,
+        });
+      }
+    }
+
+    // 18 crown-scatter nodes — float just ABOVE the brain outline
+    // These recreate the "dissolving" top edge from the reference image
+    for (let i = 0; i < 18; i++) {
+      const angle = Math.PI * (0.18 + Math.random()*0.64); // top arc
+      const spread = 0.390 + Math.random()*0.055;
+      nodes.push({
+        ox: Math.cos(angle)*spread*0.88 + (Math.random()-0.5)*0.04,
+        oy: -0.290 - Math.abs(Math.sin(angle))*0.055 + (Math.random()-0.5)*0.02,
+        oz: (Math.random()-0.5)*0.12,
+        vx: (Math.random()-0.5)*0.00020,
+        vy: (Math.random()-0.5)*0.00020,
+        vz: (Math.random()-0.5)*0.00010,
+        r:  0.35 + Math.random()*0.90,
+        crown: true,
+      });
+    }
+
+    const N = nodes.length;
+
+    // ─────────────────────────────────────────────────────────────────
+    // EDGES — max 4 connections per node (prevents clutter)
+    // Sort candidates by distance, pick shortest first
+    // ─────────────────────────────────────────────────────────────────
+    const CONN = 0.200, CONN2 = CONN*CONN;
+    const cands: [number,number,number][] = []; // [i, j, dist²]
+    for (let i = 0; i < N; i++) {
+      for (let j = i+1; j < N; j++) {
+        const dx=nodes[i].ox-nodes[j].ox;
+        const dy=nodes[i].oy-nodes[j].oy;
+        const dz=nodes[i].oz-nodes[j].oz;
+        const d2=dx*dx+dy*dy+dz*dz;
+        if (d2 < CONN2) cands.push([i, j, d2]);
+      }
+    }
+    cands.sort((a,b) => a[2]-b[2]); // shortest first
+
+    const deg = new Uint8Array(N);
+    const MAX_DEG = 4; // hard cap per node — keeps mesh clean
+    const edges: [number,number][] = [];
+    const nbr: number[][] = Array.from({length:N}, ()=>[]);
+    for (const [i,j] of cands) {
+      if (deg[i] < MAX_DEG && deg[j] < MAX_DEG) {
+        edges.push([i,j]);
+        nbr[i].push(j); nbr[j].push(i);
+        deg[i]++; deg[j]++;
+      }
+    }
+
+    // Sparse triangles — only where 3 nodes are mutually connected
+    const tris: [number,number,number][] = [];
+    const nbrSet = nbr.map(a => new Set(a));
+    for (let i = 0; i < N; i++) {
+      for (const j of nbr[i]) {
+        if (j <= i) continue;
+        for (const k of nbr[j]) {
+          if (k <= j) continue;
+          if (nbrSet[i].has(k) && Math.random() < 0.30)
+            tris.push([i,j,k]);
+        }
+      }
+    }
+
+    // ─────────────────────────────────────────────────────────────────
+    // TYPED ARRAYS — zero heap allocation in draw loop
+    // ─────────────────────────────────────────────────────────────────
     const sx  = new Float32Array(N);
     const sy  = new Float32Array(N);
-    const sz  = new Float32Array(N);
-    const en  = new Float32Array(N);
+    const sz_ = new Float32Array(N);
+    const lx  = new Float32Array(N); // live drifting positions
+    const ly  = new Float32Array(N);
+    const lz  = new Float32Array(N);
+    const en  = new Float32Array(N); // energy — ZERO until cursor injects
     const enN = new Float32Array(N);
+    for (let i = 0; i < N; i++) {
+      lx[i]=nodes[i].ox; ly[i]=nodes[i].oy; lz[i]=nodes[i].oz;
+    }
 
-    const adjT: number[][] = Array.from({length:N},()=>[]);
-    sphere.edges.forEach(([a,b])=>{ adjT[a].push(b); adjT[b].push(a); });
-    const adj = adjT.map(a=>new Uint8Array(a));
+    const adj  = nbr.map(a => new Uint8Array(a));
+    const vord = Array.from({length:N}, (_,i)=>i); // depth-sort buffer
 
-    const voAll = Array.from({length:N},(_,i)=>i);
-
-    type Pulse = { ei:number; t:number; spd:number; };
+    type Pulse = {ei:number; t:number; spd:number;};
     const pulses: Pulse[] = [];
 
-    const resize=()=>{
-      const dpr=window.devicePixelRatio||1;
-      canvas.width =canvas.offsetWidth *dpr;
-      canvas.height=canvas.offsetHeight*dpr;
+    const resize = () => {
+      const dpr = window.devicePixelRatio||1;
+      canvas.width  = canvas.offsetWidth *dpr;
+      canvas.height = canvas.offsetHeight*dpr;
     };
     resize();
-    window.addEventListener("resize",resize);
+    window.addEventListener("resize", resize);
 
-    const onMove=(e:MouseEvent)=>{
-      const r=canvas.getBoundingClientRect();
-      const lcx=e.clientX-r.left, lcy=e.clientY-r.top;
-      cursorRef.current={
-        cx:lcx, cy:lcy,
+    // ─────────────────────────────────────────────────────────────────
+    // MOUSE — window-level tracking (canvas is pointerEvents:none)
+    // ─────────────────────────────────────────────────────────────────
+    const onMove = (e: MouseEvent) => {
+      const r = canvas.getBoundingClientRect();
+      const lcx = e.clientX - r.left;
+      const lcy = e.clientY - r.top;
+      cursorRef.current = {
+        cx: lcx, cy: lcy,
         over: lcx>=0 && lcx<=r.width && lcy>=0 && lcy<=r.height,
       };
     };
-    window.addEventListener("mousemove",onMove);
+    window.addEventListener("mousemove", onMove);
 
-    let frame=0;
+    let frame = 0;
 
-    const draw=()=>{
+    // ─────────────────────────────────────────────────────────────────
+    const draw = () => {
       frame++;
-      const par=parMouseRef.current;
-      const t=frame*0.016;
+      const par = parMouseRef.current;
 
-      const ry=-t*0.18 + par.x*0.50;
-      const rx= t*0.055 + par.y*0.22;
+      // Subtle rotation — keeps brain silhouette readable
+      // ±14° max yaw from mouse, tiny auto-breathe
+      const ry = par.x*0.24 + Math.sin(frame*0.0006)*0.028;
+      const rx = -0.12 + par.y*-0.08; // fixed forward tilt + minor mouse pitch
 
-      const dpr=window.devicePixelRatio||1;
-      const W=canvas.width/dpr, H=canvas.height/dpr;
+      const dpr = window.devicePixelRatio||1;
+      const W = canvas.width/dpr, H = canvas.height/dpr;
       ctx.setTransform(dpr,0,0,dpr,0,0);
       ctx.clearRect(0,0,W,H);
 
-      const cx=W*0.50, cy=H*0.50;
-      const R =Math.min(W,H)*0.44;
+      const ccx = W*0.50, ccy = H*0.50;
+      const sc  = Math.min(W,H)*0.44;
 
-      const cxR=Math.cos(rx),sxR=Math.sin(rx),cyR=Math.cos(ry),syR=Math.sin(ry);
+      const cosX=Math.cos(rx), sinX=Math.sin(rx);
+      const cosY=Math.cos(ry), sinY=Math.sin(ry);
 
-      for(let i=0;i<N;i++){
-        const[vx,vy,vz]=sphere.verts[i];
-        const x1= vx*cyR+vz*syR, z1=-vx*syR+vz*cyR;
-        const y2= vy*cxR-z1*sxR, z2= vy*sxR+z1*cxR;
-        sx[i]=cx+x1*R; sy[i]=cy+y2*R; sz[i]=z2;
+      // Project + micro-drift
+      for (let i = 0; i < N; i++) {
+        const n = nodes[i];
+        lx[i]+=n.vx; ly[i]+=n.vy; lz[i]+=n.vz;
+        if (Math.abs(lx[i]-n.ox)>0.09) n.vx*=-1;
+        if (Math.abs(ly[i]-n.oy)>0.09) n.vy*=-1;
+        if (Math.abs(lz[i]-n.oz)>0.13) n.vz*=-1;
+        const vx=lx[i], vy=ly[i], vz=lz[i];
+        const x1= vx*cosY+vz*sinY, z1=-vx*sinY+vz*cosY;
+        const y2= vy*cosX-z1*sinX, z2= vy*sinX+z1*cosX;
+        sx[i]=ccx+x1*sc; sy[i]=ccy+y2*sc; sz_[i]=z2;
       }
 
-      // Cursor is the ONLY energy source
-      const{cx:mx,cy:my,over}=cursorRef.current;
-      const INJ_R =R*0.35;
-      const INJ_R2=INJ_R*INJ_R;
-      if(over){
-        for(let i=0;i<N;i++){
+      // ── CURSOR = ONLY ENERGY SOURCE ────────────────────────────────
+      const {cx:mx, cy:my, over} = cursorRef.current;
+      const INJ_R  = sc*0.30;
+      const INJ_R2 = INJ_R*INJ_R;
+      if (over) {
+        for (let i = 0; i < N; i++) {
           const dx=sx[i]-mx, dy=sy[i]-my;
           const d2=dx*dx+dy*dy;
-          if(d2<INJ_R2){
-            const str=1-Math.sqrt(d2)/INJ_R;
-            const nv=en[i]+str*0.34;
-            en[i]=nv>1?1:nv;
+          if (d2 < INJ_R2) {
+            const str = 1 - Math.sqrt(d2)/INJ_R;
+            const nv = en[i]+str*0.32;
+            en[i] = nv>1?1:nv;
           }
         }
       }
 
-      // Ripple along edges
-      for(let i=0;i<N;i++) enN[i]=en[i];
-      for(let i=0;i<N;i++){
-        if(en[i]>0.08){
-          const nb=adj[i];
-          for(let k=0;k<nb.length;k++){
-            const j=nb[k];
-            const nv=enN[j]+en[i]*0.050;
-            if(nv>1) enN[j]=1; else enN[j]=nv;
+      // Ripple through brain network
+      for (let i = 0; i < N; i++) enN[i]=en[i];
+      for (let i = 0; i < N; i++) {
+        if (en[i] > 0.07) {
+          const nb = adj[i];
+          for (let k = 0; k < nb.length; k++) {
+            const j = nb[k];
+            const nv = enN[j]+en[i]*0.050;
+            if (nv>1) enN[j]=1; else enN[j]=nv;
           }
         }
       }
-      // 0.750 decay when not hovering → dark in ~200ms
-      const decay=over?0.922:0.750;
-      for(let i=0;i<N;i++) en[i]=enN[i]*decay;
+      // 0.740 decay when not hovering → fully dark in ~140ms
+      const decay = over ? 0.920 : 0.740;
+      for (let i = 0; i < N; i++) en[i]=enN[i]*decay;
 
-      // Spawn pulses on hot edges
-      if(over && pulses.length<60 && Math.random()<0.40){
-        const ei=Math.floor(Math.random()*sphere.edges.length);
-        const[a,b]=sphere.edges[ei];
-        if((en[a]+en[b])*0.5>0.45)
-          pulses.push({ei, t:0, spd:0.018+Math.random()*0.024});
+      // Spawn synapse pulses on hot edges
+      if (over && pulses.length < 55 && Math.random()<0.35) {
+        const ei = Math.floor(Math.random()*edges.length);
+        const [a,b] = edges[ei];
+        if ((en[a]+en[b])*0.5 > 0.46)
+          pulses.push({ei, t:0, spd:0.018+Math.random()*0.022});
       }
 
-      // Edges
-      for(let k=0;k<sphere.edges.length;k++){
-        const[a,b]=sphere.edges[k];
-        if(sz[a]<-0.68&&sz[b]<-0.68) continue;
-        const e  =(en[a]+en[b])*0.5;
-        const dep=((sz[a]+sz[b])*0.5+1)*0.5;
+      // Depth sort — back to front
+      vord.sort((a,b) => sz_[a]-sz_[b]);
+
+      // ── 1. TRIANGLE FILLS — only render when lit ──────────────────
+      for (let ti = 0; ti < tris.length; ti++) {
+        const [a,b,c] = tris[ti];
+        const e = (en[a]+en[b]+en[c])/3;
+        if (e < 0.12) continue; // invisible when unlit
+        const dep = ((sz_[a]+sz_[b]+sz_[c])/3+1)*0.5;
+        ctx.beginPath();
+        ctx.moveTo(sx[a],sy[a]); ctx.lineTo(sx[b],sy[b]); ctx.lineTo(sx[c],sy[c]);
+        ctx.closePath();
+        ctx.fillStyle = `rgba(20,184,166,${e*0.062+dep*0.006})`;
+        ctx.fill();
+      }
+
+      // ── 2. EDGES ─────────────────────────────────────────────────
+      for (let k = 0; k < edges.length; k++) {
+        const [a,b] = edges[k];
+        const e   = (en[a]+en[b])*0.5;
+        const dep = ((sz_[a]+sz_[b])*0.5+1)*0.5;
         ctx.beginPath();
         ctx.moveTo(sx[a],sy[a]); ctx.lineTo(sx[b],sy[b]);
-        if(e<0.04){
-          ctx.strokeStyle=`rgba(110,150,148,${0.020+dep*0.014})`;
-          ctx.lineWidth  =0.16+dep*0.08;
+        if (e < 0.04) {
+          // DARK: near-invisible ghost — just enough to hint the shape
+          ctx.strokeStyle = `rgba(95,132,130,${0.016+dep*0.012})`;
+          ctx.lineWidth   = 0.14+dep*0.06;
         } else {
-          ctx.strokeStyle=`rgba(45,212,191,${e*0.95+dep*0.040})`;
-          ctx.lineWidth  =0.18+e*2.20+dep*0.24;
+          // LIT: vivid teal
+          ctx.strokeStyle = `rgba(45,212,191,${e*0.95+dep*0.036})`;
+          ctx.lineWidth   = 0.16+e*2.10+dep*0.22;
         }
         ctx.stroke();
       }
 
-      // Synapse pulses
-      for(let pi=pulses.length-1;pi>=0;pi--){
-        const p=pulses[pi];
-        p.t+=p.spd;
-        if(p.t>1){pulses.splice(pi,1);continue;}
-        const[a,b]=sphere.edges[p.ei];
-        if(sz[a]<-0.62&&sz[b]<-0.62) continue;
-        const ppx=sx[a]+(sx[b]-sx[a])*p.t;
-        const ppy=sy[a]+(sy[b]-sy[a])*p.t;
-        const fade=Math.sin(p.t*Math.PI);
-        ctx.shadowBlur =5+fade*22;
-        ctx.shadowColor=`rgba(45,212,191,${fade*0.92})`;
+      // ── 3. SYNAPSE PULSES ────────────────────────────────────────
+      for (let pi = pulses.length-1; pi >= 0; pi--) {
+        const p = pulses[pi];
+        p.t += p.spd;
+        if (p.t > 1) { pulses.splice(pi,1); continue; }
+        const [a,b] = edges[p.ei];
+        const ppx = sx[a]+(sx[b]-sx[a])*p.t;
+        const ppy = sy[a]+(sy[b]-sy[a])*p.t;
+        const fade = Math.sin(p.t*Math.PI); // bell peak at midpoint
+        ctx.shadowBlur  = 4+fade*20;
+        ctx.shadowColor = `rgba(45,212,191,${fade*0.90})`;
         ctx.beginPath();
-        ctx.arc(ppx,ppy,0.80+fade*2.0,0,Math.PI*2);
-        ctx.fillStyle=`rgba(255,255,255,${0.50+fade*0.50})`;
+        ctx.arc(ppx, ppy, 0.70+fade*1.80, 0, Math.PI*2);
+        ctx.fillStyle = `rgba(255,255,255,${0.45+fade*0.55})`;
         ctx.fill();
       }
-      ctx.shadowBlur=0;
+      ctx.shadowBlur = 0;
 
-      // Nodes depth-sorted
-      voAll.sort((a,b)=>sz[a]-sz[b]);
-      for(let ii=0;ii<N;ii++){
-        const i=voAll[ii];
-        if(sz[i]<-0.68) continue;
-        const e  =en[i];
-        const dep=(sz[i]+1)*0.5;
-        const r  =0.40+dep*0.78+e*2.85;
-        if(e>0.12){
-          ctx.shadowBlur =3+e*26;
-          ctx.shadowColor=`rgba(45,212,191,${e*0.92})`;
+      // ── 4. NODES — depth-sorted, dark by default ─────────────────
+      for (let ii = 0; ii < N; ii++) {
+        const i   = vord[ii];
+        const e   = en[i];
+        const dep = (sz_[i]+1)*0.5;
+        const r   = nodes[i].r*(0.40+dep*0.72) + e*2.70;
+
+        if (e > 0.10) {
+          ctx.shadowBlur  = 3+e*24;
+          ctx.shadowColor = `rgba(45,212,191,${e*0.90})`;
         }
         ctx.beginPath();
-        ctx.arc(sx[i],sy[i],r,0,Math.PI*2);
-        ctx.fillStyle=e<0.04
-          ?`rgba(120,158,156,${0.055+dep*0.090})`
-          :`rgba(255,255,255,${0.05+dep*0.05+e*0.90})`;
+        ctx.arc(sx[i], sy[i], r, 0, Math.PI*2);
+        ctx.fillStyle = e < 0.04
+          ? `rgba(95,130,128,${0.042+dep*0.076})`       // ghost: barely there
+          : `rgba(255,255,255,${0.04+dep*0.04+e*0.92})`; // lit: clean white
         ctx.fill();
-        if(e>0.12) ctx.shadowBlur=0;
+        if (e > 0.10) ctx.shadowBlur = 0;
       }
-      ctx.shadowBlur=0;
+      ctx.shadowBlur = 0;
 
-      raf=requestAnimationFrame(draw);
+      raf = requestAnimationFrame(draw);
     };
 
-    raf=requestAnimationFrame(draw);
-    return()=>{
+    raf = requestAnimationFrame(draw);
+    return () => {
       cancelAnimationFrame(raf);
-      window.removeEventListener("resize",  resize);
-      window.removeEventListener("mousemove",onMove);
+      window.removeEventListener("resize",    resize);
+      window.removeEventListener("mousemove", onMove);
     };
-  },[]);
+  }, []);
 
-  return(
+  return (
     <canvas
       ref={canvasRef}
       style={{
-        position:      "absolute",
-        top:           "50%",
-        right:         "-2%",
-        transform:     "translateY(-46%)",
-        width:         "clamp(480px,52vw,820px)",
-        height:        "clamp(480px,52vw,820px)",
-        display:       "block",
-        pointerEvents: "none",
-        opacity:       0.90,
+        position:       "absolute",
+        top:            "50%",
+        right:          "-2%",
+        transform:      "translateY(-46%)",
+        width:          "clamp(480px,52vw,820px)",
+        height:         "clamp(480px,52vw,820px)",
+        display:        "block",
+        pointerEvents:  "none",
+        opacity:        0.92,
         WebkitMaskImage:"linear-gradient(to right,transparent 0%,black 18%)",
         maskImage:      "linear-gradient(to right,transparent 0%,black 18%)",
       }}
