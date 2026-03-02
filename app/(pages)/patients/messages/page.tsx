@@ -717,3 +717,213 @@ export default function PatientMessagesPage() {
         </div>
 
       </main>
+
+      {/* ══════════════════════════════════════════════════════
+          FLOATING CHAT BUTTON (FAB)
+      ══════════════════════════════════════════════════════ */}
+      <button className="pm-fab" onClick={() => setChatOpen(true)}>
+        <MessageCircle size={24} />
+        {/* Unread chat indicator — show if last message is from doctor */}
+        {chatMsgs[chatMsgs.length - 1]?.sender === 'doctor' && !chatOpen && (
+          <div style={{
+            position: 'absolute', top: -6, right: -6,
+            width: 18, height: 18, borderRadius: '50%',
+            background: '#ef4444', border: '2.5px solid #F0F4F8',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            fontSize: 9, fontWeight: 800, color: '#fff',
+          }}>!</div>
+        )}
+      </button>
+
+      {/* ══════════════════════════════════════════════════════
+          CHAT MODAL OVERLAY
+      ══════════════════════════════════════════════════════ */}
+      {chatOpen && (
+        <div className="pm-chat-overlay" onClick={e => { if (e.target === e.currentTarget) setChatOpen(false); }}>
+          <div className="pm-chat-panel">
+
+            {/* Panel header */}
+            <div style={{
+              padding: '16px 20px',
+              borderBottom: '1px solid rgba(226,232,240,0.8)',
+              background: 'linear-gradient(135deg,#f8fdfc,#f0fdfb)',
+              display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+              flexShrink: 0,
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                {/* Avatar */}
+                <div style={{ position: 'relative' }}>
+                  <div style={{
+                    width: 42, height: 42, borderRadius: 13,
+                    background: 'linear-gradient(135deg,#2DD4BF,#0891b2)',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    fontSize: 13, fontWeight: 800, color: '#0B1E33',
+                    boxShadow: '0 0 0 2px rgba(45,212,191,0.22)',
+                    animation: 'pmGlow 3s ease-in-out infinite',
+                  }}>{DOCTOR.initials}</div>
+                  <div style={{
+                    position: 'absolute', bottom: -1, right: -1,
+                    width: 10, height: 10, borderRadius: '50%',
+                    background: '#22c55e', border: '2px solid #fff',
+                  }} />
+                </div>
+                <div>
+                  <div style={{ fontSize: 14, fontWeight: 800, color: '#0B1E33' }}>{DOCTOR.name}</div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 2 }}>
+                    <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#22c55e',
+                      boxShadow: '0 0 5px #22c55e80', animation: 'pmDot 2s ease-in-out infinite' }} />
+                    <span className="mono" style={{ fontSize: 9.5, color: '#64748b',
+                      textTransform: 'uppercase', letterSpacing: '0.12em', fontWeight: 600 }}>
+                      Direct Channel
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Close */}
+              <button
+                onClick={() => setChatOpen(false)}
+                style={{
+                  width: 34, height: 34, borderRadius: 11,
+                  background: 'rgba(11,30,51,0.06)', border: '1px solid rgba(226,232,240,0.9)',
+                  cursor: 'pointer', display: 'flex', alignItems: 'center',
+                  justifyContent: 'center', color: '#64748b',
+                  transition: 'all 0.2s ease', flexShrink: 0,
+                }}
+              ><X size={15} /></button>
+            </div>
+
+            {/* Messages area */}
+            <div className="pm-chat-msgs" style={{
+              flex: 1, overflowY: 'auto', padding: '20px 18px',
+              display: 'flex', flexDirection: 'column', gap: 12,
+            }}>
+              {/* Date stamp */}
+              <div style={{ textAlign: 'center', marginBottom: 4 }}>
+                <span className="mono" style={{
+                  fontSize: 9, color: '#94a3b8', textTransform: 'uppercase',
+                  letterSpacing: '0.14em', background: 'rgba(240,244,248,0.9)',
+                  padding: '3px 12px', borderRadius: 99,
+                }}>Today</span>
+              </div>
+
+              {chatMsgs.map((msg, i) => {
+                const isDoc = msg.sender === 'doctor';
+                return (
+                  <div key={msg.id}
+                    style={{
+                      display: 'flex', justifyContent: isDoc ? 'flex-start' : 'flex-end',
+                      gap: 8, alignItems: 'flex-end',
+                      animation: 'pmMsgIn 0.28s cubic-bezier(0.22,1,0.36,1) both',
+                      animationDelay: `${i * 0.04}s`,
+                    }}>
+
+                    {/* Doctor avatar */}
+                    {isDoc && (
+                      <div style={{
+                        width: 28, height: 28, borderRadius: 9,
+                        background: 'linear-gradient(135deg,#2DD4BF,#0891b2)',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        fontSize: 9, fontWeight: 800, color: '#0B1E33', flexShrink: 0,
+                      }}>{DOCTOR.initials}</div>
+                    )}
+
+                    {/* Bubble */}
+                    <div style={{
+                      maxWidth: '72%', padding: '10px 14px', borderRadius: isDoc ? '16px 16px 16px 4px' : '16px 16px 4px 16px',
+                      background: isDoc ? '#fff' : 'linear-gradient(135deg,#2DD4BF,#0891b2)',
+                      border: isDoc ? '1.5px solid rgba(226,232,240,0.9)' : 'none',
+                      color: isDoc ? '#0B1E33' : '#0B1E33',
+                      boxShadow: isDoc ? '0 2px 10px rgba(11,30,51,0.06)' : '0 4px 16px rgba(45,212,191,0.28)',
+                      position: 'relative', overflow: isDoc ? 'visible' : 'hidden',
+                    }}>
+                      {/* Shimmer on patient bubble */}
+                      {!isDoc && (
+                        <div style={{
+                          position: 'absolute', inset: 0,
+                          background: 'linear-gradient(90deg,transparent,rgba(255,255,255,0.18),transparent)',
+                          animation: 'pmShimmer 3.5s ease-in-out infinite',
+                        }} />
+                      )}
+                      <p style={{ fontSize: 13, lineHeight: 1.6, margin: 0, position: 'relative', zIndex: 1 }}>
+                        {msg.text}
+                      </p>
+                      <p className="mono" style={{
+                        fontSize: 9, marginTop: 5, position: 'relative', zIndex: 1,
+                        color: isDoc ? '#94a3b8' : 'rgba(11,30,51,0.48)',
+                        textAlign: 'right',
+                      }}>{msg.time}</p>
+                    </div>
+
+                    {/* Patient avatar */}
+                    {!isDoc && (
+                      <div style={{
+                        width: 28, height: 28, borderRadius: 9,
+                        background: 'rgba(11,30,51,0.08)',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        flexShrink: 0,
+                      }}>
+                        <User size={14} color="#64748b" />
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+              <div ref={chatEndRef} />
+            </div>
+
+            {/* Input bar */}
+            <div style={{
+              padding: '12px 16px',
+              borderTop: '1px solid rgba(226,232,240,0.8)',
+              background: '#fafbfd',
+              display: 'flex', alignItems: 'center', gap: 9,
+              flexShrink: 0,
+            }}>
+              <input
+                ref={chatInputRef}
+                className="pm-chat-input"
+                type="text"
+                value={chatInput}
+                onChange={e => setChatInput(e.target.value)}
+                onKeyDown={handleChatKey}
+                placeholder={`Message ${DOCTOR.name.split(' ')[0]}...`}
+              />
+              <button
+                onClick={sendChat}
+                style={{
+                  width: 42, height: 42, borderRadius: 12,
+                  background: chatInput.trim()
+                    ? 'linear-gradient(135deg,#2DD4BF,#0891b2)'
+                    : 'rgba(226,232,240,0.9)',
+                  border: 'none', cursor: chatInput.trim() ? 'pointer' : 'default',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  color: chatInput.trim() ? '#0B1E33' : '#94a3b8',
+                  flexShrink: 0,
+                  transition: 'all 0.2s ease',
+                  boxShadow: chatInput.trim() ? '0 4px 14px rgba(45,212,191,0.32)' : 'none',
+                }}
+              >
+                <Send size={16} />
+              </button>
+            </div>
+
+            {/* Disclaimer */}
+            <div style={{
+              padding: '8px 16px 12px',
+              background: '#fafbfd',
+              borderTop: '1px solid rgba(226,232,240,0.5)',
+              flexShrink: 0,
+            }}>
+              <p className="mono" style={{ fontSize: 8.5, color: '#94a3b8', textAlign: 'center', margin: 0,
+                textTransform: 'uppercase', letterSpacing: '0.10em' }}>
+                Direct channel · Replies during clinic hours · {DOCTOR.availability}
+              </p>
+            </div>
+
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
