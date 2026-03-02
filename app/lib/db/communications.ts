@@ -169,3 +169,58 @@ export async function markAllAsRead(patientId: string): Promise<void> {
     snap.docs.map(d => updateDoc(d.ref, { isRead: true }))
   );
 }
+
+// Generates some dummy data so the UI isn't empty when testing.
+// Run this once from your seedDatabase script.
+export async function seedCommunications(
+  patientId: string,
+  doctorId:  string
+): Promise<void> {
+  // Dynamic imports so we don't load these into the main bundle unless we are actively seeding
+  const { addDoc, collection: col, Timestamp: TS } = await import('firebase/firestore');
+  const { db: firestoreDb } = await import('../firebase');
+
+  const items: Omit<FullCommunication, 'id'>[] = [
+    {
+      senderId: doctorId, receiverId: patientId,
+      type: 'feedback', title: 'Excellent Progress This Week',
+      content: "John, I reviewed your session data from this week and I'm very impressed with your consistency. Your grip strength has improved significantly, and your adherence score is outstanding. Keep up the great work! Continue with the current protocol - Right hand, Medium difficulty.",
+      timestamp: Timestamp.fromDate(new Date('2025-11-15T09:00:00')),
+      isRead: false, isImportant: false,
+    },
+    {
+      senderId: doctorId, receiverId: patientId,
+      type: 'instruction', title: 'Protocol Adjustment',
+      content: "Based on your progress, I'm adjusting your therapy protocol starting next week. We'll increase the difficulty level to \"High\" for your right hand exercises. If you experience any discomfort, please let me know immediately.",
+      timestamp: Timestamp.fromDate(new Date('2025-11-14T10:30:00')),
+      isRead: false, isImportant: true,
+    },
+    {
+      senderId: doctorId, receiverId: patientId,
+      type: 'direct_message', title: 'Reminder: Hydration',
+      content: 'Remember to stay well-hydrated before and after your therapy sessions. Proper hydration helps with muscle recovery and overall performance during rehabilitation exercises.',
+      timestamp: Timestamp.fromDate(new Date('2025-11-12T08:00:00')),
+      isRead: true, isImportant: false,
+    },
+    {
+      senderId: doctorId, receiverId: patientId,
+      type: 'ai_insight', title: 'Memory Game Performance',
+      content: 'Your cognitive exercise performance is excellent with an 85% success rate. The dual-task therapy approach is working well for you.',
+      timestamp: Timestamp.fromDate(new Date('2025-11-10T11:00:00')),
+      isRead: true, isImportant: false,
+    },
+    {
+      senderId: doctorId, receiverId: patientId,
+      type: 'instruction', title: 'Next Appointment Scheduled',
+      content: "Your next in-person evaluation is scheduled for Nov 25, 2025 at 2:00 PM. Please complete all scheduled sessions before this appointment.",
+      timestamp: Timestamp.fromDate(new Date('2025-11-08T09:00:00')),
+      isRead: true, isImportant: true,
+    },
+  ];
+
+  await Promise.all(items.map(item =>
+    addDoc(col(firestoreDb, 'communications'), item)
+  ));
+  
+  console.log('✅ Communications seeded successfully.');
+}
