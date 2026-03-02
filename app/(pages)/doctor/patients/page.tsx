@@ -285,3 +285,205 @@ export default function DoctorPatientsPage() {
   const protoCount  = ALL_PATIENTS.filter(p => p.hasProtocol).length;
 
   if (!mounted) return null;
+
+  return (
+    <div className="mpp" style={{ minHeight: '100vh', background: '#F0F4F8' }}>
+      <style>{CSS}</style>
+
+      <div className="mpp-pad" style={{ maxWidth: 1300, margin: '0 auto', padding: '32px 28px' }}>
+
+        {/* ── Title ────────────────────────────────────────────────── */}
+        <div style={{ marginBottom: 24, animation: 'mppFadeUp 0.45s ease both' }}>
+          <h1 className="mpp-title" style={{ fontSize: 26, fontWeight: 800, color: '#0B1E33', margin: 0 }}>
+            My Patients
+          </h1>
+          <p style={{ fontSize: 14, color: '#64748b', marginTop: 5, fontWeight: 500 }}>
+            Manage, monitor, and assign therapy protocols to all your patients
+          </p>
+        </div>
+
+        {/* ── Stats strip ──────────────────────────────────────────── */}
+        <div className="mpp-stats" style={{ display: 'flex', gap: 12, marginBottom: 22 }}>
+          <StatCard label="Total Patients" value={ALL_PATIENTS.length} color="#2DD4BF" delay={0.05} icon={<User size={15} />} />
+          <StatCard label="High Adherence" value={highCount}          color="#22c55e"  delay={0.10} icon={<Shield size={15} />} />
+          <StatCard label="Need Attention" value={lowCount}           color="#ef4444"  delay={0.15} icon={<MessageCircle size={15} />} />
+          <StatCard label="Protocols Set"  value={`${protoCount}/${ALL_PATIENTS.length}`} color="#6366f1" delay={0.20} icon={<ClipboardList size={15} />} />
+        </div>
+
+        {/* ── Filters ──────────────────────────────────────────────── */}
+        <div className="mpp-filter-row" style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 18, animation: 'mppFadeUp 0.45s ease 0.08s both' }}>
+          <div style={{ position: 'relative', width: 270, flexShrink: 0 }}>
+            <Search size={15} color="#94a3b8" style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} />
+            <input
+              className="mpp-search"
+              placeholder="Search by name or ID..."
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+            />
+          </div>
+
+          <div style={{ flex: 1 }} />
+
+          <div className="mpp-selects" style={{ display: 'flex', gap: 10 }}>
+            <select className="mpp-select" value={adherenceFilter} onChange={e => setAdherenceFilter(e.target.value)}>
+              <option value="all">All Adherence</option>
+              <option value="high">High</option>
+              <option value="medium">Medium</option>
+              <option value="low">Low</option>
+            </select>
+            <select className="mpp-select" value={conditionFilter} onChange={e => setConditionFilter(e.target.value)}>
+              <option value="all">All Conditions</option>
+              <option value="stroke">Stroke</option>
+              <option value="tbi">TBI</option>
+              <option value="postsurgery">Post-Surgery</option>
+            </select>
+          </div>
+        </div>
+
+        {/* ── Table ────────────────────────────────────────────────── */}
+        <div style={{
+          background: '#fff', border: '2px solid #2DD4BF', borderRadius: 18,
+          overflow: 'hidden', boxShadow: '0 4px 28px rgba(45,212,191,0.10)',
+          animation: 'mppFadeUp 0.45s ease 0.14s both',
+        }}>
+          <div className="mpp-scroll" style={{ overflowX: 'auto' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 980 }}>
+
+              <thead>
+                <tr>
+                  <TH>Patient</TH>
+                  <TH>ID</TH>
+                  <TH>Condition</TH>
+                  <TH>Adherence</TH>
+                  <TH>Last Session</TH>
+                  <TH>Status</TH>
+                  <TH>Plan</TH>
+                  {/* ↓ NEW PROTOCOL COLUMN */}
+                  <TH accent>Protocol</TH>
+                  <TH>Message</TH>
+                  <TH>Profile</TH>
+                </tr>
+              </thead>
+
+              <tbody>
+                {filtered.map((p, i) => {
+                  const aColor = adherenceColor(p.adherence);
+                  return (
+                    <tr key={p.id} className="mpp-tr" style={{ animationDelay: `${0.14 + i * 0.035}s` }}>
+
+                      {/* Patient name + avatar */}
+                      <td style={{ padding: '14px 16px', borderBottom: '1.5px dashed rgba(45,212,191,0.22)', verticalAlign: 'middle' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                          <div style={{
+                            width: 32, height: 32, borderRadius: 10, flexShrink: 0,
+                            background: `linear-gradient(135deg,${aColor}28,${aColor}14)`,
+                            border: `1.5px solid ${aColor}38`,
+                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            fontSize: 9.5, fontWeight: 800, color: aColor,
+                          }}>
+                            {p.name.split(' ').map(w => w[0]).slice(0, 2).join('')}
+                          </div>
+                          <span style={{ fontSize: 13, fontWeight: 700, color: '#0B1E33' }}>{p.name}</span>
+                        </div>
+                      </td>
+
+                      {/* ID */}
+                      <td style={{ padding: '14px 16px', borderBottom: '1.5px dashed rgba(45,212,191,0.22)', verticalAlign: 'middle' }}>
+                        <span className="mono" style={{ fontSize: 12, color: '#2DD4BF', fontWeight: 600, background: 'rgba(45,212,191,0.08)', border: '1px solid rgba(45,212,191,0.18)', padding: '2px 8px', borderRadius: 7 }}>{p.pid}</span>
+                      </td>
+
+                      {/* Condition */}
+                      <td style={{ padding: '14px 16px', borderBottom: '1.5px dashed rgba(45,212,191,0.22)', verticalAlign: 'middle' }}>
+                        <span className="mpp-condition">{p.condition}</span>
+                      </td>
+
+                      {/* Adherence */}
+                      <td style={{ padding: '14px 16px', borderBottom: '1.5px dashed rgba(45,212,191,0.22)', verticalAlign: 'middle' }}>
+                        <AdherenceBar value={p.adherence} delay={120 + i * 30} />
+                      </td>
+
+                      {/* Last Session */}
+                      <td style={{ padding: '14px 16px', borderBottom: '1.5px dashed rgba(45,212,191,0.22)', verticalAlign: 'middle' }}>
+                        <span className="mono" style={{ fontSize: 12, color: '#475569', fontWeight: 500 }}>{p.lastSession}</span>
+                      </td>
+
+                      {/* Status */}
+                      <td style={{ padding: '14px 16px', borderBottom: '1.5px dashed rgba(45,212,191,0.22)', verticalAlign: 'middle' }}>
+                        <StatusDot status={p.status} />
+                      </td>
+
+                      {/* Subscription */}
+                      <td style={{ padding: '14px 16px', borderBottom: '1.5px dashed rgba(45,212,191,0.22)', verticalAlign: 'middle' }}>
+                        <SubBadge type={p.sub} />
+                      </td>
+
+                      {/* ── PROTOCOL COLUMN ─────────────────────────── */}
+                      <td style={{
+                        padding: '14px 16px',
+                        borderBottom: '1.5px dashed rgba(45,212,191,0.22)',
+                        borderLeft: '1px solid rgba(99,102,241,0.10)',
+                        background: 'rgba(99,102,241,0.012)',
+                        verticalAlign: 'middle',
+                      }}>
+                        {/*
+                          Link passes patient id as query param to the protocols page.
+                          Route: /doctor/protocols?patient=1
+                          On the protocols page: useSearchParams().get('patient') → pre-selects this patient
+                        */}
+                        <Link
+                          href={`/doctor/protocols?patient=${p.id}`}
+                          className={`mpp-proto-btn ${p.hasProtocol ? 'has-protocol' : ''}`}
+                        >
+                          {p.hasProtocol && <div className="mpp-proto-set" />}
+                          <ClipboardList size={13} />
+                          {p.hasProtocol ? 'Edit Protocol' : 'Set Protocol'}
+                        </Link>
+                      </td>
+
+                      {/* Message */}
+                      <td style={{ padding: '14px 16px', borderBottom: '1.5px dashed rgba(45,212,191,0.22)', verticalAlign: 'middle' }}>
+                        <Link href={`/doctor/patients/${p.id}/messages`} className="mpp-msg-btn">
+                          <MessageCircle size={12} />
+                          Message
+                        </Link>
+                      </td>
+
+                      {/* View Profile */}
+                      <td style={{ padding: '14px 16px', borderBottom: '1.5px dashed rgba(45,212,191,0.22)', verticalAlign: 'middle' }}>
+                        <Link href={`/doctor/patients/${p.id}`} className="mpp-view-btn">
+                          View Profile
+                        </Link>
+                      </td>
+                    </tr>
+                  );
+                })}
+
+                {filtered.length === 0 && (
+                  <tr>
+                    <td colSpan={10} style={{ padding: '52px', textAlign: 'center', color: '#94a3b8', fontSize: 14, fontWeight: 500 }}>
+                      No patients match your filters.
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        {/* Row count + legend */}
+        <div style={{ marginTop: 12, display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 8 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '5px 12px', borderRadius: 99, background: 'rgba(99,102,241,0.08)', border: '1px solid rgba(99,102,241,0.18)' }}>
+            <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#22c55e' }} />
+            <span className="mono" style={{ fontSize: 9.5, color: '#6366f1', fontWeight: 600, letterSpacing: '0.08em' }}>
+              Green dot = protocol already set
+            </span>
+          </div>
+          <span className="mono" style={{ fontSize: 10.5, color: '#94a3b8', letterSpacing: '0.08em' }}>
+            {filtered.length} of {ALL_PATIENTS.length} patients
+          </span>
+        </div>
+
+      </div>
+    </div>
+  );
+}
