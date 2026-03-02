@@ -1,14 +1,13 @@
 const {setGlobalOptions} = require("firebase-functions")
-const {onDocumentCreated} = require("firebase-function/v2/firestore")
-const admin = require("firebase-admin")
+const {onDocumentCreated} = require("firebase-functions/v2/firestore")
+const admin = require("firebase-admin");
 
 admin.initializeApp();
+setGlobalOptions({maxInstances: 10});
 
-exports.evaluateGameSession = functions.firestore
-  .onDocument("game_sessions/{sessionId}")
-  .onCreate((snap, context) =>{
-
-    const data = snap.data();
+exports.evaluateGameSession = onDocumentCreated(
+  "game_sessions/{sessionId}",
+  async (event) => {const data = snap.data();
     const metrics = data.metrics;
 
     if (!metrics) return null;
@@ -24,15 +23,15 @@ exports.evaluateGameSession = functions.firestore
     const accuracyScore = metrics.cognitiveAccuracyPercent;
 
     const overallScore = (0.30 * strengthScore) + (0.25 * enduranceScore) + 
-    (0.25 * reactionScore) + (0.25 * accuracyScore);
+    (0.25 * reactionScore) + (0.20 * accuracyScore);
 
     let status = overallScore >= 85 
       ? "Optimal Recovery" 
       : overallScore >= 70 
-      ? "Strong Progresss" 
+      ? "Strong Progress" 
       : overallScore >= 50 
       ? "Moderate" 
-      : "Need Attention";
+      : "Needs Attention";
 
     return snap.ref.update({
       strengthScore,
@@ -42,5 +41,7 @@ exports.evaluateGameSession = functions.firestore
       overallScore,
       status
     });
-      
-  })
+
+    return null;
+  }
+);
