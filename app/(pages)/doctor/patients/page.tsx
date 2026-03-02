@@ -167,3 +167,90 @@ const CSS = `
   @media (max-width: 860px)  { .mpp-filter-row { flex-wrap: wrap !important; } .mpp-selects { flex-wrap: wrap; } }
   @media (max-width: 600px)  { .mpp .mpp-pad { padding: 20px 14px !important; } .mpp-title { font-size: 22px !important; } }
 `;
+/* ─── Adherence Bar ───────────────────────────────────────────────────────── */
+function AdherenceBar({ value, delay = 0 }: { value: number; delay?: number }) {
+  const [w, setW] = useState(0);
+  const color = adherenceColor(value);
+  useEffect(() => {
+    const t = setTimeout(() => setW(value), delay);
+    return () => clearTimeout(t);
+  }, [value, delay]);
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+      <div style={{ width: 64, height: 5, background: '#e2e8f0', borderRadius: 99, overflow: 'hidden', flexShrink: 0 }}>
+        <div style={{
+          height: '100%', borderRadius: 99, width: `${w}%`, background: color,
+          transition: 'width 1.0s cubic-bezier(0.22,1,0.36,1)', position: 'relative',
+        }}>
+          <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(90deg,transparent,rgba(255,255,255,0.45),transparent)', animation: 'mppShimmer 2.2s ease-in-out infinite' }} />
+        </div>
+      </div>
+      <span className="mono" style={{ fontSize: 11.5, fontWeight: 700, color, minWidth: 30 }}>{value}%</span>
+    </div>
+  );
+}
+
+/* ─── Sub Badge ──────────────────────────────────────────────────────────── */
+function SubBadge({ type }: { type: string }) {
+  const isAI = type === 'AI Companion';
+  return (
+    <span style={{
+      display: 'inline-flex', alignItems: 'center', gap: 5,
+      padding: '4px 11px', borderRadius: 99,
+      background: isAI ? '#0B1E33' : '#f1f5f9',
+      color: isAI ? '#2DD4BF' : '#475569',
+      fontSize: 11, fontWeight: 700,
+      border: isAI ? '1px solid rgba(45,212,191,0.18)' : '1px solid #e2e8f0',
+      whiteSpace: 'nowrap',
+    }}>
+      {isAI ? <Bot size={10} /> : <Shield size={10} />}
+      {type}
+    </span>
+  );
+}
+
+/* ─── Status Dot ─────────────────────────────────────────────────────────── */
+function StatusDot({ status }: { status: string }) {
+  const color = statusColor(status);
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
+      <div style={{ width: 7, height: 7, borderRadius: '50%', background: color, boxShadow: `0 0 5px ${color}80`, flexShrink: 0 }} />
+      <span style={{ fontSize: 12.5, fontWeight: 600, color: '#334155' }}>{status}</span>
+    </div>
+  );
+}
+
+/* ─── TH ─────────────────────────────────────────────────────────────────── */
+function TH({ children, accent }: { children: React.ReactNode; accent?: boolean }) {
+  return (
+    <th style={{
+      padding: '13px 16px', textAlign: 'left',
+      fontSize: 10, fontWeight: 700,
+      color: accent ? '#6366f1' : '#64748b',
+      textTransform: 'uppercase', letterSpacing: '0.10em',
+      fontFamily: "'JetBrains Mono', monospace",
+      borderBottom: `1.5px solid ${accent ? 'rgba(99,102,241,0.18)' : '#e2e8f0'}`,
+      background: accent ? 'rgba(99,102,241,0.025)' : '#fff',
+      whiteSpace: 'nowrap',
+    }}>
+      {children}
+    </th>
+  );
+}
+
+/* ─── Stat Card ──────────────────────────────────────────────────────────── */
+function StatCard({ label, value, color, icon, delay }: { label: string; value: number | string; color: string; icon: React.ReactNode; delay: number }) {
+  return (
+    <div className="mpp-stat" style={{ animationDelay: `${delay}s` }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+        <div style={{ width: 34, height: 34, borderRadius: 10, background: `${color}14`, border: `1px solid ${color}28`, display: 'flex', alignItems: 'center', justifyContent: 'center', color, flexShrink: 0 }}>
+          {icon}
+        </div>
+        <div>
+          <div className="mono" style={{ fontSize: 8.5, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.14em', fontWeight: 700 }}>{label}</div>
+          <div style={{ fontSize: 22, fontWeight: 800, color: '#0B1E33', lineHeight: 1.15 }}>{value}</div>
+        </div>
+      </div>
+    </div>
+  );
+}
