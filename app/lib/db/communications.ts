@@ -22,3 +22,84 @@ type FullCommunication = Communication & {
   title:        string;
   isImportant?: boolean;
 };
+
+// Fetches the patient's "inbox" (the formal stuff: feedback, instructions, AI insights).
+// We exclude standard direct messages here so they don't clutter the main feed.
+export async function getInboxMessages(patientId: string): Promise<FullCommunication[]> {
+  const q = query(
+    collection(db, 'communications'),
+    where('receiverId', '==', patientId),
+    where('type', 'in', ['feedback', 'instruction', 'ai_insight']),
+    orderBy('timestamp', 'desc')
+  );
+
+  const snap = await getDocs(q);
+  return snap.docs.map(d => ({
+    id: d.id,
+    ...d.data(),
+  } as FullCommunication));
+}
+
+// Fetches the direct message chat history between a patient and a doctor.
+export async function getDirectChat(
+  patientId: string,
+  doctorId:  string
+): Promise<FullCommunication[]> {
+  // Firebase doesn't easily support querying "Where sender is A AND receiver is B -- OR -- sender is B AND receiver is A"
+  // To get around this, we just fire off two separate queries for both directions and merge the results.
+  const [snap1, snap2] = await Promise.all([
+    getDocs(query(
+      collection(db, 'communications'),
+      where('senderId',   '==', doctorId),
+      where('receiverId', '==', patientId),
+      where('type', '==', 'direct_message'),
+      orderBy('timestamp', 'asc')
+    )),
+    getDocs(query(
+      collection(db, 'communications'),
+      where('senderId',   '==', patientId),
+      where('receiverId', '==', doctorId),
+      where('type', '==', 'direct_message'),
+      orderBy('timestamp', 'asc')
+    )),
+  ]);
+
+  const toItems = (snap: QuerySnapshot<DocumentData>) =>
+    snap.docs.map(d => ({ id: d.id, ...d.data() } as FullCommunication));
+
+  const merged = [...toItems(snap1), ...toItems(snap2)];
+
+  // Sort the final merged array so the chat timeline flows naturally (oldest to newest)
+  return merged.sort((a, b) => {
+    const ta = (a.timestamp as Timestamp).seconds;
+    const tb = (b.timestamp as Timestamp).seconds;
+    return ta - tb;
+  });
+}
+
+// Real-time listener for the chat UI. 
+// Call this in a useEffect so new messages pop up instantly without refreshing the page.
+// Make sure to call the returned unsubscribe function on component unmount!
+export function subscribeToDirect(
+  patientId: string,
+  doctorId:  string,
+  callback:  (msgs: FullCommunication[]) => void
+): () => void {
+  
+  const q = query(
+    collection(db, 'communications'),
+    where('type', '==', 'direct_message'),
+    orderBy('timestamp', 'asc')
+  );
+
+  return onSnapshot(q, (snap) => {
+    // We filter client-side here to grab only the messages between these two specific users.
+    const msgs = snap.docs
+      .map(d => ({ id: d.id, ...d.data() } as FullCommunication))
+      .filter(m =>
+        (m.senderId === doctorId  && m.receiverId === patientId) ||
+        (m.senderId === patientId && m.receiverId === doctorId)
+      );
+    callback(msgs);
+  });
+}
