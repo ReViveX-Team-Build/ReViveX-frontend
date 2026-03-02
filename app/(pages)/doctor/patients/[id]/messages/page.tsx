@@ -360,3 +360,138 @@ function MiniBar({ value, color }: { value: number; color: string }) {
     </div>
   );
 }
+
+/* ══════════════════════════════════════════════════════════
+   MAIN COMPONENT
+══════════════════════════════════════════════════════════ */
+export default function DoctorMessagingHub() {
+  const { id } = useParams();
+  const initId  = Array.isArray(id) ? id[0] : (id ?? '1');
+
+  /* ── State ──────────────────────────────────────────── */
+  const [selectedId, setSelectedId]     = useState(initId);
+  const [panel,      setPanel]          = useState<ActivePanel>('chat');
+  const [search,     setSearch]         = useState('');
+  const [mounted,    setMounted]        = useState(false);
+
+  // Chat state
+  const [chatMap, setChatMap] = useState<Record<string, ChatMessage[]>>(() => {
+    const m: Record<string, ChatMessage[]> = {};
+    Object.keys(PATIENTS).forEach(k => { m[k] = getSeedChat(k); });
+    return m;
+  });
+  const [chatInput, setChatInput] = useState('');
+
+  // Compose — instruction
+  const [instrTitle,     setInstrTitle]     = useState('');
+  const [instrContent,   setInstrContent]   = useState('');
+  const [instrImportant, setInstrImportant] = useState(false);
+  const [instrSent,      setInstrSent]      = useState<Record<string, SentItem[]>>({});
+
+  // Compose — feedback
+  const [fbTitle,     setFbTitle]     = useState('');
+  const [fbContent,   setFbContent]   = useState('');
+  const [fbImportant, setFbImportant] = useState(false);
+  const [fbSent,      setFbSent]      = useState<Record<string, SentItem[]>>({});
+
+  // AI generate
+  const [aiMode,      setAiMode]      = useState<'feedback' | 'instruction'>('feedback');
+  const [aiLoading,   setAiLoading]   = useState(false);
+  const [aiDraft,     setAiDraft]     = useState('');
+  const [aiTitle,     setAiTitle]     = useState('');
+  const [aiSent,      setAiSent]      = useState<Record<string, SentItem[]>>({});
+
+  const chatEndRef   = useRef<HTMLDivElement>(null);
+  const chatInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => { setMounted(true); }, []);
+  useEffect(() => {
+    chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [chatMap, selectedId]);
+
+  // Reset compose fields on patient switch
+  useEffect(() => {
+    setInstrTitle(''); setInstrContent(''); setInstrImportant(false);
+    setFbTitle(''); setFbContent(''); setFbImportant(false);
+    setAiDraft(''); setAiTitle('');
+  }, [selectedId]);
+
+  /* ── Derived ───────────────────────────────────────── */
+  const patient     = PATIENTS[selectedId] ?? PATIENTS['1'];
+  const sColor      = statusColor(patient.status);
+  const aColor      = adherenceColor(patient.adherence);
+  const chatMsgs    = chatMap[selectedId] ?? [];
+  const canUseAI    = patient.isAIPlan;
+
+  const filteredPats = Object.entries(PATIENTS).filter(([, p]) =>
+    p.name.toLowerCase().includes(search.toLowerCase()) ||
+    p.pid.toLowerCase().includes(search.toLowerCase())
+  );
+
+  /* ── Handlers ──────────────────────────────────────── */
+  const sendChat = () => {
+    if (!chatInput.trim()) return;
+    const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    setChatMap(prev => ({
+      ...prev,
+      [selectedId]: [...(prev[selectedId] ?? []), { sender: 'doctor', text: chatInput.trim(), time }],
+    }));
+    setChatInput('');
+    setTimeout(() => chatInputRef.current?.focus(), 50);
+    // Production: sendFromDoctor(doctorId, selectedId, 'direct_message', 'Direct Message', chatInput)
+  };
+  const handleChatKey = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendChat(); }
+  };
+
+  const sendInstruction = () => {
+    if (!instrTitle.trim() || !instrContent.trim()) return;
+    const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    const item: SentItem = { id: Date.now().toString(), type: 'instruction', title: instrTitle, content: instrContent, time, isImportant: instrImportant, sentByAI: false };
+    setInstrSent(prev => ({ ...prev, [selectedId]: [item, ...(prev[selectedId] ?? [])] }));
+    setInstrTitle(''); setInstrContent(''); setInstrImportant(false);
+    // Production: sendFromDoctor(doctorId, selectedId, 'instruction', instrTitle, instrContent, instrImportant)
+  };
+
+  const sendFeedback = () => {
+    if (!fbTitle.trim() || !fbContent.trim()) return;
+    const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    const item: SentItem = { id: Date.now().toString(), type: 'feedback', title: fbTitle, content: fbContent, time, isImportant: fbImportant, sentByAI: false };
+    setFbSent(prev => ({ ...prev, [selectedId]: [item, ...(prev[selectedId] ?? [])] }));
+    setFbTitle(''); setFbContent(''); setFbImportant(false);
+    // Production: sendFromDoctor(doctorId, selectedId, 'feedback', fbTitle, fbContent, fbImportant)
+  };
+
+  const generateAI = useCallback(() => {
+    if (!canUseAI) return;
+    setAiLoading(true);
+    setAiDraft('');
+    setAiTitle('');
+    // Mock Gemini call — replace with: fetch('/api/llm', { method:'POST', body: JSON.stringify({ patientId: selectedId, type: aiMode }) })
+    setTimeout(() => {
+      const draft = aiMode === 'feedback'
+        ? AI_FEEDBACK_DRAFTS[patient.status]
+        : AI_INSTRUCTION_DRAFTS[patient.status];
+      const title = aiMode === 'feedback'
+        ? `AI Feedback — ${patient.name.split(' ')[0]} (${new Date().toLocaleDateString('en-GB', { day:'numeric', month:'short' })})`
+        : `AI Protocol Note — ${patient.name.split(' ')[0]}`;
+      setAiDraft(draft);
+      setAiTitle(title);
+      setAiLoading(false);
+    }, 2200);
+  }, [canUseAI, aiMode, patient.status, patient.name]);
+
+  const sendAiDraft = () => {
+    if (!aiDraft.trim() || !aiTitle.trim()) return;
+    const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    const item: SentItem = { id: Date.now().toString(), type: aiMode === 'feedback' ? 'feedback' : 'instruction', title: aiTitle, content: aiDraft, time, isImportant: false, sentByAI: true };
+    setAiSent(prev => ({ ...prev, [selectedId]: [item, ...(prev[selectedId] ?? [])] }));
+    setAiDraft(''); setAiTitle('');
+    // Production: sendFromDoctor(doctorId, selectedId, aiMode === 'feedback' ? 'ai_insight' : 'instruction', aiTitle, aiDraft)
+  };
+
+  if (!mounted) return null;
+
+  /* ══════════════════════════════════════════════════════
+     PANEL RENDERS
+  ══════════════════════════════════════════════════════ */
