@@ -279,3 +279,66 @@ const CSS = `
   }
 `;
 
+/* ══════════════════════════════════════════════════════════
+   MAIN PAGE
+══════════════════════════════════════════════════════════ */
+export default function PatientMessagesPage() {
+  const [messages,    setMessages]   = useState<PatientMessage[]>(INITIAL_MESSAGES);
+  const [filter,      setFilter]     = useState<MsgCategory>('all');
+  const [expanded,    setExpanded]   = useState<Set<string>>(new Set());
+  const [chatOpen,    setChatOpen]   = useState(false);
+  const [chatMsgs,    setChatMsgs]   = useState<ChatBubble[]>(INITIAL_CHAT);
+  const [chatInput,   setChatInput]  = useState('');
+  const [mounted,     setMounted]    = useState(false);
+  const chatEndRef                   = useRef<HTMLDivElement>(null);
+  const chatInputRef                 = useRef<HTMLInputElement>(null);
+
+  useEffect(() => { setMounted(true); }, []);
+  useEffect(() => {
+    if (chatOpen) {
+      chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+      setTimeout(() => chatInputRef.current?.focus(), 100);
+    }
+  }, [chatOpen, chatMsgs]);
+
+  /* ── Derived ──────────────────────────────────────────── */
+  const unreadCount = messages.filter(m => !m.isRead).length;
+
+  const filtered = messages.filter(m => {
+    if (filter === 'all')            return true;
+    if (filter === 'direct_message') return m.type === 'direct_message' || m.type === 'ai_insight';
+    return m.type === filter;
+  });
+
+  /* ── Handlers ─────────────────────────────────────────── */
+  const toggleRead = (id: string) => {
+    setMessages(prev => prev.map(m => m.id === id ? { ...m, isRead: !m.isRead } : m));
+    // Production: await markAsRead(id) from lib/db/communications.ts
+  };
+
+  const toggleExpand = (id: string) => {
+    setExpanded(prev => {
+      const next = new Set(prev);
+      next.has(id) ? next.delete(id) : next.add(id);
+      return next;
+    });
+  };
+
+  const sendChat = () => {
+    if (!chatInput.trim()) return;
+    const now = new Date();
+    const time = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    const newMsg: ChatBubble = {
+      id: `c${Date.now()}`, sender: 'patient',
+      text: chatInput.trim(), time,
+    };
+    setChatMsgs(prev => [...prev, newMsg]);
+    setChatInput('');
+    // Production: await sendCommunication(patientId, doctorId, chatInput, 'direct_message', 'Direct Message')
+  };
+
+  const handleChatKey = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendChat(); }
+  };
+
+  if (!mounted) return null;
