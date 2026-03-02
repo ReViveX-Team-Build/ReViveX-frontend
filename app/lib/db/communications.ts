@@ -103,3 +103,46 @@ export function subscribeToDirect(
     callback(msgs);
   });
 }
+
+// Used when the patient types a message into the chat box and hits send.
+export async function sendDirectMessage(
+  patientId: string,
+  doctorId:  string,
+  content:   string
+): Promise<string> {
+  const ref = await addDoc(collection(db, 'communications'), {
+    senderId:    patientId,
+    receiverId:  doctorId,
+    type:        'direct_message',
+    title:       'Direct Message',
+    content,
+    timestamp:   Timestamp.now(),
+    isRead:      false,
+    isImportant: false,
+  } satisfies Omit<FullCommunication, 'id'>);
+
+  return ref.id;
+}
+
+// Used by the doctor dashboard to push formal updates (instructions, AI generated notes, etc.)
+export async function sendFromDoctor(
+  doctorId:    string,
+  patientId:   string,
+  type:        FullCommunication['type'],
+  title:       string,
+  content:     string,
+  isImportant: boolean = false
+): Promise<string> {
+  const ref = await addDoc(collection(db, 'communications'), {
+    senderId:   doctorId,
+    receiverId: patientId,
+    type,
+    title,
+    content,
+    timestamp:   Timestamp.now(),
+    isRead:      false,
+    isImportant,
+  } satisfies Omit<FullCommunication, 'id'>);
+
+  return ref.id;
+}
