@@ -36,7 +36,7 @@ const navItems = [
 
 const bottomItems = [
   { icon: Settings,    label: "Settings",    href: "/doctor/settings" },
-  { icon: HelpCircle,  label: "FAQ & Support",href: "/doctor/support"  },
+  { icon: HelpCircle,  label: "FAQ & Support",href: "/doctor/faq"  },
 ];
 
 const doctor = { name: "Dr. Suresh", role: "Neurologist", initials: "DS" };
