@@ -254,3 +254,34 @@ function StatCard({ label, value, color, icon, delay }: { label: string; value: 
     </div>
   );
 }
+
+/* ─── Main ───────────────────────────────────────────────────────────────── */
+export default function DoctorPatientsPage() {
+  const [search,          setSearch]          = useState('');
+  const [adherenceFilter, setAdherenceFilter] = useState('all');
+  const [conditionFilter, setConditionFilter] = useState('all');
+  const [mounted,         setMounted]         = useState(false);
+
+  useEffect(() => { setMounted(true); }, []);
+
+  const filtered = useMemo(() =>
+    ALL_PATIENTS.filter(p => {
+      const q = search.toLowerCase();
+      const matchQ = p.name.toLowerCase().includes(q) || p.pid.toLowerCase().includes(q);
+      const matchA =
+        adherenceFilter === 'all' ||
+        (adherenceFilter === 'high'   && p.status === 'High')   ||
+        (adherenceFilter === 'medium' && p.status === 'Medium') ||
+        (adherenceFilter === 'low'    && p.status === 'Low');
+      const matchC =
+        conditionFilter === 'all' ||
+        p.condition.toLowerCase().replace(/[\s-]/g, '') === conditionFilter.toLowerCase().replace(/[\s-]/g, '');
+      return matchQ && matchA && matchC;
+    }),
+  [search, adherenceFilter, conditionFilter]);
+
+  const highCount   = ALL_PATIENTS.filter(p => p.status === 'High').length;
+  const lowCount    = ALL_PATIENTS.filter(p => p.status === 'Low').length;
+  const protoCount  = ALL_PATIENTS.filter(p => p.hasProtocol).length;
+
+  if (!mounted) return null;
