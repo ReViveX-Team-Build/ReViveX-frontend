@@ -146,3 +146,26 @@ export async function sendFromDoctor(
 
   return ref.id;
 }
+
+// Flips the boolean when a user clicks the "acknowledge/read" checkbox on a specific message.
+export async function markAsRead(messageId: string): Promise<void> {
+  await updateDoc(doc(db, 'communications', messageId), {
+    isRead: true,
+  });
+}
+
+// Handy utility if we ever want to add a "Mark all as read" button to clear the whole inbox at once.
+export async function markAllAsRead(patientId: string): Promise<void> {
+  const q = query(
+    collection(db, 'communications'),
+    where('receiverId', '==', patientId),
+    where('isRead', '==', false)
+  );
+  
+  const snap = await getDocs(q);
+  
+  // Fire off all the updates simultaneously 
+  await Promise.all(
+    snap.docs.map(d => updateDoc(d.ref, { isRead: true }))
+  );
+}
