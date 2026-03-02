@@ -820,3 +820,315 @@ export default function DoctorMessagingHub() {
       )}
     </div>
   );
+
+  /* ══════════════════════════════════════════════════════
+     RENDER
+  ══════════════════════════════════════════════════════ */
+  return (
+    <div className="dm" style={{ height: '100vh', background: '#F0F4F8', display: 'flex', flexDirection: 'column', padding: '20px', gap: 14, overflow: 'hidden' }}>
+      <style>{CSS}</style>
+
+      {/* ── Top nav ──────────────────────────────────────── */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12, animation: 'dmFadeUp 0.45s ease both', flexShrink: 0 }}>
+        <Link href="/doctor/patients" style={{
+          display: 'inline-flex', alignItems: 'center', gap: 7,
+          padding: '8px 14px', borderRadius: 12,
+          background: '#fff', border: '1.5px solid rgba(226,232,240,0.9)',
+          fontSize: 13, fontWeight: 700, color: '#64748b', textDecoration: 'none',
+          transition: 'all 0.2s ease',
+        }}>
+          <ArrowLeft size={14} /> Back to Patients
+        </Link>
+        <span className="mono" style={{ fontSize: 9.5, color: '#94a3b8', letterSpacing: '0.14em', textTransform: 'uppercase' }}>
+          Patient Messaging Hub
+        </span>
+      </div>
+
+      {/* ── Main layout ──────────────────────────────────── */}
+      <div style={{ display: 'flex', gap: 14, flex: 1, minHeight: 0, animation: 'dmFadeUp 0.50s ease 0.06s both' }}>
+
+        {/* ════════════════════════════════════════════════
+            SIDEBAR — patient list
+        ════════════════════════════════════════════════ */}
+        <div className="dm-sidebar-wrap" style={{
+          width: 268, flexShrink: 0, background: '#fff',
+          borderRadius: 20, border: '1px solid rgba(226,232,240,0.9)',
+          boxShadow: '0 2px 18px rgba(11,30,51,0.055)',
+          display: 'flex', flexDirection: 'column', overflow: 'hidden',
+        }}>
+          {/* Sidebar header */}
+          <div style={{
+            padding: '16px 15px 12px',
+            borderBottom: '1px solid rgba(226,232,240,0.8)',
+            background: 'linear-gradient(135deg,#f8fdfc,#f0fdfb)',
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 9, marginBottom: 11 }}>
+              <div style={{ width: 32, height: 32, borderRadius: 10, background: 'rgba(45,212,191,0.10)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#2DD4BF' }}>
+                <User size={15} />
+              </div>
+              <div>
+                <div style={{ fontSize: 13.5, fontWeight: 800, color: '#0B1E33' }}>All Patients</div>
+                <div className="mono" style={{ fontSize: 8.5, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.12em' }}>
+                  {Object.keys(PATIENTS).length} assigned
+                </div>
+              </div>
+            </div>
+            {/* Search */}
+            <div style={{ position: 'relative' }}>
+              <Search size={13} color="#94a3b8" style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} />
+              <input
+                value={search}
+                onChange={e => setSearch(e.target.value)}
+                placeholder="Search..."
+                style={{
+                  width: '100%', padding: '8px 10px 8px 30px',
+                  background: 'rgba(240,244,248,0.9)', border: '1px solid rgba(226,232,240,0.9)',
+                  borderRadius: 10, fontSize: 12, color: '#0B1E33', outline: 'none',
+                  fontFamily: "'Plus Jakarta Sans', sans-serif",
+                }}
+              />
+            </div>
+          </div>
+
+          {/* Patient list */}
+          <div className="dm-sidebar" style={{ flex: 1, overflowY: 'auto', padding: '8px' }}>
+            {filteredPats.map(([pid, p]) => {
+              const sc  = statusColor(p.status);
+              const ac  = adherenceColor(p.adherence);
+              const isA = pid === selectedId;
+              const lastChat = (chatMap[pid] ?? []).slice(-1)[0];
+              return (
+                <button
+                  key={pid}
+                  className={`dm-patient-btn ${isA ? 'active' : ''}`}
+                  onClick={() => { setSelectedId(pid); setPanel('chat'); }}
+                >
+                  {/* Avatar */}
+                  <div style={{ position: 'relative', flexShrink: 0 }}>
+                    <div style={{
+                      width: 38, height: 38, borderRadius: 12,
+                      background: isA ? 'linear-gradient(135deg,#2DD4BF,#0891b2)' : `${ac}18`,
+                      border: `1.5px solid ${isA ? 'transparent' : ac + '38'}`,
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      fontSize: 10.5, fontWeight: 800,
+                      color: isA ? '#0B1E33' : ac,
+                    }}>
+                      {initials(p.name)}
+                    </div>
+                    <div style={{ position: 'absolute', bottom: -1, right: -1, width: 9, height: 9, borderRadius: '50%', background: sc, border: '2px solid #fff', animation: 'dmDot 2.2s ease-in-out infinite' }} />
+                  </div>
+
+                  <div style={{ flex: 1, minWidth: 0, textAlign: 'left' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 4 }}>
+                      <span style={{ fontSize: 12.5, fontWeight: 700, color: '#0B1E33', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: 108 }}>{p.name}</span>
+                      <MiniBar value={p.adherence} color={ac} />
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginTop: 2 }}>
+                      <span className="mono" style={{ fontSize: 8.5, color: '#2DD4BF', background: 'rgba(45,212,191,0.08)', padding: '1px 5px', borderRadius: 5 }}>{p.pid}</span>
+                      {p.isAIPlan && <div style={{ display: 'flex', alignItems: 'center', gap: 3, background: '#0B1E33', borderRadius: 6, padding: '1px 6px' }}><Bot size={8} color="#2DD4BF" /><span className="mono" style={{ fontSize: 7.5, color: '#2DD4BF', fontWeight: 700 }}>AI</span></div>}
+                    </div>
+                    {lastChat && (
+                      <div style={{ fontSize: 10.5, color: '#94a3b8', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: 150, marginTop: 1 }}>
+                        {lastChat.sender === 'doctor' ? 'You: ' : ''}{lastChat.text}
+                      </div>
+                    )}
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* ════════════════════════════════════════════════
+            MAIN COLUMN
+        ════════════════════════════════════════════════ */}
+        <div className="dm-main-col" style={{
+          flex: 1, display: 'flex', flexDirection: 'column',
+          gap: 0, minWidth: 0,
+          background: '#fff', borderRadius: 20,
+          border: '1px solid rgba(226,232,240,0.9)',
+          boxShadow: '0 2px 18px rgba(11,30,51,0.055)',
+          overflow: 'hidden',
+        }}>
+
+          {/* ── Patient hero header (dark card) ───────────── */}
+          <div style={{
+            background: '#0B1E33', position: 'relative', overflow: 'hidden', flexShrink: 0,
+          }}>
+            {/* Grid overlay */}
+            <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none',
+              backgroundImage: 'linear-gradient(rgba(45,212,191,0.04) 1px,transparent 1px),linear-gradient(90deg,rgba(45,212,191,0.04) 1px,transparent 1px)',
+              backgroundSize: '32px 32px' }} />
+            {/* Scan line */}
+            <div style={{ position: 'absolute', inset: 0, overflow: 'hidden', pointerEvents: 'none' }}>
+              <div style={{ position: 'absolute', left: 0, right: 0, height: '22%', background: 'linear-gradient(to bottom,transparent,rgba(45,212,191,0.05),transparent)', animation: 'dmScanLine 5.5s linear infinite' }} />
+            </div>
+
+            <div style={{ position: 'relative', zIndex: 2, padding: '18px 22px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap' }}>
+              {/* Patient info */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+                <div style={{ position: 'relative' }}>
+                  <div style={{
+                    width: 48, height: 48, borderRadius: 14,
+                    background: `linear-gradient(135deg,${aColor},${aColor}aa)`,
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    fontSize: 14, fontWeight: 800, color: '#fff',
+                    boxShadow: `0 0 0 2.5px ${aColor}40, 0 5px 18px ${aColor}35`,
+                    animation: 'dmGlow 3s ease-in-out infinite', flexShrink: 0,
+                  }}>
+                    {initials(patient.name)}
+                  </div>
+                  <div style={{ position: 'absolute', bottom: -1, right: -1, width: 11, height: 11, borderRadius: '50%', background: sColor, border: '2.5px solid #0B1E33', boxShadow: `0 0 5px ${sColor}` }} />
+                </div>
+                <div>
+                  <p className="mono" style={{ fontSize: 8.5, color: 'rgba(45,212,191,0.60)', textTransform: 'uppercase', letterSpacing: '0.20em', marginBottom: 2 }}>
+                    Active Patient
+                  </p>
+                  <div style={{ fontSize: 17, fontWeight: 800, color: '#fff', lineHeight: 1.2 }}>{patient.name}</div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 4, flexWrap: 'wrap' }}>
+                    <span className="mono" style={{ fontSize: 10, color: '#2DD4BF', background: 'rgba(45,212,191,0.12)', border: '1px solid rgba(45,212,191,0.20)', padding: '1px 8px', borderRadius: 7 }}>{patient.pid}</span>
+                    <span style={{ fontSize: 11.5, color: 'rgba(255,255,255,0.40)' }}>{patient.condition}</span>
+                    <span style={{ fontSize: 11, color: sColor, fontWeight: 700 }}>{patient.status} Adherence</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Badges */}
+              <div style={{ display: 'flex', gap: 9, flexWrap: 'wrap', alignItems: 'center' }}>
+                {patient.isAIPlan ? (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 7, background: 'rgba(45,212,191,0.10)', border: '1px solid rgba(45,212,191,0.22)', borderRadius: 11, padding: '7px 13px' }}>
+                    <Bot size={13} color="#2DD4BF" />
+                    <span style={{ fontSize: 11.5, fontWeight: 700, color: '#2DD4BF' }}>AI Companion</span>
+                  </div>
+                ) : (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 7, background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.09)', borderRadius: 11, padding: '7px 13px' }}>
+                    <Shield size={13} color="rgba(255,255,255,0.35)" />
+                    <span style={{ fontSize: 11.5, fontWeight: 700, color: 'rgba(255,255,255,0.40)' }}>Standard</span>
+                  </div>
+                )}
+                <Link href={`/doctor/patients/${selectedId}`} style={{
+                  display: 'inline-flex', alignItems: 'center', gap: 5,
+                  padding: '7px 13px', borderRadius: 11,
+                  background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.09)',
+                  fontSize: 11.5, fontWeight: 700, color: 'rgba(255,255,255,0.55)', textDecoration: 'none',
+                  transition: 'all 0.2s ease',
+                }}>
+                  View Profile <ChevronRight size={12} />
+                </Link>
+              </div>
+            </div>
+          </div>
+
+          {/* ── Action tabs ────────────────────────────────── */}
+          <div style={{
+            display: 'flex', gap: 6, padding: '10px 16px',
+            borderBottom: '1px solid rgba(226,232,240,0.8)',
+            background: 'rgba(248,250,252,0.95)', flexShrink: 0,
+          }}>
+            {/* Chat */}
+            <button
+              className={`dm-tab ${panel === 'chat' ? 'active' : ''}`}
+              onClick={() => setPanel('chat')}
+              style={{
+                background: panel === 'chat' ? 'rgba(45,212,191,0.09)' : 'transparent',
+                border: `1.5px solid ${panel === 'chat' ? 'rgba(45,212,191,0.28)' : 'transparent'}`,
+                color: panel === 'chat' ? '#0891b2' : '#94a3b8',
+              }}
+            >
+              <MessageCircle size={16} />
+              <span className="dm-tab-label mono" style={{ fontSize: 8.5, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.12em' }}>Chat</span>
+            </button>
+
+            {/* Instruction */}
+            <button
+              className={`dm-tab ${panel === 'instruction' ? 'active' : ''}`}
+              onClick={() => setPanel('instruction')}
+              style={{
+                background: panel === 'instruction' ? 'rgba(245,158,11,0.08)' : 'transparent',
+                border: `1.5px solid ${panel === 'instruction' ? 'rgba(245,158,11,0.28)' : 'transparent'}`,
+                color: panel === 'instruction' ? '#b45309' : '#94a3b8',
+              }}
+            >
+              <AlertCircle size={16} />
+              <span className="dm-tab-label mono" style={{ fontSize: 8.5, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.12em' }}>Instruction</span>
+            </button>
+
+            {/* Feedback */}
+            <button
+              className={`dm-tab ${panel === 'feedback' ? 'active' : ''}`}
+              onClick={() => setPanel('feedback')}
+              style={{
+                background: panel === 'feedback' ? 'rgba(45,212,191,0.09)' : 'transparent',
+                border: `1.5px solid ${panel === 'feedback' ? 'rgba(45,212,191,0.28)' : 'transparent'}`,
+                color: panel === 'feedback' ? '#0891b2' : '#94a3b8',
+              }}
+            >
+              <Activity size={16} />
+              <span className="dm-tab-label mono" style={{ fontSize: 8.5, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.12em' }}>Feedback</span>
+            </button>
+
+            {/* AI Generate */}
+            <button
+              className={`dm-tab ${panel === 'ai_generate' ? 'active' : ''}`}
+              onClick={() => setPanel('ai_generate')}
+              style={{
+                background: panel === 'ai_generate' ? 'linear-gradient(135deg,rgba(99,102,241,0.10),rgba(139,92,246,0.07))' : 'transparent',
+                border: `1.5px solid ${panel === 'ai_generate' ? 'rgba(99,102,241,0.28)' : 'transparent'}`,
+                color: panel === 'ai_generate' ? '#6366f1' : '#94a3b8',
+                position: 'relative',
+              }}
+            >
+              <Sparkles size={16} />
+              <span className="dm-tab-label mono" style={{ fontSize: 8.5, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.12em' }}>AI Generate</span>
+              {/* Premium crown badge */}
+              <div style={{
+                position: 'absolute', top: 4, right: 4,
+                width: 14, height: 14, borderRadius: '50%',
+                background: 'linear-gradient(135deg,#6366f1,#8b5cf6)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                boxShadow: '0 2px 6px rgba(99,102,241,0.45)',
+              }}>
+                <Crown size={7} color="#fff" />
+              </div>
+              {!canUseAI && (
+                <div style={{ position: 'absolute', top: 4, left: 4, width: 12, height: 12, borderRadius: '50%', background: '#ef4444', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <Lock size={7} color="#fff" />
+                </div>
+              )}
+            </button>
+          </div>
+
+          {/* ── Active panel ────────────────────────────────── */}
+          {panel === 'chat' && <ChatPanel />}
+
+          {panel === 'instruction' && (
+            <ComposeForm
+              typeLabel="Instruction" typeColor="#f59e0b" typeBg="rgba(245,158,11,0.08)"
+              title={instrTitle} setTitle={setInstrTitle}
+              content={instrContent} setContent={setInstrContent}
+              important={instrImportant} setImportant={setInstrImportant}
+              onSend={sendInstruction}
+              sentItems={instrSent[selectedId] ?? []}
+              hint={`Write a clinical instruction for ${patient.name.split(' ')[0]}. Instructions are highlighted to the patient and require their acknowledgment before dismissal. Use this for protocol changes, appointment notices, or mandatory actions.`}
+            />
+          )}
+
+          {panel === 'feedback' && (
+            <ComposeForm
+              typeLabel="Feedback" typeColor="#2DD4BF" typeBg="rgba(45,212,191,0.08)"
+              title={fbTitle} setTitle={setFbTitle}
+              content={fbContent} setContent={setFbContent}
+              important={fbImportant} setImportant={setFbImportant}
+              onSend={sendFeedback}
+              sentItems={fbSent[selectedId] ?? []}
+              hint={`Send clinical feedback to ${patient.name.split(' ')[0]} based on their recent session performance. Feedback helps the patient understand their progress and reinforces positive behaviour.`}
+            />
+          )}
+
+          {panel === 'ai_generate' && <AiPanel />}
+
+        </div>
+      </div>
+    </div>
+  );
+}
