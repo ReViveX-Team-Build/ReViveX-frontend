@@ -495,3 +495,328 @@ export default function DoctorMessagingHub() {
   /* ══════════════════════════════════════════════════════
      PANEL RENDERS
   ══════════════════════════════════════════════════════ */
+
+  /* ── CHAT PANEL ──────────────────────────────────────── */
+  const ChatPanel = () => (
+    <div style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0 }}>
+      <div className="dm-msgs" style={{ flex: 1, overflowY: 'auto', padding: '20px 22px', display: 'flex', flexDirection: 'column', gap: 12 }}>
+        <div style={{ textAlign: 'center', marginBottom: 4 }}>
+          <span className="mono" style={{ fontSize: 9, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.14em', background: 'rgba(240,244,248,0.9)', padding: '3px 12px', borderRadius: 99 }}>Today</span>
+        </div>
+        {chatMsgs.map((msg, i) => {
+          const isDoc = msg.sender === 'doctor';
+          return (
+            <div key={i} style={{ display: 'flex', justifyContent: isDoc ? 'flex-end' : 'flex-start', gap: 8, alignItems: 'flex-end', animationDelay: `${i * 0.03}s` }}>
+              {!isDoc && (
+                <div style={{ width: 28, height: 28, borderRadius: 9, background: `${aColor}22`, border: `1.5px solid ${aColor}44`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 9, fontWeight: 800, color: aColor, flexShrink: 0 }}>
+                  {initials(patient.name)}
+                </div>
+              )}
+              <div className={isDoc ? 'dm-bubble-doc' : 'dm-bubble-pat'} style={{ animationDelay: `${i * 0.04}s` }}>
+                <p style={{ fontSize: 13.5, lineHeight: 1.62, margin: 0, position: 'relative', zIndex: 1 }}>{msg.text}</p>
+                <p className="mono" style={{ fontSize: 9, marginTop: 5, textAlign: 'right', position: 'relative', zIndex: 1, color: isDoc ? '#94a3b8' : 'rgba(11,30,51,0.45)' }}>{msg.time}</p>
+              </div>
+              {isDoc && (
+                <div style={{ width: 28, height: 28, borderRadius: 9, background: 'linear-gradient(135deg,#2DD4BF,#0891b2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 9, fontWeight: 800, color: '#0B1E33', flexShrink: 0 }}>
+                  SJ
+                </div>
+              )}
+            </div>
+          );
+        })}
+        <div ref={chatEndRef} />
+      </div>
+
+      {/* Chat input */}
+      <div style={{ padding: '12px 18px', borderTop: '1px solid rgba(226,232,240,0.8)', background: '#fafbfd', display: 'flex', alignItems: 'center', gap: 9 }}>
+        <input
+          ref={chatInputRef}
+          className="dm-input"
+          type="text"
+          value={chatInput}
+          onChange={e => setChatInput(e.target.value)}
+          onKeyDown={handleChatKey}
+          placeholder={`Direct message to ${patient.name.split(' ')[0]}...`}
+        />
+        <button className="dm-send-btn" onClick={sendChat} disabled={!chatInput.trim()}>
+          <Send size={16} />
+        </button>
+      </div>
+    </div>
+  );
+
+  /* ── COMPOSE SHARED INNER ───────────────────────────── */
+  const ComposeForm = ({
+    typeLabel, typeColor, typeBg,
+    title, setTitle, content, setContent,
+    important, setImportant, onSend,
+    sentItems, hint,
+  }: {
+    typeLabel: string; typeColor: string; typeBg: string;
+    title: string; setTitle: (v: string) => void;
+    content: string; setContent: (v: string) => void;
+    important: boolean; setImportant: (v: boolean) => void;
+    onSend: () => void; sentItems: SentItem[]; hint: string;
+  }) => (
+    <div className="dm-compose-scroll" style={{ flex: 1, overflowY: 'auto', padding: '20px 22px', display: 'flex', flexDirection: 'column', gap: 14 }}>
+      {/* Hint */}
+      <div style={{ display: 'flex', alignItems: 'flex-start', gap: 9, padding: '10px 14px', background: `${typeColor}08`, border: `1px solid ${typeColor}28`, borderRadius: 12 }}>
+        <Info size={13} color={typeColor} style={{ flexShrink: 0, marginTop: 1 }} />
+        <p style={{ fontSize: 12, color: '#475569', margin: 0, lineHeight: 1.6 }}>{hint}</p>
+      </div>
+
+      {/* Title field */}
+      <div>
+        <label className="mono" style={{ display: 'block', fontSize: 9, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.14em', fontWeight: 700, marginBottom: 7 }}>
+          Title
+        </label>
+        <input
+          className="dm-title-input"
+          value={title}
+          onChange={e => setTitle(e.target.value)}
+          placeholder={`e.g. ${typeLabel === 'Instruction' ? 'Protocol Adjustment — Week 4' : 'Weekly Progress Summary'}`}
+        />
+      </div>
+
+      {/* Content field */}
+      <div>
+        <label className="mono" style={{ display: 'block', fontSize: 9, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.14em', fontWeight: 700, marginBottom: 7 }}>
+          Content
+        </label>
+        <textarea
+          className="dm-textarea"
+          rows={6}
+          value={content}
+          onChange={e => setContent(e.target.value)}
+          placeholder={`Write your ${typeLabel.toLowerCase()} for ${patient.name.split(' ')[0]}...`}
+        />
+      </div>
+
+      {/* Options row */}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 10 }}>
+        {/* Important toggle */}
+        <button className="dm-toggle" onClick={() => setImportant(!important)}>
+          {important
+            ? <ToggleRight size={22} color={typeColor} />
+            : <ToggleLeft  size={22} color="#cbd5e1" />
+          }
+          <span style={{ fontSize: 12.5, fontWeight: 700, color: important ? typeColor : '#94a3b8' }}>
+            Mark as Important
+          </span>
+          {important && (
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '2px 9px', borderRadius: 99, background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.22)', fontSize: 9, fontWeight: 800, color: '#ef4444', fontFamily: "'JetBrains Mono', monospace", letterSpacing: '0.10em' }}>
+              <AlertCircle size={8} />IMPORTANT
+            </span>
+          )}
+        </button>
+
+        {/* Send button */}
+        <button
+          className="dm-compose-btn"
+          onClick={onSend}
+          disabled={!title.trim() || !content.trim()}
+          style={{
+            background: title.trim() && content.trim()
+              ? `linear-gradient(135deg,${typeColor},${typeColor}cc)`
+              : 'rgba(226,232,240,0.9)',
+            color: title.trim() && content.trim() ? '#fff' : '#94a3b8',
+            boxShadow: title.trim() && content.trim() ? `0 6px 22px ${typeColor}38` : 'none',
+          }}
+        >
+          <Send size={14} style={{ position: 'relative', zIndex: 1 }} />
+          <span style={{ position: 'relative', zIndex: 1 }}>Send {typeLabel}</span>
+        </button>
+      </div>
+
+      {/* Sent history */}
+      {sentItems.length > 0 && (
+        <div style={{ marginTop: 4 }}>
+          <div className="mono" style={{ fontSize: 9, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.14em', marginBottom: 10, fontWeight: 700 }}>
+            Sent This Session
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            {sentItems.map(item => (
+              <div key={item.id} className="dm-sent-item">
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 5 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
+                    <CheckCircle2 size={13} color={typeColor} />
+                    <span style={{ fontSize: 13, fontWeight: 700, color: '#0B1E33' }}>{item.title}</span>
+                    {item.isImportant && (
+                      <span style={{ padding: '1px 7px', borderRadius: 99, background: 'rgba(239,68,68,0.07)', border: '1px solid rgba(239,68,68,0.20)', fontSize: 8.5, fontWeight: 800, color: '#ef4444', fontFamily: "'JetBrains Mono', monospace", letterSpacing: '0.10em' }}>
+                        IMPORTANT
+                      </span>
+                    )}
+                  </div>
+                  <span className="mono" style={{ fontSize: 9, color: '#94a3b8' }}>{item.time}</span>
+                </div>
+                <p style={{ fontSize: 12, color: '#64748b', margin: 0, lineHeight: 1.62, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+                  {item.content}
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+
+  /* ── AI GENERATE PANEL ──────────────────────────────── */
+  const AiPanel = () => (
+    <div className="dm-compose-scroll" style={{ flex: 1, overflowY: 'auto', padding: '20px 22px', display: 'flex', flexDirection: 'column', gap: 16, position: 'relative' }}>
+
+      {/* Premium lock overlay for non-AI-plan patients */}
+      {!canUseAI && (
+        <div className="dm-premium-lock" style={{ borderRadius: 0 }}>
+          <div style={{ width: 52, height: 52, borderRadius: 16, background: 'linear-gradient(135deg,#6366f1,#8b5cf6)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 6px 22px rgba(99,102,241,0.35)' }}>
+            <Crown size={22} color="#fff" />
+          </div>
+          <div style={{ textAlign: 'center' }}>
+            <p style={{ fontSize: 15, fontWeight: 800, color: '#0B1E33', margin: '0 0 5px' }}>AI Companion Plan Required</p>
+            <p style={{ fontSize: 12, color: '#64748b', margin: '0 0 14px', maxWidth: 260, lineHeight: 1.65 }}>
+              {patient.name.split(' ')[0]} is on the Standard plan. Upgrade their subscription to unlock AI-generated feedback and protocol notes.
+            </p>
+            <div style={{ display: 'inline-flex', alignItems: 'center', gap: 7, padding: '8px 18px', borderRadius: 12, background: 'linear-gradient(135deg,rgba(99,102,241,0.12),rgba(139,92,246,0.08))', border: '1.5px solid rgba(99,102,241,0.25)', fontSize: 12, fontWeight: 700, color: '#6366f1' }}>
+              <Shield size={13} />
+              Standard Plan — No AI Access
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* AI companion header badge */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 16px', background: 'linear-gradient(135deg,rgba(99,102,241,0.08),rgba(139,92,246,0.05))', border: '1.5px solid rgba(99,102,241,0.18)', borderRadius: 14 }}>
+        <div style={{ width: 36, height: 36, borderRadius: 11, background: 'linear-gradient(135deg,#6366f1,#8b5cf6)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 14px rgba(99,102,241,0.30)', flexShrink: 0, animation: 'dmAiPulse 3s ease-in-out infinite' }}>
+          <Sparkles size={16} color="#fff" />
+        </div>
+        <div>
+          <div style={{ fontSize: 13, fontWeight: 800, color: '#0B1E33' }}>AI Clinical Generator</div>
+          <div className="mono" style={{ fontSize: 8.5, color: 'rgba(99,102,241,0.75)', textTransform: 'uppercase', letterSpacing: '0.14em', marginTop: 2 }}>
+            Powered by Gemini 1.5 Flash · AI Companion Plan
+          </div>
+        </div>
+        <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 5, padding: '4px 10px', borderRadius: 99, background: '#0B1E33', border: '1px solid rgba(45,212,191,0.20)' }}>
+          <Zap size={10} color="#2DD4BF" />
+          <span className="mono" style={{ fontSize: 8.5, color: '#2DD4BF', fontWeight: 700, letterSpacing: '0.10em' }}>PREMIUM</span>
+        </div>
+      </div>
+
+      {/* Mode toggle — feedback or instruction */}
+      <div>
+        <label className="mono" style={{ display: 'block', fontSize: 9, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.14em', fontWeight: 700, marginBottom: 8 }}>
+          Generate Type
+        </label>
+        <div style={{ display: 'flex', gap: 8 }}>
+          {(['feedback', 'instruction'] as const).map(mode => (
+            <button
+              key={mode}
+              onClick={() => { setAiMode(mode); setAiDraft(''); setAiTitle(''); }}
+              style={{
+                flex: 1, padding: '10px', borderRadius: 12, cursor: 'pointer',
+                background: aiMode === mode ? (mode === 'feedback' ? 'rgba(45,212,191,0.10)' : 'rgba(245,158,11,0.10)') : 'rgba(240,244,248,0.8)',
+                border: `1.5px solid ${aiMode === mode ? (mode === 'feedback' ? 'rgba(45,212,191,0.35)' : 'rgba(245,158,11,0.35)') : 'rgba(226,232,240,0.9)'}`,
+                color: aiMode === mode ? (mode === 'feedback' ? '#0891b2' : '#92400e') : '#94a3b8',
+                fontSize: 12.5, fontWeight: 800, transition: 'all 0.2s ease',
+                fontFamily: "'Plus Jakarta Sans', sans-serif",
+              }}
+            >
+              {mode === 'feedback' ? '📊 Feedback' : '📋 Instruction'}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Context note */}
+      <div style={{ padding: '10px 14px', background: 'rgba(240,244,248,0.8)', border: '1px solid rgba(226,232,240,0.9)', borderRadius: 12 }}>
+        <p className="mono" style={{ fontSize: 9, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.12em', margin: '0 0 4px', fontWeight: 700 }}>
+          AI Context
+        </p>
+        <p style={{ fontSize: 12, color: '#475569', margin: 0, lineHeight: 1.65 }}>
+          Gemini will analyse <span style={{ fontWeight: 700, color: '#0B1E33' }}>{patient.name}</span>'s last 7 sessions — grip force trends, endurance drop %, cognitive accuracy, and adherence ({patient.adherence}%) — to generate a personalised{' '}
+          <span style={{ color: aiMode === 'feedback' ? '#2DD4BF' : '#f59e0b', fontWeight: 700 }}>{aiMode}</span>.
+        </p>
+      </div>
+
+      {/* Generate button */}
+      <button
+        className="dm-ai-btn"
+        onClick={generateAI}
+        disabled={aiLoading || !canUseAI}
+        style={{ width: '100%', opacity: !canUseAI ? 0.45 : 1 }}
+      >
+        {aiLoading
+          ? <div style={{ width: 14, height: 14, border: '2.5px solid rgba(99,102,241,0.25)', borderTopColor: '#6366f1', borderRadius: '50%', animation: 'dmSpin 0.75s linear infinite' }} />
+          : <Sparkles size={14} />
+        }
+        {aiLoading ? 'Analysing session data…' : `Generate AI ${aiMode.charAt(0).toUpperCase() + aiMode.slice(1)}`}
+      </button>
+
+      {/* Draft output */}
+      {aiDraft && (
+        <div style={{ animation: 'dmCardPop 0.45s cubic-bezier(0.22,1,0.36,1) both' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+            <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#6366f1', boxShadow: '0 0 6px rgba(99,102,241,0.7)', animation: 'dmDot 2s ease-in-out infinite' }} />
+            <span className="mono" style={{ fontSize: 9, color: '#6366f1', textTransform: 'uppercase', letterSpacing: '0.14em', fontWeight: 700 }}>
+              AI Draft — Edit before sending
+            </span>
+          </div>
+
+          {/* Editable title */}
+          <input
+            className="dm-title-input"
+            value={aiTitle}
+            onChange={e => setAiTitle(e.target.value)}
+            placeholder="Draft title..."
+            style={{ marginBottom: 10 }}
+          />
+
+          {/* Editable content */}
+          <textarea
+            className="dm-textarea"
+            rows={5}
+            value={aiDraft}
+            onChange={e => setAiDraft(e.target.value)}
+            style={{ border: '1.5px solid rgba(99,102,241,0.28)', background: 'rgba(99,102,241,0.04)' }}
+          />
+
+          {/* AI disclaimer + send */}
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 10, flexWrap: 'wrap', gap: 8 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 11, color: '#94a3b8' }}>
+              <Bot size={12} color="#6366f1" />
+              AI-generated · Review before sending
+            </div>
+            <button
+              className="dm-compose-btn"
+              onClick={sendAiDraft}
+              style={{ background: 'linear-gradient(135deg,#6366f1,#8b5cf6)', color: '#fff', boxShadow: '0 6px 22px rgba(99,102,241,0.32)', padding: '11px 20px' }}
+            >
+              <Send size={13} style={{ position: 'relative', zIndex: 1 }} />
+              <span style={{ position: 'relative', zIndex: 1 }}>Send to Patient</span>
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* AI sent history */}
+      {(aiSent[selectedId] ?? []).length > 0 && (
+        <div style={{ marginTop: 4 }}>
+          <div className="mono" style={{ fontSize: 9, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.14em', marginBottom: 10, fontWeight: 700 }}>
+            AI Messages Sent
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            {(aiSent[selectedId] ?? []).map(item => (
+              <div key={item.id} className="dm-sent-item" style={{ borderColor: 'rgba(99,102,241,0.20)', background: 'rgba(99,102,241,0.03)' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 4 }}>
+                  <Bot size={12} color="#6366f1" />
+                  <span style={{ fontSize: 12.5, fontWeight: 700, color: '#0B1E33' }}>{item.title}</span>
+                  <span className="mono" style={{ fontSize: 8.5, color: '#6366f1', background: 'rgba(99,102,241,0.08)', border: '1px solid rgba(99,102,241,0.18)', padding: '1px 6px', borderRadius: 6, marginLeft: 'auto' }}>AI</span>
+                </div>
+                <p style={{ fontSize: 12, color: '#64748b', margin: 0, lineHeight: 1.62, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+                  {item.content}
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
