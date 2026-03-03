@@ -11,7 +11,7 @@ export async function POST(req: Request) {
         const sessions = await getRecentSessions(uid);
 
         const prompt = `
-        Patient name: ${user?.name}
+        Patient name: ${user && "name" in user ? user.name : "Unknown"}
         Recent sessions: ${JSON.stringify(sessions)}
         Question: ${message}
         `;
