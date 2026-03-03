@@ -627,3 +627,47 @@ function CategorySection({ cat, openMap, onToggle }: {
     </div>
   );
 }
+
+/* ══════════════════════════════════════════════════════════
+   MAIN PAGE
+══════════════════════════════════════════════════════════ */
+export default function DoctorHelpPage() {
+  const [mounted,   setMounted]   = useState(false);
+  const [search,    setSearch]    = useState('');
+  const [openMap,   setOpenMap]   = useState<Record<string, boolean>>({});
+  const [activeFilter, setFilter] = useState<string>('all');
+  
+  // State for the mock support ticket form
+  const [ticketSent, setTicketSent] = useState(false);
+  const [ticketMsg,  setTicketMsg]  = useState('');
+
+  useEffect(() => { setMounted(true); }, []);
+
+  const toggleAccordion = (key: string) => {
+    setOpenMap(prev => ({ ...prev, [key]: !prev[key] }));
+  };
+
+  // Dynamically filters the FAQ list based on the active tab and the user's search query
+  const visibleCategories = FAQ_CATEGORIES.filter(cat => {
+    const matchesFilter = activeFilter === 'all' || cat.id === activeFilter;
+    if (!matchesFilter) return false;
+    if (!search.trim()) return true;
+    const q = search.toLowerCase();
+    return cat.items.some(item =>
+      item.q.toLowerCase().includes(q)
+    );
+  }).map(cat => ({
+    ...cat,
+    items: !search.trim()
+      ? cat.items
+      : cat.items.filter(item => item.q.toLowerCase().includes(search.toLowerCase())),
+  }));
+
+  const handleTicket = () => {
+    if (!ticketMsg.trim()) return;
+    setTicketSent(true);
+    // Auto-reset the success state after 3.5 seconds
+    setTimeout(() => { setTicketSent(false); setTicketMsg(''); }, 3500);
+  };
+
+  if (!mounted) return null;
