@@ -27,14 +27,11 @@ export const registerDoctor = async (
   licenseNumber: string = ""
 ) => {
   try {
-    // Create auth account
     const userCredential = await createUserWithEmailAndPassword(auth, email, password);
     const user = userCredential.user;
     
-    // Generate doctor ID (d + random 6 characters from uid)
     const doctorId = "d" + user.uid.slice(-6).toLowerCase();
     
-    // Create doctor profile in Firestore
     const doctorData: DoctorData = {
       uid: user.uid,
       role: "doctor",
@@ -57,7 +54,6 @@ export const registerDoctor = async (
   } catch (error: any) {
     console.error("Registration error:", error);
     
-    // User-friendly error messages
     let errorMessage = "Registration failed";
     if (error.code === "auth/email-already-in-use") {
       errorMessage = "This email is already registered";
@@ -74,7 +70,6 @@ export const registerDoctor = async (
 // --- SIGN IN WITH DOCTOR ID ---
 export const signInWithDoctorId = async (doctorId: string, password: string) => {
   try {
-    // Step 1: Find the email associated with this doctorId
     const usersRef = collection(db, "users");
     const q = query(usersRef, where("doctorId", "==", doctorId.toLowerCase()));
     const querySnapshot = await getDocs(q);
@@ -83,16 +78,13 @@ export const signInWithDoctorId = async (doctorId: string, password: string) => 
       return { success: false, error: "Doctor ID not found" };
     }
     
-    // Get the email from the doctor's profile
     const doctorDoc = querySnapshot.docs[0];
     const doctorData = doctorDoc.data();
     const email = doctorData.email;
     
-    // Step 2: Sign in with email and password
     const userCredential = await signInWithEmailAndPassword(auth, email, password);
     const user = userCredential.user;
     
-    // Verify this is a doctor account
     if (doctorData.role !== "doctor") {
       await signOut(auth);
       return { success: false, error: "This account is not a doctor account" };
@@ -106,7 +98,6 @@ export const signInWithDoctorId = async (doctorId: string, password: string) => 
   } catch (error: any) {
     console.error("Sign in error:", error);
     
-    // User-friendly error messages
     let errorMessage = "Sign in failed";
     if (error.code === "auth/wrong-password") {
       errorMessage = "Incorrect password";
@@ -120,13 +111,12 @@ export const signInWithDoctorId = async (doctorId: string, password: string) => 
   }
 };
 
-// --- SIGN IN WITH EMAIL (Alternative method) ---
+// --- SIGN IN WITH EMAIL ---
 export const signInWithEmail = async (email: string, password: string) => {
   try {
     const userCredential = await signInWithEmailAndPassword(auth, email, password);
     const user = userCredential.user;
     
-    // Verify this is a doctor account
     const userDoc = await getDoc(doc(db, "users", user.uid));
     
     if (!userDoc.exists()) {
@@ -149,7 +139,6 @@ export const signInWithEmail = async (email: string, password: string) => {
   } catch (error: any) {
     console.error("Sign in error:", error);
     
-    // User-friendly error messages
     let errorMessage = "Sign in failed";
     if (error.code === "auth/user-not-found") {
       errorMessage = "No account found with this email";
