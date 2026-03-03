@@ -812,3 +812,315 @@ export default function DoctorHelpPage() {
             ))}
           </div>
         </div>
+
+        {/* ══════════════════════════════════════════════════
+            CATEGORY FILTER TABS
+        ══════════════════════════════════════════════════ */}
+        <div style={{
+          display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap',
+          marginBottom: 24, animation: 'hcFadeUp 0.48s ease 0.12s both',
+        }}>
+          {[
+            { id: 'all', label: 'All Topics', icon: <BookOpen size={12} /> },
+            ...FAQ_CATEGORIES.map(c => ({ id: c.id, label: c.label.split(' ')[0] + (c.label.split(' ')[1] ? ' ' + c.label.split(' ')[1] : ''), icon: c.icon })),
+          ].map(tab => (
+            <button
+              key={tab.id}
+              className="hc-filter-tab"
+              onClick={() => { setFilter(tab.id); setSearch(''); }}
+              style={{
+                background: activeFilter === tab.id ? '#0B1E33' : '#fff',
+                color:      activeFilter === tab.id ? '#fff'    : '#64748b',
+                border:     `1.5px solid ${activeFilter === tab.id ? 'transparent' : 'rgba(226,232,240,0.9)'}`,
+                boxShadow:  activeFilter === tab.id ? '0 4px 14px rgba(11,30,51,0.20)' : 'none',
+              }}
+            >
+              {tab.icon}
+              {tab.label}
+            </button>
+          ))}
+
+          <div style={{ flex: 1 }} />
+
+          <span className="mono" style={{ fontSize: 10, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.12em', fontWeight: 600 }}>
+            {visibleCategories.reduce((n, c) => n + c.items.length, 0)} topics
+          </span>
+        </div>
+
+        {/* ══════════════════════════════════════════════════
+            FAQ ACCORDION SECTIONS
+        ══════════════════════════════════════════════════ */}
+        {visibleCategories.length === 0 ? (
+          <div style={{
+            textAlign: 'center', padding: '60px 24px',
+            background: '#fff', borderRadius: 18,
+            border: '1px solid rgba(226,232,240,0.9)',
+            animation: 'hcFadeUp 0.4s ease both',
+          }}>
+            <HelpCircle size={36} color="#cbd5e1" style={{ marginBottom: 14 }} />
+            <p style={{ fontSize: 15, fontWeight: 700, color: '#64748b', margin: 0 }}>
+              No topics found for <span style={{ color: '#0B1E33' }}>"{search}"</span>
+            </p>
+            <p style={{ fontSize: 13, color: '#94a3b8', marginTop: 6 }}>
+              Try a different search term, or{' '}
+              <button onClick={() => setSearch('')} style={{ background: 'none', border: 'none', color: '#2DD4BF', fontWeight: 700, cursor: 'pointer', fontSize: 13, fontFamily: "'Plus Jakarta Sans',sans-serif" }}>
+                clear the search
+              </button>
+              .
+            </p>
+          </div>
+        ) : (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 36 }}>
+            {visibleCategories.map(cat => (
+              <CategorySection
+                key={cat.id}
+                cat={cat}
+                openMap={openMap}
+                onToggle={toggleAccordion}
+              />
+            ))}
+          </div>
+        )}
+
+        {/* ══════════════════════════════════════════════════
+            CONTACT / SUPPORT FOOTER
+        ══════════════════════════════════════════════════ */}
+        <div id="contact" style={{ marginTop: 52, scrollMarginTop: 24 }}>
+
+          {/* Section header */}
+          <div style={{ textAlign: 'center', marginBottom: 28, animation: 'hcFadeUp 0.48s ease 0.10s both' }}>
+            <div style={{ display: 'inline-flex', alignItems: 'center', gap: 7, marginBottom: 12, padding: '5px 16px', borderRadius: 99, background: 'rgba(45,212,191,0.08)', border: '1px solid rgba(45,212,191,0.20)' }}>
+              <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#2DD4BF', animation: 'hcDot 2s ease-in-out infinite' }} />
+              <span className="mono" style={{ fontSize: 9.5, color: '#0891b2', textTransform: 'uppercase', letterSpacing: '0.18em', fontWeight: 700 }}>
+                Clinical Support Network
+              </span>
+            </div>
+            <h2 style={{ fontSize: 22, fontWeight: 800, color: '#0B1E33', margin: 0 }}>
+              Still need help?
+            </h2>
+            <p style={{ fontSize: 13.5, color: '#64748b', marginTop: 7, fontWeight: 500, maxWidth: 440, margin: '8px auto 0' }}>
+              Our clinical support team is available Monday to Friday, 8 AM – 6 PM. Urgent hardware issues are escalated within 2 hours.
+            </p>
+          </div>
+
+          {/* Contact cards */}
+          <div className="hc-contact-grid" style={{ marginBottom: 24 }}>
+            {[
+              {
+                icon:    <Mail size={20} />,
+                color:   '#2DD4BF',
+                bg:      'rgba(45,212,191,0.10)',
+                border:  'rgba(45,212,191,0.25)',
+                title:   'Email Support',
+                detail:  'support@revivex.com',
+                sub:     'Response within 4 business hours',
+                href:    'mailto:support@revivex.com',
+              },
+              {
+                icon:    <Phone size={20} />,
+                color:   '#6366f1',
+                bg:      'rgba(99,102,241,0.10)',
+                border:  'rgba(99,102,241,0.25)',
+                title:   'Phone Hotline',
+                detail:  '+94 11 234 5678',
+                sub:     'Mon–Fri 8 AM – 6 PM (IST)',
+                href:    'tel:+94112345678',
+              },
+              {
+                icon:    <Settings2 size={20} />,
+                color:   '#f59e0b',
+                bg:      'rgba(245,158,11,0.10)',
+                border:  'rgba(245,158,11,0.25)',
+                title:   'System Admin',
+                detail:  'admin@revivex.com',
+                sub:     'Compliance, access & security',
+                href:    'mailto:admin@revivex.com',
+              },
+            ].map((c, i) => (
+              <a
+                key={c.title}
+                href={c.href}
+                className="hc-contact-card"
+                style={{
+                  animation: `hcCardPop 0.45s cubic-bezier(0.22,1,0.36,1) ${0.12 + i * 0.07}s both`,
+                }}
+              >
+                <div style={{
+                  width: 46, height: 46, borderRadius: 14, flexShrink: 0,
+                  background: c.bg, border: `1.5px solid ${c.border}`,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  color: c.color,
+                }}>
+                  {c.icon}
+                </div>
+                <div>
+                  <div style={{ fontSize: 13.5, fontWeight: 800, color: '#0B1E33', marginBottom: 3 }}>{c.title}</div>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: c.color }}>{c.detail}</div>
+                  <div style={{ fontSize: 11.5, color: '#94a3b8', marginTop: 2 }}>{c.sub}</div>
+                </div>
+                <ExternalLink size={14} color="#cbd5e1" style={{ marginLeft: 'auto', flexShrink: 0 }} />
+              </a>
+            ))}
+          </div>
+
+          {/* Submit a ticket */}
+          <div style={{
+            background: '#fff', borderRadius: 20,
+            border: '1.5px solid rgba(226,232,240,0.9)',
+            boxShadow: '0 2px 20px rgba(11,30,51,0.06)',
+            overflow: 'hidden',
+            animation: 'hcCardPop 0.48s cubic-bezier(0.22,1,0.36,1) 0.18s both',
+          }}>
+            {/* Header stripe */}
+            <div style={{
+              background: 'linear-gradient(135deg,#0B1E33,#1e3a5f)',
+              padding: '18px 26px',
+              display: 'flex', alignItems: 'center', gap: 14,
+              position: 'relative', overflow: 'hidden',
+            }}>
+              <div style={{ position: 'absolute', inset: 0, backgroundImage: 'linear-gradient(rgba(45,212,191,0.04) 1px,transparent 1px),linear-gradient(90deg,rgba(45,212,191,0.04) 1px,transparent 1px)', backgroundSize: '28px 28px', pointerEvents: 'none' }} />
+              <div style={{ width: 38, height: 38, borderRadius: 12, background: 'rgba(45,212,191,0.12)', border: '1px solid rgba(45,212,191,0.22)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#2DD4BF', position: 'relative', zIndex: 1 }}>
+                <MessageSquare size={18} />
+              </div>
+              <div style={{ position: 'relative', zIndex: 1 }}>
+                <div style={{ fontSize: 15, fontWeight: 800, color: '#fff' }}>Submit a Support Ticket</div>
+                <div className="mono" style={{ fontSize: 9, color: 'rgba(45,212,191,0.55)', textTransform: 'uppercase', letterSpacing: '0.18em', marginTop: 2 }}>
+                  Tracked · Prioritised · Resolved
+                </div>
+              </div>
+            </div>
+
+            {/* Form body */}
+            <div style={{ padding: '24px 26px' }}>
+              {ticketSent ? (
+                <div style={{
+                  display: 'flex', alignItems: 'center', gap: 12,
+                  padding: '18px 22px', borderRadius: 14,
+                  background: 'rgba(34,197,94,0.08)', border: '1.5px solid rgba(34,197,94,0.25)',
+                  animation: 'hcCardPop 0.4s cubic-bezier(0.22,1,0.36,1) both',
+                }}>
+                  <CheckCircle2 size={24} color="#22c55e" />
+                  <div>
+                    <div style={{ fontSize: 14, fontWeight: 800, color: '#15803d' }}>Ticket submitted successfully!</div>
+                    <div style={{ fontSize: 12.5, color: '#166534', marginTop: 3 }}>
+                      A confirmation has been sent to your registered email. Expect a response within 4 business hours.
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                    {[
+                      { label: 'Subject', placeholder: 'e.g. Device R-103 not connecting' },
+                      { label: 'Patient ID (if applicable)', placeholder: 'e.g. P007' },
+                    ].map(field => (
+                      <div key={field.label}>
+                        <label className="mono" style={{ display: 'block', fontSize: 9, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.14em', fontWeight: 700, marginBottom: 7 }}>
+                          {field.label}
+                        </label>
+                        <input
+                          placeholder={field.placeholder}
+                          style={{
+                            width: '100%', padding: '10px 14px',
+                            background: 'rgba(240,244,248,0.75)', border: '1.5px solid rgba(226,232,240,0.9)',
+                            borderRadius: 11, fontSize: 13, fontWeight: 500, color: '#0B1E33',
+                            outline: 'none', fontFamily: "'Plus Jakarta Sans',sans-serif",
+                            transition: 'all 0.2s ease',
+                          }}
+                          onFocus={e => { e.target.style.borderColor = 'rgba(45,212,191,0.50)'; e.target.style.background = '#fff'; e.target.style.boxShadow = '0 0 0 3px rgba(45,212,191,0.10)'; }}
+                          onBlur={e => { e.target.style.borderColor = 'rgba(226,232,240,0.9)'; e.target.style.background = 'rgba(240,244,248,0.75)'; e.target.style.boxShadow = 'none'; }}
+                        />
+                      </div>
+                    ))}
+                  </div>
+
+                  <div>
+                    <label className="mono" style={{ display: 'block', fontSize: 9, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.14em', fontWeight: 700, marginBottom: 7 }}>
+                      Describe the issue
+                    </label>
+                    <textarea
+                      rows={4}
+                      value={ticketMsg}
+                      onChange={e => setTicketMsg(e.target.value)}
+                      placeholder="Provide as much detail as possible — device ID, session timestamps, error messages, and steps already attempted will help us resolve the issue faster..."
+                      style={{
+                        width: '100%', padding: '12px 14px',
+                        background: 'rgba(240,244,248,0.75)', border: '1.5px solid rgba(226,232,240,0.9)',
+                        borderRadius: 13, fontSize: 13, fontWeight: 500, color: '#0B1E33',
+                        outline: 'none', resize: 'none', lineHeight: 1.7,
+                        fontFamily: "'Plus Jakarta Sans',sans-serif", transition: 'all 0.2s ease',
+                      }}
+                      onFocus={e => { e.target.style.borderColor = 'rgba(45,212,191,0.50)'; e.target.style.background = '#fff'; e.target.style.boxShadow = '0 0 0 3px rgba(45,212,191,0.10)'; }}
+                      onBlur={e => { e.target.style.borderColor = 'rgba(226,232,240,0.9)'; e.target.style.background = 'rgba(240,244,248,0.75)'; e.target.style.boxShadow = 'none'; }}
+                    />
+                  </div>
+
+                  {/* Priority + Submit */}
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <span className="mono" style={{ fontSize: 9.5, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.12em', fontWeight: 700 }}>Priority:</span>
+                      {['Low', 'Medium', 'High'].map((p, pi) => {
+                        const pColor = pi === 0 ? '#22c55e' : pi === 1 ? '#f59e0b' : '#ef4444';
+                        return (
+                          <button
+                            key={p}
+                            style={{
+                              padding: '4px 12px', borderRadius: 99, border: `1.5px solid ${pColor}30`,
+                              background: `${pColor}0a`, color: pColor,
+                              fontSize: 11, fontWeight: 700, cursor: 'pointer',
+                              fontFamily: "'Plus Jakarta Sans',sans-serif",
+                              transition: 'all 0.15s ease',
+                            }}
+                            onMouseEnter={e => { e.currentTarget.style.background = `${pColor}18`; e.currentTarget.style.borderColor = `${pColor}55`; }}
+                            onMouseLeave={e => { e.currentTarget.style.background = `${pColor}0a`; e.currentTarget.style.borderColor = `${pColor}30`; }}
+                          >
+                            {p}
+                          </button>
+                        );
+                      })}
+                    </div>
+
+                    <button
+                      onClick={handleTicket}
+                      disabled={!ticketMsg.trim()}
+                      style={{
+                        display: 'inline-flex', alignItems: 'center', gap: 8,
+                        padding: '12px 24px', borderRadius: 13, border: 'none',
+                        background: ticketMsg.trim()
+                          ? 'linear-gradient(135deg,#2DD4BF,#0891b2)'
+                          : 'rgba(226,232,240,0.9)',
+                        color: ticketMsg.trim() ? '#0B1E33' : '#94a3b8',
+                        fontSize: 13, fontWeight: 800, cursor: ticketMsg.trim() ? 'pointer' : 'default',
+                        boxShadow: ticketMsg.trim() ? '0 6px 20px rgba(45,212,191,0.30)' : 'none',
+                        transition: 'all 0.22s ease',
+                        fontFamily: "'Plus Jakarta Sans',sans-serif",
+                        position: 'relative', overflow: 'hidden',
+                      }}
+                    >
+                      <Send size={15} style={{ position: 'relative', zIndex: 1 }} />
+                      <span style={{ position: 'relative', zIndex: 1 }}>Submit Ticket</span>
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Bottom system info bar */}
+          <div style={{ marginTop: 22, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 18, flexWrap: 'wrap' }}>
+            {[
+              { icon: <Lock size={11} />, text: 'All data encrypted at rest & in transit' },
+              { icon: <Eye size={11} />,  text: 'Audit logs available on request' },
+              { icon: <Bot size={11} />,  text: 'AI features require AI Companion plan' },
+            ].map(info => (
+              <div key={info.text} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                <span style={{ color: '#94a3b8' }}>{info.icon}</span>
+                <span className="mono" style={{ fontSize: 9.5, color: '#94a3b8', letterSpacing: '0.08em' }}>{info.text}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
