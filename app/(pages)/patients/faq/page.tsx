@@ -671,3 +671,144 @@ export default function DoctorHelpPage() {
   };
 
   if (!mounted) return null;
+
+  return (
+    <div className="hc" style={{ minHeight: '100vh', background: '#F0F4F8', paddingBottom: 72 }}>
+      <style>{CSS}</style>
+
+      {/* ── Ambient background ───────────────────────────── */}
+      <div style={{ position: 'fixed', inset: 0, pointerEvents: 'none', zIndex: 0, overflow: 'hidden' }}>
+        <div style={{ position: 'absolute', top: '-12%', right: '3%', width: 700, height: 700, background: 'radial-gradient(circle,rgba(45,212,191,0.050),transparent 65%)', borderRadius: '50%' }} />
+        <div style={{ position: 'absolute', bottom: '-10%', left: '2%', width: 600, height: 600, background: 'radial-gradient(circle,rgba(99,102,241,0.040),transparent 65%)', borderRadius: '50%' }} />
+        <div style={{ position: 'absolute', inset: 0, backgroundImage: 'linear-gradient(rgba(11,30,51,0.018) 1px,transparent 1px),linear-gradient(90deg,rgba(11,30,51,0.018) 1px,transparent 1px)', backgroundSize: '54px 54px' }} />
+      </div>
+
+      <div className="hc-pad" style={{ maxWidth: 1120, margin: '0 auto', padding: '28px 24px', position: 'relative', zIndex: 1 }}>
+
+        {/* ── Back nav ─────────────────────────────────────── */}
+        <div style={{ marginBottom: 24, animation: 'hcFadeUp 0.40s ease both' }}>
+          <Link href="/doctor/home" style={{
+            display: 'inline-flex', alignItems: 'center', gap: 7,
+            padding: '8px 16px', borderRadius: 12,
+            background: '#fff', border: '1.5px solid rgba(226,232,240,0.9)',
+            fontSize: 13, fontWeight: 700, color: '#64748b', textDecoration: 'none',
+            transition: 'all 0.2s ease', boxShadow: '0 1px 8px rgba(11,30,51,0.05)',
+          }}>
+            <ArrowLeft size={14} /> Back to Dashboard
+          </Link >
+        </div>
+
+        {/* ══════════════════════════════════════════════════
+            HERO — dark header card
+        ══════════════════════════════════════════════════ */}
+        <div style={{
+          background: '#0B1E33', borderRadius: 22, marginBottom: 28,
+          overflow: 'hidden', position: 'relative',
+          animation: 'hcFadeUp 0.45s ease 0.04s both',
+        }}>
+          {/* Grid overlay */}
+          <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', backgroundImage: 'linear-gradient(rgba(45,212,191,0.038) 1px,transparent 1px),linear-gradient(90deg,rgba(45,212,191,0.038) 1px,transparent 1px)', backgroundSize: '34px 34px' }} />
+          {/* Scan line */}
+          <div style={{ position: 'absolute', inset: 0, overflow: 'hidden', pointerEvents: 'none' }}>
+            <div style={{ position: 'absolute', left: 0, right: 0, height: '22%', background: 'linear-gradient(to bottom,transparent,rgba(45,212,191,0.055),transparent)', animation: 'hcScanLine 6s linear infinite' }} />
+          </div>
+
+          <div style={{ position: 'relative', zIndex: 2, padding: '36px 40px' }}>
+            {/* Label */}
+            <p className="mono" style={{ fontSize: 9, color: 'rgba(45,212,191,0.65)', textTransform: 'uppercase', letterSpacing: '0.24em', marginBottom: 10, fontWeight: 600 }}>
+              ReViveX Clinical Platform
+            </p>
+
+            <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 32, flexWrap: 'wrap', marginBottom: 28 }}>
+              <div>
+                <h1 style={{ fontSize: 'clamp(1.6rem,3vw,2.25rem)', fontWeight: 800, color: '#fff', margin: 0, lineHeight: 1.12 }}>
+                  Help &amp; Clinical <span style={{ color: '#2DD4BF' }}>Support</span>
+                </h1>
+                <p style={{ fontSize: 14, color: 'rgba(255,255,255,0.45)', marginTop: 8, fontWeight: 500, maxWidth: 480, lineHeight: 1.65 }}>
+                  Documentation, clinical protocols, hardware troubleshooting, and AI feature guidance for the ReViveX Doctor Dashboard.
+                </p>
+              </div>
+
+              {/* Status pills */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8, flexShrink: 0 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 7, padding: '7px 14px', borderRadius: 11, background: 'rgba(45,212,191,0.10)', border: '1px solid rgba(45,212,191,0.20)' }}>
+                  <div style={{ width: 7, height: 7, borderRadius: '50%', background: '#22c55e', boxShadow: '0 0 6px rgba(34,197,94,0.7)', animation: 'hcDot 2s ease-in-out infinite' }} />
+                  <span className="mono" style={{ fontSize: 9.5, color: '#2DD4BF', fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase' }}>All Systems Operational</span>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 7, padding: '7px 14px', borderRadius: 11, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)' }}>
+                  <Server size={11} color="rgba(255,255,255,0.35)" />
+                  <span className="mono" style={{ fontSize: 9.5, color: 'rgba(255,255,255,0.40)', fontWeight: 600, letterSpacing: '0.10em', textTransform: 'uppercase' }}>v2.4.1 — Platform Build</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Search bar */}
+            <div style={{ position: 'relative', maxWidth: 620 }}>
+              <Search size={17} color="#94a3b8" style={{ position: 'absolute', left: 16, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none', zIndex: 1 }} />
+              <input
+                className="hc-search"
+                placeholder="Search protocols, hardware setups, or AI features..."
+                value={search}
+                onChange={e => setSearch(e.target.value)}
+              />
+              {search && (
+                <button
+                  onClick={() => setSearch('')}
+                  style={{ position: 'absolute', right: 14, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: '#94a3b8', fontSize: 18, lineHeight: 1 }}
+                >
+                  ×
+                </button>
+              )}
+            </div>
+            {search && (
+              <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.35)', marginTop: 10 }}>
+                Showing results for <span style={{ color: '#2DD4BF', fontWeight: 700 }}>"{search}"</span>
+                {' '}— {visibleCategories.reduce((n, c) => n + c.items.length, 0)} topics found
+              </p>
+            )}
+          </div>
+        </div>
+
+        {/* ══════════════════════════════════════════════════
+            QUICK ACTION CARDS
+        ══════════════════════════════════════════════════ */}
+        <div style={{ marginBottom: 32, animation: 'hcFadeUp 0.48s ease 0.08s both' }}>
+          <div className="hc-quick-grid">
+            {QUICK_ACTIONS.map((card, i) => (
+              <a
+                key={card.label}
+                href={card.anchor}
+                className="hc-quick-card"
+                style={{
+                  background: card.bg,
+                  border: `1.5px solid ${card.border}`,
+                  animationDelay: `${0.10 + i * 0.06}s`,
+                  animation: `hcCardPop 0.45s cubic-bezier(0.22,1,0.36,1) ${0.10 + i * 0.06}s both`,
+                }}
+              >
+                <div style={{
+                  width: 42, height: 42, borderRadius: 13,
+                  background: `${card.color}18`,
+                  border: `1.5px solid ${card.color}35`,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  color: card.color, flexShrink: 0,
+                }}>
+                  {card.icon}
+                </div>
+                <div>
+                  <div style={{ fontSize: 13.5, fontWeight: 800, color: '#0B1E33', marginBottom: 4 }}>
+                    {card.label}
+                  </div>
+                  <div style={{ fontSize: 12, color: '#64748b', lineHeight: 1.55 }}>
+                    {card.desc}
+                  </div>
+                </div>
+                <ChevronDown
+                  size={14}
+                  color={card.color}
+                  style={{ transform: 'rotate(-90deg)', marginTop: 'auto', alignSelf: 'flex-end' }}
+                />
+              </a>
+            ))}
+          </div>
+        </div>
