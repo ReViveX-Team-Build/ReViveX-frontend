@@ -535,7 +535,7 @@ export default function PatientMessagesPage() {
               <div
                 key={msg.id}
                 className={`pm-msg-card${!msg.isRead ? ' unread' : ''}`}
-                style={{ animationDelay: `${0.18 + idx * 0.06}s`, animation: 'pmCardPop 0.50s cubic-bezier(0.22,1,0.36,1) both' }}
+                style={{ animation: `pmCardPop 0.50s cubic-bezier(0.22,1,0.36,1) ${0.18 + idx * 0.06}s both` }}
               >
                 {/* Colored left bar — type indicator */}
                 <div style={{
@@ -814,8 +814,7 @@ export default function PatientMessagesPage() {
                     style={{
                       display: 'flex', justifyContent: isDoc ? 'flex-start' : 'flex-end',
                       gap: 8, alignItems: 'flex-end',
-                      animation: 'pmMsgIn 0.28s cubic-bezier(0.22,1,0.36,1) both',
-                      animationDelay: `${i * 0.04}s`,
+                      animation: `pmMsgIn 0.28s cubic-bezier(0.22,1,0.36,1) ${i * 0.04}s both`,
                     }}>
 
                     {/* Doctor avatar */}
