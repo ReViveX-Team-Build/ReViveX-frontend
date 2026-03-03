@@ -6,7 +6,6 @@ import {
 } from "firebase/auth";
 import { doc, setDoc, getDoc, query, collection, where, getDocs, Timestamp } from "firebase/firestore";
 
-// Interface for Doctor data
 interface DoctorData {
   uid: string;
   role: "doctor";
@@ -18,7 +17,6 @@ interface DoctorData {
   createdAt: any;
 }
 
-// --- SIGN UP DOCTOR ---
 export const registerDoctor = async (
   email: string, 
   password: string, 
@@ -67,7 +65,6 @@ export const registerDoctor = async (
   }
 };
 
-// --- SIGN IN WITH DOCTOR ID ---
 export const signInWithDoctorId = async (doctorId: string, password: string) => {
   try {
     const usersRef = collection(db, "users");
@@ -111,7 +108,6 @@ export const signInWithDoctorId = async (doctorId: string, password: string) => 
   }
 };
 
-// --- SIGN IN WITH EMAIL ---
 export const signInWithEmail = async (email: string, password: string) => {
   try {
     const userCredential = await signInWithEmailAndPassword(auth, email, password);
@@ -154,7 +150,6 @@ export const signInWithEmail = async (email: string, password: string) => {
   }
 };
 
-// --- SIGN OUT ---
 export const signOutDoctor = async () => {
   try {
     await signOut(auth);
