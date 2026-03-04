@@ -134,6 +134,7 @@ export default function PatientSignInPage() {
                           setError("");
                         }}
                         placeholder="e.g., p7a3b2f"
+                        autoComplete="off"
                         className="w-full px-4 py-2.5 border-2 border-gray-200 rounded-lg focus:outline-none focus:border-purple-500 transition-colors text-gray-900 placeholder-gray-400"
                         required
                       />
@@ -154,6 +155,7 @@ export default function PatientSignInPage() {
                           setError("");
                         }}
                         placeholder="patient@example.com"
+                        autoComplete="off"
                         className="w-full px-4 py-2.5 border-2 border-gray-200 rounded-lg focus:outline-none focus:border-purple-500 transition-colors text-gray-900 placeholder-gray-400"
                         required
                       />
@@ -174,6 +176,7 @@ export default function PatientSignInPage() {
                           setError("");
                         }}
                         placeholder="Enter your password"
+                        autoComplete="off"
                         className="w-full px-4 py-2.5 border-2 border-gray-200 rounded-lg focus:outline-none focus:border-purple-500 transition-colors text-gray-900 placeholder-gray-400"
                         required
                       />
