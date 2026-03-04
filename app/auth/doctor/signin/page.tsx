@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Lottie from 'lottie-react';
 import doctorAnimation from '@/public/animations/doctor-animation.json';
-import { signInWithDoctorId, signInWithEmail } from "@/lib/auth/doctorAuth";
+import { signInWithDoctorId, signInWithEmail } from "@/app/lib/auth/doctorAuth";
 
 export default function DoctorSignInPage() {
   const router = useRouter();

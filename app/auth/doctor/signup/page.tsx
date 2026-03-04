@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Lottie from 'lottie-react';
 import doctorAnimation from '@/public/animations/doctor-animation.json';
-import { registerDoctor } from "@/lib/auth/doctorAuth";
+import { registerDoctor } from "@/app/lib/auth/doctorAuth";
 
 export default function DoctorSignUpPage() {
   const router = useRouter();
