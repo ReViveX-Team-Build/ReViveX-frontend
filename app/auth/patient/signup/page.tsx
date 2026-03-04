@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Lottie from 'lottie-react';
-import doctorAnimation from '@/public/animations/doctor-animation.json';
+import doctorAnimation from '@/public/animations/patient-animation.json';
 import { registerPatient } from "@/app/lib/auth/patientAuth";
 
 export default function PatientSignUpPage() {
