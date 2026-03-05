@@ -13,3 +13,7 @@ interface Navigator {
 serial?: any;
 }
 }
+
+export function useSensor() {
+    const [isConnected, setIsConnected] = useState(false);
+    const [currentPressure, setCurrentPressure] = useState(0);
