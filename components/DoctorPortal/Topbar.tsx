@@ -442,7 +442,7 @@ export default function DoctorTopbar() {
                 {[
                   { label: "View Profile",    href: "/doctor/profile"  },
                   { label: "Account Settings",href: "/doctor/settings" },
-                  { label: "Help & Support",  href: "/doctor/support"  },
+                  { label: "Help & Support",  href: "/doctor/faq"  },
                 ].map(item => (
                   <a key={item.label} href={item.href} className="dtb-menu-item">{item.label}</a>
                 ))}

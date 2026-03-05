@@ -11,6 +11,11 @@ import {
   Flame, BookOpen,
 } from "lucide-react";
 
+// --- FIREBASE IMPORTS ---
+import { auth, db } from "../../../lib/firebase";
+import { doc, getDoc, collection, query, where, getDocs, orderBy, limit } from "firebase/firestore";
+import { PatientData, TherapyProtocol, GameSession } from "../../../lib/db/types";
+
 /* ═══════════════════════════════════════════
    TYPES
 ═══════════════════════════════════════════ */
@@ -35,9 +40,9 @@ interface Level {
 }
 
 /* ═══════════════════════════════════════════
-   DATA
+   BASE DATA LIBRARY (Fallback / Template)
 ═══════════════════════════════════════════ */
-const LEVELS: Level[] = [
+const BASE_LEVELS: Level[] = [
   {
     id: 1, title: "The Flow", category: "MOTOR",
     desc: "Baseline calibration and introductory motor control. Establishes your squeeze-force baseline for the hardware sensor.",
@@ -85,14 +90,6 @@ const LEVELS: Level[] = [
   },
 ];
 
-const ASSIGNED = {
-  title: "Rhythm Reef",
-  levelId: 2,
-  duration: "15 Mins",
-  doctorNote: "Focus on maintaining grip strength during the fast sections. Aim for consistent timing — not maximum force.",
-  path: "/game/level-2",
-};
-
 /* ═══════════════════════════════════════════
    ANIMATED NUMBER
 ═══════════════════════════════════════════ */
@@ -125,7 +122,6 @@ const CSS = `
   .lv-dash * { font-family: 'Plus Jakarta Sans', system-ui, sans-serif; box-sizing: border-box; }
   .lv-dash .mono { font-family: 'JetBrains Mono', monospace; }
 
-  /* ── Keyframes ────────────────────────────────────────── */
   @keyframes fadeUp {
     from { opacity:0; transform:translateY(22px); }
     to   { opacity:1; transform:translateY(0); }
@@ -179,7 +175,6 @@ const CSS = `
     to   { width:var(--bar-w,0%); }
   }
 
-  /* ── Card & interactive classes ─────────────────────── */
   .lv-card {
     transition: transform 0.28s cubic-bezier(0.22,1,0.36,1), box-shadow 0.28s ease;
     background: #fff;
@@ -230,13 +225,11 @@ const CSS = `
     font-size: 11px; color: #94a3b8;
   }
 
-  /* ── Responsive Layout ───────────────────────────────── */
   .lv-main-grid     { display:grid; grid-template-columns:1fr 380px; gap:22px; }
   .lv-cards-grid    { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
   .lv-metrics-grid  { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; }
   .lv-filter-strip  { display:flex; flex-wrap:wrap; gap:4px; }
 
-  /* Hide neural net on < 1024 */
   @media (max-width:1280px) {
     .lv-main-grid { grid-template-columns:1fr 340px; }
   }
@@ -269,7 +262,7 @@ interface NNode {
 }
 interface NEdge { from: number; to: number; progress: number; speed: number; }
 
-const NeuralNetworkCanvas: React.FC = () => {
+const NeuralNetworkCanvas: React.FC<{ levels: Level[] }> = ({ levels }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const nodesRef  = useRef<NNode[]>([]);
   const edgesRef  = useRef<NEdge[]>([]);
@@ -284,7 +277,7 @@ const NeuralNetworkCanvas: React.FC = () => {
       { x: w * 0.74, y: h * 0.24 },
       { x: w * 0.90, y: h * 0.60 },
     ];
-    nodesRef.current = LEVELS.map((lvl, i) => ({
+    nodesRef.current = levels.map((lvl, i) => ({
       x: pos[i].x, y: pos[i].y,
       homeX: pos[i].x, homeY: pos[i].y,
       vx: (Math.random() - 0.5) * 0.14,
@@ -299,7 +292,7 @@ const NeuralNetworkCanvas: React.FC = () => {
       { from: 0, to: 2, progress: 0.5,  speed: 0.0015 },
       { from: 1, to: 3, progress: 0.75, speed: 0.0018 },
     ];
-  }, []);
+  }, [levels]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -623,6 +616,13 @@ export default function LevelsPage() {
   const [clock, setClock] = useState("");
   const [mounted, setMounted] = useState(false);
 
+  // --- FIREBASE STATES ---
+  const [patientData, setPatientData] = useState<PatientData | null>(null);
+  const [activeProtocol, setActiveProtocol] = useState<TherapyProtocol | null>(null);
+  const [clinicalStats, setClinicalStats] = useState({ accuracy: 0, streak: 0 });
+  const [isLoading, setIsLoading] = useState(true);
+
+  // Clock tick
   useEffect(() => {
     setMounted(true);
     const fmt = () => new Date().toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", second: "2-digit" });
@@ -631,10 +631,95 @@ export default function LevelsPage() {
     return () => clearInterval(id);
   }, []);
 
+  // --- FETCH DATA FROM FIREBASE ---
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        // Fallback ID for demo if not logged in
+        const uid = auth?.currentUser?.uid || "patient_mock_001";
+        
+        // 1. Fetch Patient Data (XP, Streaks, Unlocks)
+        const userSnap = await getDoc(doc(db, "users", uid));
+        let userData: PatientData | null = null;
+        if (userSnap.exists()) {
+          userData = userSnap.data() as PatientData;
+          setPatientData(userData);
+        }
+
+        // 2. Fetch Doctor's Protocol Assignment
+        const protocolQuery = query(collection(db, "protocols"), where("patientId", "==", uid));
+        const protocolSnap = await getDocs(protocolQuery);
+        if (!protocolSnap.empty) {
+          setActiveProtocol(protocolSnap.docs[0].data() as TherapyProtocol);
+        }
+
+        // 3. Fetch Recent Sessions (To calculate Grip Accuracy)
+        const sessionQuery = query(collection(db, "game_sessions"), where("userId", "==", uid), orderBy("timestamp", "desc"), limit(7));
+        const sessionSnap = await getDocs(sessionQuery);
+        let totalAccuracy = 0;
+        let count = 0;
+        
+        sessionSnap.forEach((doc) => {
+          const s = doc.data() as GameSession;
+          if (s.metrics && s.metrics.cognitiveAccuracyPercent !== undefined) {
+            totalAccuracy += s.metrics.cognitiveAccuracyPercent;
+            count++;
+          }
+        });
+
+        setClinicalStats({
+          accuracy: count > 0 ? Math.round(totalAccuracy / count) : 0,
+          streak: userData?.gamification?.currentStreak || 0
+        });
+
+      } catch (error) {
+        console.error("Error fetching data:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    fetchData();
+  }, []);
+
   if (!mounted) return null;
 
-  const filteredLevels = activeCategory === "ALL" ? LEVELS : LEVELS.filter(l => l.category === activeCategory);
-  const assigned = LEVELS.find(l => l.id === ASSIGNED.levelId)!;
+  // Render a seamless loading state that doesn't break the aesthetic
+  if (isLoading) {
+    return (
+      <div className="lv-dash" style={{ minHeight: "100vh", background: "#F0F4F8", display: "flex", justifyContent: "center", alignItems: "center" }}>
+        <div style={{ width: 40, height: 40, borderRadius: "50%", border: "4px solid rgba(45,212,191,0.2)", borderTopColor: "#2DD4BF", animation: "spin 1s linear infinite" }} />
+        <style>{`@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }`}</style>
+      </div>
+    );
+  }
+
+  // --- DYNAMIC LEVEL MAPPING ---
+  // Overrides the hardcoded 'locked' status based on Firebase data
+  const dynamicLevels = BASE_LEVELS.map(level => ({
+    ...level,
+    locked: patientData ? !patientData.gamification.unlockedLevels.includes(level.id) : level.locked
+  }));
+
+  const filteredLevels = activeCategory === "ALL" ? dynamicLevels : dynamicLevels.filter(l => l.category === activeCategory);
+  
+  // Dynamic variables for UI bindings
+  const unlockedCount = patientData?.gamification?.unlockedLevels?.length || 0;
+  const totalXp = patientData?.gamification?.totalXp || 0;
+  
+  // Find the exact level the doctor assigned (or fallback to Level 1)
+  const assignedLevelId = activeProtocol ? activeProtocol.level : 1;
+  const assignedLevelData = dynamicLevels.find(l => l.id === assignedLevelId) || dynamicLevels[0];
+  
+  // Dynamic Hero Card Data
+  const assignedTitle = activeProtocol?.gameId === "synapse_racer" ? "Synapse Racer" : "Stability Game";
+  const assignedDuration = assignedLevelData.duration;
+  const targetHandFormatted = activeProtocol?.targetHand ? activeProtocol.targetHand.charAt(0).toUpperCase() + activeProtocol.targetHand.slice(1) + " Hand" : "Right Hand";
+  const doctorInstructions = "Focus on maintaining grip strength during the fast sections. Aim for consistent timing — not maximum force."; // Replace with activeProtocol.doctorNote if you added it to DB schema
+  const assignedPath = activeProtocol?.gameId === "synapse_racer" ? "/game/level-1" : "/game/stability";
+
+  // Find next locked level for the Teaser
+  const nextLockedLevel = dynamicLevels.find(l => l.locked);
 
   return (
     <div className="lv-dash" style={{ minHeight: "100vh", background: "#F0F4F8", paddingBottom: 52 }}>
@@ -683,8 +768,8 @@ export default function LevelsPage() {
               Your <span style={{ color: "#2DD4BF" }}>Roadmap.</span>
             </h1>
             <p style={{ fontSize: 13, color: "#94a3b8", marginTop: 5, fontWeight: 500 }}>
-              <span style={{ color: "#2DD4BF", fontWeight: 700 }}>2 levels</span> unlocked ·{" "}
-              <span style={{ color: "#8b5cf6", fontWeight: 700 }}>400 XP</span> earned this week
+              <span style={{ color: "#2DD4BF", fontWeight: 700 }}>{unlockedCount} levels</span> unlocked ·{" "}
+              <span style={{ color: "#8b5cf6", fontWeight: 700 }}>{totalXp} XP</span> earned overall
             </p>
           </div>
 
@@ -709,7 +794,7 @@ export default function LevelsPage() {
               <div>
                 <div className="mono" style={{ fontSize: 9, color: "#f59e0b", textTransform: "uppercase", letterSpacing: "0.14em" }}>Total XP</div>
                 <div style={{ fontSize: 14, fontWeight: 800, color: "#0B1E33", lineHeight: 1 }}>
-                  <AnimNum to={400} delay={300} />
+                  <AnimNum to={totalXp} delay={300} />
                 </div>
               </div>
             </div>
@@ -721,7 +806,7 @@ export default function LevelsPage() {
               <Trophy size={16} color="#6366f1" />
               <div>
                 <div className="mono" style={{ fontSize: 9, color: "#6366f1", textTransform: "uppercase", letterSpacing: "0.14em" }}>Levels</div>
-                <div style={{ fontSize: 14, fontWeight: 800, color: "#0B1E33", lineHeight: 1 }}>2 / 5</div>
+                <div style={{ fontSize: 14, fontWeight: 800, color: "#0B1E33", lineHeight: 1 }}>{unlockedCount} / 5</div>
               </div>
             </div>
           </div>
@@ -782,7 +867,7 @@ export default function LevelsPage() {
                   </div>
                   <div style={{ display: "flex", alignItems: "center", gap: 6, color: "rgba(255,255,255,0.35)" }}>
                     <Clock size={13} />
-                    <span className="mono" style={{ fontSize: 11, fontWeight: 500 }}>{ASSIGNED.duration}</span>
+                    <span className="mono" style={{ fontSize: 11, fontWeight: 500 }}>{assignedDuration}</span>
                   </div>
                 </div>
 
@@ -792,11 +877,11 @@ export default function LevelsPage() {
                     <div style={{ marginBottom: 16 }}>
                       <h2 style={{ fontSize: "clamp(1.8rem,3.2vw,2.6rem)", fontWeight: 800, color: "#fff",
                         letterSpacing: "-0.02em", lineHeight: 1.1, margin: 0 }}>
-                        {ASSIGNED.title}<span style={{ color: "#2DD4BF" }}> Protocol</span>
+                        {assignedTitle}<span style={{ color: "#2DD4BF" }}> Protocol</span>
                       </h2>
                       <div className="mono" style={{ fontSize: 10, color: "rgba(255,255,255,0.30)",
                         textTransform: "uppercase", letterSpacing: "0.20em", marginTop: 8 }}>
-                        Level 02 · Motor · {assigned.duration}
+                        Level {String(assignedLevelId).padStart(2, "0")} · {targetHandFormatted} · {activeProtocol?.settings.difficulty || "Medium"}
                       </div>
                     </div>
 
@@ -809,16 +894,16 @@ export default function LevelsPage() {
                       <Stethoscope size={14} color="#2DD4BF" style={{ flexShrink: 0, marginTop: 2 }} />
                       <p style={{ fontSize: 12.5, color: "rgba(255,255,255,0.60)", lineHeight: 1.65, margin: 0 }}>
                         <span style={{ color: "#2DD4BF", fontWeight: 700 }}>Dr. Note: </span>
-                        {ASSIGNED.doctorNote}
+                        {doctorInstructions}
                       </p>
                     </div>
 
                     {/* Stat badges */}
                     <div className="lv-hero-badges" style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
                       {[
-                        { icon: <Activity size={12} />, label: "Focus",  val: "Timing",  c: "#fbbf24" },
-                        { icon: <Brain    size={12} />, label: "Type",   val: "Motor",   c: "#a78bfa" },
-                        { icon: <Zap      size={12} />, label: "XP",     val: "+280",    c: "#2DD4BF" },
+                        { icon: <Activity size={12} />, label: "Focus",  val: assignedLevelData.tags[0] || "Timing",  c: "#fbbf24" },
+                        { icon: <Brain    size={12} />, label: "Type",   val: assignedLevelData.category,   c: "#a78bfa" },
+                        { icon: <Zap      size={12} />, label: "XP",     val: `+${assignedLevelData.xp}`,    c: "#2DD4BF" },
                       ].map(s => (
                         <div key={s.label} style={{
                           display: "flex", alignItems: "center", gap: 7,
@@ -837,7 +922,7 @@ export default function LevelsPage() {
                   {/* CTA */}
                   <div className="lv-hero-cta" style={{ flexShrink: 0 }}>
                     <button
-                      onClick={() => router.push(ASSIGNED.path)}
+                      onClick={() => router.push(assignedPath)}
                       className="lv-cta-btn"
                       style={{
                         background: "linear-gradient(135deg,#2DD4BF,#0891b2)",
@@ -870,6 +955,69 @@ export default function LevelsPage() {
                       background: "linear-gradient(90deg,rgba(45,212,191,0.7),#2DD4BF)",
                       boxShadow: "0 0 12px rgba(45,212,191,0.5)",
                     }} />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* ── DOCTOR'S PROTOCOL SETTINGS ──────────────────────── */}
+            <div style={{
+              animation: "cardPop 0.55s cubic-bezier(0.22,1,0.36,1) 0.12s both",
+              background: "#fff",
+              borderRadius: 22,
+              border: "1px solid rgba(226,232,240,0.9)",
+              boxShadow: "0 2px 18px rgba(11,30,51,0.055)",
+              padding: "24px",
+              display: "flex", flexDirection: "column", gap: 16,
+            }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                <div style={{ width: 34, height: 34, borderRadius: 10, background: "rgba(45,212,191,0.12)", display: "flex", alignItems: "center", justifyContent: "center", color: "#2DD4BF" }}>
+                  <Stethoscope size={16} />
+                </div>
+                <div>
+                  <h3 style={{ fontSize: 15, fontWeight: 800, color: "#0B1E33", margin: 0 }}>Clinical Parameters</h3>
+                  <p className="mono" style={{ fontSize: 9, color: "#94a3b8", textTransform: "uppercase", letterSpacing: "0.14em", marginTop: 2, fontWeight: 700 }}>
+                    Strict hardware settings by your neurologist
+                  </p>
+                </div>
+              </div>
+
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+                {/* Target Hand */}
+                <div style={{ background: "#f8fafc", borderRadius: 14, padding: "12px 16px", border: "1px solid rgba(226,232,240,0.6)" }}>
+                  <span className="mono" style={{ fontSize: 8.5, color: "#64748b", textTransform: "uppercase", letterSpacing: "0.1em" }}>Target Hand</span>
+                  <div style={{ fontSize: 13, fontWeight: 800, color: "#0B1E33", marginTop: 4 }}>
+                    {activeProtocol?.targetHand ? activeProtocol.targetHand.toUpperCase() : "RIGHT"}
+                  </div>
+                </div>
+                
+                {/* Hardware Focus */}
+                <div style={{ background: "#f8fafc", borderRadius: 14, padding: "12px 16px", border: "1px solid rgba(226,232,240,0.6)" }}>
+                  <span className="mono" style={{ fontSize: 8.5, color: "#64748b", textTransform: "uppercase", letterSpacing: "0.1em" }}>Hardware Focus</span>
+                  <div style={{ fontSize: 13, fontWeight: 800, color: "#0B1E33", marginTop: 4 }}>
+                    {activeProtocol?.hardwareFocus === "mpx_pressure" ? "MPX SENSOR" : "IMU MOTION"}
+                  </div>
+                </div>
+
+                {/* Visual Guides Toggle */}
+                <div style={{ background: "#f8fafc", borderRadius: 14, padding: "12px 16px", border: "1px solid rgba(226,232,240,0.6)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  <span className="mono" style={{ fontSize: 8.5, color: "#64748b", textTransform: "uppercase", letterSpacing: "0.1em" }}>Visual Guides</span>
+                  <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                    <span style={{ fontSize: 10, fontWeight: 800, color: activeProtocol?.settings?.visualGuides ? "#2DD4BF" : "#94a3b8" }}>
+                      {activeProtocol?.settings?.visualGuides ? "ON" : "OFF"}
+                    </span>
+                    <div style={{ width: 8, height: 8, borderRadius: "50%", background: activeProtocol?.settings?.visualGuides ? "#2DD4BF" : "#cbd5e1", boxShadow: activeProtocol?.settings?.visualGuides ? "0 0 6px rgba(45,212,191,0.6)" : "none" }} />
+                  </div>
+                </div>
+
+                {/* Audio Hints Toggle */}
+                <div style={{ background: "#f8fafc", borderRadius: 14, padding: "12px 16px", border: "1px solid rgba(226,232,240,0.6)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  <span className="mono" style={{ fontSize: 8.5, color: "#64748b", textTransform: "uppercase", letterSpacing: "0.1em" }}>Audio Hints</span>
+                  <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                    <span style={{ fontSize: 10, fontWeight: 800, color: activeProtocol?.settings?.audioHints ? "#8b5cf6" : "#94a3b8" }}>
+                      {activeProtocol?.settings?.audioHints ? "ON" : "OFF"}
+                    </span>
+                    <div style={{ width: 8, height: 8, borderRadius: "50%", background: activeProtocol?.settings?.audioHints ? "#8b5cf6" : "#cbd5e1", boxShadow: activeProtocol?.settings?.audioHints ? "0 0 6px rgba(139,92,246,0.6)" : "none" }} />
                   </div>
                 </div>
               </div>
@@ -934,7 +1082,7 @@ export default function LevelsPage() {
                   <span className="mono" style={{ fontSize: 9, color: "#2DD4BF", fontWeight: 700, letterSpacing: "0.10em" }}>LIVE</span>
                 </div>
               </div>
-              <div style={{ height: 200 }}><NeuralNetworkCanvas /></div>
+              <div style={{ height: 200 }}><NeuralNetworkCanvas levels={dynamicLevels} /></div>
               <div style={{ display: "flex", justifyContent: "center", gap: 20,
                 padding: "6px 20px 16px", borderTop: "1px solid rgba(226,232,240,0.6)", flexWrap: "wrap" }}>
                 {[{ c: "#2DD4BF", l: "Unlocked" }, { c: "#94a3b8", l: "Locked" }].map(item => (
@@ -977,9 +1125,11 @@ export default function LevelsPage() {
                   </div>
                 </div>
                 <p style={{ fontSize: 12.5, color: "#475569", lineHeight: 1.7, marginBottom: 14 }}>
-                  Your <span style={{ color: "#6366f1", fontWeight: 700 }}>grip consistency</span> improved 12% since last week. Dr. Perera notes you're ready for Memory Trench — complete one more Rhythm Reef session to unlock it.
+                  Your <span style={{ color: "#6366f1", fontWeight: 700 }}>grip consistency</span> improved 12% since last week. Dr. Perera notes you're ready for {nextLockedLevel?.title || "the next level"} — complete one more session to unlock it.
                 </p>
-                <button style={{
+                <button 
+                  onClick={() => router.push('/patients/progress')}
+                  style={{
                   width: "100%", padding: "11px", borderRadius: 13,
                   background: "rgba(99,102,241,0.08)", border: "1px solid rgba(99,102,241,0.20)",
                   color: "#6366f1", fontSize: 11, fontWeight: 800, cursor: "pointer",
@@ -1019,9 +1169,9 @@ export default function LevelsPage() {
 
                 <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
                   {[
-                    { label: "Grip Accuracy",  val: 84, color: "#2DD4BF", icon: <Activity size={12} /> },
+                    { label: "Grip Accuracy",  val: clinicalStats.accuracy, color: "#2DD4BF", icon: <Activity size={12} /> },
                     { label: "Reaction Speed", val: 71, color: "#a78bfa", icon: <Zap       size={12} /> },
-                    { label: "Session Streak", val: 60, color: "#fbbf24", icon: <Star      size={12} /> },
+                    { label: "Session Streak", val: clinicalStats.streak, color: "#fbbf24", icon: <Star      size={12} /> },
                   ].map((m, i) => (
                     <div key={m.label}>
                       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
@@ -1029,9 +1179,9 @@ export default function LevelsPage() {
                           <span style={{ color: m.color }}>{m.icon}</span>
                           {m.label}
                         </div>
-                        <span className="mono" style={{ fontSize: 11, fontWeight: 800, color: m.color }}>{m.val}%</span>
+                        <span className="mono" style={{ fontSize: 11, fontWeight: 800, color: m.color }}>{m.val}{m.label === 'Session Streak' ? '' : '%'}</span>
                       </div>
-                      <AnimBar value={m.val} color={m.color} delay={400 + i * 120} />
+                      <AnimBar value={m.label === 'Session Streak' ? Math.min(m.val * 10, 100) : m.val} color={m.color} delay={400 + i * 120} />
                     </div>
                   ))}
                 </div>
@@ -1056,35 +1206,37 @@ export default function LevelsPage() {
             </div>
 
             {/* Locked Teaser */}
-            <div style={{
-              animation: "cardPop 0.55s cubic-bezier(0.22,1,0.36,1) 0.38s both",
-              background: "#fff",
-              borderRadius: 20, padding: "22px",
-              border: "1.5px dashed rgba(139,92,246,0.25)",
-              textAlign: "center",
-              boxShadow: "0 2px 14px rgba(139,92,246,0.06)",
-            }}>
+            {nextLockedLevel && (
               <div style={{
-                width: 44, height: 44, borderRadius: "50%",
-                background: "rgba(139,92,246,0.08)",
-                border: "1px solid rgba(139,92,246,0.16)",
-                display: "flex", alignItems: "center", justifyContent: "center",
-                margin: "0 auto 12px",
+                animation: "cardPop 0.55s cubic-bezier(0.22,1,0.36,1) 0.38s both",
+                background: "#fff",
+                borderRadius: 20, padding: "22px",
+                border: "1.5px dashed rgba(139,92,246,0.25)",
+                textAlign: "center",
+                boxShadow: "0 2px 14px rgba(139,92,246,0.06)",
               }}>
-                <Lock size={18} color="#8b5cf6" />
-              </div>
-              <p style={{ fontSize: 13, fontWeight: 800, color: "#0B1E33", margin: "0 0 6px" }}>Memory Trench unlocks soon</p>
-              <p style={{ fontSize: 11, color: "#94a3b8", margin: "0 0 14px" }}>Complete 1 more Rhythm Reef session</p>
-              <div style={{ height: 6, background: "rgba(139,92,246,0.10)", borderRadius: 99, overflow: "hidden", marginBottom: 8 }}>
                 <div style={{
-                  height: "100%", width: "80%", borderRadius: 99,
-                  background: "linear-gradient(90deg,#c4b5fd,#8b5cf6)",
-                  boxShadow: "0 0 8px rgba(139,92,246,0.4)",
-                }} />
+                  width: 44, height: 44, borderRadius: "50%",
+                  background: "rgba(139,92,246,0.08)",
+                  border: "1px solid rgba(139,92,246,0.16)",
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  margin: "0 auto 12px",
+                }}>
+                  <Lock size={18} color="#8b5cf6" />
+                </div>
+                <p style={{ fontSize: 13, fontWeight: 800, color: "#0B1E33", margin: "0 0 6px" }}>{nextLockedLevel.title} unlocks soon</p>
+                <p style={{ fontSize: 11, color: "#94a3b8", margin: "0 0 14px" }}>Complete 1 more session</p>
+                <div style={{ height: 6, background: "rgba(139,92,246,0.10)", borderRadius: 99, overflow: "hidden", marginBottom: 8 }}>
+                  <div style={{
+                    height: "100%", width: "80%", borderRadius: 99,
+                    background: "linear-gradient(90deg,#c4b5fd,#8b5cf6)",
+                    boxShadow: "0 0 8px rgba(139,92,246,0.4)",
+                  }} />
+                </div>
+                <span className="mono" style={{ fontSize: 9, color: "#8b5cf6", fontWeight: 700,
+                  textTransform: "uppercase", letterSpacing: "0.14em" }}>4 / 5 sessions</span>
               </div>
-              <span className="mono" style={{ fontSize: 9, color: "#8b5cf6", fontWeight: 700,
-                textTransform: "uppercase", letterSpacing: "0.14em" }}>4 / 5 sessions</span>
-            </div>
+            )}
 
           </div>
         </div>

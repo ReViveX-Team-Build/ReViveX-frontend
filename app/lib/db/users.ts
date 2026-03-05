@@ -1,20 +1,22 @@
 import { db } from "../firebase";
 import { doc, getDoc, collection, query, where, getDocs } from "firebase/firestore";
 import { PatientData } from "./types";
-
-// Enhanced version of your friend's getUser function
+// Fetches a single user's profile data from the database using their unique ID.
 export async function getUser(uid: string) {
   const userRef = doc(db, "users", uid);
   const snap = await getDoc(userRef);
   
   if (snap.exists()) {
-    // We add the 'id' into the returned object so the frontend knows the document ID
+    // Inject the document ID into the returned object so the frontend can reference it easily later.
     return { id: snap.id, ...snap.data() };
   }
-  return null; // Safer than returning undefined if the user doesn't exist
+  
+  // Explicitly return null if the user isn't found (cleaner for error handling than undefined).
+  return null; 
 }
 
-//  For the Doctor Dashboard: Get all patients assigned to a specific doctor
+// Fetches a list of all patients assigned to a specific doctor.
+// Used primarily to populate the Doctor Dashboard and Patient list views.
 export const getPatientsByDoctor = async (doctorId: string): Promise<PatientData[]> => {
   const q = query(
     collection(db, "users"), 
@@ -26,7 +28,8 @@ export const getPatientsByDoctor = async (doctorId: string): Promise<PatientData
   const patients: PatientData[] = [];
   
   querySnapshot.forEach((doc) => {
-    // We cast it to PatientData so TypeScript knows exactly what fields are available
+    // Merge the document ID with the Firestore data and enforce our TypeScript shape
+    // so the frontend knows exactly what fields are available.
     patients.push({ uid: doc.id, ...doc.data() } as PatientData);
   });
   

@@ -41,7 +41,7 @@ export interface TherapyProtocol {
   };
 }
 
-// --- GAME SESSIONS (Directly from your Metrics PDF) ---
+
 export interface SessionMetrics {
   // MPX50DP (Pressure) Metrics - Synapse Racer
   reactionTimeMs?: number; 
