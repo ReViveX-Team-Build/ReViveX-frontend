@@ -11,7 +11,13 @@ export interface UserProfile {
 
 export interface PatientData extends UserProfile {
   condition: "Stroke" | "Parkinson's" | "Other";
-  assignedDoctorId: string;
+  
+  assignedDoctorId: string | null; 
+  
+  connectionStatus: "none" | "pending" | "accepted"; 
+
+  profilePictureUrl?: string; 
+
   gamification: {
     totalXp: number;
     currentStreak: number;
@@ -41,13 +47,15 @@ export interface TherapyProtocol {
   };
 }
 
-
 export interface SessionMetrics {
   // MPX50DP (Pressure) Metrics - Synapse Racer
   reactionTimeMs?: number; 
   peakGripForce?: number;
   muscleEnduranceDropPercent?: number; 
   cognitiveAccuracyPercent?: number;
+  
+  // NEW: Stores the raw squeeze data arrays for LLM analysis
+  rawSensorData?: number[]; 
 
   // MPU6050 (Motion) Metrics - Stability Game
   tremorAmplitude?: number;
@@ -72,7 +80,8 @@ export interface Communication {
   id?: string;
   senderId: string; 
   receiverId: string;
-  type: "instruction" | "feedback" | "direct_message" | "ai_insight";
+  // NEW: Added 'connection_request' to handle the Patient-Doctor handshake
+  type: "instruction" | "feedback" | "direct_message" | "ai_insight" | "connection_request";
   content: string;
   timestamp: Timestamp;
   isRead: boolean;
