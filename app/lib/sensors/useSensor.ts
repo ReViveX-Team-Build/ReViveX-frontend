@@ -98,3 +98,8 @@ export function useSensor() {
             disconnect();
         }
     };
+
+        // We expose a getter function so the game loop can fetch the exact pressure instantly
+    const getPressure = useCallback(() => {
+        return currentPressure;
+    }, [currentPressure]);
