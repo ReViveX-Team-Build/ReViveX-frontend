@@ -557,7 +557,6 @@ function MagButton({ children, onClick, style = {}, className = "", type = "butt
   );
 
 }
-
 function FloatingParticles({ count = 35 }: { count?: number }) {
   const P = useMemo(() => Array.from({ length: count }, (_, i) => ({
     id: i,
@@ -597,339 +596,350 @@ function FloatingParticles({ count = 35 }: { count?: number }) {
     </div>
   );
 }
-function NeuralNetwork({ mouse }: { mouse: { x: number; y: number } }) {
-  const canvasRef   = useRef<HTMLCanvasElement>(null);
-  const parMouseRef = useRef(mouse);
-  const cursorRef   = useRef({ cx: -9999, cy: -9999, over: false });
 
-  useEffect(() => { parMouseRef.current = mouse; }, [mouse]);
+function NeuralNetwork({ mouse }: { mouse: { x: number; y: number } }) {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const mouseRef  = useRef(mouse);
+  const cursorRef = useRef({ x: -9999, y: -9999 });
+
+  useEffect(() => { mouseRef.current = mouse; }, [mouse]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
+    // Removed alpha: false so it perfectly blends with the Next.js background!
     const ctx = canvas.getContext("2d")!;
-    let raf = 0;
 
-    // ─────────────────────────────────────────────────────────────────
-    // BRAIN SILHOUETTE — 32-point lateral view polygon
-    // Anatomical regions: frontal lobe, crown, parietal, occipital,
-    // brainstem taper, temporal lobe, Sylvian fissure notch
-    // Raw [0,1] → centered by subtracting bbox-center (0.495, 0.490)
-    // ─────────────────────────────────────────────────────────────────
-    const rawOutline: [number,number][] = [
-      // Frontal inferior base → ascent
-      [0.15,0.44],[0.09,0.35],[0.07,0.24],[0.10,0.13],[0.16,0.06],
-      // Crown — vertex slightly left of center
-      [0.24,0.01],[0.36,0.00],[0.50,0.01],[0.63,0.05],
-      // Parietal → Occipital dome (right hemisphere)
-      [0.74,0.12],[0.84,0.22],[0.90,0.34],[0.92,0.46],[0.88,0.57],
-      // Brainstem junction then NARROW TAPER to single point
-      [0.82,0.63],[0.76,0.69],[0.71,0.76],[0.67,0.82],
-      [0.63,0.88],[0.59,0.94],[0.56,0.98],  // ← brainstem tip
-      // Back up left side of brainstem
-      [0.51,0.96],[0.47,0.88],[0.43,0.80],[0.39,0.72],
-      // Temporal lobe posterior → pole (FAR LEFT)
-      [0.34,0.67],[0.26,0.65],[0.17,0.63],[0.09,0.60],
-      // Sylvian fissure (notch between temporal and frontal)
-      [0.07,0.55],[0.09,0.50],[0.15,0.47],
-    ];
-    const BX = 0.495, BY = 0.490; // bbox center
-    const POLY: [number,number][] = rawOutline.map(([x,y]) => [x-BX, y-BY]);
+    // ── Constants ──
+    const N      = 500;      // sphere particles
+    const R      = 200;      // sphere radius
+    const FOCAL  = 900;      // perspective focal length
+    const C1     = "0,245,212"; // primary teal (RGB)
+    const C2     = "14,165,233"; // sky blue (RGB)
+    const C3     = "192,132,252"; // purple (RGB)
 
-    // Ray-cast point-in-polygon
-    const inBrain = (nx: number, ny: number): boolean => {
-      let inside = false;
-      for (let i = 0, j = POLY.length - 1; i < POLY.length; j = i++) {
-        const [xi,yi] = POLY[i], [xj,yj] = POLY[j];
-        if (((yi > ny) !== (yj > ny)) && nx < ((xj-xi)*(ny-yi))/(yj-yi)+xi)
-          inside = !inside;
-      }
-      return inside;
-    };
-
-    // ─────────────────────────────────────────────────────────────────
-    // SEED NODES — uniform 2D distribution inside brain + z-depth
-    // ─────────────────────────────────────────────────────────────────
-    type BNode = {
-      ox:number; oy:number; oz:number;
-      vx:number; vy:number; vz:number;
-      r:number; crown:boolean;
-    };
-    const nodes: BNode[] = [];
-
-    // 155 interior nodes via rejection sampling
-    let attempts = 0;
-    while (nodes.length < 155 && attempts < 8000) {
-      attempts++;
-      const nx = (Math.random()-0.5)*0.92;
-      const ny = (Math.random()-0.5)*1.02;
-      if (inBrain(nx, ny)) {
-        nodes.push({
-          ox: nx, oy: ny,
-          oz: (Math.random()-0.5)*0.22, // z gives 3D depth
-          vx: (Math.random()-0.5)*0.00028,
-          vy: (Math.random()-0.5)*0.00028,
-          vz: (Math.random()-0.5)*0.00015,
-          r:  0.70 + Math.random()*1.55,
-          crown: false,
-        });
-      }
-    }
-
-    // 18 crown-scatter nodes — float just ABOVE the brain outline
-    // These recreate the "dissolving" top edge from the reference image
-    for (let i = 0; i < 18; i++) {
-      const angle = Math.PI * (0.18 + Math.random()*0.64); // top arc
-      const spread = 0.390 + Math.random()*0.055;
-      nodes.push({
-        ox: Math.cos(angle)*spread*0.88 + (Math.random()-0.5)*0.04,
-        oy: -0.290 - Math.abs(Math.sin(angle))*0.055 + (Math.random()-0.5)*0.02,
-        oz: (Math.random()-0.5)*0.12,
-        vx: (Math.random()-0.5)*0.00020,
-        vy: (Math.random()-0.5)*0.00020,
-        vz: (Math.random()-0.5)*0.00010,
-        r:  0.35 + Math.random()*0.90,
-        crown: true,
+    // ── Fibonacci sphere ──
+    type Pt3 = { ox:number; oy:number; oz:number; x:number; y:number; z:number; size:number; speed:number; hue:number; arcIdx:number };
+    const pts: Pt3[] = [];
+    const GR = (1 + Math.sqrt(5)) / 2;
+    for (let i = 0; i < N; i++) {
+      const theta = Math.acos(1 - 2*(i+0.5)/N);
+      const phi   = 2 * Math.PI * i / GR;
+      const ox = Math.sin(theta) * Math.cos(phi);
+      const oy = Math.sin(theta) * Math.sin(phi);
+      const oz = Math.cos(theta);
+      pts.push({ ox, oy, oz, x:0, y:0, z:0,
+        size: Math.random()*1.4+0.4,
+        speed: Math.random()*0.00016+0.00006,
+        hue: Math.random(),
+        arcIdx: i,
       });
     }
 
-    const N = nodes.length;
-
-    // ─────────────────────────────────────────────────────────────────
-    // EDGES — max 4 connections per node (prevents clutter)
-    // Sort candidates by distance, pick shortest first
-    // ─────────────────────────────────────────────────────────────────
-    const CONN = 0.200, CONN2 = CONN*CONN;
-    const cands: [number,number,number][] = []; // [i, j, dist²]
+    // ── Synaptic arc pairs ──
+    type Arc = { a:number; b:number; pulseT:number; pulseSpeed:number; colorRGB:string };
+    const arcs: Arc[] = [];
+    const COLORS = [C1, C2, C3, "251,191,36"];
     for (let i = 0; i < N; i++) {
       for (let j = i+1; j < N; j++) {
-        const dx=nodes[i].ox-nodes[j].ox;
-        const dy=nodes[i].oy-nodes[j].oy;
-        const dz=nodes[i].oz-nodes[j].oz;
-        const d2=dx*dx+dy*dy+dz*dz;
-        if (d2 < CONN2) cands.push([i, j, d2]);
-      }
-    }
-    cands.sort((a,b) => a[2]-b[2]); // shortest first
-
-    const deg = new Uint8Array(N);
-    const MAX_DEG = 4; // hard cap per node — keeps mesh clean
-    const edges: [number,number][] = [];
-    const nbr: number[][] = Array.from({length:N}, ()=>[]);
-    for (const [i,j] of cands) {
-      if (deg[i] < MAX_DEG && deg[j] < MAX_DEG) {
-        edges.push([i,j]);
-        nbr[i].push(j); nbr[j].push(i);
-        deg[i]++; deg[j]++;
-      }
-    }
-
-    // Sparse triangles — only where 3 nodes are mutually connected
-    const tris: [number,number,number][] = [];
-    const nbrSet = nbr.map(a => new Set(a));
-    for (let i = 0; i < N; i++) {
-      for (const j of nbr[i]) {
-        if (j <= i) continue;
-        for (const k of nbr[j]) {
-          if (k <= j) continue;
-          if (nbrSet[i].has(k) && Math.random() < 0.30)
-            tris.push([i,j,k]);
+        const dx = pts[i].ox-pts[j].ox, dy = pts[i].oy-pts[j].oy, dz = pts[i].oz-pts[j].oz;
+        const d  = Math.sqrt(dx*dx+dy*dy+dz*dz);
+        if (d < 0.38 && arcs.length < 320) {
+          arcs.push({ a:i, b:j, pulseT:Math.random(), pulseSpeed:0.003+Math.random()*0.005, colorRGB:COLORS[Math.floor(Math.random()*COLORS.length)] });
         }
       }
     }
 
-    // ─────────────────────────────────────────────────────────────────
-    // TYPED ARRAYS — zero heap allocation in draw loop
-    // ─────────────────────────────────────────────────────────────────
-    const sx  = new Float32Array(N);
-    const sy  = new Float32Array(N);
-    const sz_ = new Float32Array(N);
-    const lx  = new Float32Array(N); // live drifting positions
-    const ly  = new Float32Array(N);
-    const lz  = new Float32Array(N);
-    const en  = new Float32Array(N); // energy — ZERO until cursor injects
-    const enN = new Float32Array(N);
-    for (let i = 0; i < N; i++) {
-      lx[i]=nodes[i].ox; ly[i]=nodes[i].oy; lz[i]=nodes[i].oz;
-    }
+    // ── Gyroscopic rings ──
+    type Ring = { inclX:number; inclZ:number; radius:number; rotY:number; rotSpeed:number; rgb:string; dash:[number,number]; width:number };
+    const rings: Ring[] = [
+      { inclX: 0.42, inclZ: 0.0,  radius:240, rotY:0, rotSpeed: 0.0018, rgb:C1, dash:[20,12], width:1.8 },
+      { inclX:-0.28, inclZ: 0.35, radius:268, rotY:1, rotSpeed:-0.0012, rgb:C2, dash:[3, 9],  width:1.3 },
+      { inclX: 0.1,  inclZ:-0.5,  radius:292, rotY:2, rotSpeed: 0.0008, rgb:C3, dash:[45,18], width:1.2 },
+    ];
 
-    const adj  = nbr.map(a => new Uint8Array(a));
-    const vord = Array.from({length:N}, (_,i)=>i); // depth-sort buffer
-
-    type Pulse = {ei:number; t:number; spd:number;};
-    const pulses: Pulse[] = [];
+    // ── Aurora wisps ──
+    type Wisp = { x:number; y:number; rx:number; ry:number; rot:number; rotSpd:number; dxSpd:number; dySpd:number; rgb:string; alpha:number };
+    const wisps: Wisp[] = Array.from({length:6}, (_,i) => ({
+      x: (Math.random()-0.5)*1.4, y: (Math.random()-0.5)*0.9,
+      rx: 180+Math.random()*260, ry: 80+Math.random()*120,
+      rot: Math.random()*Math.PI, rotSpd: (Math.random()-0.5)*0.0004,
+      dxSpd: (Math.random()-0.5)*0.0002, dySpd: (Math.random()-0.5)*0.00015,
+      rgb: [C1,C2,C3,"251,191,36"][i%4],
+      alpha: 0.03+Math.random()*0.04,
+    }));
 
     const resize = () => {
       const dpr = window.devicePixelRatio||1;
-      canvas.width  = canvas.offsetWidth *dpr;
-      canvas.height = canvas.offsetHeight*dpr;
+      canvas.width  = canvas.offsetWidth  * dpr;
+      canvas.height = canvas.offsetHeight * dpr;
     };
     resize();
     window.addEventListener("resize", resize);
 
-    // ─────────────────────────────────────────────────────────────────
-    // MOUSE — window-level tracking (canvas is pointerEvents:none)
-    // ─────────────────────────────────────────────────────────────────
     const onMove = (e: MouseEvent) => {
       const r = canvas.getBoundingClientRect();
-      const lcx = e.clientX - r.left;
-      const lcy = e.clientY - r.top;
-      cursorRef.current = {
-        cx: lcx, cy: lcy,
-        over: lcx>=0 && lcx<=r.width && lcy>=0 && lcy<=r.height,
-      };
+      cursorRef.current = { x:e.clientX-r.left, y:e.clientY-r.top };
     };
     window.addEventListener("mousemove", onMove);
 
+    let tiltX=0, tiltY=0, velTX=0, velTY=0;
+    let baseRotY = 0;
     let frame = 0;
+    let raf   = 0;
+    let smoothHover = 0; // The master brightness controller!
 
-    // ─────────────────────────────────────────────────────────────────
+    const rotY  = (x:number,y:number,z:number,a:number) => ({ x:x*Math.cos(a)+z*Math.sin(a), y, z:-x*Math.sin(a)+z*Math.cos(a) });
+    const rotX  = (x:number,y:number,z:number,a:number) => ({ x, y:y*Math.cos(a)-z*Math.sin(a), z:y*Math.sin(a)+z*Math.cos(a) });
+    const rotZ  = (x:number,y:number,z:number,a:number) => ({ x:x*Math.cos(a)-y*Math.sin(a), y:x*Math.sin(a)+y*Math.cos(a), z });
+    const project = (x:number,y:number,z:number,cx:number,cy:number,f:number) => {
+      const s  = f / (z + f);
+      return { px: x*s+cx, py: y*s+cy, scale:s, z };
+    };
+
+    // ── DRAW LOOP ──
     const draw = () => {
       frame++;
-      const par = parMouseRef.current;
-
-      // Subtle rotation — keeps brain silhouette readable
-      // ±14° max yaw from mouse, tiny auto-breathe
-      const ry = par.x*0.24 + Math.sin(frame*0.0006)*0.028;
-      const rx = -0.12 + par.y*-0.08; // fixed forward tilt + minor mouse pitch
-
       const dpr = window.devicePixelRatio||1;
-      const W = canvas.width/dpr, H = canvas.height/dpr;
+      const W   = canvas.width/dpr, H = canvas.height/dpr;
+      const CX  = W/2, CY  = H/2;
+
       ctx.setTransform(dpr,0,0,dpr,0,0);
+
+      // GUARANTEED SEAMLESS BACKGROUND (No pasted paper box)
       ctx.clearRect(0,0,W,H);
 
-      const ccx = W*0.50, ccy = H*0.50;
-      const sc  = Math.min(W,H)*0.44;
+      // ── Hover Physics (Shadowy vs Bright) ──
+      const cur = cursorRef.current;
+      const dcx = cur.x - CX, dcy = cur.y - CY;
+      const distToCenter = Math.sqrt(dcx*dcx + dcy*dcy);
 
-      const cosX=Math.cos(rx), sinX=Math.sin(rx);
-      const cosY=Math.cos(ry), sinY=Math.sin(ry);
-
-      // Project + micro-drift
-      for (let i = 0; i < N; i++) {
-        const n = nodes[i];
-        lx[i]+=n.vx; ly[i]+=n.vy; lz[i]+=n.vz;
-        if (Math.abs(lx[i]-n.ox)>0.09) n.vx*=-1;
-        if (Math.abs(ly[i]-n.oy)>0.09) n.vy*=-1;
-        if (Math.abs(lz[i]-n.oz)>0.13) n.vz*=-1;
-        const vx=lx[i], vy=ly[i], vz=lz[i];
-        const x1= vx*cosY+vz*sinY, z1=-vx*sinY+vz*cosY;
-        const y2= vy*cosX-z1*sinX, z2= vy*sinX+z1*cosX;
-        sx[i]=ccx+x1*sc; sy[i]=ccy+y2*sc; sz_[i]=z2;
-      }
-
-      // ── CURSOR = ONLY ENERGY SOURCE ────────────────────────────────
-      const {cx:mx, cy:my, over} = cursorRef.current;
-      const INJ_R  = sc*0.30;
-      const INJ_R2 = INJ_R*INJ_R;
-      if (over) {
-        for (let i = 0; i < N; i++) {
-          const dx=sx[i]-mx, dy=sy[i]-my;
-          const d2=dx*dx+dy*dy;
-          if (d2 < INJ_R2) {
-            const str = 1 - Math.sqrt(d2)/INJ_R;
-            const nv = en[i]+str*0.32;
-            en[i] = nv>1?1:nv;
-          }
+      let targetHover = 0;
+      if (cur.x > 0 && cur.x < W && cur.y > 0 && cur.y < H) {
+        if (distToCenter < 400) {
+          // Eases up to 1.0 when mouse gets close
+          targetHover = Math.pow(Math.max(0, 1 - distToCenter/400), 0.6);
         }
       }
+      
+      // Smoothly interpolate brightness
+      smoothHover += (targetHover - smoothHover) * 0.08;
+      const bFac = smoothHover; // bFac = 0 (Dark/Idle), bFac = 1 (Bright/Hovered)
 
-      // Ripple through brain network
-      for (let i = 0; i < N; i++) enN[i]=en[i];
-      for (let i = 0; i < N; i++) {
-        if (en[i] > 0.07) {
-          const nb = adj[i];
-          for (let k = 0; k < nb.length; k++) {
-            const j = nb[k];
-            const nv = enN[j]+en[i]*0.050;
-            if (nv>1) enN[j]=1; else enN[j]=nv;
-          }
-        }
+      // ── Mouse-driven sphere tilt ──
+      const mx = mouseRef.current;
+      const targetTX = mx.y * 0.55; 
+      const targetTY = mx.x * -0.55;
+      const STIFF=0.04, DAMP=0.82;
+      velTX = (velTX + (targetTX-tiltX)*STIFF) * DAMP;
+      velTY = (velTY + (targetTY-tiltY)*STIFF) * DAMP;
+      tiltX += velTX;
+      tiltY += velTY;
+      baseRotY += 0.0025; 
+
+      for (const p of pts) {
+        let v = rotY(p.ox*R, p.oy*R, p.oz*R, baseRotY + tiltY);
+        v     = rotX(v.x, v.y, v.z, tiltX);
+        const w = frame * p.speed * 1000;
+        v = rotZ(v.x, v.y, v.z, Math.sin(w)*0.012);
+        p.x = v.x; p.y = v.y; p.z = v.z;
       }
-      // 0.740 decay when not hovering → fully dark in ~140ms
-      const decay = over ? 0.920 : 0.740;
-      for (let i = 0; i < N; i++) en[i]=enN[i]*decay;
 
-      // Spawn synapse pulses on hot edges
-      if (over && pulses.length < 55 && Math.random()<0.35) {
-        const ei = Math.floor(Math.random()*edges.length);
-        const [a,b] = edges[ei];
-        if ((en[a]+en[b])*0.5 > 0.46)
-          pulses.push({ei, t:0, spd:0.018+Math.random()*0.022});
+      const REPEL_R = 280;
+
+      // ── Aurora wisps ──
+      ctx.globalCompositeOperation = "source-over";
+      for (const w of wisps) {
+        w.x   += w.dxSpd; w.y += w.dySpd; w.rot += w.rotSpd;
+        const wx = CX + w.x * W, wy = CY + w.y * H;
+        ctx.save();
+        ctx.translate(wx, wy);
+        ctx.rotate(w.rot);
+        const g = ctx.createRadialGradient(0,0,0, 0,0, w.rx);
+        // Wisps are almost invisible until hovered
+        const finalWispAlpha = w.alpha * (0.1 + 0.9 * bFac); 
+        g.addColorStop(0, `rgba(${w.rgb}, ${finalWispAlpha})`);
+        g.addColorStop(1, "transparent");
+        ctx.scale(1, w.ry/w.rx);
+        ctx.beginPath(); ctx.arc(0,0,w.rx,0,Math.PI*2);
+        ctx.fillStyle = g; ctx.fill();
+        ctx.restore();
       }
 
-      // Depth sort — back to front
-      vord.sort((a,b) => sz_[a]-sz_[b]);
+      ctx.globalCompositeOperation = "lighter";
 
-      // ── 1. TRIANGLE FILLS — only render when lit ──────────────────
-      for (let ti = 0; ti < tris.length; ti++) {
-        const [a,b,c] = tris[ti];
-        const e = (en[a]+en[b]+en[c])/3;
-        if (e < 0.12) continue; // invisible when unlit
-        const dep = ((sz_[a]+sz_[b]+sz_[c])/3+1)*0.5;
+      const sorted = pts.map((_,i)=>i).sort((a,b)=>pts[a].z-pts[b].z);
+
+      // ── Synaptic arcs ──
+      for (const arc of arcs) {
+        arc.pulseT += arc.pulseSpeed;
+        if (arc.pulseT > 1) arc.pulseT = 0;
+        const pa = pts[arc.a], pb = pts[arc.b];
+        if (pa.z < -80 && pb.z < -80) continue;
+        const { px:ax, py:ay, scale:sa } = project(pa.x,pa.y,pa.z, CX,CY, FOCAL);
+        const { px:bx, py:by, scale:sb } = project(pb.x,pb.y,pb.z, CX,CY, FOCAL);
+        const avgScale = (sa+sb)*0.5;
+        const depthAlpha = Math.max(0, Math.min(1, (Math.min(pa.z,pb.z)+R)/(R*2)));
+        
+        const midX = (ax+bx)/2 + (Math.random()-0.5)*30;
+        const midY = (ay+by)/2 + (Math.random()-0.5)*30;
         ctx.beginPath();
-        ctx.moveTo(sx[a],sy[a]); ctx.lineTo(sx[b],sy[b]); ctx.lineTo(sx[c],sy[c]);
-        ctx.closePath();
-        ctx.fillStyle = `rgba(20,184,166,${e*0.062+dep*0.006})`;
-        ctx.fill();
-      }
+        ctx.moveTo(ax,ay); ctx.quadraticCurveTo(midX,midY,bx,by);
+        
+        // Shadowy default, brightens on hover
+        const activeArcA = depthAlpha * 0.18 * avgScale;
+        const idleArcA = 0.01;
+        const finalArcA = idleArcA + (activeArcA - idleArcA) * bFac;
 
-      // ── 2. EDGES ─────────────────────────────────────────────────
-      for (let k = 0; k < edges.length; k++) {
-        const [a,b] = edges[k];
-        const e   = (en[a]+en[b])*0.5;
-        const dep = ((sz_[a]+sz_[b])*0.5+1)*0.5;
-        ctx.beginPath();
-        ctx.moveTo(sx[a],sy[a]); ctx.lineTo(sx[b],sy[b]);
-        if (e < 0.04) {
-          // DARK: near-invisible ghost — just enough to hint the shape
-          ctx.strokeStyle = `rgba(95,132,130,${0.016+dep*0.012})`;
-          ctx.lineWidth   = 0.14+dep*0.06;
-        } else {
-          // LIT: vivid teal
-          ctx.strokeStyle = `rgba(45,212,191,${e*0.95+dep*0.036})`;
-          ctx.lineWidth   = 0.16+e*2.10+dep*0.22;
-        }
+        ctx.strokeStyle = `rgba(${arc.colorRGB}, ${finalArcA})`;
+        ctx.lineWidth = 0.8 * avgScale;
         ctx.stroke();
-      }
-
-      // ── 3. SYNAPSE PULSES ────────────────────────────────────────
-      for (let pi = pulses.length-1; pi >= 0; pi--) {
-        const p = pulses[pi];
-        p.t += p.spd;
-        if (p.t > 1) { pulses.splice(pi,1); continue; }
-        const [a,b] = edges[p.ei];
-        const ppx = sx[a]+(sx[b]-sx[a])*p.t;
-        const ppy = sy[a]+(sy[b]-sy[a])*p.t;
-        const fade = Math.sin(p.t*Math.PI); // bell peak at midpoint
-        ctx.shadowBlur  = 4+fade*20;
-        ctx.shadowColor = `rgba(45,212,191,${fade*0.90})`;
-        ctx.beginPath();
-        ctx.arc(ppx, ppy, 0.70+fade*1.80, 0, Math.PI*2);
-        ctx.fillStyle = `rgba(255,255,255,${0.45+fade*0.55})`;
-        ctx.fill();
-      }
-      ctx.shadowBlur = 0;
-
-      // ── 4. NODES — depth-sorted, dark by default ─────────────────
-      for (let ii = 0; ii < N; ii++) {
-        const i   = vord[ii];
-        const e   = en[i];
-        const dep = (sz_[i]+1)*0.5;
-        const r   = nodes[i].r*(0.40+dep*0.72) + e*2.70;
-
-        if (e > 0.10) {
-          ctx.shadowBlur  = 3+e*24;
-          ctx.shadowColor = `rgba(45,212,191,${e*0.90})`;
+        
+        // Data pulses only appear when hovered!
+        const packetAlpha = depthAlpha * 0.85 * bFac; 
+        if (packetAlpha > 0.01) {
+          const t = arc.pulseT;
+          const qt = 1-t, t2=t*t, qt2=qt*qt;
+          const pPX = qt2*ax + 2*qt*t*midX + t2*bx;
+          const pPY = qt2*ay + 2*qt*t*midY + t2*by;
+          ctx.beginPath(); ctx.arc(pPX,pPY, 1.5*avgScale,0,Math.PI*2);
+          ctx.fillStyle = `rgba(255,255,255,${packetAlpha})`;
+          ctx.fill();
         }
-        ctx.beginPath();
-        ctx.arc(sx[i], sy[i], r, 0, Math.PI*2);
-        ctx.fillStyle = e < 0.04
-          ? `rgba(95,130,128,${0.042+dep*0.076})`       // ghost: barely there
-          : `rgba(255,255,255,${0.04+dep*0.04+e*0.92})`; // lit: clean white
-        ctx.fill();
-        if (e > 0.10) ctx.shadowBlur = 0;
       }
-      ctx.shadowBlur = 0;
+
+      // ── Particles ──
+      for (const idx of sorted) {
+        const p = pts[idx];
+        const { px, py, scale } = project(p.x,p.y,p.z, CX,CY, FOCAL);
+        const cdx = px - cur.x, cdy = py - cur.y;
+        const cdist = Math.sqrt(cdx*cdx+cdy*cdy);
+        let repelledX = px, repelledY = py;
+        // Physics push only happens heavily if hovered
+        if (cdist < REPEL_R && cdist > 1) {
+          const force = (1-(cdist/REPEL_R)) * (28 * Math.max(0.2, bFac));
+          repelledX += (cdx/cdist)*force;
+          repelledY += (cdy/cdist)*force;
+        }
+        
+        const depthT  = (p.z + R) / (R*2); 
+        
+        // Dim idle particles, bright active particles
+        const idleAlpha = 0.02 + depthT * 0.05; 
+        const activeAlpha = 0.12 + depthT * 0.78;
+        const alpha = idleAlpha + (activeAlpha - idleAlpha) * bFac;
+        
+        const radius  = (p.size * scale) * (0.5 + depthT * 0.7);
+        const r = Math.round(depthT > 0.6 ? 200+depthT*55 : 14+depthT*186);
+        const g = Math.round(100 + depthT * 155);
+        const b = Math.round(depthT > 0.5 ? 100+depthT*155 : 230-depthT*80);
+        
+        // Chromatic aberration only on intense hover
+        if (depthT > 0.85 && radius > 1.2 && bFac > 0.5) {
+          ctx.beginPath(); ctx.arc(repelledX-1.2, repelledY, radius*0.7,0,Math.PI*2);
+          ctx.fillStyle = `rgba(255,80,80,${alpha*0.4})`; ctx.fill();
+          ctx.beginPath(); ctx.arc(repelledX+1.2, repelledY, radius*0.7,0,Math.PI*2);
+          ctx.fillStyle = `rgba(80,200,255,${alpha*0.4})`; ctx.fill();
+        }
+        ctx.beginPath(); ctx.arc(repelledX, repelledY, Math.max(0.3,radius),0,Math.PI*2);
+        ctx.fillStyle = `rgba(${r},${g},${b},${alpha})`; ctx.fill();
+      }
+
+      // ── Gyroscopic halo rings ──
+      for (const ring of rings) {
+        ring.rotY += ring.rotSpeed;
+        const RING_PTS = 160;
+        ctx.beginPath();
+        for (let i = 0; i <= RING_PTS; i++) {
+          const a = (i/RING_PTS)*Math.PI*2;
+          let v = { x: Math.cos(a)*ring.radius, y: 0, z: Math.sin(a)*ring.radius };
+          v = rotX(v.x,v.y,v.z, ring.inclX);
+          v = rotZ(v.x,v.y,v.z, ring.inclZ);
+          v = rotY(v.x,v.y,v.z, ring.rotY + tiltY);
+          v = rotX(v.x,v.y,v.z, tiltX);
+          const { px:rpx, py:rpy } = project(v.x,v.y,v.z, CX,CY, FOCAL);
+          
+          if (i===0) ctx.moveTo(rpx,rpy); else ctx.lineTo(rpx,rpy);
+        }
+        
+        // Dim default, bright on hover
+        const depthAvg = 0.5; // rough avg
+        const activeRingA = 0.15 + depthAvg * 0.65;
+        const idleRingA = 0.02;
+        const ringAlpha = idleRingA + (activeRingA - idleRingA) * bFac;
+
+        ctx.setLineDash(ring.dash);
+        ctx.strokeStyle = `rgba(${ring.rgb}, ${ringAlpha})`;
+        ctx.lineWidth   = ring.width;
+        ctx.shadowBlur  = 8 * bFac; 
+        ctx.shadowColor = `rgba(${ring.rgb}, 1)`;
+        ctx.stroke();
+        ctx.shadowBlur  = 0;
+        ctx.setLineDash([]);
+      }
+
+      // ── Energy tendrils to cursor ──
+      if (cur.x > 0 && cur.x < W && cur.y > 0 && cur.y < H && bFac > 0.1) {
+        const dcx = cur.x - CX, dcy = cur.y - CY;
+        const dCurDist = Math.sqrt(dcx*dcx+dcy*dcy);
+        if (dCurDist < 380) {
+          // Multiply strength by bFac so it doesn't appear unless glowing
+          const strength = Math.max(0, 1 - dCurDist/380) * bFac; 
+          for (let t=0; t<4; t++) {
+            ctx.beginPath(); ctx.moveTo(CX,CY);
+            let lx=CX, ly=CY;
+            const steps=7;
+            for (let s=1; s<=steps; s++) {
+              const prog = s/steps;
+              const jx = (Math.random()-0.5)*38*(1-prog);
+              const jy = (Math.random()-0.5)*38*(1-prog);
+              lx = CX+(cur.x-CX)*prog+jx;
+              ly = CY+(cur.y-CY)*prog+jy;
+              ctx.lineTo(lx,ly);
+            }
+            ctx.strokeStyle = `rgba(0,245,212,${strength*0.35})`;
+            ctx.lineWidth   = 0.8+strength*0.6;
+            ctx.shadowBlur  = 12; ctx.shadowColor="#00f5d4";
+            ctx.stroke(); ctx.shadowBlur=0;
+          }
+          // Impact point
+          ctx.beginPath(); ctx.arc(cur.x,cur.y, 2+Math.random()*3,0,Math.PI*2);
+          ctx.fillStyle=`rgba(255,255,255,${strength*0.8})`; ctx.fill();
+          // Cursor ring
+          ctx.beginPath(); ctx.arc(cur.x,cur.y,12+strength*8,0,Math.PI*2);
+          ctx.strokeStyle=`rgba(0,245,212,${strength*0.4})`;
+          ctx.lineWidth=1; ctx.stroke();
+        }
+      }
+
+      // ── Central volumetric core ──
+      ctx.globalCompositeOperation = "lighter";
+      const pulse  = Math.sin(frame*0.04)*0.18+0.82;
+      const pulse2 = Math.sin(frame*0.06+1)*0.12+0.88;
+      
+      const g1 = ctx.createRadialGradient(CX,CY,0,CX,CY, 140*pulse2);
+      g1.addColorStop(0, `rgba(0,245,212,${0.01 + 0.05 * bFac})`);
+      g1.addColorStop(0.5,`rgba(14,165,233,${0.005 + 0.035 * bFac})`);
+      g1.addColorStop(1, "transparent");
+      ctx.fillStyle=g1; ctx.beginPath(); ctx.arc(CX,CY,140*pulse2,0,Math.PI*2); ctx.fill();
+      
+      const g2 = ctx.createRadialGradient(CX,CY,0,CX,CY, 55*pulse);
+      g2.addColorStop(0, `rgba(255,255,255,${0.02 + 0.53 * bFac})`);
+      g2.addColorStop(0.25,`rgba(0,245,212,${0.01 + 0.37 * bFac})`);
+      g2.addColorStop(0.7, `rgba(14,165,233,${0.005 + 0.145 * bFac})`);
+      g2.addColorStop(1, "transparent");
+      ctx.fillStyle=g2; ctx.beginPath(); ctx.arc(CX,CY,55*pulse,0,Math.PI*2); ctx.fill();
+      
+      const g3 = ctx.createRadialGradient(CX,CY,0,CX,CY,22);
+      g3.addColorStop(0,`rgba(255,255,255,${0.02 + 0.88 * bFac})`);
+      g3.addColorStop(0.4,`rgba(192,132,252,${0.01 + 0.59 * bFac})`);
+      g3.addColorStop(1,"transparent");
+      ctx.fillStyle=g3; ctx.beginPath(); ctx.arc(CX,CY,22,0,Math.PI*2); ctx.fill();
+      
+      ctx.globalCompositeOperation="source-over";
+      ctx.beginPath(); ctx.arc(CX,CY,3.5,0,Math.PI*2);
+      ctx.fillStyle=`rgba(255,255,255,${0.05 + 0.9 * bFac})`; 
+      ctx.fill();
 
       raf = requestAnimationFrame(draw);
     };
@@ -937,28 +947,23 @@ function NeuralNetwork({ mouse }: { mouse: { x: number; y: number } }) {
     raf = requestAnimationFrame(draw);
     return () => {
       cancelAnimationFrame(raf);
-      window.removeEventListener("resize",    resize);
+      window.removeEventListener("resize", resize);
       window.removeEventListener("mousemove", onMove);
     };
   }, []);
 
   return (
-    <canvas
-      ref={canvasRef}
-      style={{
-        position:       "absolute",
-        top:            "50%",
-        right:          "-2%",
-        transform:      "translateY(-46%)",
-        width:          "clamp(480px,52vw,820px)",
-        height:         "clamp(480px,52vw,820px)",
-        display:        "block",
-        pointerEvents:  "none",
-        opacity:        0.92,
-        WebkitMaskImage:"linear-gradient(to right,transparent 0%,black 18%)",
-        maskImage:      "linear-gradient(to right,transparent 0%,black 18%)",
-      }}
-    />
+    <canvas ref={canvasRef} style={{
+      position: "absolute", 
+      top: "50%", 
+      right: "2%",               // Pushed to the right side!
+      transform: "translateY(-50%)", 
+      width: "45vw",             // Takes up half the screen width
+      height: "80vh",            
+      pointerEvents: "auto",     // CRITICAL: Allows mouse interaction!
+      display: "block",
+      zIndex: 20                 // Sits cleanly above backgrounds
+    }} />
   );
 }
 
@@ -2298,14 +2303,26 @@ function SolutionSection() {
             YOU DON'T DO<br /><span style={{ color: "#2DD4BF" }}>EXERCISES.</span><br />YOU <span style={{ color: "#2DD4BF" }}>PLAY GAMES.</span>
           </h2>
         </Reveal>
-
-        {/* EXPANDED TABLET/GAMEPLAY CONTAINER */}
+{/* EXPANDED TABLET/GAMEPLAY CONTAINER */}
         <Reveal dir="zoom" style={{ marginBottom: 60, display: "flex", justifyContent: "center" }}>
-          <div style={{ borderRadius: 36, overflow: "hidden", border: "1px solid rgba(45,212,191,.14)", boxShadow: "0 40px 100px rgba(0,0,0,.5)", width: "90vw", maxWidth: 1000 }}>
-            {/* Replace with your actual video or image */}
-            <div style={{ width: "100%", height: "460px", background: "#0a192f", display: "flex", alignItems: "center", justifyContent: "center" }}>
-              <span className="fM" style={{ color: "#2DD4BF", opacity: 0.5 }}>[IMG:GAMEPLAY] Placeholder</span>
-            </div>
+          <div style={{ 
+            borderRadius: 36, 
+            overflow: "hidden", 
+            border: "1px solid rgba(45,212,191,.14)", 
+            boxShadow: "0 40px 100px rgba(0,0,0,.5)", 
+            width: "90vw", 
+            maxWidth: 1000 
+          }}>
+            <img 
+              src="/image/fishgame.jpeg" 
+              alt="ReViveX Gameplay" 
+              style={{ 
+                width: "100%", 
+                height: "460px", 
+                objectFit: "cover", 
+                display: "block" 
+              }} 
+            />
           </div>
         </Reveal>
 
@@ -2939,11 +2956,11 @@ function Footer() {
 
             {[
 
-              { icon: <Mail size={15} />, l: "Email", v: "hello@revivex.io", href: "mailto:hello@revivex.io" },
+              { icon: <Mail size={15} />, l: "Email", v: "revivex13@gmail.com", href: "mailto:revivex13@gmail.com" },
 
-              { icon: <Phone size={15} />, l: "Phone", v: "+94 77 000 0000", href: "#" },
+              { icon: <Phone size={15} />, l: "Phone", v: "+94 77 3847510", href: "#" },
 
-              { icon: <Globe size={15} />, l: "Website", v: "www.revivex.io", href: "#" },
+              { icon: <Globe size={15} />, l: "Website", v: "revivex1.com", href: "#" },
 
             ].map(c => (
 
