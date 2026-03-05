@@ -7,7 +7,9 @@ setGlobalOptions({maxInstances: 10});
 
 exports.evaluateGameSession = onDocumentCreated(
   "game_sessions/{sessionId}",
-  async (event) => {const data = snap.data();
+  async (event) => {
+
+    const data = event.data.data();
     const metrics = data.metrics;
 
     if (!metrics) return null;
@@ -33,7 +35,7 @@ exports.evaluateGameSession = onDocumentCreated(
       ? "Moderate" 
       : "Needs Attention";
 
-    return snap.ref.update({
+    await event.data.ref.update({
       strengthScore,
       enduranceScore,
       reactionScore,
