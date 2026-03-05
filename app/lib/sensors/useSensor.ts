@@ -17,3 +17,8 @@ serial?: any;
 export function useSensor() {
     const [isConnected, setIsConnected] = useState(false);
     const [currentPressure, setCurrentPressure] = useState(0);
+
+        // We use refs to keep track of these values across renders without triggering infinite loops
+    const portRef = useRef<SerialPort | null>(null);
+    const readerRef = useRef<ReadableStreamDefaultReader<string> | null>(null);
+    const isConnRef = useRef(false);
