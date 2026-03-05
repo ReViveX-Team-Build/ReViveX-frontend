@@ -1,12 +1,22 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
+const apiKey = process.env.GEMINI_API_KEY;
 
-export async function askGemini(prompt: string) {
-    const model = genAI.getGenerativeModel({
-        model: "gemini-3-flash-preview"
-    });
+if (!apiKey) {
+  throw new Error("GEMINI_API_KEY is missing in environment variables");
+}
 
-    const result = await model.generateContent(prompt);
-    return result.response.text();
+const genAI = new GoogleGenerativeAI(apiKey);
+
+export async function askGemini(systemPrompt: string, userMessage: string) {
+
+  const model = genAI.getGenerativeModel({
+    model: "gemini-2.0-flash"
+  });
+
+  const fullPrompt = `${systemPrompt}\n\nPatient asks: ${userMessage}`;
+
+  const result = await model.generateContent(fullPrompt);
+
+  return result.response.text();
 }
