@@ -52,3 +52,49 @@ export function useSensor() {
             console.error(error);
         }
     };
+
+        const disconnect = async () => {
+        setIsConnected(false);
+        isConnRef.current = false;
+        setCurrentPressure(0);
+        
+        try {
+            if (readerRef.current) {
+                await readerRef.current.cancel();
+                readerRef.current.releaseLock();
+                readerRef.current = null;
+            }
+            if (portRef.current) {
+                await portRef.current.close();
+                portRef.current = null;
+            }
+        } catch (err) {
+            console.error('Error during disconnect:', err);
+        }
+    };
+
+        const readLoop = async (reader: ReadableStreamDefaultReader<string>) => {
+        let buffer = '';
+        try {
+            while (true) {
+                const { value, done } = await reader.read();
+                if (done) break;
+                if (value) {
+                    buffer += value;
+                    const lines = buffer.split('\n');
+                    buffer = lines.pop() || '';
+                    
+                    for (const line of lines) {
+                        // Assuming your sensor sends data in the format "V:3.14"
+                        const match = line.match(/V:([\d.]+)/);
+                        if (match) {
+                            setCurrentPressure(parseFloat(match[1]));
+                        }
+                    }
+                }
+            }
+        } catch (error) {
+            console.error('Sensor read error:', error);
+            disconnect();
+        }
+    };
