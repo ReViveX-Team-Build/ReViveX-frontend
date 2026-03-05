@@ -103,3 +103,12 @@ export function useSensor() {
     const getPressure = useCallback(() => {
         return currentPressure;
     }, [currentPressure]);
+
+        return {
+        isConnected,
+        isConnRef,
+        connect,
+        disconnect,
+        getPressure
+    };
+}
