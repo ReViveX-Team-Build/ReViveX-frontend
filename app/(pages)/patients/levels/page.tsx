@@ -63,8 +63,8 @@ const BASE_LEVELS: Level[] = [
   },
   {
     id: 3, title: "Memory Trench", category: "COGNITIVE",
-    desc: "Cognitive dual-tasking protocol. Navigate while sequencing colour targets from working memory.",
-    locked: true, path: "/game/level-3", difficulty: "Hard", difficultyN: 3,
+    desc: "Cognitive dual-tasking protocol. Navigate while sequencing colour targets from working memory. Watch the color sequence on each gate and pass through in the correct order!",
+    locked: false, path: "/game/sky-memory?level=3", difficulty: "Hard", difficultyN: 3,
     accentHex: "#f59e0b",
     icon: <Brain size={18} />, xp: 450, duration: "20 min",
     completedSessions: 0, targetSessions: 5,
@@ -72,8 +72,8 @@ const BASE_LEVELS: Level[] = [
   },
   {
     id: 4, title: "Precision Peaks", category: "MOTOR",
-    desc: "Micro-force control training. Thread the fish through sub-pixel gate windows at increasing speed.",
-    locked: true, path: "/game/level-4", difficulty: "Hard", difficultyN: 4,
+    desc: "Micro-force control training. Thread the bird through sub-pixel gate windows at increasing speed while memorizing longer color sequences.",
+    locked: false, path: "/game/sky-memory?level=4", difficulty: "Hard", difficultyN: 4,
     accentHex: "#22c55e",
     icon: <Target size={18} />, xp: 600, duration: "20 min",
     completedSessions: 0, targetSessions: 5,
@@ -81,12 +81,21 @@ const BASE_LEVELS: Level[] = [
   },
   {
     id: 5, title: "Abyss Mastery", category: "STRENGTH",
-    desc: "Sustained endurance protocol. Maintain consistent grip force for the full session against adaptive resistance.",
-    locked: true, path: "/game/level-5", difficulty: "Expert", difficultyN: 5,
+    desc: "Sustained endurance protocol. Maintain consistent grip force while remembering complex color sequences across all four colors.",
+    locked: false, path: "/game/sky-memory?level=5", difficulty: "Expert", difficultyN: 5,
     accentHex: "#ef4444",
     icon: <Shield size={18} />, xp: 1000, duration: "25 min",
     completedSessions: 0, targetSessions: 5,
     tags: ["Endurance", "Strength"],
+  },
+  {
+    id: 6, title: "Flappy Push", category: "COGNITIVE",
+    desc: "Navigate obstacles while memorising colour sequences. Combines fine motor control with working memory training.",
+    locked: false, path: "/game/memory-diver", difficulty: "Medium", difficultyN: 2,
+    accentHex: "#A78BFA",
+    icon: <Brain size={18} />, xp: 350, duration: "15 min",
+    completedSessions: 0, targetSessions: 5,
+    tags: ["Memory", "Working Memory"],
   },
 ];
 
