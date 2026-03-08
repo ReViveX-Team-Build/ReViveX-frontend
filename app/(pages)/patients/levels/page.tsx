@@ -287,8 +287,8 @@ const NeuralNetworkCanvas: React.FC<{ levels: Level[] }> = ({ levels }) => {
       { x: w * 0.90, y: h * 0.60 },
     ];
     nodesRef.current = levels.map((lvl, i) => ({
-      x: pos[i].x, y: pos[i].y,
-      homeX: pos[i].x, homeY: pos[i].y,
+      x: pos[i]?.x ?? w * 0.5, y: pos[i]?.y ?? h * 0.5,
+      homeX: pos[i]?.x ?? w * 0.5, homeY: pos[i]?.y ?? h * 0.5,
       vx: (Math.random() - 0.5) * 0.14,
       vy: (Math.random() - 0.5) * 0.14,
       level: lvl, pulsePhase: Math.random() * Math.PI * 2,

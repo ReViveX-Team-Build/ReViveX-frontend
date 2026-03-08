@@ -407,10 +407,10 @@ const SkyMemoryGame: React.FC = () => {
         sequenceRef.current = sequence;
         setCurrentSequence(sequence);
         
-        // Spawn multiple gates like Flappy Bird - each with different gap positions
-        const numGates = 3;
-        const gateSpacing = 350; // Horizontal space between gates
+
         
+        const numGates = 3;
+        const gateSpacing = 650; // Increased from 500 for more space between gates
         for (let i = 0; i < numGates; i++) {
             const gate = new SkyGate(
                 c.width + (i * gateSpacing), // Stagger X positions
@@ -478,6 +478,8 @@ const SkyMemoryGame: React.FC = () => {
             
             for (let i = gatesRef.current.length - 1; i >= 0; i--) {
                 const gate = gatesRef.current[i];
+                if (!gate) continue;
+                
                 gate.update(scrollSpeed);
                 gate.draw(ctx);
                 
@@ -488,10 +490,10 @@ const SkyMemoryGame: React.FC = () => {
                     const birdRadius = birdRef.current.radius;
                     
                     if (gate.state === 'waiting' || gate.state === 'passed_checkpoint' || gate.state === 'showing') {
-                        const gapTop = gate.pillarTops[0];
-                        const gapBottom = gate.pillarBottoms[0];
-                        const pipeLeft = gate.x - 26;
-                        const pipeRight = gate.x + 26;
+                        const gapTop = gate.pillarTops.length > 0 ? gate.pillarTops[0] : c.height * 0.3;
+                        const gapBottom = gate.pillarBottoms.length > 0 ? gate.pillarBottoms[0] : c.height * 0.7;
+                        const pipeLeft = gate.x - 35; // Updated from 26 (half of new pillarWidth 70)
+                        const pipeRight = gate.x + 35; // Updated from 26
                         
                         // Check if bird is horizontally aligned with pipe
                         if (birdX + birdRadius > pipeLeft && birdX - birdRadius < pipeRight) {
@@ -895,4 +897,5 @@ const SkyMemoryGame: React.FC = () => {
 };
 
 export default SkyMemoryGame;
+
 
