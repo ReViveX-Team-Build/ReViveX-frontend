@@ -87,9 +87,17 @@ export class SkyGate {
     
     private generatePillars(gameHeight: number): void {
         // Generate gap position - VERY LARGE GAP for therapy/easy gameplay
-        const gapSize = this.height * 0.65; // Increased from 0.50 to 0.65 for much more space
+        const gapSize = this.height * 0.85; // Original value
         const minY = gameHeight * 0.10;
         const maxY = gameHeight - gapSize - gameHeight * 0.10;
+        
+        // Ensure we have valid bounds
+        if (maxY <= minY) {
+            // Fallback to center gap if calculation fails
+            this.pillarTops = [gameHeight * 0.3];
+            this.pillarBottoms = [gameHeight * 0.7];
+            return;
+        }
         
         // Random gap position
         const gapY = minY + Math.random() * (maxY - minY);
@@ -233,9 +241,9 @@ export class SkyGate {
     private drawGateFrame(ctx: CanvasRenderingContext2D, gateTop: number, gateBottom: number): void {
         ctx.save();
         
-        // Flappy Bird style green pipes
-        const pillarWidth = 52;
-        const capHeight = 26;
+        // Flappy Bird style green pipes - THICKER PIPES
+        const pillarWidth = 70; // Increased from 52
+        const capHeight = 35; // Increased from 26
         
         // Get gap positions from pillarTops if available
         const gapTop = this.pillarTops.length > 0 ? this.pillarTops[0] : gateTop;
@@ -272,8 +280,8 @@ export class SkyGate {
         ctx.fillStyle = pipeColor;
         ctx.fillRect(x - width/2, y, width, height);
         
-        // Pipe cap (the flared part)
-        const capHeight = 26;
+        // Pipe cap (the flared part) - THICKER PIPES
+        const capHeight = 35; // Increased from 26
         const capWidth = width + 16;
         
         if (isTop) {
