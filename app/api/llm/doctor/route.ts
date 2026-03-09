@@ -18,3 +18,13 @@ export async function POST(req: Request) {
           { status: 400 }
         );
       }
+
+    const [doctor, patients, history] = await Promise.all([
+        getUser(uid),
+        getPatientsByDoctor(uid),
+        getHistoryForAI(uid, 16),
+      ]);
+
+    const cohort = await getCohortStats(uid);
+
+    const doctorName = doctor ? (doctor as any).name ?? "Doctor" : "Doctor";
