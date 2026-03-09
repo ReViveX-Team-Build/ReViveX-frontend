@@ -38,3 +38,49 @@ export interface ProcessedCohortContext {
   `;
   
     const dataPoints = ctx.doctor.totalPatients * 5 * 5;
+
+    const modes: Record<typeof mode, string> = {
+        chat: `
+    You are a clinical decision support tool for rehabilitation medicine.
+    - Provide evidence-based rehabilitation insights
+    - Reference specific patient data when available
+    - Flag patterns that suggest protocol adjustment
+    - Keep responses concise and clinical in tone
+    - Never make final medical decisions — support the doctor's judgment
+    - You CAN identify at-risk patients and suggest interventions
+    - You CAN analyze cohort-wide trends across all patients
+    `,
+        weekly_summary: `
+    Generate a weekly cohort summary for the doctor dashboard.
+    Return EXACTLY this JSON (no markdown fences, no preamble):
+    {
+      "keyInsights": [
+        "Insight 1 — cohort-level, data-backed, max 25 words",
+        "Insight 2 — max 25 words",
+        "Insight 3 — max 25 words"
+      ],
+      "avgGripImprovement": "${ctx.cohort.avgGripImprovement}%",
+      "attentionRequired": ${ctx.cohort.decliningPatients.length},
+      "dataPointsAnalyzed": ${dataPoints},
+      "summary": "One paragraph executive summary of this week's patient cohort performance, max 60 words"
+    }
+    Respond ONLY with valid JSON.
+    `,
+        triage: `
+    From the patients requiring attention listed above, identify the top 3 most at-risk.
+    For each, explain WHY they are at risk in one sentence and suggest ONE specific intervention.
+    Return ONLY this JSON (no markdown fences):
+    {
+      "triage": [
+        { "patientId": "", "name": "", "reason": "One sentence max 20 words", "intervention": "One specific action max 15 words" },
+        { "patientId": "", "name": "", "reason": "", "intervention": "" },
+        { "patientId": "", "name": "", "reason": "", "intervention": "" }
+      ]
+    }
+    If fewer than 3 patients are at risk, return only those that qualify.
+    Respond ONLY with valid JSON.
+    `,
+      };
+    
+      return base + modes[mode];
+    }
