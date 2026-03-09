@@ -16,13 +16,17 @@ export function useAiCompanion(uid: string, role: AiRole = "patient") {
     const [messages, setMessages] = useState<ChatMessage[]>([]);
     const [isLoading, setIsLoading] = useState(false);
 
-    // Load chat history when component mounts or uid changes
+    // Load chat history
     useEffect(() => {
         if (!uid) return;
 
         async function loadHistory() {
-            const history = await getConversationHistory(uid);
-            setMessages(history);
+            try {
+                const history = await getConversationHistory(uid);
+                setMessages(history);
+            } catch (error) {
+                console.error("Failed to load chat history:", error);
+            }
         }
 
         loadHistory();
@@ -41,12 +45,11 @@ export function useAiCompanion(uid: string, role: AiRole = "patient") {
         setMessages((prev) => [...prev, userMessage]);
         setIsLoading(true);
 
-        // Select correct API route
         const endpoint =
             role === "doctor" ? "/api/llm/doctor" : "/api/llm/patient";
 
         try {
-            // Save user message to Firestore
+            // Save user message
             await saveMessage(uid, "user", content);
 
             const response = await fetch(endpoint, {
@@ -61,6 +64,10 @@ export function useAiCompanion(uid: string, role: AiRole = "patient") {
                 })
             });
 
+            if (!response.ok) {
+                throw new Error("AI service unavailable");
+            }
+
             const data = await response.json();
 
             if (data.reply) {
@@ -73,12 +80,22 @@ export function useAiCompanion(uid: string, role: AiRole = "patient") {
 
                 setMessages((prev) => [...prev, aiMessage]);
 
-                // Save AI reply
                 await saveMessage(uid, "model", data.reply);
+            } else {
+                throw new Error("Invalid AI response");
             }
 
-        } catch (error) {
+        } catch (error: any) {
             console.error("Chat error:", error);
+
+            const errorMessage: ChatMessage = {
+                userId: uid,
+                role: "model",
+                content: "Sorry, the AI assistant is currently unavailable. Please try again.",
+                timestamp: null as any
+            };
+
+            setMessages((prev) => [...prev, errorMessage]);
         } finally {
             setIsLoading(false);
         }
