@@ -16,3 +16,17 @@ const PAGE_CSS = `
   .onb-card { ... }
   /* etc */
 `;
+const [checkingSkip, setCheckingSkip] = useState(true);
+
+useEffect(() => {
+  if (authLoading) return;
+  if (!user) { router.replace("/auth/patient/signin"); return; }
+
+  getPatientData(user.uid).then((data) => {
+    if (data?.profilePictureUrl) {
+      router.replace("/auth/onboarding/select-doctor");
+    } else {
+      setCheckingSkip(false);
+    }
+  }).catch(() => setCheckingSkip(false));
+}, [user, authLoading]);
