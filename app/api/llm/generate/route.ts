@@ -35,4 +35,15 @@ export async function POST(req: Request) {
       const model = genAI.getGenerativeModel({ model: MODEL });
       const result = await model.generateContent(prompt);
       const generated = result.response.text();
+
+      return NextResponse.json({ generated });
+
+    } catch (err: any) {
+        console.error("Generate LLM Route Error:", err);
+        return NextResponse.json(
+          { error: err.message ?? "Generation failed" },
+          { status: 500 }
+        );
+      }
+    }
       
