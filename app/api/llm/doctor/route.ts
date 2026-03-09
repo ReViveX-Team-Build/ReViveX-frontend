@@ -130,3 +130,6 @@ For each patient:
 Be direct. Prioritize worst-adherence patients first.
 `,
   };
+
+  return base + (modeInstructions[mode] ?? modeInstructions.chat);
+}
