@@ -3,11 +3,13 @@
 import { useState, useEffect } from "react";
 import { getConversationHistory, saveMessage, ChatMessage } from "../db/conversations";
 
-export function useAiCompanion(uid: string) {
+export type AiRole = "patient" | "doctor";
+
+export function useAiCompanion(uid: string, role: AiRole = "patient") {
     const [messages, setMessages] = useState<ChatMessage[]>([]);
     const [isLoading, setIsLoading] = useState(false);
 
-    // Load chat history when component mounts
+    // Load chat history when component mounts or uid changes
     useEffect(() => {
         if (!uid) return;
 
@@ -32,11 +34,16 @@ export function useAiCompanion(uid: string) {
         setMessages((prev) => [...prev, userMessage]);
         setIsLoading(true);
 
+        // choose correct API route depending on role
+        const endpoint = role === "doctor"
+            ? "/api/llm/doctor"
+            : "/api/llm/patient";
+
         try {
-            // Save user message
+            // Save user message to Firestore
             await saveMessage(uid, "user", content);
 
-            const response = await fetch("/api/llm", {
+            const response = await fetch(endpoint, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json"
@@ -59,7 +66,7 @@ export function useAiCompanion(uid: string) {
 
                 setMessages((prev) => [...prev, aiMessage]);
 
-                // Save AI response
+                // Save AI response to Firestore
                 await saveMessage(uid, "model", data.reply);
             }
 
