@@ -56,3 +56,20 @@ export async function POST(req: Request) {
       ]);
   
       return NextResponse.json({ reply });
+
+    } catch (err: any) {
+        console.error("Patient LLM Route Error:", err);
+        return NextResponse.json(
+          { error: err.message ?? "AI failed to respond" },
+          { status: 500 }
+        );
+      }
+    }
+    
+    function buildPatientContext(
+      patient: PatientData | null,
+      sessions: GameSession[],
+      bilateral: { left: GameSession[]; right: GameSession[] },
+      protocol: TherapyProtocol | null,
+      doctorMessages: any[]
+    ) {
