@@ -29,3 +29,16 @@ export async function updateGamification(
     "gamification.currentStreak": newStreak,
   });
 }
+
+// Unlock a new level (called by doctor or auto after XP threshold)
+export async function unlockLevel(uid: string, level: number): Promise<void> {
+  const snap = await getDoc(doc(db, "users", uid));
+  if (!snap.exists()) return;
+
+  const current: number[] = snap.data().gamification?.unlockedLevels ?? [];
+  if (!current.includes(level)) {
+    await updateDoc(doc(db, "users", uid), {
+      "gamification.unlockedLevels": [...current, level],
+    });
+  }
+}
