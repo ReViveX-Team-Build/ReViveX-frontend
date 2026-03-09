@@ -46,3 +46,8 @@ export async function POST(req: Request) {
     const chat = model.startChat({ history: geminiHistory });
     const result = await chat.sendMessage(message);
     const reply = result.response.text();
+
+    await Promise.all([
+        saveMessage(uid, "user", message),
+        saveMessage(uid, "model", reply),
+      ]);
