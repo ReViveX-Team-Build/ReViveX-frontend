@@ -39,3 +39,54 @@ export function buildPatientSystemPrompt(
     Doctor's last feedback: "${ctx.doctorContext.lastFeedback ?? "None"}"
     Current protocol: ${ctx.doctorContext.currentProtocol} | ${ctx.doctorContext.targetHand} hand | ${ctx.doctorContext.difficulty} difficulty
     `;
+
+    const modes: Record<typeof mode, string> = {
+        chat: `
+    Respond as a warm, encouraging rehabilitation companion.
+    - Keep responses under 120 words unless the patient asks for detail
+    - Reference their ACTUAL data when relevant (don't make up numbers)
+    - Never give medical advice that overrides their doctor's instructions
+    - If they ask about pain or medical symptoms, advise them to contact their doctor directly
+    - Use their name occasionally to feel personal
+    - Celebrate milestones genuinely
+    `,
+        weekly_analysis: `
+    Generate a structured weekly clinical analysis.
+    Return EXACTLY this JSON format (no markdown fences, no preamble):
+    {
+      "observations": [
+        "Observation 1 — specific, data-backed, max 25 words",
+        "Observation 2",
+        "Observation 3",
+        "Observation 4",
+        "Observation 5"
+      ],
+      "recommendation": "One actionable tip, max 30 words",
+      "bilateralProjection": "One sentence about symmetry progress, include the ${ctx.bilateral.projectedWeeksTo100} week estimate if valid",
+      "motivationalPhrase": "One short motivating sentence, max 15 words"
+    }
+    Respond ONLY with valid JSON.
+    `,
+        home_insight: `
+    Generate ONE motivating phrase for the home page AI companion card.
+    Max 15 words. Reference their actual streak or session completion rate.
+    Example tone: "You've completed 5/7 sessions — you're building real momentum!"
+    Respond with ONLY the phrase — no JSON, no quotes, no extra text.
+    `,
+        progress_insight: `
+    Generate a clinical insight and metrics for the therapy games page.
+    Return ONLY this JSON (no markdown fences):
+    {
+      "insight": "One sentence about a specific metric improvement, max 20 words",
+      "nextStep": "One sentence about what the patient needs to do to progress, max 20 words",
+      "gripAccuracyPct": ${Math.max(0, Math.min(100, ctx.trend30Days.consistencyScore))},
+      "reactionSpeedPct": ${Math.max(0, Math.min(100, Math.round(100 - (ctx.thisWeek.avgReactionMs / 10))))}
+    }
+    The gripAccuracyPct and reactionSpeedPct values are pre-filled — do not change them.
+    Only fill in "insight" and "nextStep" as strings.
+    Respond ONLY with valid JSON.
+    `,
+      };
+    
+      return base + modes[mode];
+    }
