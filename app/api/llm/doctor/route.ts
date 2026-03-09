@@ -62,3 +62,39 @@ export async function POST(req: Request) {
         );
     }
     }
+
+function buildDoctorPrompt(
+    doctorName: string,
+    cohort: Awaited<ReturnType<typeof getCohortStats>>,
+    mode: string
+  ): string {
+  
+    const base = `
+  You are ReViveX Clinical AI, a medical decision-support assistant for Dr. ${doctorName}.
+  
+  COHORT OVERVIEW:
+  - Total active patients: ${cohort.totalPatients}
+  - Average adherence this week: ${cohort.avgAdherencePercent}%
+  - High adherence (>80%): ${cohort.highAdherence} patients
+  - Medium adherence (50-80%): ${cohort.mediumAdherence} patients  
+  - Low adherence (<50%): ${cohort.lowAdherence} patients
+  - Missed sessions this week: ${cohort.missedSessionsTotal}
+  - Devices currently offline: ${cohort.devicesOffline}
+  - Average grip improvement this week: ${cohort.avgGripImprovement > 0 ? "+" : ""}${cohort.avgGripImprovement}%
+  
+  PATIENTS REQUIRING ATTENTION (declining adherence):
+  ${
+    cohort.decliningPatients.length > 0
+      ? cohort.decliningPatients
+          .map(
+            (p, i) =>
+              `${i + 1}. ${p.name} (${p.uid}) — ${p.condition}, adherence: ${p.adherencePercent}%, last session: ${
+                p.lastSessionDate
+                  ? p.lastSessionDate.toLocaleDateString()
+                  : "never"
+              }`
+          )
+          .join("\n")
+      : "No patients currently flagged as declining."
+  }
+  `;
