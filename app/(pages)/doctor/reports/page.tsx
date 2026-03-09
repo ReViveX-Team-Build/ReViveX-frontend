@@ -1,12 +1,23 @@
-"use client";
-
 import ReportKPICard from "@/components/DoctorPortal/ReportKPICard";
 import PatientOutcomesChart from "@/components/DoctorPortal/PatientOutcomesChart";
 import AdherenceRateChart from "@/components/DoctorPortal/AdherenceRateChart";
 import DeviceStatusChart from "@/components/DoctorPortal/DeviceStatusChart";
 import ProgressTrendChart from "@/components/DoctorPortal/ProgressTrendChart";
 
-export default function ReportsPage() {
+import Link from "next/link";
+
+type Patient = {
+  id: string;
+  name: string;
+  status: "Stable" | "Improving" | "Needs Attention";
+};
+
+const patients: Patient[] = [
+  { id: "rvx-001", name: "Nimal Perera", status: "Improving" },
+  { id: "rvx-002", name: "Saman Silva", status: "Needs Attention" },
+];
+
+export default function DoctorReportsPage() {
   return (
     <div className="p-8 max-w-7xl mx-auto space-y-8">
       {/* Header */}
