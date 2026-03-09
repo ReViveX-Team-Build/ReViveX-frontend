@@ -36,9 +36,13 @@ export async function POST(req: Request) {
         systemInstruction: systemPrompt,
       });
 
-      const firstUserIdx = history.findIndex((m) => m.role === "user");
-      const geminiHistory = (firstUserIdx > 0 ? history.slice(firstUserIdx) : history)
-        .map((m) => ({
-          role: m.role,
-          parts: [{ text: m.content }],
-        }));
+    const firstUserIdx = history.findIndex((m) => m.role === "user");
+    const geminiHistory = (firstUserIdx > 0 ? history.slice(firstUserIdx) : history)
+    .map((m) => ({
+        role: m.role,
+        parts: [{ text: m.content }],
+    }));
+
+    const chat = model.startChat({ history: geminiHistory });
+    const result = await chat.sendMessage(message);
+    const reply = result.response.text();
