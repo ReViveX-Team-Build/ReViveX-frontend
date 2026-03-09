@@ -53,7 +53,7 @@ const CSS = `
 
     --bd:  #374151;
 
-    --mu:  #6B7280;
+    --mu:  #94a3b8;
 
   }
 
@@ -65,7 +65,7 @@ const CSS = `
 
   body { overflow-x: hidden; background: var(--dk); }
 
-  ::selection { background: rgba(45,212,191,.25); color: var(--dk2); }
+  ::selection { background: rgba(45,212,191,.35); color: #080f1a; }
 
 
 
@@ -267,9 +267,141 @@ const CSS = `
 
   input:focus, textarea:focus { outline: none; border-color: rgba(45,212,191,.5) !important; }
 
-  .stat-card:hover { transform: translateY(-4px); box-shadow: 0 20px 50px rgba(0,0,0,.12); }
+  .stat-card:hover { transform: translateY(-4px); box-shadow: 0 24px 60px rgba(45,212,191,.10); }
 
-  .stat-card { transition: transform .3s, box-shadow .3s; }
+  .stat-card { transition: transform .35s, box-shadow .35s; }
+
+  @keyframes deepGlow { 0%,100%{opacity:.55;transform:scale(1)} 50%{opacity:1;transform:scale(1.06)} }
+  .deep-glow { animation: deepGlow 8s ease-in-out infinite; }
+
+  @keyframes borderBreath {
+    0%,100%{border-color:rgba(45,212,191,.08);box-shadow:0 0 0 rgba(45,212,191,0)}
+    50%{border-color:rgba(45,212,191,.28);box-shadow:0 0 40px rgba(45,212,191,.07),inset 0 1px 0 rgba(45,212,191,.06)}
+  }
+  .border-breathe { animation:borderBreath 6s ease-in-out infinite; }
+
+  .glass-dk { background:rgba(255,255,255,.028) !important; backdrop-filter:blur(20px); -webkit-backdrop-filter:blur(20px); }
+  .glass-dk:hover { background:rgba(45,212,191,.045) !important; border-color:rgba(45,212,191,.24) !important; box-shadow:0 28px 80px rgba(45,212,191,.09),inset 0 1px 0 rgba(45,212,191,.07) !important; }
+  .glass-dk { transition: background .4s, border-color .4s, box-shadow .4s; }
+
+  /* ── DEPTH UTILITIES ───────────────────────────────────── */
+  .depth-top { position:absolute;top:0;left:0;right:0;height:300px;pointer-events:none;background:linear-gradient(to bottom,rgba(45,212,191,.07),transparent); }
+  .depth-bottom { position:absolute;bottom:0;left:0;right:0;height:300px;pointer-events:none;background:linear-gradient(to top,rgba(14,165,233,.06),transparent); }
+  .depth-radial-tl { position:absolute;top:0;left:0;width:700px;height:600px;pointer-events:none;background:radial-gradient(ellipse at top left,rgba(45,212,191,.09),transparent 65%); }
+  .depth-radial-br { position:absolute;bottom:0;right:0;width:700px;height:600px;pointer-events:none;background:radial-gradient(ellipse at bottom right,rgba(139,92,246,.07),transparent 65%); }
+
+  /* ── SECTION ATMOSPHERIC ORBS ───────────────────────────── */
+  /* Problem section — Red-tinted deep navy */
+  .prob-orb-1 { position:absolute;top:-120px;right:-100px;width:700px;height:700px;pointer-events:none;background:radial-gradient(circle,rgba(239,68,68,.09) 0%,rgba(239,68,68,.04) 35%,transparent 70%);border-radius:50%; }
+  .prob-orb-2 { position:absolute;bottom:-80px;left:-80px;width:500px;height:500px;pointer-events:none;background:radial-gradient(circle,rgba(251,113,133,.06) 0%,transparent 65%);border-radius:50%; }
+
+  /* Solution section — Rich teal atmosphere */
+  .sol-orb-1 { position:absolute;top:-100px;left:50%;transform:translateX(-50%);width:900px;height:600px;pointer-events:none;background:radial-gradient(ellipse,rgba(45,212,191,.12) 0%,rgba(14,165,233,.06) 40%,transparent 70%); }
+  .sol-orb-2 { position:absolute;bottom:-80px;right:-60px;width:480px;height:480px;pointer-events:none;background:radial-gradient(circle,rgba(139,92,246,.07),transparent 65%);border-radius:50%; }
+
+  /* Offer section — Purple-tinted deep navy */
+  .offer-orb-1 { position:absolute;top:-80px;right:0;width:650px;height:650px;pointer-events:none;background:radial-gradient(circle,rgba(139,92,246,.10) 0%,rgba(99,102,241,.05) 40%,transparent 70%);border-radius:50%; }
+  .offer-orb-2 { position:absolute;bottom:-60px;left:-60px;width:500px;height:500px;pointer-events:none;background:radial-gradient(circle,rgba(45,212,191,.07),transparent 65%);border-radius:50%; }
+
+  /* Why section — Gold-tinted atmosphere */
+  .why-orb-1 { position:absolute;top:0;right:0;width:700px;height:700px;pointer-events:none;background:radial-gradient(circle at top right,rgba(251,191,36,.08) 0%,rgba(251,191,36,.03) 40%,transparent 65%); }
+  .why-orb-2 { position:absolute;bottom:0;left:0;width:600px;height:600px;pointer-events:none;background:radial-gradient(circle at bottom left,rgba(52,211,153,.07),transparent 60%); }
+
+  /* ── SECTION DIVIDERS ────────────────────────────────────── */
+  .section-divider-teal { height:1px;background:linear-gradient(90deg,transparent,rgba(45,212,191,.35),transparent);position:relative; }
+  .section-divider-red  { height:1px;background:linear-gradient(90deg,transparent,rgba(239,68,68,.3),transparent);position:relative; }
+
+  /* ── STAT CARD — PROBLEM SECTION ───────────────────────── */
+  .stat-problem { background:rgba(239,68,68,.06) !important; border:1px solid rgba(239,68,68,.15) !important; transition:background .35s,border-color .35s,box-shadow .35s,transform .35s; }
+  .stat-problem:hover { background:rgba(239,68,68,.10) !important; border-color:rgba(239,68,68,.3) !important; box-shadow:0 20px 60px rgba(239,68,68,.12),inset 0 1px 0 rgba(239,68,68,.08) !important; transform:translateY(-4px); }
+
+  /* ── OFFER CARD TINTS ───────────────────────────────────── */
+  .offer-card-purple { background:rgba(139,92,246,.08) !important; border:1px solid rgba(139,92,246,.20) !important; }
+  .offer-card-green  { background:rgba(52,211,153,.07) !important; border:1px solid rgba(52,211,153,.18) !important; }
+  .offer-card-gold   { background:rgba(251,191,36,.06) !important; border:1px solid rgba(251,191,36,.18) !important; }
+
+  /* ── HERO CHIP GLOW ─────────────────────────────────────── */
+  @keyframes chipFloat { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-6px)} }
+
+  /* ══ AMBIENT DRIFTING LIGHT SYSTEM ══════════════════════════ */
+  /* Each light drifts along a slow Lissajous-like path         */
+  @keyframes drift-a {
+    0%   { transform: translate(0px,    0px)    scale(1);    }
+    25%  { transform: translate(60px,  -40px)   scale(1.08); }
+    50%  { transform: translate(20px,  -80px)   scale(0.95); }
+    75%  { transform: translate(-40px, -30px)   scale(1.05); }
+    100% { transform: translate(0px,    0px)    scale(1);    }
+  }
+  @keyframes drift-b {
+    0%   { transform: translate(0px,   0px)   scale(1);    }
+    20%  { transform: translate(-50px, 35px)  scale(1.06); }
+    50%  { transform: translate(-80px,-20px)  scale(0.92); }
+    80%  { transform: translate(30px,  50px)  scale(1.08); }
+    100% { transform: translate(0px,   0px)   scale(1);    }
+  }
+  @keyframes drift-c {
+    0%   { transform: translate(0px,  0px)    scale(1);    }
+    33%  { transform: translate(70px, 60px)   scale(1.1);  }
+    66%  { transform: translate(-30px,80px)   scale(0.93); }
+    100% { transform: translate(0px,  0px)    scale(1);    }
+  }
+  @keyframes drift-d {
+    0%   { transform: translate(0px,   0px)   scale(1);    }
+    40%  { transform: translate(-60px,-70px)  scale(1.07); }
+    70%  { transform: translate(50px, -50px)  scale(0.96); }
+    100% { transform: translate(0px,   0px)   scale(1);    }
+  }
+  @keyframes opacityPulse {
+    0%,100%{opacity:1} 50%{opacity:.55}
+  }
+  .aml { position:absolute; border-radius:50%; pointer-events:none; filter:blur(70px); animation: opacityPulse 8s ease-in-out infinite; }
+  .aml-a { animation: drift-a 22s ease-in-out infinite, opacityPulse 9s ease-in-out infinite; }
+  .aml-b { animation: drift-b 28s ease-in-out infinite, opacityPulse 11s ease-in-out infinite; }
+  .aml-c { animation: drift-c 18s ease-in-out infinite, opacityPulse 7s  ease-in-out infinite; }
+  .aml-d { animation: drift-d 32s ease-in-out infinite, opacityPulse 13s ease-in-out infinite; }
+
+  /* ── PROBLEM CARD HOVER GLOW ────────────────────────────── */
+  .prob-insight-card { transition:background .4s,box-shadow .4s,transform .35s; }
+  .prob-insight-card:hover { box-shadow:0 16px 60px rgba(239,68,68,.14),inset 0 1px 0 rgba(239,68,68,.08) !important; transform:translateY(-3px); }
+
+  /* ── WHY CARD HOVER ─────────────────────────────────────── */
+  .why-card { transition:background .4s,box-shadow .4s,transform .35s; }
+  .why-card:hover { box-shadow:0 16px 70px rgba(45,212,191,.10),inset 0 1px 0 rgba(45,212,191,.06) !important; transform:translateY(-2px); }
+
+  /* ══ HERO TITLE — REFINED CINEMATIC REVEAL ══════════════ */
+  /* Word-level reveal: each line blurs + lifts in as a unit */
+  @keyframes titleBeam {
+    0%   { transform:scaleX(0); opacity:0; }
+    20%  { opacity:1; }
+    100% { transform:scaleX(1); opacity:1; }
+  }
+  @keyframes tealGlow {
+    0%,100% { text-shadow:0 0 40px rgba(45,212,191,.22),0 0 80px rgba(45,212,191,.08); }
+    50%     { text-shadow:0 0 60px rgba(45,212,191,.38),0 0 120px rgba(45,212,191,.15),0 2px 0 rgba(45,212,191,.12); }
+  }
+  @keyframes beamSweep {
+    0%   { left:-100%; opacity:0; }
+    5%   { opacity:1; }
+    95%  { opacity:.7; }
+    100% { left:110%; opacity:0; }
+  }
+  .hero-title-wrap  { position:relative; }
+  .hero-beam-line   {
+    position:absolute; bottom:-6px; left:0; right:0; height:2px;
+    background:linear-gradient(90deg,transparent 0%,rgba(45,212,191,.9) 50%,transparent 100%);
+    transform-origin:left; box-shadow:0 0 16px rgba(45,212,191,.7);
+  }
+  .hero-beam-sweep {
+    position:absolute; top:0; bottom:0; width:60%; pointer-events:none;
+    background:linear-gradient(90deg,transparent,rgba(45,212,191,.06),transparent);
+    animation:beamSweep 5s linear infinite; animation-delay:3s;
+  }
+  .title-line-1 { color:#ffffff; display:block; }
+  .title-line-2 {
+    color:#2DD4BF; display:block;
+    animation:tealGlow 4s ease-in-out infinite;
+    animation-delay:1.8s;
+  }
 
 `;
 
@@ -597,373 +729,690 @@ function FloatingParticles({ count = 35 }: { count?: number }) {
   );
 }
 
-function NeuralNetwork({ mouse }: { mouse: { x: number; y: number } }) {
+function DeviceHoloCanvas({ mouse }: { mouse: { x: number; y: number } }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const mouseRef  = useRef(mouse);
-  const cursorRef = useRef({ x: -9999, y: -9999 });
-
   useEffect(() => { mouseRef.current = mouse; }, [mouse]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
-    // Removed alpha: false so it perfectly blends with the Next.js background!
     const ctx = canvas.getContext("2d")!;
-
-    // ── Constants ──
-    const N      = 500;      // sphere particles
-    const R      = 200;      // sphere radius
-    const FOCAL  = 900;      // perspective focal length
-    const C1     = "0,245,212"; // primary teal (RGB)
-    const C2     = "14,165,233"; // sky blue (RGB)
-    const C3     = "192,132,252"; // purple (RGB)
-
-    // ── Fibonacci sphere ──
-    type Pt3 = { ox:number; oy:number; oz:number; x:number; y:number; z:number; size:number; speed:number; hue:number; arcIdx:number };
-    const pts: Pt3[] = [];
-    const GR = (1 + Math.sqrt(5)) / 2;
-    for (let i = 0; i < N; i++) {
-      const theta = Math.acos(1 - 2*(i+0.5)/N);
-      const phi   = 2 * Math.PI * i / GR;
-      const ox = Math.sin(theta) * Math.cos(phi);
-      const oy = Math.sin(theta) * Math.sin(phi);
-      const oz = Math.cos(theta);
-      pts.push({ ox, oy, oz, x:0, y:0, z:0,
-        size: Math.random()*1.4+0.4,
-        speed: Math.random()*0.00016+0.00006,
-        hue: Math.random(),
-        arcIdx: i,
-      });
-    }
-
-    // ── Synaptic arc pairs ──
-    type Arc = { a:number; b:number; pulseT:number; pulseSpeed:number; colorRGB:string };
-    const arcs: Arc[] = [];
-    const COLORS = [C1, C2, C3, "251,191,36"];
-    for (let i = 0; i < N; i++) {
-      for (let j = i+1; j < N; j++) {
-        const dx = pts[i].ox-pts[j].ox, dy = pts[i].oy-pts[j].oy, dz = pts[i].oz-pts[j].oz;
-        const d  = Math.sqrt(dx*dx+dy*dy+dz*dz);
-        if (d < 0.38 && arcs.length < 320) {
-          arcs.push({ a:i, b:j, pulseT:Math.random(), pulseSpeed:0.003+Math.random()*0.005, colorRGB:COLORS[Math.floor(Math.random()*COLORS.length)] });
-        }
-      }
-    }
-
-    // ── Gyroscopic rings ──
-    type Ring = { inclX:number; inclZ:number; radius:number; rotY:number; rotSpeed:number; rgb:string; dash:[number,number]; width:number };
-    const rings: Ring[] = [
-      { inclX: 0.42, inclZ: 0.0,  radius:240, rotY:0, rotSpeed: 0.0018, rgb:C1, dash:[20,12], width:1.8 },
-      { inclX:-0.28, inclZ: 0.35, radius:268, rotY:1, rotSpeed:-0.0012, rgb:C2, dash:[3, 9],  width:1.3 },
-      { inclX: 0.1,  inclZ:-0.5,  radius:292, rotY:2, rotSpeed: 0.0008, rgb:C3, dash:[45,18], width:1.2 },
-    ];
-
-    // ── Aurora wisps ──
-    type Wisp = { x:number; y:number; rx:number; ry:number; rot:number; rotSpd:number; dxSpd:number; dySpd:number; rgb:string; alpha:number };
-    const wisps: Wisp[] = Array.from({length:6}, (_,i) => ({
-      x: (Math.random()-0.5)*1.4, y: (Math.random()-0.5)*0.9,
-      rx: 180+Math.random()*260, ry: 80+Math.random()*120,
-      rot: Math.random()*Math.PI, rotSpd: (Math.random()-0.5)*0.0004,
-      dxSpd: (Math.random()-0.5)*0.0002, dySpd: (Math.random()-0.5)*0.00015,
-      rgb: [C1,C2,C3,"251,191,36"][i%4],
-      alpha: 0.03+Math.random()*0.04,
-    }));
+    const dpr = () => window.devicePixelRatio || 1;
 
     const resize = () => {
-      const dpr = window.devicePixelRatio||1;
-      canvas.width  = canvas.offsetWidth  * dpr;
-      canvas.height = canvas.offsetHeight * dpr;
+      const d = dpr();
+      canvas.width  = canvas.offsetWidth  * d;
+      canvas.height = canvas.offsetHeight * d;
     };
     resize();
     window.addEventListener("resize", resize);
 
-    const onMove = (e: MouseEvent) => {
-      const r = canvas.getBoundingClientRect();
-      cursorRef.current = { x:e.clientX-r.left, y:e.clientY-r.top };
-    };
-    window.addEventListener("mousemove", onMove);
-
-    let tiltX=0, tiltY=0, velTX=0, velTY=0;
-    let baseRotY = 0;
+    // ── COLOR PALETTE SYSTEM ───────────────────────────────────
+    const PALETTES = [
+      { r:45,  g:212, b:191 },  // teal
+      { r:168, g:85,  b:247 },  // purple
+      { r:6,   g:182, b:212 },  // cyan
+      { r:251, g:146, b:60  },  // amber
+    ];
     let frame = 0;
-    let raf   = 0;
-    let smoothHover = 0; // The master brightness controller!
 
-    const rotY  = (x:number,y:number,z:number,a:number) => ({ x:x*Math.cos(a)+z*Math.sin(a), y, z:-x*Math.sin(a)+z*Math.cos(a) });
-    const rotX  = (x:number,y:number,z:number,a:number) => ({ x, y:y*Math.cos(a)-z*Math.sin(a), z:y*Math.sin(a)+z*Math.cos(a) });
-    const rotZ  = (x:number,y:number,z:number,a:number) => ({ x:x*Math.cos(a)-y*Math.sin(a), y:x*Math.sin(a)+y*Math.cos(a), z });
-    const project = (x:number,y:number,z:number,cx:number,cy:number,f:number) => {
-      const s  = f / (z + f);
-      return { px: x*s+cx, py: y*s+cy, scale:s, z };
+    const getThemeColor = (opacity = 1, shift = 0) => {
+      const t = (frame * 0.004 + shift) % PALETTES.length;
+      const ai = Math.floor(t), bi = (ai + 1) % PALETTES.length;
+      const f = t % 1;
+      const ease = f * f * (3 - 2 * f);
+      const r = PALETTES[ai].r * (1-ease) + PALETTES[bi].r * ease;
+      const g = PALETTES[ai].g * (1-ease) + PALETTES[bi].g * ease;
+      const b = PALETTES[ai].b * (1-ease) + PALETTES[bi].b * ease;
+      return `rgba(${r|0},${g|0},${b|0},${opacity})`;
+    };
+    const getRGB = (shift = 0) => {
+      const t = (frame * 0.004 + shift) % PALETTES.length;
+      const ai = Math.floor(t), bi = (ai + 1) % PALETTES.length;
+      const f = (t % 1); const ease = f*f*(3-2*f);
+      return {
+        r: PALETTES[ai].r*(1-ease)+PALETTES[bi].r*ease,
+        g: PALETTES[ai].g*(1-ease)+PALETTES[bi].g*ease,
+        b: PALETTES[ai].b*(1-ease)+PALETTES[bi].b*ease,
+      };
     };
 
-    // ── DRAW LOOP ──
-    const draw = () => {
-      frame++;
-      const dpr = window.devicePixelRatio||1;
-      const W   = canvas.width/dpr, H = canvas.height/dpr;
-      const CX  = W/2, CY  = H/2;
+    // ── ISO PROJECTION ─────────────────────────────────────────
+    // Device sits in world space; mouse tilts the whole scene
+    let tiltX = 0, tiltY = 0, tiltVX = 0, tiltVY = 0;
 
-      ctx.setTransform(dpr,0,0,dpr,0,0);
+    const project = (wx: number, wy: number, wz: number, cx: number, cy: number) => {
+      // Apply mouse tilt
+      const cosX = Math.cos(tiltX), sinX = Math.sin(tiltX);
+      const cosY = Math.cos(tiltY), sinY = Math.sin(tiltY);
+      // Rotate around Y
+      const x1 = wx * cosY + wz * sinY;
+      const z1 = -wx * sinY + wz * cosY;
+      // Rotate around X
+      const y2 = wy * cosX - z1 * sinX;
+      const z2 = wy * sinX + z1 * cosX;
+      // Iso-ish perspective
+      const SCALE = 0.85, FOV = 480;
+      const s = FOV / (z2 + FOV);
+      return { px: cx + x1 * s * SCALE, py: cy - y2 * s * SCALE, depth: z2 };
+    };
 
-      // GUARANTEED SEAMLESS BACKGROUND (No pasted paper box)
-      ctx.clearRect(0,0,W,H);
+    // ── DEVICE GEOMETRY ────────────────────────────────────────
+    // Base unit: box w=120, h=35, d=90 centered at (0,0,0) bottom
+    const BASE = { w:120, h:36, d:88 };
+    const SCREEN = { w:88, h:68, d:5 };
 
-      // ── Hover Physics (Shadowy vs Bright) ──
-      const cur = cursorRef.current;
-      const dcx = cur.x - CX, dcy = cur.y - CY;
-      const distToCenter = Math.sqrt(dcx*dcx + dcy*dcy);
+    // 8 corners of base box (y goes up)
+    const baseVerts = (): [number,number,number][] => {
+      const [hw,hh,hd] = [BASE.w/2, BASE.h/2, BASE.d/2];
+      return [
+        [-hw, hh,-hd],[ hw, hh,-hd],[ hw, hh, hd],[-hw, hh, hd],  // top face
+        [-hw,-hh,-hd],[ hw,-hh,-hd],[ hw,-hh, hd],[-hw,-hh, hd],  // bottom face
+      ];
+    };
 
-      let targetHover = 0;
-      if (cur.x > 0 && cur.x < W && cur.y > 0 && cur.y < H) {
-        if (distToCenter < 400) {
-          // Eases up to 1.0 when mouse gets close
-          targetHover = Math.pow(Math.max(0, 1 - distToCenter/400), 0.6);
-        }
-      }
-      
-      // Smoothly interpolate brightness
-      smoothHover += (targetHover - smoothHover) * 0.08;
-      const bFac = smoothHover; // bFac = 0 (Dark/Idle), bFac = 1 (Bright/Hovered)
+    // Screen slab sitting on top, angled back 25°
+    const screenVerts = (): [number,number,number][] => {
+      const [hw,hh,hd] = [SCREEN.w/2, SCREEN.h/2, SCREEN.d/2];
+      const tilt = 0.40; // radians backward tilt
+      const baseY = BASE.h/2;
+      const verts: [number,number,number][] = [
+        [-hw,-hh,-hd],[ hw,-hh,-hd],[ hw, hh,-hd],[-hw, hh,-hd],
+        [-hw,-hh, hd],[ hw,-hh, hd],[ hw, hh, hd],[-hw, hh, hd],
+      ];
+      // Apply Y-axis tilt and position on top of base
+      return verts.map(([x,y,z]) => {
+        const newY = y * Math.cos(tilt) - z * Math.sin(tilt);
+        const newZ = y * Math.sin(tilt) + z * Math.cos(tilt);
+        return [x, newY + baseY + hh * Math.cos(tilt) + 4, newZ - hd * Math.sin(tilt) - 8];
+      });
+    };
 
-      // ── Mouse-driven sphere tilt ──
-      const mx = mouseRef.current;
-      const targetTX = mx.y * 0.55; 
-      const targetTY = mx.x * -0.55;
-      const STIFF=0.04, DAMP=0.82;
-      velTX = (velTX + (targetTX-tiltX)*STIFF) * DAMP;
-      velTY = (velTY + (targetTY-tiltY)*STIFF) * DAMP;
-      tiltX += velTX;
-      tiltY += velTY;
-      baseRotY += 0.0025; 
+    const BOX_FACES = [
+      [0,1,2,3],  // top
+      [4,5,6,7],  // bottom
+      [0,1,5,4],  // front
+      [2,3,7,6],  // back
+      [0,3,7,4],  // left
+      [1,2,6,5],  // right
+    ];
 
-      for (const p of pts) {
-        let v = rotY(p.ox*R, p.oy*R, p.oz*R, baseRotY + tiltY);
-        v     = rotX(v.x, v.y, v.z, tiltX);
-        const w = frame * p.speed * 1000;
-        v = rotZ(v.x, v.y, v.z, Math.sin(w)*0.012);
-        p.x = v.x; p.y = v.y; p.z = v.z;
-      }
+    // ── ORBITAL RINGS ──────────────────────────────────────────
+    type Ring = { tiltX:number; tiltZ:number; radius:number; speed:number; nodes:number; phase:number; colorShift:number };
+    const RINGS: Ring[] = [
+      { tiltX:0.35, tiltZ:0.0, radius:200, speed:0.012, nodes:6, phase:0,         colorShift:0   },
+      { tiltX:0.9,  tiltZ:0.5, radius:230, speed:-0.008, nodes:5, phase:1.2,      colorShift:1   },
+      { tiltX:0.15, tiltZ:1.1, radius:175, speed:0.018,  nodes:4, phase:2.4,      colorShift:2   },
+    ];
 
-      const REPEL_R = 280;
+    // ── DATA PACKETS on rings ─────────────────────────────────
+    type Packet = { ring:number; angle:number; speed:number; colorShift:number; trail:[number,number][] };
+    const packets: Packet[] = [];
+    RINGS.forEach((r, ri) => {
+      for(let i=0;i<3;i++) packets.push({
+        ring:ri, angle:Math.random()*Math.PI*2,
+        speed: r.speed * (0.8+Math.random()*0.4),
+        colorShift: ri * 0.66 + i * 0.2,
+        trail:[],
+      });
+    });
 
-      // ── Aurora wisps ──
-      ctx.globalCompositeOperation = "source-over";
-      for (const w of wisps) {
-        w.x   += w.dxSpd; w.y += w.dySpd; w.rot += w.rotSpd;
-        const wx = CX + w.x * W, wy = CY + w.y * H;
-        ctx.save();
-        ctx.translate(wx, wy);
-        ctx.rotate(w.rot);
-        const g = ctx.createRadialGradient(0,0,0, 0,0, w.rx);
-        // Wisps are almost invisible until hovered
-        const finalWispAlpha = w.alpha * (0.1 + 0.9 * bFac); 
-        g.addColorStop(0, `rgba(${w.rgb}, ${finalWispAlpha})`);
-        g.addColorStop(1, "transparent");
-        ctx.scale(1, w.ry/w.rx);
-        ctx.beginPath(); ctx.arc(0,0,w.rx,0,Math.PI*2);
-        ctx.fillStyle = g; ctx.fill();
-        ctx.restore();
-      }
+    // ── CIRCUIT TRACES ────────────────────────────────────────
+    type Trace = { pts:[number,number][]; pulseT:number; pulseSpd:number };
+    const traces: Trace[] = [];
+    for(let i=0;i<12;i++) {
+      const ang = (i/12)*Math.PI*2;
+      const r = 100+Math.random()*60;
+      const x = Math.cos(ang)*r, y = Math.sin(ang)*r;
+      const mid = [ x*0.4 + (Math.random()-.5)*40, y*0.4 + (Math.random()-.5)*40 ];
+      traces.push({
+        pts: [[0,0], mid as [number,number], [x,y]],
+        pulseT: Math.random(), pulseSpd: 0.004+Math.random()*0.006,
+      });
+    }
 
-      ctx.globalCompositeOperation = "lighter";
+    // ── DATA NODES ────────────────────────────────────────────
+    type Node = { x:number; y:number; vx:number; vy:number; life:number; maxLife:number; size:number; text?:string };
+    const nodes: Node[] = [];
+    const DATA_LABELS = ["84kPa","±0.02g","87%","ECG","IMU","BLE","SPI","ADC","GPIO","PWM","NTP","OTA"];
+    let labelIdx = 0;
 
-      const sorted = pts.map((_,i)=>i).sort((a,b)=>pts[a].z-pts[b].z);
+    // ── SCREEN DATA (ECG-like graph) ───────────────────────────
+    const screenData: number[] = Array.from({length:40}, (_,i) => {
+      // ECG-like: mostly flat with spikes
+      const x = (i/40)*Math.PI*4;
+      return Math.sin(x)*0.2 + (Math.sin(x*6)>0.85 ? Math.sin(x*6)*2 : 0);
+    });
+    let screenOffset = 0;
 
-      // ── Synaptic arcs ──
-      for (const arc of arcs) {
-        arc.pulseT += arc.pulseSpeed;
-        if (arc.pulseT > 1) arc.pulseT = 0;
-        const pa = pts[arc.a], pb = pts[arc.b];
-        if (pa.z < -80 && pb.z < -80) continue;
-        const { px:ax, py:ay, scale:sa } = project(pa.x,pa.y,pa.z, CX,CY, FOCAL);
-        const { px:bx, py:by, scale:sb } = project(pb.x,pb.y,pb.z, CX,CY, FOCAL);
-        const avgScale = (sa+sb)*0.5;
-        const depthAlpha = Math.max(0, Math.min(1, (Math.min(pa.z,pb.z)+R)/(R*2)));
-        
-        const midX = (ax+bx)/2 + (Math.random()-0.5)*30;
-        const midY = (ay+by)/2 + (Math.random()-0.5)*30;
+    // ── BULB PULSE ────────────────────────────────────────────
+    let bulbPulse = 0;
+
+    // ── FLOATING HUD LABELS ───────────────────────────────────
+    type HUD = { label:string; val:string; x:number; y:number; alpha:number; drift:number; colorShift:number };
+    const HUDS: HUD[] = [
+      { label:"GRIP",     val:"84 kPa",  x:-195, y:-90,  alpha:0, drift:0,   colorShift:0   },
+      { label:"TREMOR",   val:"±0.02g",  x: 195, y:-70,  alpha:0, drift:0.6, colorShift:0.9 },
+      { label:"ADHERENCE",val:"87%",     x:-185, y: 95,  alpha:0, drift:1.1, colorShift:1.6 },
+      { label:"XP PTS",   val:"+280",    x: 185, y:100,  alpha:0, drift:1.9, colorShift:2.3 },
+    ];
+
+    // ── SHOCKWAVE SYSTEM ──────────────────────────────────────
+    type Wave = { x:number; y:number; r:number; maxR:number; alpha:number; colorShift:number };
+    const waves: Wave[] = [];
+    let nextWave = 60;
+
+    // ── MAIN DRAW ─────────────────────────────────────────────
+    let raf = 0;
+
+    const drawBox = (
+      verts: [number,number,number][],
+      cx: number, cy: number,
+      fillAlpha: number,
+      strokeAlpha: number,
+      blur: number,
+      colorShift = 0,
+    ) => {
+      const pv = verts.map(v => project(v[0], v[1], v[2], cx, cy));
+      const col = getRGB(colorShift);
+      const csStr = `${col.r|0},${col.g|0},${col.b|0}`;
+
+      // Draw visible faces (simple depth sort: just draw back then front)
+      const faceOrder = [1,3,5,2,0,4]; // roughly back to front
+      faceOrder.forEach(fi => {
+        const face = BOX_FACES[fi];
         ctx.beginPath();
-        ctx.moveTo(ax,ay); ctx.quadraticCurveTo(midX,midY,bx,by);
-        
-        // Shadowy default, brightens on hover
-        const activeArcA = depthAlpha * 0.18 * avgScale;
-        const idleArcA = 0.01;
-        const finalArcA = idleArcA + (activeArcA - idleArcA) * bFac;
-
-        ctx.strokeStyle = `rgba(${arc.colorRGB}, ${finalArcA})`;
-        ctx.lineWidth = 0.8 * avgScale;
+        face.forEach((vi, i) => {
+          const p = pv[vi];
+          i === 0 ? ctx.moveTo(p.px, p.py) : ctx.lineTo(p.px, p.py);
+        });
+        ctx.closePath();
+        ctx.fillStyle = `rgba(${csStr},${fillAlpha * (fi===0 ? 1 : fi===2 ? 0.7 : 0.4)})`;
+        ctx.strokeStyle = `rgba(${csStr},${strokeAlpha})`;
+        ctx.lineWidth = 1.2;
+        ctx.shadowBlur = blur;
+        ctx.shadowColor = `rgba(${csStr},0.8)`;
+        ctx.fill();
         ctx.stroke();
-        
-        // Data pulses only appear when hovered!
-        const packetAlpha = depthAlpha * 0.85 * bFac; 
-        if (packetAlpha > 0.01) {
-          const t = arc.pulseT;
-          const qt = 1-t, t2=t*t, qt2=qt*qt;
-          const pPX = qt2*ax + 2*qt*t*midX + t2*bx;
-          const pPY = qt2*ay + 2*qt*t*midY + t2*by;
-          ctx.beginPath(); ctx.arc(pPX,pPY, 1.5*avgScale,0,Math.PI*2);
-          ctx.fillStyle = `rgba(255,255,255,${packetAlpha})`;
-          ctx.fill();
-        }
-      }
+      });
+    };
 
-      // ── Particles ──
-      for (const idx of sorted) {
-        const p = pts[idx];
-        const { px, py, scale } = project(p.x,p.y,p.z, CX,CY, FOCAL);
-        const cdx = px - cur.x, cdy = py - cur.y;
-        const cdist = Math.sqrt(cdx*cdx+cdy*cdy);
-        let repelledX = px, repelledY = py;
-        // Physics push only happens heavily if hovered
-        if (cdist < REPEL_R && cdist > 1) {
-          const force = (1-(cdist/REPEL_R)) * (28 * Math.max(0.2, bFac));
-          repelledX += (cdx/cdist)*force;
-          repelledY += (cdy/cdist)*force;
-        }
-        
-        const depthT  = (p.z + R) / (R*2); 
-        
-        // Dim idle particles, bright active particles
-        const idleAlpha = 0.02 + depthT * 0.05; 
-        const activeAlpha = 0.12 + depthT * 0.78;
-        const alpha = idleAlpha + (activeAlpha - idleAlpha) * bFac;
-        
-        const radius  = (p.size * scale) * (0.5 + depthT * 0.7);
-        const r = Math.round(depthT > 0.6 ? 200+depthT*55 : 14+depthT*186);
-        const g = Math.round(100 + depthT * 155);
-        const b = Math.round(depthT > 0.5 ? 100+depthT*155 : 230-depthT*80);
-        
-        // Chromatic aberration only on intense hover
-        if (depthT > 0.85 && radius > 1.2 && bFac > 0.5) {
-          ctx.beginPath(); ctx.arc(repelledX-1.2, repelledY, radius*0.7,0,Math.PI*2);
-          ctx.fillStyle = `rgba(255,80,80,${alpha*0.4})`; ctx.fill();
-          ctx.beginPath(); ctx.arc(repelledX+1.2, repelledY, radius*0.7,0,Math.PI*2);
-          ctx.fillStyle = `rgba(80,200,255,${alpha*0.4})`; ctx.fill();
-        }
-        ctx.beginPath(); ctx.arc(repelledX, repelledY, Math.max(0.3,radius),0,Math.PI*2);
-        ctx.fillStyle = `rgba(${r},${g},${b},${alpha})`; ctx.fill();
-      }
+    const drawScreenContent = (sv: ReturnType<typeof project>[], cx: number, cy: number) => {
+      // Screen face is face index 0 (front face of screen box) = verts 0,1,2,3
+      const [p0,p1,p2,p3] = [sv[4],sv[5],sv[6],sv[7]]; // front face of screen
+      if (!p0 || !p1 || !p2 || !p3) return;
 
-      // ── Gyroscopic halo rings ──
-      for (const ring of rings) {
-        ring.rotY += ring.rotSpeed;
-        const RING_PTS = 160;
-        ctx.beginPath();
-        for (let i = 0; i <= RING_PTS; i++) {
-          const a = (i/RING_PTS)*Math.PI*2;
-          let v = { x: Math.cos(a)*ring.radius, y: 0, z: Math.sin(a)*ring.radius };
-          v = rotX(v.x,v.y,v.z, ring.inclX);
-          v = rotZ(v.x,v.y,v.z, ring.inclZ);
-          v = rotY(v.x,v.y,v.z, ring.rotY + tiltY);
-          v = rotX(v.x,v.y,v.z, tiltX);
-          const { px:rpx, py:rpy } = project(v.x,v.y,v.z, CX,CY, FOCAL);
-          
-          if (i===0) ctx.moveTo(rpx,rpy); else ctx.lineTo(rpx,rpy);
-        }
-        
-        // Dim default, bright on hover
-        const depthAvg = 0.5; // rough avg
-        const activeRingA = 0.15 + depthAvg * 0.65;
-        const idleRingA = 0.02;
-        const ringAlpha = idleRingA + (activeRingA - idleRingA) * bFac;
+      ctx.save();
+      // Clip to screen quad
+      ctx.beginPath();
+      ctx.moveTo(p0.px,p0.py); ctx.lineTo(p1.px,p1.py);
+      ctx.lineTo(p2.px,p2.py); ctx.lineTo(p3.px,p3.py);
+      ctx.closePath();
+      ctx.clip();
 
-        ctx.setLineDash(ring.dash);
-        ctx.strokeStyle = `rgba(${ring.rgb}, ${ringAlpha})`;
-        ctx.lineWidth   = ring.width;
-        ctx.shadowBlur  = 8 * bFac; 
-        ctx.shadowColor = `rgba(${ring.rgb}, 1)`;
-        ctx.stroke();
-        ctx.shadowBlur  = 0;
-        ctx.setLineDash([]);
-      }
-
-      // ── Energy tendrils to cursor ──
-      if (cur.x > 0 && cur.x < W && cur.y > 0 && cur.y < H && bFac > 0.1) {
-        const dcx = cur.x - CX, dcy = cur.y - CY;
-        const dCurDist = Math.sqrt(dcx*dcx+dcy*dcy);
-        if (dCurDist < 380) {
-          // Multiply strength by bFac so it doesn't appear unless glowing
-          const strength = Math.max(0, 1 - dCurDist/380) * bFac; 
-          for (let t=0; t<4; t++) {
-            ctx.beginPath(); ctx.moveTo(CX,CY);
-            let lx=CX, ly=CY;
-            const steps=7;
-            for (let s=1; s<=steps; s++) {
-              const prog = s/steps;
-              const jx = (Math.random()-0.5)*38*(1-prog);
-              const jy = (Math.random()-0.5)*38*(1-prog);
-              lx = CX+(cur.x-CX)*prog+jx;
-              ly = CY+(cur.y-CY)*prog+jy;
-              ctx.lineTo(lx,ly);
-            }
-            ctx.strokeStyle = `rgba(0,245,212,${strength*0.35})`;
-            ctx.lineWidth   = 0.8+strength*0.6;
-            ctx.shadowBlur  = 12; ctx.shadowColor="#00f5d4";
-            ctx.stroke(); ctx.shadowBlur=0;
-          }
-          // Impact point
-          ctx.beginPath(); ctx.arc(cur.x,cur.y, 2+Math.random()*3,0,Math.PI*2);
-          ctx.fillStyle=`rgba(255,255,255,${strength*0.8})`; ctx.fill();
-          // Cursor ring
-          ctx.beginPath(); ctx.arc(cur.x,cur.y,12+strength*8,0,Math.PI*2);
-          ctx.strokeStyle=`rgba(0,245,212,${strength*0.4})`;
-          ctx.lineWidth=1; ctx.stroke();
-        }
-      }
-
-      // ── Central volumetric core ──
-      ctx.globalCompositeOperation = "lighter";
-      const pulse  = Math.sin(frame*0.04)*0.18+0.82;
-      const pulse2 = Math.sin(frame*0.06+1)*0.12+0.88;
-      
-      const g1 = ctx.createRadialGradient(CX,CY,0,CX,CY, 140*pulse2);
-      g1.addColorStop(0, `rgba(0,245,212,${0.01 + 0.05 * bFac})`);
-      g1.addColorStop(0.5,`rgba(14,165,233,${0.005 + 0.035 * bFac})`);
-      g1.addColorStop(1, "transparent");
-      ctx.fillStyle=g1; ctx.beginPath(); ctx.arc(CX,CY,140*pulse2,0,Math.PI*2); ctx.fill();
-      
-      const g2 = ctx.createRadialGradient(CX,CY,0,CX,CY, 55*pulse);
-      g2.addColorStop(0, `rgba(255,255,255,${0.02 + 0.53 * bFac})`);
-      g2.addColorStop(0.25,`rgba(0,245,212,${0.01 + 0.37 * bFac})`);
-      g2.addColorStop(0.7, `rgba(14,165,233,${0.005 + 0.145 * bFac})`);
-      g2.addColorStop(1, "transparent");
-      ctx.fillStyle=g2; ctx.beginPath(); ctx.arc(CX,CY,55*pulse,0,Math.PI*2); ctx.fill();
-      
-      const g3 = ctx.createRadialGradient(CX,CY,0,CX,CY,22);
-      g3.addColorStop(0,`rgba(255,255,255,${0.02 + 0.88 * bFac})`);
-      g3.addColorStop(0.4,`rgba(192,132,252,${0.01 + 0.59 * bFac})`);
-      g3.addColorStop(1,"transparent");
-      ctx.fillStyle=g3; ctx.beginPath(); ctx.arc(CX,CY,22,0,Math.PI*2); ctx.fill();
-      
-      ctx.globalCompositeOperation="source-over";
-      ctx.beginPath(); ctx.arc(CX,CY,3.5,0,Math.PI*2);
-      ctx.fillStyle=`rgba(255,255,255,${0.05 + 0.9 * bFac})`; 
+      // Screen background
+      ctx.fillStyle = "rgba(2,12,24,0.95)";
       ctx.fill();
 
+      // Estimate screen center and axes for drawing content inside
+      const scx = (p0.px+p1.px+p2.px+p3.px)/4;
+      const scy = (p0.py+p1.py+p2.py+p3.py)/4;
+      const sw  = Math.hypot(p1.px-p0.px, p1.py-p0.py) * 0.8;
+      const sh  = Math.hypot(p3.py-p0.py, p3.px-p0.px) * 0.75;
+
+      const col = getRGB(0.5);
+      const cStr = `${col.r|0},${col.g|0},${col.b|0}`;
+
+      // Draw ECG-like waveform
+      const waveY = scy + sh*0.12;
+      const waveH = sh*0.32;
+      const waveX0 = scx - sw/2;
+      const waveXW = sw;
+      ctx.beginPath();
+      screenData.forEach((v, i) => {
+        const x = waveX0 + (i/screenData.length)*waveXW;
+        const y = waveY - v*waveH;
+        i===0 ? ctx.moveTo(x,y) : ctx.lineTo(x,y);
+      });
+      ctx.strokeStyle = `rgba(${cStr},0.9)`;
+      ctx.lineWidth = 1.4;
+      ctx.shadowBlur = 8;
+      ctx.shadowColor = `rgba(${cStr},1)`;
+      ctx.stroke();
+
+      // Bar graph at bottom
+      for(let i=0;i<8;i++) {
+        const bx = scx - sw/2 + (i/8)*sw + sw/16;
+        const bh = (0.3+Math.sin(frame*0.05+i)*0.2)*sh*0.3;
+        const by = scy + sh*0.35;
+        const alpha = 0.3 + 0.4*(i/8);
+        const g = ctx.createLinearGradient(bx, by-bh, bx, by);
+        g.addColorStop(0, `rgba(${cStr},${alpha})`);
+        g.addColorStop(1, `rgba(${cStr},0.05)`);
+        ctx.fillStyle = g;
+        ctx.fillRect(bx, by-bh, sw/8-2, bh);
+      }
+
+      // Top label
+      ctx.font = "bold 7px monospace";
+      ctx.fillStyle = `rgba(${cStr},0.7)`;
+      ctx.textAlign = "center";
+      ctx.shadowBlur = 4;
+      ctx.fillText("REVIVEX · LIVE", scx, scy - sh*0.42);
+
+      // Scan line
+      const scanY = scy - sh/2 + ((frame*1.5) % (sh+4));
+      ctx.fillStyle = `rgba(${cStr},0.08)`;
+      ctx.fillRect(scx-sw/2, scanY, sw, 2);
+
+      ctx.restore();
+    };
+
+    // Ring point in 3D
+    const ringPt = (ring: Ring, angle: number): [number,number,number] => {
+      const x = Math.cos(angle) * ring.radius;
+      const y = Math.sin(angle) * ring.radius * Math.cos(ring.tiltX) - Math.sin(angle)*ring.radius*0.2;
+      const z = Math.sin(angle) * ring.radius * Math.sin(ring.tiltX) + Math.cos(angle)*ring.radius*Math.sin(ring.tiltZ)*0.5;
+      return [x, y, z];
+    };
+
+    const draw = () => {
+      frame++;
+      const d = dpr();
+      const W = canvas.width/d, H = canvas.height/d;
+      const CX = W * 0.50, CY = H * 0.50;
+
+      ctx.setTransform(d,0,0,d,0,0);
+      ctx.clearRect(0,0,W,H);
+
+      // ── Mouse tilt physics ─────────────────────────────────
+      const mx = mouseRef.current;
+      const targetTY = mx.x * 0.3;
+      const targetTX = mx.y * -0.18;
+      tiltVX = (tiltVX + (targetTX - tiltX) * 0.04) * 0.88;
+      tiltVY = (tiltVY + (targetTY - tiltY) * 0.04) * 0.88;
+      tiltX += tiltVX; tiltY += tiltVY;
+
+      // ── Hex grid background dots ──────────────────────────
+      ctx.save();
+      const hexR = 28;
+      for(let row=0; row<Math.ceil(H/hexR/2)+1; row++) {
+        for(let col=0; col<Math.ceil(W/hexR)+2; col++) {
+          const x = col*hexR*1.73 + (row%2)*hexR*0.87 - hexR;
+          const y = row*hexR*1.5 - hexR;
+          const dist = Math.hypot(x-CX, y-CY);
+          const fade = Math.max(0, 1 - dist/380);
+          if(fade<0.01) continue;
+          const pulse = Math.sin(frame*0.02 + dist*0.02)*0.5+0.5;
+          ctx.fillStyle = getThemeColor(fade * 0.045 * pulse);
+          ctx.beginPath(); ctx.arc(x, y, 1.2, 0, Math.PI*2); ctx.fill();
+        }
+      }
+      ctx.restore();
+
+      // ── Circuit traces (radiating from device) ─────────────
+      ctx.save();
+      traces.forEach(tr => {
+        tr.pulseT += tr.pulseSpd;
+        if(tr.pulseT > 1) tr.pulseT = 0;
+
+        const [p0, p1, p2] = tr.pts;
+        const screenP0 = { px: CX + p0[0], py: CY + p0[1] };
+        const screenP1 = { px: CX + p1[0], py: CY + p1[1] };
+        const screenP2 = { px: CX + p2[0], py: CY + p2[1] };
+
+        // Draw trace line (faint)
+        ctx.beginPath();
+        ctx.moveTo(screenP0.px, screenP0.py);
+        ctx.quadraticCurveTo(screenP1.px, screenP1.py, screenP2.px, screenP2.py);
+        ctx.strokeStyle = getThemeColor(0.06);
+        ctx.lineWidth = 0.8;
+        ctx.shadowBlur = 0;
+        ctx.stroke();
+
+        // Draw moving pulse dot
+        const t = tr.pulseT;
+        const bx = (1-t)*(1-t)*screenP0.px + 2*(1-t)*t*screenP1.px + t*t*screenP2.px;
+        const by = (1-t)*(1-t)*screenP0.py + 2*(1-t)*t*screenP1.py + t*t*screenP2.py;
+        ctx.shadowBlur = 12;
+        ctx.shadowColor = getThemeColor(1);
+        ctx.fillStyle = getThemeColor(0.9);
+        ctx.beginPath(); ctx.arc(bx, by, 2.5, 0, Math.PI*2); ctx.fill();
+
+        // End node glow
+        const endFade = Math.sin(frame*0.03 + tr.pulseSpd*200)*0.3+0.7;
+        ctx.shadowBlur = 18;
+        ctx.fillStyle = getThemeColor(0.35*endFade);
+        ctx.beginPath(); ctx.arc(screenP2.px, screenP2.py, 5, 0, Math.PI*2); ctx.fill();
+        ctx.fillStyle = getThemeColor(0.9*endFade);
+        ctx.beginPath(); ctx.arc(screenP2.px, screenP2.py, 1.5, 0, Math.PI*2); ctx.fill();
+      });
+      ctx.restore();
+
+      // ── Orbital rings ──────────────────────────────────────
+      RINGS.forEach((ring, ri) => {
+        const STEPS = 120;
+        ctx.save();
+        ctx.lineWidth = 1;
+
+        // Draw ring path (dashed neon)
+        for(let i=0; i<STEPS; i++) {
+          const a0 = (i/STEPS)*Math.PI*2;
+          const a1 = ((i+1)/STEPS)*Math.PI*2;
+          if(i%4 < 2) continue; // dashed effect
+          const p0 = ringPt(ring, a0), p1 = ringPt(ring, a1);
+          const s0 = project(p0[0],p0[1],p0[2], CX,CY);
+          const s1 = project(p1[0],p1[1],p1[2], CX,CY);
+          const depth = (s0.depth+s1.depth)*0.5;
+          const alpha = 0.06 + Math.max(0, -depth/400)*0.12;
+          ctx.beginPath();
+          ctx.moveTo(s0.px,s0.py); ctx.lineTo(s1.px,s1.py);
+          ctx.strokeStyle = getThemeColor(alpha, ri*0.66);
+          ctx.shadowBlur = 8;
+          ctx.shadowColor = getThemeColor(0.4, ri*0.66);
+          ctx.stroke();
+        }
+
+        // Ring nodes (glowing dots at even positions)
+        for(let n=0; n<ring.nodes; n++) {
+          const a = (n/ring.nodes)*Math.PI*2 + frame*0.003*Math.sign(ring.speed);
+          const p = ringPt(ring, a);
+          const sp = project(p[0],p[1],p[2], CX,CY);
+          const pulse = Math.sin(frame*0.06 + n)*0.3+0.7;
+          const depth = sp.depth;
+          const sz = 3.5 * (1 + Math.max(0,-depth/500)*0.5) * pulse;
+          ctx.shadowBlur = 20;
+          ctx.shadowColor = getThemeColor(0.9, ri*0.66);
+          ctx.fillStyle = getThemeColor(0.8*pulse, ri*0.66);
+          ctx.beginPath(); ctx.arc(sp.px,sp.py,sz,0,Math.PI*2); ctx.fill();
+          ctx.fillStyle = "rgba(255,255,255,0.9)";
+          ctx.beginPath(); ctx.arc(sp.px,sp.py,1.2,0,Math.PI*2); ctx.fill();
+        }
+        ctx.restore();
+      });
+
+      // ── Data packets traveling along rings ─────────────────
+      packets.forEach(pkt => {
+        pkt.angle += pkt.speed * 1.8;
+        const ring = RINGS[pkt.ring];
+        const p3d = ringPt(ring, pkt.angle);
+        const sp = project(p3d[0],p3d[1],p3d[2], CX,CY);
+
+        // Trail
+        pkt.trail.push([sp.px, sp.py]);
+        if(pkt.trail.length > 18) pkt.trail.shift();
+        for(let ti=1; ti<pkt.trail.length; ti++) {
+          const a = (ti/pkt.trail.length) * 0.6;
+          ctx.beginPath();
+          ctx.moveTo(pkt.trail[ti-1][0], pkt.trail[ti-1][1]);
+          ctx.lineTo(pkt.trail[ti][0],   pkt.trail[ti][1]);
+          ctx.strokeStyle = getThemeColor(a, pkt.colorShift);
+          ctx.lineWidth = (ti/pkt.trail.length)*3;
+          ctx.shadowBlur = 10; ctx.shadowColor = getThemeColor(0.7,pkt.colorShift);
+          ctx.stroke();
+        }
+        // Head
+        ctx.save();
+        ctx.shadowBlur = 22; ctx.shadowColor = getThemeColor(1,pkt.colorShift);
+        ctx.fillStyle = "rgba(255,255,255,0.95)";
+        ctx.beginPath(); ctx.arc(sp.px,sp.py,3.2,0,Math.PI*2); ctx.fill();
+        ctx.restore();
+      });
+
+      // ── Shockwaves ────────────────────────────────────────
+      nextWave--;
+      if(nextWave<=0) {
+        waves.push({ x:CX, y:CY, r:0, maxR:260, alpha:0.6, colorShift:Math.random()*3 });
+        nextWave = 80+Math.floor(Math.random()*60);
+      }
+      for(let i=waves.length-1; i>=0; i--) {
+        const w=waves[i];
+        w.r += 2.8; w.alpha *= 0.965;
+        if(w.r >= w.maxR || w.alpha < 0.01) { waves.splice(i,1); continue; }
+        const prog = w.r/w.maxR;
+        ctx.beginPath();
+        ctx.ellipse(w.x, w.y, w.r, w.r*0.38, 0, 0, Math.PI*2);
+        ctx.strokeStyle = getThemeColor(w.alpha*(1-prog), w.colorShift);
+        ctx.lineWidth = 1.5*(1-prog*0.6);
+        ctx.shadowBlur = 16; ctx.shadowColor = getThemeColor(0.6, w.colorShift);
+        ctx.stroke();
+      }
+
+      // ── Floating HUD labels ───────────────────────────────
+      HUDS.forEach((hud, hi) => {
+        hud.alpha += 0.008;
+        const a = (Math.sin(frame*0.012 + hud.drift) * 0.25 + 0.75) * Math.min(1, hud.alpha);
+        const dy = Math.sin(frame*0.016 + hud.drift*2) * 6;
+        const sx = CX + hud.x, sy = CY + hud.y + dy;
+        const col = getRGB(hud.colorShift);
+        const cStr = `${col.r|0},${col.g|0},${col.b|0}`;
+
+        // Box
+        ctx.save();
+        ctx.shadowBlur = 20; ctx.shadowColor = `rgba(${cStr},0.4)`;
+        ctx.fillStyle = `rgba(2,12,24,${0.75*a})`;
+        ctx.strokeStyle = `rgba(${cStr},${0.4*a})`;
+        ctx.lineWidth = 1;
+        const bw=72, bh=32, br=6;
+        ctx.beginPath();
+        ctx.roundRect(sx-bw/2, sy-bh/2, bw, bh, br);
+        ctx.fill(); ctx.stroke();
+
+        // Label + value
+        ctx.shadowBlur = 6;
+        ctx.font = `500 7px "Space Mono",monospace`;
+        ctx.fillStyle = `rgba(${cStr},${0.55*a})`;
+        ctx.textAlign = "center";
+        ctx.fillText(hud.label, sx, sy-4);
+        ctx.font = `bold 11px "Space Mono",monospace`;
+        ctx.fillStyle = `rgba(255,255,255,${0.9*a})`;
+        ctx.fillText(hud.val, sx, sy+8);
+
+        // Connector dot
+        ctx.fillStyle = `rgba(${cStr},${0.7*a})`;
+        ctx.beginPath(); ctx.arc(sx, sy+bh/2, 2.5, 0, Math.PI*2); ctx.fill();
+        ctx.restore();
+      });
+
+      // ── 3D Device ─────────────────────────────────────────
+      ctx.save();
+      // Draw base box
+      const bvRaw = baseVerts();
+      const bvProj = bvRaw.map(v => project(v[0],v[1],v[2],CX,CY));
+
+      // Face rendering (back to front)
+      const baseFaceAlphas = [0.18, 0.04, 0.12, 0.04, 0.08, 0.14];
+      [1,3,5,2,4,0].forEach((fi, di) => {
+        const face = BOX_FACES[fi];
+        ctx.beginPath();
+        face.forEach((vi,i) => {
+          i===0 ? ctx.moveTo(bvProj[vi].px, bvProj[vi].py) : ctx.lineTo(bvProj[vi].px, bvProj[vi].py);
+        });
+        ctx.closePath();
+        const col = getRGB(0);
+        const cStr = `${col.r|0},${col.g|0},${col.b|0}`;
+        ctx.fillStyle = `rgba(4,14,30,0.88)`;
+        ctx.shadowBlur = 0; ctx.fill();
+        ctx.strokeStyle = `rgba(${cStr},${0.35+di*0.03})`;
+        ctx.lineWidth = 1.4; ctx.shadowBlur = 12;
+        ctx.shadowColor = `rgba(${cStr},0.7)`;
+        ctx.stroke();
+      });
+
+      // Logo "R" on front face
+      const frontFace = BOX_FACES[2].map(vi => bvProj[vi]);
+      const lx = frontFace.reduce((s,p)=>s+p.px,0)/4;
+      const ly = frontFace.reduce((s,p)=>s+p.py,0)/4;
+      ctx.font = "bold 9px 'Bebas Neue',sans-serif";
+      ctx.fillStyle = getThemeColor(0.9);
+      ctx.shadowBlur = 14; ctx.shadowColor = getThemeColor(1);
+      ctx.textAlign = "center"; ctx.textBaseline="middle";
+      ctx.fillText("R", lx, ly);
+      ctx.textBaseline = "alphabetic";
+
+      // LED strip on top edge of front face
+      const tf0 = bvProj[0], tf1 = bvProj[1];
+      for(let li=0; li<12; li++) {
+        const t2 = li/11;
+        const lx2 = tf0.px+(tf1.px-tf0.px)*t2;
+        const ly2 = tf0.py+(tf1.py-tf0.py)*t2;
+        const on = Math.sin(frame*0.08+li*0.7)>0.2;
+        ctx.fillStyle = on ? getThemeColor(0.85) : getThemeColor(0.15);
+        ctx.shadowBlur = on ? 10 : 0;
+        ctx.shadowColor = getThemeColor(1);
+        ctx.beginPath(); ctx.arc(lx2, ly2, 1.8, 0, Math.PI*2); ctx.fill();
+      }
+
+      // ── Screen slab ────────────────────────────────────────
+      const svRaw = screenVerts();
+      const svProj = svRaw.map(v => project(v[0],v[1],v[2],CX,CY));
+
+      // Draw screen frame (all faces)
+      [1,3,5,2,4,0].forEach(fi => {
+        const face = BOX_FACES[fi];
+        ctx.beginPath();
+        face.forEach((vi,i) => {
+          i===0 ? ctx.moveTo(svProj[vi].px, svProj[vi].py) : ctx.lineTo(svProj[vi].px, svProj[vi].py);
+        });
+        ctx.closePath();
+        ctx.fillStyle = "rgba(8,20,40,0.9)";
+        ctx.fill();
+        const col = getRGB(0.2);
+        ctx.strokeStyle = `rgba(${col.r|0},${col.g|0},${col.b|0},0.5)`;
+        ctx.lineWidth=1.2; ctx.shadowBlur=8; ctx.shadowColor=getThemeColor(0.5);
+        ctx.stroke();
+      });
+
+      // Screen content on front face
+      drawScreenContent(svProj, CX, CY);
+
+      // ── Cable + Bulb ───────────────────────────────────────
+      // Cable starts from left side of base
+      const cableStart = project(-BASE.w/2, 0, BASE.d*0.3, CX, CY);
+      const bulbAngle = frame * 0.011;
+      const bulbX = -BASE.w/2 - 110 + Math.sin(bulbAngle)*20;
+      const bulbY = 15 + Math.cos(bulbAngle*0.7)*12;
+      const bulbZ = BASE.d*0.2 + Math.sin(bulbAngle*0.5)*15;
+      const cableMid = project(-BASE.w/2-60, 30, BASE.d*0.3, CX, CY);
+      const bulbPos = project(bulbX, bulbY, bulbZ, CX, CY);
+
+      // Draw cable as bezier
+      ctx.beginPath();
+      ctx.moveTo(cableStart.px, cableStart.py);
+      ctx.quadraticCurveTo(cableMid.px, cableMid.py, bulbPos.px, bulbPos.py);
+      ctx.strokeStyle = "rgba(60,80,100,0.7)";
+      ctx.lineWidth = 3; ctx.shadowBlur = 0; ctx.stroke();
+      ctx.strokeStyle = getThemeColor(0.25);
+      ctx.lineWidth = 1; ctx.shadowBlur = 6; ctx.shadowColor = getThemeColor(0.8);
+      ctx.stroke();
+
+      // Bulb body
+      bulbPulse = Math.sin(frame*0.05)*0.25+0.75;
+      const bulbR = 18 * bulbPulse;
+      const col3 = getRGB(1.5);
+      const cStr3 = `${col3.r|0},${col3.g|0},${col3.b|0}`;
+
+      // Outer glow
+      const bulbGrad = ctx.createRadialGradient(bulbPos.px,bulbPos.py,0, bulbPos.px,bulbPos.py,bulbR*2.2);
+      bulbGrad.addColorStop(0,   `rgba(${cStr3},0.25)`);
+      bulbGrad.addColorStop(0.5, `rgba(${cStr3},0.10)`);
+      bulbGrad.addColorStop(1,   "transparent");
+      ctx.fillStyle = bulbGrad; ctx.shadowBlur=0;
+      ctx.beginPath(); ctx.arc(bulbPos.px,bulbPos.py,bulbR*2.2,0,Math.PI*2); ctx.fill();
+
+      // Bulb shell
+      ctx.beginPath(); ctx.ellipse(bulbPos.px,bulbPos.py,bulbR,bulbR*0.82,0,0,Math.PI*2);
+      ctx.fillStyle = `rgba(4,14,28,0.88)`;
+      ctx.strokeStyle = `rgba(${cStr3},${0.6+bulbPulse*0.3})`;
+      ctx.lineWidth=1.5; ctx.shadowBlur=18; ctx.shadowColor=`rgba(${cStr3},0.7)`;
+      ctx.fill(); ctx.stroke();
+
+      // Sensor lines inside bulb
+      for(let si=0;si<4;si++) {
+        const a = (si/4)*Math.PI + frame*0.022;
+        const sr = bulbR*0.55;
+        ctx.beginPath();
+        ctx.moveTo(bulbPos.px+Math.cos(a)*sr*0.3, bulbPos.py+Math.sin(a)*sr*0.3*0.82);
+        ctx.lineTo(bulbPos.px+Math.cos(a)*sr,     bulbPos.py+Math.sin(a)*sr*0.82);
+        ctx.strokeStyle = `rgba(${cStr3},${0.5*bulbPulse})`;
+        ctx.lineWidth=1; ctx.shadowBlur=6; ctx.stroke();
+      }
+      // Core
+      ctx.fillStyle = `rgba(255,255,255,${0.85*bulbPulse})`;
+      ctx.shadowBlur=10; ctx.shadowColor="white";
+      ctx.beginPath(); ctx.arc(bulbPos.px,bulbPos.py,3.5,0,Math.PI*2); ctx.fill();
+
+      // Pressure wave rings from bulb
+      for(let pw=0;pw<3;pw++) {
+        const pr = ((frame*0.8 + pw*25) % 55);
+        const pa = Math.max(0, 1 - pr/55) * 0.5;
+        ctx.beginPath();
+        ctx.ellipse(bulbPos.px,bulbPos.py, pr, pr*0.82, 0, 0, Math.PI*2);
+        ctx.strokeStyle = `rgba(${cStr3},${pa})`;
+        ctx.lineWidth=1; ctx.shadowBlur=8; ctx.stroke();
+      }
+
+      ctx.restore();
+
+      // ── Spawn data nodes from device ─────────────────────
+      if(frame % 40 === 0) {
+        nodes.push({
+          x: CX + (Math.random()-.5)*50,
+          y: CY - 60 + (Math.random()-.5)*30,
+          vx: (Math.random()-.5)*1.8,
+          vy: -(1+Math.random()*1.5),
+          life:0, maxLife:80+Math.floor(Math.random()*40),
+          size:1.5+Math.random()*2,
+          text: DATA_LABELS[(labelIdx++)%DATA_LABELS.length],
+        });
+      }
+      for(let i=nodes.length-1;i>=0;i--) {
+        const n=nodes[i]; n.x+=n.vx; n.y+=n.vy; n.vx*=0.99; n.life++;
+        const a2 = Math.sin((n.life/n.maxLife)*Math.PI)*0.85;
+        ctx.save();
+        ctx.shadowBlur=10; ctx.shadowColor=getThemeColor(0.8);
+        ctx.fillStyle=getThemeColor(a2);
+        ctx.beginPath(); ctx.arc(n.x,n.y,n.size,0,Math.PI*2); ctx.fill();
+        if(n.text && n.life<50) {
+          ctx.font="6px 'Space Mono',monospace";
+          ctx.fillStyle=getThemeColor(a2*0.8);
+          ctx.textAlign="center"; ctx.shadowBlur=4;
+          ctx.fillText(n.text, n.x, n.y-8);
+        }
+        ctx.restore();
+        if(n.life>=n.maxLife) nodes.splice(i,1);
+      }
+
+      // ── Master device glow ─────────────────────────────
+      ctx.save();
+      ctx.globalCompositeOperation = "lighter";
+      const masterGlow = ctx.createRadialGradient(CX,CY,0, CX,CY,220);
+      masterGlow.addColorStop(0, getThemeColor(0.04));
+      masterGlow.addColorStop(1, "transparent");
+      ctx.fillStyle = masterGlow;
+      ctx.beginPath(); ctx.arc(CX,CY,220,0,Math.PI*2); ctx.fill();
+      ctx.restore();
+
+      screenOffset = (screenOffset + 0.4) % 100;
       raf = requestAnimationFrame(draw);
     };
 
     raf = requestAnimationFrame(draw);
-    return () => {
-      cancelAnimationFrame(raf);
-      window.removeEventListener("resize", resize);
-      window.removeEventListener("mousemove", onMove);
-    };
+    return () => { cancelAnimationFrame(raf); window.removeEventListener("resize", resize); };
   }, []);
 
   return (
-    <canvas ref={canvasRef} style={{
-      position: "absolute", 
-      top: "50%", 
-      right: "2%",               // Pushed to the right side!
-      transform: "translateY(-50%)", 
-      width: "45vw",             // Takes up half the screen width
-      height: "80vh",            
-      pointerEvents: "auto",     // CRITICAL: Allows mouse interaction!
-      display: "block",
-      zIndex: 20                 // Sits cleanly above backgrounds
-    }} />
+    <canvas
+      ref={canvasRef}
+      style={{
+        position:"absolute", inset:0,
+        width:"100%", height:"100%",
+        display:"block",
+        pointerEvents:"auto",
+        zIndex:20
+      }}
+    />
   );
 }
 
@@ -1308,7 +1757,7 @@ function Preloader({ onDone }: { onDone: () => void }) {
           style={{
             position: "fixed", inset: 0, zIndex: 9900,
             display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
-            overflow: "hidden", background: "#080f1a",
+            overflow: "hidden", background: "linear-gradient(160deg, #050c18 0%, #080f1a 50%, #060d1c 100%)",
           }}
         >
           <motion.div
@@ -1437,7 +1886,7 @@ function Navbar() {
 
         backdropFilter: scrolled ? "blur(22px)" : "none",
 
-        borderBottom: scrolled ? "1px solid rgba(45,212,191,.07)" : "none",
+        borderBottom: scrolled ? "1px solid rgba(45,212,191,.16)" : "none",
 
         transition: "background .4s, backdrop-filter .4s, border .4s",
 
@@ -1458,7 +1907,7 @@ function Navbar() {
             style={{
               fontSize: 9, textTransform: "uppercase", letterSpacing: ".22em",
 
-              color: "rgba(255,255,255,.38)", textDecoration: "none", transition: "color .3s"
+              color: "rgba(255,255,255,.52)", textDecoration: "none", transition: "color .3s"
             }}
 
             onMouseEnter={e => (e.currentTarget.style.color = "rgba(255,255,255,.85)")}
@@ -1498,6 +1947,59 @@ function Navbar() {
 }
 
 
+
+// ── NEON TITLE — Cinematic word-blur reveal ─────────────────────────────────
+function NeonTitle({ line1 = "REWIRING", line2 = "RECOVERY." }: { line1?: string; line2?: string }) {
+  const ref = useRef(null);
+  const seen = useInView(ref, { once: true, margin: "-40px" });
+
+  // Shared easing for both lines
+  const ease: [number,number,number,number] = [0.16, 1, 0.3, 1];
+
+  return (
+    <div ref={ref} className="hero-title-wrap" style={{ marginBottom: 32, lineHeight: 0.9 }}>
+
+      {/* Beam sweep — scans once across the title block after reveal */}
+      <div className="hero-beam-sweep" />
+
+      {/* LINE 1 — white, lifts + unblurs */}
+      <div style={{ overflow: "hidden", display: "block" }}>
+        <motion.div
+          className="fB title-line-1"
+          style={{ fontSize: "clamp(3.8rem,9.5vw,9rem)", letterSpacing: ".03em" }}
+          initial={{ y: "100%", filter: "blur(18px)", opacity: 0 }}
+          animate={seen ? { y: "0%", filter: "blur(0px)", opacity: 1 } : {}}
+          transition={{ duration: 1.1, delay: 0.3, ease }}
+        >
+          {line1}
+        </motion.div>
+      </div>
+
+      {/* LINE 2 — teal, slight delay, same reveal */}
+      <div style={{ overflow: "hidden", display: "block" }}>
+        <motion.div
+          className="fB title-line-2"
+          style={{ fontSize: "clamp(3.8rem,9.5vw,9rem)", letterSpacing: ".03em" }}
+          initial={{ y: "100%", filter: "blur(18px)", opacity: 0 }}
+          animate={seen ? { y: "0%", filter: "blur(0px)", opacity: 1 } : {}}
+          transition={{ duration: 1.1, delay: 0.55, ease }}
+        >
+          {line2}
+        </motion.div>
+      </div>
+
+      {/* Thin beam line — draws in from left after text lands */}
+      <motion.div
+        className="hero-beam-line"
+        initial={{ scaleX: 0, opacity: 0 }}
+        animate={seen ? { scaleX: 1, opacity: 1 } : {}}
+        transition={{ duration: 1.0, delay: 1.3, ease: [0.22, 1, 0.36, 1] }}
+        style={{ transformOrigin: "left" }}
+      />
+    </div>
+  );
+}
+
 function HeroSection() {
 
   const router = useRouter();
@@ -1525,35 +2027,6 @@ function HeroSection() {
   const dY = useTransform(smoothY, v => v * 10);
 
 
-  const chip0x = useTransform(smoothX, v => -190 + v * 14 * 100); // Far Left, Top
-
-  const chip0y = useTransform(smoothY, v => 10 + v * 14 * 100);
-
-  const chip1x = useTransform(smoothX, v => 190 + v * 18 * 100); // Far Right, Top
-
-  const chip1y = useTransform(smoothY, v => 30 + v * 18 * 100);
-
-  const chip2x = useTransform(smoothX, v => -170 + v * 12 * 100); // Far Left, Bottom
-
-  const chip2y = useTransform(smoothY, v => 180 + v * 12 * 100);
-
-  const chip3x = useTransform(smoothX, v => 170 + v * 16 * 100); // Far Right, Bottom
-
-  const chip3y = useTransform(smoothY, v => 170 + v * 16 * 100);
-
-
-
-  const chips = [
-
-    { l: "GRIP", v: "84 kPa", c: "#2DD4BF", delay: 1.9, cx: chip0x, cy: chip0y },
-
-    { l: "TREMOR", v: "±0.02g", c: "#a78bfa", delay: 2.08, cx: chip1x, cy: chip1y },
-
-    { l: "ADHERENCE", v: "87%", c: "#34d399", delay: 2.26, cx: chip2x, cy: chip2y },
-
-    { l: "XP POINTS", v: "+280", c: "#fbbf24", delay: 2.44, cx: chip3x, cy: chip3y },
-
-  ];
 
   return (
 
@@ -1576,7 +2049,7 @@ function HeroSection() {
         <div className="glow-breath" style={{
           width: "100%", height: "100%",
 
-          background: "radial-gradient(ellipse 65% 60% at 50% 58%, rgba(45,212,191,.10), transparent 68%)"
+          background: "radial-gradient(ellipse 70% 65% at 50% 58%, rgba(45,212,191,.18), transparent 68%)"
         }} />
 
       </motion.div>
@@ -1585,7 +2058,10 @@ function HeroSection() {
 
       <div className="grid-dk" style={{ position: "absolute", inset: 0, pointerEvents: "none" }} />
 
-
+      {/* Ambient drifting lights */}
+      <div className="aml aml-a" style={{ width:500, height:500, top:"10%",  left:"5%",   background:"radial-gradient(circle,rgba(45,212,191,.055),transparent 70%)" }} />
+      <div className="aml aml-b" style={{ width:600, height:600, top:"30%",  right:"-5%", background:"radial-gradient(circle,rgba(14,165,233,.045),transparent 70%)" }} />
+      <div className="aml aml-c" style={{ width:400, height:400, bottom:"5%",left:"20%",  background:"radial-gradient(circle,rgba(139,92,246,.035),transparent 70%)" }} />
 
       {/* Decorative diagonal lines */}
 
@@ -1605,28 +2081,26 @@ function HeroSection() {
 
       <div className="scanline" />
 
-      <FloatingParticles count={20} />
+      <FloatingParticles count={28} />
 
       {/* Neural network layer */}
 
       {/* Neural network layer — 3D brain, right side */}
 
-      <div style={{ position: "absolute", inset: 0, pointerEvents: "none" }}>
-        <NeuralNetwork mouse={mouse} />
-      </div>
-
-
-
-      {/* Main content */}
-
+      {/* ── TWO-COLUMN LAYOUT ────────────────────────────────── */}
       <motion.div style={{
-        skewY, width: "100%", maxWidth: 1280,
-
-        padding: "120px 40px 80px", display: "flex",
-
-        flexDirection: "column", alignItems: "center", position: "relative", zIndex: 10
+        skewY, width: "100%", maxWidth: 1400,
+        padding: "0 40px", display: "flex",
+        flexDirection: "row", alignItems: "center",
+        position: "relative", zIndex: 10,
+        minHeight: "100vh",
       }}>
 
+        {/* LEFT COLUMN — Text content */}
+        <div style={{
+          flex: "0 0 52%", display: "flex", flexDirection: "column",
+          justifyContent: "center", padding: "120px 60px 100px 20px",
+        }}>
 
         {/* Badge */}
 
@@ -1635,11 +2109,11 @@ function HeroSection() {
           <div className="fM" style={{
             fontSize: 9, textTransform: "uppercase", letterSpacing: ".28em",
 
-            color: "rgba(255,255,255,.38)", marginBottom: 38,
+            color: "rgba(255,255,255,.52)", marginBottom: 38,
 
             display: "flex", alignItems: "center", gap: 10,
 
-            padding: "8px 20px", borderRadius: 99,
+            padding: "8px 20px", borderRadius: 99, width: "fit-content",
 
             background: "rgba(255,255,255,.03)", border: "1px solid rgba(255,255,255,.07)"
           }}>
@@ -1654,266 +2128,92 @@ function HeroSection() {
 
 
 
-        {/* Headline */}
-
-        <div style={{ textAlign: "center", lineHeight: ".88", marginBottom: 24, perspective: 900, overflow: "hidden" }}>
-
-          <div className="fB" style={{ fontSize: "clamp(4rem,12vw,11rem)", color: "#fff", letterSpacing: ".04em", overflow: "hidden" }}>
-
-            <SplitText text="REWIRING" delay={.5} stagger={.04} />
-
-          </div>
-
-          <div className="fB" style={{ fontSize: "clamp(4rem,12vw,11rem)", color: "#2DD4BF", letterSpacing: ".04em", overflow: "hidden" }}>
-
-            <SplitText text="RECOVERY." delay={.72} stagger={.04} />
-
-          </div>
-
-        </div>
+        {/* Headline — NeonTitle replaces old SplitText */}
+        <NeonTitle line1="REWIRING" line2="RECOVERY." />
 
 
 
         {/* Tagline */}
 
         <Reveal dir="up" delay={1.1}>
-
           <p className="fS" style={{
-            color: "rgba(255,255,255,.44)", fontSize: 17,
-
-            textAlign: "center", maxWidth: 460, lineHeight: 1.68,
-
-            fontWeight: 300, marginBottom: 52
+            color: "rgba(255,255,255,.70)", fontSize: 16,
+            maxWidth: 440, lineHeight: 1.72,
+            fontWeight: 300, marginBottom: 48,
           }}>
-
             A revolutionary IoT device that turns repetitive physiotherapy into
-
-            <span style={{ color: "rgba(255,255,255,.82)", fontWeight: 500 }}> immersive games</span>
-
-            {" "}— so patients <span style={{ color: "#2DD4BF", fontWeight: 500 }}>actually want</span> to recover.
-
+            <span style={{ color: "rgba(255,255,255,.92)", fontWeight: 500 }}> immersive games</span>
+            {" "}— so patients <span style={{ color: "#2DD4BF", fontWeight: 600 }}>actually want</span> to recover.
           </p>
-
         </Reveal>
-
-        {/* Device */}
-
-        <Reveal dir="zoom" delay={.85} style={{ marginBottom: 80 }}>
-
-          <motion.div style={{ x: dX, y: dY, position: "relative", width: "300px", height: "240px" }}>
-
-            {[280, 210, 148].map((s, i) => (
-
-              <div key={i} style={{
-                position: "absolute", top: "50%", left: "50%",
-
-                width: s, height: s, borderRadius: "50%",
-
-                border: `1px solid rgba(45,212,191,${.04 + i * .05})`,
-
-                transform: "translate(-50%,-50%)", pointerEvents: "none"
-              }} />
-
-            ))}
-
-            <div className="ring-pop" style={{
-              width: 190, height: 190, borderRadius: "50%",
-
-              border: "1px solid rgba(45,212,191,.55)", pointerEvents: "none"
-            }} />
-
-
-
-            <TiltCard style={{
-              position: "relative", zIndex: 2, width: "100%", height: "100%",
-
-              borderRadius: 44, display: "flex", flexDirection: "column",
-
-              alignItems: "center", justifyContent: "center", gap: 14
-            }}
-
-              className="float-card">
-
-              <div style={{
-                width: "100%", height: "100%", borderRadius: 44,
-
-                display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 14,
-
-                background: "linear-gradient(145deg,rgba(45,212,191,.12),rgba(4,10,20,.94))",
-
-                border: "1px solid rgba(45,212,191,.24)",
-
-                boxShadow: "0 0 80px rgba(45,212,191,.16), inset 0 1px 0 rgba(255,255,255,.05)"
-              }}>
-
-                <Cpu size={44} strokeWidth={.9} style={{ color: "#2DD4BF", opacity: .55 }} />
-
-                <div className="fM" style={{
-                  fontSize: 7, color: "rgba(255,255,255,.2)",
-
-                  textTransform: "uppercase", letterSpacing: ".22em", textAlign: "center", lineHeight: 1.8
-                }}>
-
-                  BP BULB · ESP32<br />MPX10DP · MPU6050
-
-                </div>
-
-                <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-
-                  <div style={{
-                    width: 6, height: 6, borderRadius: "50%",
-
-                    background: "#2DD4BF", animation: "blink 1.3s step-end infinite"
-                  }} />
-
-                  <span className="fM" style={{
-                    fontSize: 7, color: "rgba(45,212,191,.5)",
-
-                    textTransform: "uppercase", letterSpacing: ".26em"
-                  }}>LIVE</span>
-
-                </div>
-
-              </div>
-
-            </TiltCard>
-
-            {/* Floating data chips */}
-
-            {chips.map((chip, i) => (
-
-              <motion.div key={chip.l}
-
-                style={{
-                  position: "absolute", x: chip.cx, y: chip.cy,
-
-                  left: "50%", transform: "translateX(-50%)"
-                }}
-
-                initial={{ opacity: 0, scale: .5 }}
-
-                animate={{ opacity: 1, scale: 1 }}
-
-                transition={{ delay: chip.delay, duration: .55 }}>
-
-                <div style={{
-                  padding: "7px 12px", borderRadius: 12, textAlign: "center",
-
-                  background: "rgba(4,10,20,.94)", border: `1px solid ${chip.c}25`,
-
-                  backdropFilter: "blur(14px)",
-
-                  boxShadow: `0 4px 24px rgba(0,0,0,.5), 0 0 12px ${chip.c}15`
-                }}>
-
-                  <div className="fM" style={{
-                    fontSize: 7, color: "rgba(255,255,255,.2)",
-
-                    textTransform: "uppercase", letterSpacing: ".2em"
-                  }}>{chip.l}</div>
-
-                  <div className="fB" style={{ fontSize: 15, color: chip.c, lineHeight: 1.2 }}>{chip.v}</div>
-
-                </div>
-
-              </motion.div>
-
-            ))}
-
-          </motion.div>
-
-        </Reveal>
-
 
         {/* CTA pill */}
-
-        <Reveal dir="up" delay={1.8}>
-
+        <Reveal dir="up" delay={1.5}>
           <div style={{
             display: "flex", flexDirection: "row", alignItems: "center", gap: 8, padding: 8,
-
             borderRadius: 32, background: "rgba(255,255,255,.03)",
-
-            border: "1px solid rgba(255,255,255,.07)",
-
+            border: "1px solid rgba(255,255,255,.09)",
             backdropFilter: "blur(24px)",
-
-            boxShadow: "0 24px 64px rgba(0,0,0,.6), inset 0 1px 0 rgba(255,255,255,.04)"
+            boxShadow: "0 24px 64px rgba(0,0,0,.6), inset 0 1px 0 rgba(255,255,255,.04)",
+            width: "fit-content",
           }}>
-
             <MagButton onClick={() => router.push("/patients/home")}
-
               className="btn-shim fB"
-
               style={{
                 position: "relative", overflow: "hidden",
-
                 display: "flex", alignItems: "center", gap: 12,
-
-                padding: "18px 44px", borderRadius: 24, fontSize: 15, letterSpacing: ".12em",
-
+                padding: "16px 36px", borderRadius: 24, fontSize: 14, letterSpacing: ".12em",
                 background: "#2DD4BF", color: "#080f1a", border: "none",
-
                 boxShadow: "0 0 55px rgba(45,212,191,.42)"
               }}>
-
-              <Play size={16} style={{ fill: "#080f1a", position: "relative", zIndex: 1 }} />
-
+              <Play size={15} style={{ fill: "#080f1a", position: "relative", zIndex: 1 }} />
               <span style={{ position: "relative", zIndex: 1 }}>Patient Portal</span>
-
             </MagButton>
-
-            <div style={{ width: 1, height: 46, background: "rgba(255,255,255,.06)" }} />
-
+            <div style={{ width: 1, height: 42, background: "rgba(255,255,255,.07)" }} />
             <MagButton onClick={() => router.push("/doctor/home")}
-
               className="fB"
-
               style={{
-                display: "flex", alignItems: "center", gap: 12,
-
-                padding: "18px 44px", borderRadius: 24, fontSize: 15, letterSpacing: ".12em",
-
-                background: "transparent", color: "rgba(255,255,255,.78)", border: "none"
+                display: "flex", alignItems: "center", gap: 10,
+                padding: "16px 32px", borderRadius: 24, fontSize: 14, letterSpacing: ".12em",
+                background: "transparent", color: "rgba(255,255,255,.82)", border: "none"
               }}>
-
-              <Stethoscope size={16} />
-
+              <Stethoscope size={15} />
               Clinician Access
-
-              <ArrowRight size={13} style={{ opacity: .4 }} />
-
+              <ArrowRight size={12} style={{ opacity: .45 }} />
             </MagButton>
-
           </div>
-
         </Reveal>
 
-        {/* Scroll hint */}
-
+        {/* Scroll hint — stays inside left col at bottom */}
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}
-
           transition={{ delay: 2.9, duration: 1 }}
-
           style={{
-            position: "absolute", bottom: 36,
-
-            display: "flex", flexDirection: "column", alignItems: "center",
-
-            gap: 8, color: "rgba(255,255,255,.2)"
+            display: "flex", flexDirection: "column", alignItems: "flex-start",
+            gap: 8, color: "rgba(255,255,255,.25)", marginTop: 52,
           }}>
-
           <span className="fM" style={{ fontSize: 8, textTransform: "uppercase", letterSpacing: ".3em" }}>Scroll</span>
-
-          <motion.div animate={{ y: [0, 8, 0] }} transition={{ repeat: Infinity, duration: 2, ease: "easeInOut" }}>
-
-            <ChevronDown size={14} />
-
+          <motion.div animate={{ y: [0, 7, 0] }} transition={{ repeat: Infinity, duration: 2, ease: "easeInOut" }}>
+            <ChevronDown size={13} />
           </motion.div>
-
         </motion.div>
 
-      </motion.div>
+        </div>{/* end LEFT COLUMN */}
+
+        {/* RIGHT COLUMN — Device Canvas */}
+        <div style={{
+          flex: "0 0 48%",
+          position: "relative",
+          height: "100vh",
+          minHeight: 600,
+        }}>
+          <DeviceHoloCanvas mouse={mouse} />
+
+          {/* chips rendered inside canvas — no JSX duplication */}
+
+          {/* no column separator — seamless blend */}
+        </div>
+
+      </motion.div>{/* end TWO-COLUMN wrapper */}
 
     </section>
 
@@ -2055,25 +2355,31 @@ function ProblemSection() {
 
   return (
 
-    <section id="problem" data-theme="light" style={{
+    <section id="problem" data-theme="dark" style={{
 
-      background: "#F8F9FA", padding: "120px 40px", position: "relative", overflow: "hidden",
+      background: "linear-gradient(160deg, #0e0b16 0%, #091221 50%, #0a0e1a 100%)", padding: "120px 40px", position: "relative", overflow: "hidden",
 
     }}>
 
-      <div className="grid-lt" style={{ position: "absolute", inset: 0, pointerEvents: "none" }} />
+      <div className="prob-orb-1" />
+      <div className="prob-orb-2" />
+      <div className="depth-top" />
+      <div className="grid-dk" style={{ position: "absolute", inset: 0, pointerEvents: "none" }} />
+      <div className="scanline" />
+      <div className="aml aml-b" style={{ width:450, height:450, top:"15%",  right:"8%",  background:"radial-gradient(circle,rgba(239,68,68,.055),transparent 70%)" }} />
+      <div className="aml aml-d" style={{ width:350, height:350, bottom:"20%",left:"5%", background:"radial-gradient(circle,rgba(251,113,133,.04),transparent 70%)" }} />
 
       <div style={{ maxWidth: 1280, margin: "0 auto" }}>
 
         <Reveal dir="left">
 
           <div className="fM" style={{
-            fontSize: 9, color: "rgba(11,30,51,.35)", textTransform: "uppercase",
+            fontSize: 9, color: "rgba(45,212,191,.65)", textTransform: "uppercase",
 
             letterSpacing: ".32em", marginBottom: 20, display: "flex", alignItems: "center", gap: 12
           }}>
 
-            <span style={{ width: 32, height: 1, background: "rgba(11,30,51,.2)", display: "inline-block" }} />
+            <span style={{ width: 32, height: 1, background: "rgba(45,212,191,.38)", display: "inline-block" }} />
 
             The Problem
 
@@ -2083,9 +2389,9 @@ function ProblemSection() {
 
         <Reveal dir="zoom" style={{ marginBottom: 48 }}>
 
-          <h2 className="fB" style={{ fontSize: "clamp(3.5rem,8vw,7.5rem)", color: "#0B1E33", letterSpacing: ".03em", lineHeight: .9 }}>
+          <h2 className="fB" style={{ fontSize: "clamp(3.5rem,8vw,7.5rem)", color: "#fff", letterSpacing: ".03em", lineHeight: .9 }}>
 
-            RECOVERY IS<br /><span style={{ color: "#ef4444" }}>BROKEN.</span>
+            RECOVERY IS<br /><span style={{ color: "#ef4444", textShadow: "0 0 40px rgba(239,68,68,.5)" }}>BROKEN.</span>
 
           </h2>
 
@@ -2095,7 +2401,7 @@ function ProblemSection() {
 
           <Reveal dir="left" delay={.1}>
 
-            <p className="fS" style={{ fontSize: 17, color: "#374151", lineHeight: 1.75, fontWeight: 300, maxWidth: 460, marginBottom: 24 }}>
+            <p className="fS" style={{ fontSize: 17, color: "rgba(255,255,255,.68)", lineHeight: 1.75, fontWeight: 300, maxWidth: 460, marginBottom: 24 }}>
 
               Traditional physiotherapy is repetitive, demoralising, and completely disconnected
 
@@ -2103,15 +2409,15 @@ function ProblemSection() {
 
               Patients don't fail because they're lazy —{" "}
 
-              <strong style={{ color: "#0B1E33" }}>they quit because the system fails them.</strong>
+              <strong style={{ color: "#2DD4BF" }}>they quit because the system fails them.</strong>
 
             </p>
 
-            <p className="fS" style={{ fontSize: 15, color: "#6B7280", lineHeight: 1.75, fontWeight: 300, maxWidth: 460 }}>
+            <p className="fS" style={{ fontSize: 15, color: "rgba(255,255,255,.5)", lineHeight: 1.75, fontWeight: 300, maxWidth: 460 }}>
 
               High-end robotic rehabilitation systems cost over{" "}
 
-              <strong style={{ color: "#0B1E33" }}>LKR 5 million</strong>. Even if affordable,
+              <strong style={{ color: "#2DD4BF" }}>LKR 5 million</strong>. Even if affordable,
 
               they only treat motor symptoms — ignoring the cognitive rewiring that neuroscience says is essential for real neuroplasticity.
 
@@ -2138,10 +2444,10 @@ function ProblemSection() {
 
                 <Reveal key={s.l} dir="zoom" delay={i * .1}>
 
-                  <TiltCard className="stat-card" style={{
+                  <TiltCard className="stat-card stat-problem" style={{
                     padding: "20px 18px", borderRadius: 22,
 
-                    background: "#fff", border: "1px solid rgba(11,30,51,.08)", boxShadow: "0 4px 24px rgba(11,30,51,.05)"
+                    boxShadow: "0 8px 40px rgba(0,0,0,.35)"
                   }}>
 
                     <div className="fB" style={{ fontSize: "2.6rem", color: s.c, lineHeight: 1, marginBottom: 4 }}>
@@ -2150,9 +2456,9 @@ function ProblemSection() {
 
                     </div>
 
-                    <div className="fM" style={{ fontSize: 8, color: "#0B1E33", textTransform: "uppercase", letterSpacing: ".18em", marginBottom: 4 }}>{s.l}</div>
+                    <div className="fM" style={{ fontSize: 8, color: "rgba(255,255,255,.72)", textTransform: "uppercase", letterSpacing: ".18em", marginBottom: 4 }}>{s.l}</div>
 
-                    <div className="fS" style={{ fontSize: 11, color: "#9CA3AF", lineHeight: 1.5 }}>{s.sub}</div>
+                    <div className="fS" style={{ fontSize: 11, color: "rgba(255,255,255,.52)", lineHeight: 1.5 }}>{s.sub}</div>
 
                   </TiltCard>
 
@@ -2180,15 +2486,15 @@ function ProblemSection() {
 
             <Reveal key={card.t} dir="up" delay={i * .12}>
 
-              <TiltCard style={{
+              <TiltCard className="prob-insight-card" style={{
                 padding: "28px 24px", borderRadius: 26, height: "100%",
 
-                background: "#fff", borderLeft: `3px solid ${card.c}`, boxShadow: "0 4px 28px rgba(11,30,51,.06)"
+                background: "rgba(255,255,255,.04)", borderLeft: `3px solid ${card.c}`, boxShadow: "0 8px 40px rgba(0,0,0,.4)", border: "1px solid rgba(255,255,255,.07)"
               }}>
 
-                <div className="fB" style={{ fontSize: 22, color: "#0B1E33", letterSpacing: ".04em", marginBottom: 12 }}>{card.t}</div>
+                <div className="fB" style={{ fontSize: 22, color: "#fff", letterSpacing: ".04em", marginBottom: 12 }}>{card.t}</div>
 
-                <p className="fS" style={{ fontSize: 14, color: "#4B5563", lineHeight: 1.75, fontWeight: 300 }}>{card.b}</p>
+                <p className="fS" style={{ fontSize: 14, color: "rgba(255,255,255,.80)", lineHeight: 1.75, fontWeight: 300 }}>{card.b}</p>
 
               </TiltCard>
 
@@ -2216,15 +2522,15 @@ function DarkBridge() {
   // Background transition
   const bg = useTransform(p, [0, 0.3], ["#F8F9FA", "#080f1a"]);
 
-  const rawWordY = useTransform(p, [0, 0.15], [300, 0]);
-  const rawWordScale = useTransform(p, [0.25, 0.45], [1, 25]);
-  const wordOp = useTransform(p, [0, 0.05, 0.35, 0.45], [0, 1, 1, 0]);
+  const rawWordY = useTransform(p, [0, 0.18], [280, 0]);
+  // No spring on scale — spring physics caused the lag. Direct transform only.
+  const wordScale = useTransform(p, [0.28, 0.52], [1, 22]);
+  const wordOp = useTransform(p, [0, 0.06, 0.38, 0.52], [0, 1, 1, 0]);
 
-  const statsOp = useTransform(p, [0.2, 0.25, 0.40, 0.45], [0, 1, 1, 0]);
+  const statsOp = useTransform(p, [0.22, 0.28, 0.42, 0.52], [0, 1, 1, 0]);
 
-  // SPRING PHYSICS
-  const wordY = useSpring(rawWordY, { stiffness: 70, damping: 25, restDelta: 0.001 });
-  const wordScale = useSpring(rawWordScale, { stiffness: 70, damping: 25, restDelta: 0.001 });
+  // Light spring only on Y (fine for vertical glide, not scale)
+  const wordY = useSpring(rawWordY, { stiffness: 180, damping: 28, restDelta: 0.001 });
 
   const absCenter: React.CSSProperties = {
     position: "absolute", top: "50%", left: "50%", transform: "translate(-50%, -50%)",
@@ -2233,7 +2539,7 @@ function DarkBridge() {
   };
 
   return (
-    <div ref={ref} style={{ height: "300vh", position: "relative" }}>
+    <div ref={ref} style={{ height: "170vh", position: "relative" }}>
       <motion.div style={{ position: "sticky", top: 0, height: "100vh", overflow: "hidden", backgroundColor: bg }}>
         <div className="grid-dk" style={{ position: "absolute", inset: 0, pointerEvents: "none" }} />
         <div className="scanline" />
@@ -2274,7 +2580,7 @@ function DarkBridge() {
             <div className="fB" style={{ fontSize: "clamp(5rem,15vw,16rem)", letterSpacing: "0.04em", lineHeight: .88, color: "#FFFFFF" }}>
               THE<br /><span style={{ color: "#2DD4BF" }}>SOLUTION</span>
             </div>
-            <div className="fM" style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: ".3em", marginTop: 26, color: "rgba(45,212,191,.6)" }}>
+            <div className="fM" style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: ".3em", marginTop: 26, color: "rgba(45,212,191,.8)" }}>
               ↓ A new paradigm in rehabilitation
             </div>
           </motion.div>
@@ -2289,10 +2595,14 @@ function DarkBridge() {
 
 function SolutionSection() {
   return (
-    <section id="solution" data-theme="dark" style={{ background: "#080f1a", padding: "120px 40px", position: "relative", overflow: "hidden" }}>
+    <section id="solution" data-theme="dark" style={{ background: "linear-gradient(180deg, #04101a 0%, #061421 60%, #060e1a 100%)", padding: "120px 40px", position: "relative", overflow: "hidden" }}>
+      <div className="sol-orb-1" />
+      <div className="sol-orb-2" />
+      <div className="aml aml-a" style={{ width:550, height:550, top:"20%",  left:"-5%",  background:"radial-gradient(circle,rgba(45,212,191,.06),transparent 70%)" }} />
+      <div className="aml aml-c" style={{ width:400, height:400, bottom:"15%",right:"10%",background:"radial-gradient(circle,rgba(6,182,212,.05),transparent 70%)" }} />
       <div className="grid-dk" style={{ position: "absolute", inset: 0, pointerEvents: "none" }} />
       <div className="scanline" />
-      <div className="glow-breath" style={{ position: "absolute", inset: 0, pointerEvents: "none", background: "radial-gradient(ellipse 52% 42% at 50% 50%, rgba(45,212,191,.07), transparent 65%)" }} />
+      <div className="glow-breath" style={{ position: "absolute", inset: 0, pointerEvents: "none", background: "radial-gradient(ellipse 60% 50% at 50% 40%, rgba(45,212,191,.15), transparent 60%)" }} />
       <div style={{ position: "absolute", top: 0, right: 0, width: 400, height: 400, pointerEvents: "none", background: "radial-gradient(circle at top right, rgba(139,92,246,.06), transparent 70%)" }} />
       <div style={{ position: "absolute", bottom: 0, left: 0, width: 400, height: 400, pointerEvents: "none", background: "radial-gradient(circle at bottom left, rgba(45,212,191,.04), transparent 70%)" }} />
 
@@ -2333,7 +2643,7 @@ function SolutionSection() {
             { n: "03", c: "#fbbf24", icon: <BarChart3 size={26} strokeWidth={1.1} />, tag: "Cloud", t: "Remote Clinical Dashboard", b: "Every squeeze streams live to Firebase. Grip force, tremor amplitude, reaction time — your doctor adjusts therapy remotely without clinic visits." },
           ].map((card, i) => (
             <Reveal key={card.n} dir="zoom" delay={i * .14}>
-              <TiltCard style={{ padding: "38px 32px", borderRadius: 34, position: "relative", overflow: "hidden", height: "100%", background: "rgba(255,255,255,.025)", border: `1px solid ${card.c}1e` }}>
+              <TiltCard style={{ padding: "38px 32px", borderRadius: 34, position: "relative", overflow: "hidden", height: "100%", background: `${card.c}0a`, border: `1px solid ${card.c}35`, boxShadow: `0 8px 40px rgba(0,0,0,.3), inset 0 1px 0 ${card.c}18` }}>
                 <div className="scanline" />
                 <div className="fB" style={{ position: "absolute", top: -18, right: -8, fontSize: "9rem", color: `${card.c}07`, lineHeight: 1, pointerEvents: "none" }}>{card.n}</div>
                 <div style={{ position: "relative", zIndex: 1 }}>
@@ -2361,19 +2671,24 @@ function OfferSection() {
 
   return (
 
-    <section id="offer" data-theme="light" style={{ background: "#FFFFFF", padding: "120px 40px", position: "relative" }}>
+    <section id="offer" data-theme="dark" style={{ background: "linear-gradient(150deg, #0c0820 0%, #080b1c 50%, #060e20 100%)", padding: "120px 40px", position: "relative", overflow: "hidden" }}>
 
-      <div className="grid-lt" style={{ position: "absolute", inset: 0, pointerEvents: "none" }} />
+      <div className="offer-orb-1" />
+      <div className="offer-orb-2" />
+      <div className="aml aml-b" style={{ width:500, height:500, top:"10%",  left:"10%",  background:"radial-gradient(circle,rgba(139,92,246,.055),transparent 70%)" }} />
+      <div className="aml aml-d" style={{ width:380, height:380, bottom:"10%",right:"5%", background:"radial-gradient(circle,rgba(99,102,241,.04),transparent 70%)" }} />
+      <div className="grid-dk" style={{ position: "absolute", inset: 0, pointerEvents: "none" }} />
+      <div className="scanline" />
 
       <div style={{ maxWidth: 1280, margin: "0 auto" }}>
 
         <Reveal dir="left" style={{ marginBottom: 60 }}>
 
-          <div className="fM" style={{ fontSize: 9, color: "rgba(11,30,51,.35)", textTransform: "uppercase", letterSpacing: ".3em", marginBottom: 12 }}>What We Offer</div>
+          <div className="fM" style={{ fontSize: 9, color: "rgba(167,139,250,.8)", textTransform: "uppercase", letterSpacing: ".3em", marginBottom: 12 }}>What We Offer</div>
 
-          <h2 className="fB" style={{ fontSize: "clamp(3rem,7vw,6.5rem)", letterSpacing: ".03em", lineHeight: .9, color: "#0B1E33" }}>
+          <h2 className="fB" style={{ fontSize: "clamp(3rem,7vw,6.5rem)", letterSpacing: ".03em", lineHeight: .9, color: "#fff" }}>
 
-            EVERYTHING YOUR<br /><span style={{ color: "#2DD4BF" }}>RECOVERY NEEDS.</span>
+            EVERYTHING YOUR<br /><span style={{ color: "#a78bfa" }}>RECOVERY NEEDS.</span>
 
           </h2>
 
@@ -2387,7 +2702,7 @@ function OfferSection() {
 
           <Reveal dir="zoom">
 
-            <TiltCard style={{ padding: "42px 38px", borderRadius: 34, background: "#0B1E33", minHeight: 300, position: "relative", overflow: "hidden" }}>
+            <TiltCard style={{ padding: "42px 38px", borderRadius: 34, background: "linear-gradient(145deg,#0e1d36,#0a1428)", minHeight: 300, position: "relative", overflow: "hidden", border: "1px solid rgba(45,212,191,.16)", boxShadow: "0 20px 80px rgba(45,212,191,.07), inset 0 1px 0 rgba(45,212,191,.08)" }}>
 
               <div className="scanline" />
 
@@ -2435,7 +2750,7 @@ function OfferSection() {
 
           <Reveal dir="right" delay={.1}>
 
-            <TiltCard style={{ padding: "36px 32px", borderRadius: 34, background: "#F3F0FF", minHeight: 300, border: "1px solid rgba(139,92,246,.14)" }}>
+            <TiltCard className="offer-card-purple" style={{ padding: "36px 32px", borderRadius: 34, minHeight: 300, transition: "transform .35s, box-shadow .35s" }}>
 
               <div style={{
                 width: 54, height: 54, borderRadius: 18, marginBottom: 20,
@@ -2451,13 +2766,13 @@ function OfferSection() {
 
               <div className="fM" style={{ fontSize: 8, color: "rgba(139,92,246,.65)", textTransform: "uppercase", letterSpacing: ".22em", marginBottom: 10 }}>Dual-Task</div>
 
-              <h3 className="fB" style={{ fontSize: 24, color: "#0B1E33", letterSpacing: ".04em", marginBottom: 14, lineHeight: 1.05 }}>
+              <h3 className="fB" style={{ fontSize: 24, color: "#fff", letterSpacing: ".04em", marginBottom: 14, lineHeight: 1.05 }}>
 
                 Motor + Cognitive. Simultaneously.
 
               </h3>
 
-              <p className="fS" style={{ fontSize: 14, color: "#374151", lineHeight: 1.75, fontWeight: 300 }}>
+              <p className="fS" style={{ fontSize: 14, color: "rgba(255,255,255,.78)", lineHeight: 1.75, fontWeight: 300 }}>
 
                 The only therapy system training both physical grip and working memory at once. Because neuroplasticity requires both.
 
@@ -2485,7 +2800,7 @@ function OfferSection() {
 
           <Reveal dir="left" delay={.15}>
 
-            <TiltCard style={{ padding: "36px 32px", borderRadius: 34, background: "#F0FDF4", border: "1px solid rgba(52,211,153,.16)", minHeight: 260 }}>
+            <TiltCard className="offer-card-green" style={{ padding: "36px 32px", borderRadius: 34, minHeight: 260, transition: "transform .35s, box-shadow .35s" }}>
 
               <div style={{
                 width: 54, height: 54, borderRadius: 18, marginBottom: 20,
@@ -2501,13 +2816,13 @@ function OfferSection() {
 
               <div className="fM" style={{ fontSize: 8, color: "rgba(52,211,153,.68)", textTransform: "uppercase", letterSpacing: ".22em", marginBottom: 10 }}>Tremor Intelligence</div>
 
-              <h3 className="fB" style={{ fontSize: 22, color: "#0B1E33", letterSpacing: ".04em", marginBottom: 12, lineHeight: 1.05 }}>
+              <h3 className="fB" style={{ fontSize: 22, color: "#fff", letterSpacing: ".04em", marginBottom: 12, lineHeight: 1.05 }}>
 
                 Filters involuntary tremors in real-time.
 
               </h3>
 
-              <p className="fS" style={{ fontSize: 14, color: "#374151", lineHeight: 1.75, fontWeight: 300 }}>
+              <p className="fS" style={{ fontSize: 14, color: "rgba(255,255,255,.78)", lineHeight: 1.75, fontWeight: 300 }}>
 
                 6-axis IMU continuously separates Parkinson's tremors from intentional grip for clinical accuracy even in severe cases.
 
@@ -2519,7 +2834,7 @@ function OfferSection() {
 
           <Reveal dir="right" delay={.2}>
 
-            <TiltCard style={{ padding: "36px 32px", borderRadius: 34, background: "#FFFBF0", border: "1px solid rgba(251,191,36,.16)", minHeight: 260 }}>
+            <TiltCard className="offer-card-gold" style={{ padding: "36px 32px", borderRadius: 34, minHeight: 260, transition: "transform .35s, box-shadow .35s" }}>
 
 
               <div style={{
@@ -2536,13 +2851,13 @@ function OfferSection() {
 
               <div className="fM" style={{ fontSize: 8, color: "rgba(251,191,36,.72)", textTransform: "uppercase", letterSpacing: ".22em", marginBottom: 10 }}>Tele-Rehab</div>
 
-              <h3 className="fB" style={{ fontSize: 22, color: "#0B1E33", letterSpacing: ".04em", marginBottom: 12, lineHeight: 1.05 }}>
+              <h3 className="fB" style={{ fontSize: 22, color: "#fff", letterSpacing: ".04em", marginBottom: 12, lineHeight: 1.05 }}>
 
                 Your doctor sees every session, from anywhere.
 
               </h3>
 
-              <p className="fS" style={{ fontSize: 14, color: "#374151", lineHeight: 1.75, fontWeight: 300 }}>
+              <p className="fS" style={{ fontSize: 14, color: "rgba(255,255,255,.78)", lineHeight: 1.75, fontWeight: 300 }}>
 
                 Firebase streams grip force, tremor amplitude, and reaction data live. Therapy adjustments happen remotely — no clinic visits needed.
 
@@ -2599,25 +2914,24 @@ function WhySection() {
 
   return (
 
-    <section id="why" data-theme="dark" style={{ background: "#0B1E33", padding: "120px 40px", position: "relative", overflow: "hidden" }}>
+    <section id="why" data-theme="dark" style={{ background: "linear-gradient(170deg, #060f20 0%, #08141f 60%, #071122 100%)", padding: "120px 40px", position: "relative", overflow: "hidden" }}>
 
       <div className="grid-dk" style={{ position: "absolute", inset: 0, pointerEvents: "none" }} />
 
-      <div style={{
-        position: "absolute", top: 0, right: 0, width: 500, height: 500, pointerEvents: "none",
-
-        background: "radial-gradient(circle at top right, rgba(251,191,36,.04), transparent 65%)"
-      }} />
+      <div className="why-orb-1" />
+      <div className="why-orb-2" />
+      <div className="aml aml-c" style={{ width:480, height:480, top:"15%",  left:"5%",  background:"radial-gradient(circle,rgba(251,191,36,.05),transparent 70%)" }} />
+      <div className="aml aml-a" style={{ width:420, height:420, bottom:"10%",right:"8%",background:"radial-gradient(circle,rgba(52,211,153,.045),transparent 70%)" }} />
 
       <div style={{ maxWidth: 1280, margin: "0 auto" }}>
 
         <Reveal dir="zoom" style={{ textAlign: "center", marginBottom: 72 }}>
 
-          <div className="fM" style={{ fontSize: 9, color: "rgba(45,212,191,.5)", textTransform: "uppercase", letterSpacing: ".32em", marginBottom: 16 }}>Why ReViveX</div>
+          <div className="fM" style={{ fontSize: 9, color: "rgba(251,191,36,.75)", textTransform: "uppercase", letterSpacing: ".32em", marginBottom: 16 }}>Why ReViveX</div>
 
           <h2 className="fB" style={{ fontSize: "clamp(3rem,8vw,7rem)", letterSpacing: ".03em", lineHeight: .9, color: "#fff" }}>
 
-            NOT ANOTHER<br /><span style={{ color: "#2DD4BF" }}>REHAB GADGET.</span>
+            NOT ANOTHER<br /><span style={{ color: "#fbbf24" }}>REHAB GADGET.</span>
 
           </h2>
 
@@ -2634,7 +2948,7 @@ function WhySection() {
 
                 display: "grid", gridTemplateColumns: "80px 1fr", gap: 32, alignItems: "center",
 
-                background: "rgba(255,255,255,.022)", borderLeft: `3px solid ${pt.c}`, position: "relative", overflow: "hidden"
+                background: "rgba(255,255,255,.038)", borderLeft: `3px solid ${pt.c}`, position: "relative", overflow: "hidden", boxShadow: "0 10px 50px rgba(0,0,0,.35)"
               }}>
 
                 <div className="fB" style={{ fontSize: "5rem", color: `${pt.c}18`, lineHeight: 1, pointerEvents: "none" }}>{pt.n}</div>
@@ -2674,7 +2988,7 @@ function MarqueeStrip() {
 
   const B = ["STROKE RECOVERY", "PARKINSON'S CARE", "BRAIN INJURY REHAB", "ADAPTIVE DIFFICULTY", "REAL-TIME FEEDBACK", "GAMIFIED THERAPY", "HOME-BASED CARE", "CLINICAL DASHBOARD"];
 
-  const dot = <span style={{ margin: "0 18px", color: "rgba(45,212,191,.28)" }}>·</span>;
+  const dot = <span style={{ margin: "0 18px", color: "rgba(45,212,191,.52)" }}>·</span>;
 
   const makeRow = (items: string[], cls: string) => (
 
@@ -2690,7 +3004,7 @@ function MarqueeStrip() {
 
               <span key={i} style={{ display: "inline-flex", alignItems: "center" }}>
 
-                <span className="fB" style={{ fontSize: 13, color: "rgba(255,255,255,.12)", letterSpacing: ".14em" }}>{t}</span>
+                <span className="fB" style={{ fontSize: 13, color: "rgba(255,255,255,.72)", letterSpacing: ".14em" }}>{t}</span>
 
                 {dot}
 
@@ -2711,9 +3025,9 @@ function MarqueeStrip() {
   return (
 
     <div style={{
-      background: "#060f1a", padding: "20px 0",
+      background: "linear-gradient(90deg, #04111e, #040f1c, #04111e)", padding: "20px 0",
 
-      borderTop: "1px solid rgba(255,255,255,.04)", borderBottom: "1px solid rgba(255,255,255,.04)", overflow: "hidden"
+      borderTop: "1px solid rgba(45,212,191,.12)", borderBottom: "1px solid rgba(45,212,191,.12)", overflow: "hidden"
     }}>
 
       {makeRow(A, "mqL")}
@@ -2752,19 +3066,20 @@ function Footer() {
 
     <footer id="contact" data-theme="dark" style={{
 
-      background: "#060f1a", padding: "120px 40px 60px",
+      background: "linear-gradient(170deg, #030c18 0%, #050e1c 100%)", padding: "120px 40px 60px",
 
       position: "relative", overflow: "hidden",
 
-      borderTop: "1px solid rgba(45,212,191,.06)",
+      borderTop: "1px solid rgba(45,212,191,.14)",
 
     }}>
 
       <div className="glow-breath" style={{
         position: "absolute", inset: 0, pointerEvents: "none",
-
-        background: "radial-gradient(ellipse 55% 42% at 50% 92%, rgba(45,212,191,.06), transparent 58%)"
+        background: "radial-gradient(ellipse 55% 42% at 50% 92%, rgba(45,212,191,.10), transparent 58%)"
       }} />
+      <div className="aml aml-a" style={{ width:500, height:500, top:"10%",  left:"5%",  background:"radial-gradient(circle,rgba(45,212,191,.05),transparent 70%)" }} />
+      <div className="aml aml-b" style={{ width:400, height:400, top:"20%",  right:"10%",background:"radial-gradient(circle,rgba(14,165,233,.04),transparent 70%)" }} />
 
       <div className="fB" style={{
         position: "absolute", bottom: 0, left: "50%",
@@ -2849,7 +3164,7 @@ function Footer() {
                     <div key={f.k}>
 
                       <div className="fM" style={{
-                        fontSize: 8, color: "rgba(255,255,255,.28)",
+                        fontSize: 8, color: "rgba(255,255,255,.72)",
 
                         textTransform: "uppercase", letterSpacing: ".18em", marginBottom: 9
                       }}>{f.l}</div>
@@ -2877,7 +3192,7 @@ function Footer() {
                   <div>
 
                     <div className="fM" style={{
-                      fontSize: 8, color: "rgba(255,255,255,.28)",
+                      fontSize: 8, color: "rgba(255,255,255,.72)",
 
                       textTransform: "uppercase", letterSpacing: ".18em", marginBottom: 9
                     }}>Message</div>
@@ -2943,7 +3258,7 @@ function Footer() {
             </h3>
 
             <p className="fS" style={{
-              fontSize: 15, color: "rgba(255,255,255,.42)",
+              fontSize: 15, color: "rgba(255,255,255,.78)",
 
               lineHeight: 1.75, fontWeight: 300, marginBottom: 42
             }}>
@@ -2987,12 +3302,12 @@ function Footer() {
                 <div>
 
                   <div className="fM" style={{
-                    fontSize: 8, color: "rgba(255,255,255,.22)",
+                    fontSize: 8, color: "rgba(255,255,255,.65)",
 
                     textTransform: "uppercase", letterSpacing: ".18em"
                   }}>{c.l}</div>
 
-                  <div className="fS" style={{ fontSize: 14, color: "rgba(255,255,255,.65)" }}>{c.v}</div>
+                  <div className="fS" style={{ fontSize: 14, color: "rgba(255,255,255,.78)" }}>{c.v}</div>
 
                 </div>
 
@@ -3021,7 +3336,7 @@ function Footer() {
 
                     background: "rgba(255,255,255,.04)", border: "1px solid rgba(255,255,255,.07)",
 
-                    color: "rgba(255,255,255,.45)"
+                    color: "rgba(255,255,255,.70)"
                   }}>
 
                   {s.icon}
@@ -3051,7 +3366,7 @@ function Footer() {
           </div>
 
           <div className="fM" style={{
-            fontSize: 8, color: "rgba(255,255,255,.15)",
+            fontSize: 8, color: "rgba(255,255,255,.38)",
 
             textTransform: "uppercase", letterSpacing: ".22em"
           }}>
@@ -3134,4 +3449,3 @@ export default function LandingPage() {
   );
 
 }
-
