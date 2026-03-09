@@ -13,3 +13,19 @@ export async function getPatientById(uid: string): Promise<PatientData | null> {
   if (data.role !== "patient") return null;
   return { uid: snap.id, ...data } as PatientData;
 }
+
+// Update XP and streak after a game session completes
+export async function updateGamification(
+  uid: string,
+  xpEarned: number,
+  newStreak: number
+): Promise<void> {
+  const snap = await getDoc(doc(db, "users", uid));
+  if (!snap.exists()) return;
+
+  const current = snap.data().gamification?.totalXp ?? 0;
+  await updateDoc(doc(db, "users", uid), {
+    "gamification.totalXp": current + xpEarned,
+    "gamification.currentStreak": newStreak,
+  });
+}
