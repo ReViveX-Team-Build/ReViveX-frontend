@@ -1,26 +1,13 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { Bot } from "lucide-react";
-import { Crown, Check } from "lucide-react";
+import { Bot, Crown, Check } from "lucide-react";
+import { useAiCompanion } from "../../../lib/ai/useAiCompanion";
 
 export default function PatientAICompanion() {
-    type Message = {
-        id: string;
-        sender: "user" | "ai";
-        text: string;
-        timestamp: string;
-    };
 
-    const [messages, setMessages] = useState<Message[]>([
-        {
-            id: "1",
-            sender: "ai",
-            text:
-                "Hello John! 👋 I’m your AI companion here to support you through your rehabilitation journey. How are you feeling today?",
-            timestamp: "10:00 AM",
-        },
-    ]);
+    const { messages, sendMessage, isLoading } =
+        useAiCompanion("patient_mock_001", "patient");
 
     const [inputValue, setInputValue] = useState("");
     const scrollRef = useRef<HTMLDivElement>(null);
@@ -29,51 +16,15 @@ export default function PatientAICompanion() {
         if (scrollRef.current) {
             scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
         }
-    }, [messages]);
-
-
+    }, [messages, isLoading]);
 
     const handleSendMessage = async () => {
-        if (!inputValue.trim()) return;
+        if (!inputValue.trim() || isLoading) return;
 
-        const userMessage: Message = {
-            id: Date.now().toString(),
-            sender: "user",
-            text: inputValue,
-            timestamp: new Date().toLocaleTimeString([], {
-                hour: "2-digit",
-                minute: "2-digit",
-            }),
-        };
-
-        setMessages((prev) => [...prev, userMessage]);
+        const content = inputValue;
         setInputValue("");
 
-        try {
-            const res = await fetch("/api/ai-companion", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify({ message: userMessage.text }),
-            });
-
-            const data = await res.json();
-
-            const aiMessage: Message = {
-                id: (Date.now() + 1).toString(),
-                sender: "ai",
-                text: data.reply || "No response from AI",
-                timestamp: new Date().toLocaleTimeString([], {
-                    hour: "2-digit",
-                    minute: "2-digit",
-                }),
-            };
-
-            setMessages((prev) => [...prev, aiMessage]);
-        } catch (error) {
-            console.error("Frontend error:", error);
-        }
+        await sendMessage(content);
     };
 
     return (
@@ -93,7 +44,7 @@ export default function PatientAICompanion() {
                 {/* Main Layout */}
                 <div className="grid gap-6 lg:grid-cols-3">
 
-                    {/* Chat Area Placeholder */}
+                    {/* Chat Area */}
                     <div className="bg-white shadow-lg rounded-xl h-[calc(100vh-250px)] flex flex-col">
 
                         {/* Chat Messages */}
@@ -101,52 +52,70 @@ export default function PatientAICompanion() {
                             ref={scrollRef}
                             className="flex-1 p-4 space-y-4 overflow-y-auto"
                         >
-                            {messages.map((message) => (
+
+                            {messages.map((message, index) => (
                                 <div
-                                    key={message.id}
+                                    key={index}
                                     className={`flex ${
-                                        message.sender === "user" ? "justify-end" : "justify-start"
+                                        message.role === "user"
+                                            ? "justify-end"
+                                            : "justify-start"
                                     }`}
                                 >
-                                    {message.sender === "ai" && (
+                                    {message.role === "model" && (
                                         <div className="flex items-start gap-3 max-w-[80%]">
                                             <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#2DD4BF] to-[#0A2E4C] flex items-center justify-center">
                                                 <Bot className="h-5 w-5 text-white" />
                                             </div>
                                             <div className="bg-[#F8F9FA] text-[#0A2E4C] rounded-lg p-3">
-                                                <p className="text-sm">{message.text}</p>
-                                                <p className="text-xs text-gray-500 mt-1">
-                                                    {message.timestamp}
+                                                <p className="text-sm">
+                                                    {message.content}
                                                 </p>
                                             </div>
                                         </div>
                                     )}
 
-                                    {message.sender === "user" && (
+                                    {message.role === "user" && (
                                         <div className="bg-[#2DD4BF] text-white rounded-lg p-3 max-w-[80%]">
-                                            <p className="text-sm">{message.text}</p>
-                                            <p className="text-xs text-white/70 mt-1 text-right">
-                                                {message.timestamp}
+                                            <p className="text-sm">
+                                                {message.content}
                                             </p>
                                         </div>
                                     )}
                                 </div>
                             ))}
+
+                            {/* Loading indicator */}
+                            {isLoading && (
+                                <div className="flex justify-start">
+                                    <div className="flex items-center gap-2 text-sm text-gray-400">
+                                        <Bot className="h-4 w-4 animate-pulse" />
+                                        AI is typing...
+                                    </div>
+                                </div>
+                            )}
+
                         </div>
 
-                        {/* Input Placeholder */}
+                        {/* Input */}
                         <div className="border-t p-4">
                             <div className="flex gap-2">
                                 <input
                                     value={inputValue}
-                                    onChange={(e) => setInputValue(e.target.value)}
-                                    onKeyDown={(e) => e.key === "Enter" && handleSendMessage()}
+                                    onChange={(e) =>
+                                        setInputValue(e.target.value)
+                                    }
+                                    onKeyDown={(e) =>
+                                        e.key === "Enter" && handleSendMessage()
+                                    }
                                     placeholder="Type your message..."
+                                    disabled={isLoading}
                                     className="flex-1 px-4 py-3 border rounded-lg text-sm"
                                 />
                                 <button
                                     onClick={handleSendMessage}
-                                    className="bg-[#2DD4BF] hover:bg-[#2DD4BF]/90 text-white px-4 rounded-lg"
+                                    disabled={isLoading}
+                                    className="bg-[#2DD4BF] hover:bg-[#2DD4BF]/90 text-white px-4 rounded-lg disabled:opacity-50"
                                 >
                                     Send
                                 </button>
@@ -154,7 +123,7 @@ export default function PatientAICompanion() {
                         </div>
                     </div>
 
-                    {/* Plans / Info Placeholder */}
+                    {/* Plans / Info */}
                     <div className="space-y-6">
 
                         {/* Current Plan */}
