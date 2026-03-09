@@ -46,4 +46,21 @@ export async function POST(req: Request) {
         );
       }
     }
-      
+
+function buildGeneratePrompt(
+    patient: PatientData,
+    sessions: GameSession[],
+    type: "feedback" | "instruction"
+  ): string {
+        const avg = (nums: (number | undefined)[]): number => {
+            const valid = nums.filter((n): n is number => n != null && !isNaN(n));
+            return valid.length
+            ? Math.round((valid.reduce((a, b) => a + b, 0) / valid.length) * 10) / 10
+            : 0;
+        };
+
+        const completed = sessions.filter((s) => s.durationSeconds > 60).length;
+        const adherence = Math.round((completed / 7) * 100);
+        const peakGrip = Math.max(0, ...sessions.map((s) => s.metrics.peakGripForce ?? 0));
+        const avgCognitive = avg(sessions.map((s) => s.metrics.cognitiveAccuracyPercent));
+        const avgEndurance = avg(sessions.map((s) => s.metrics.muscleEnduranceDropPercent));
