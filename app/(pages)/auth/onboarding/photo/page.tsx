@@ -50,3 +50,23 @@ const handleFileChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) =>
   reader.onload = (ev) => setPreview(ev.target?.result as string);
   reader.readAsDataURL(f);
 }, []);
+
+const handleUpload = useCallback(async () => {
+  if (!file || !user) return;
+  setUploading(true);
+  setError(null);
+
+  try {
+    const storage = getStorage();
+    const fileRef = storageRef(storage, `profilePictures/${user.uid}`);
+    await uploadBytes(fileRef, file);
+    const url = await getDownloadURL(fileRef);
+    await updateProfilePicture(user.uid, url);
+    setUploaded(true);
+    setTimeout(() => router.push("/auth/onboarding/select-doctor"), 900);
+  } catch (err: any) {
+    setError("Upload failed. Please try again.");
+  } finally {
+    setUploading(false);
+  }
+}, [file, user, router]);
