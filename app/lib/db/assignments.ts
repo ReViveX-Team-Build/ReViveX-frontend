@@ -20,3 +20,38 @@ export async function createAssignment(
   });
   return ref.id;
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// READ — patient view
+// ─────────────────────────────────────────────────────────────────────────────
+
+// All assignments for a patient, newest first
+export async function getPatientAssignments(
+  patientId: string,
+  maxResults: number = 20
+): Promise<Assignment[]> {
+  const snap = await getDocs(
+    query(
+      collection(db, "assignments"),
+      where("patientId", "==", patientId),
+      orderBy("assignedDate", "desc"),
+      limit(maxResults)
+    )
+  );
+  return snap.docs.map((d) => ({ id: d.id, ...d.data() } as Assignment));
+}
+
+// Only pending/active assignments — shown on patient home & therapy games page
+export async function getPendingAssignments(
+  patientId: string
+): Promise<Assignment[]> {
+  const snap = await getDocs(
+    query(
+      collection(db, "assignments"),
+      where("patientId", "==", patientId),
+      where("status", "in", ["pending", "active"]),
+      orderBy("assignedDate", "desc")
+    )
+  );
+  return snap.docs.map((d) => ({ id: d.id, ...d.data() } as Assignment));
+}
