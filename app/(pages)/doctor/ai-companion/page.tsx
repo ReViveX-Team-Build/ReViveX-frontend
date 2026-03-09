@@ -1,46 +1,32 @@
 "use client";
 
+import { useState, useRef, useEffect } from "react";
 import { Bot } from "lucide-react";
-import { useState } from "react";
+import { useAiCompanion } from "../../../lib/ai/useAiCompanion";
 
 export default function DoctorAICompanion() {
 
-    const [input, setInput] = useState("");
-    const [messages, setMessages] = useState<
-        { sender: "ai" | "user"; text: string }[]
-    >([
-        {
-            sender: "ai",
-            text: "Hello Doctor 👋 I’m your AI Clinical Assistant. I can help you analyze patient progress, adherence, and therapy risks.",
-        },
-    ]);
-    const handleSend = async () => {
-        if (!input.trim()) return;
+    const { messages, sendMessage, isLoading } =
+        useAiCompanion("doctor_mock_001", "doctor");
 
-        const userMessage = { sender: "user" as const, text: input };
-        setMessages((prev) => [...prev, userMessage]);
+    const [input, setInput] = useState("");
+    const scrollRef = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        if (scrollRef.current) {
+            scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+        }
+    }, [messages, isLoading]);
+
+    const handleSend = async () => {
+        if (!input.trim() || isLoading) return;
+
+        const content = input;
         setInput("");
 
-        try {
-            const res = await fetch("/api/doctor-ai", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ message: userMessage.text }),
-            });
-
-            const data = await res.json();
-
-            const aiMessage = {
-                sender: "ai" as const,
-                text: data.reply,
-            };
-
-            setMessages((prev) => [...prev, aiMessage]);
-
-        } catch (error) {
-            console.error("Doctor AI error:", error);
-        }
+        await sendMessage(content);
     };
+
     return (
         <div className="p-8 min-h-screen bg-gray-50">
 
@@ -68,38 +54,68 @@ export default function DoctorAICompanion() {
             <div className="bg-white rounded-xl shadow-sm border border-gray-200 h-[65vh] flex flex-col">
 
                 {/* Messages */}
-                <div className="flex-1 p-6 space-y-6 overflow-y-auto">
-                    {messages.map((msg, index) => (
+                <div
+                    ref={scrollRef}
+                    className="flex-1 p-6 space-y-6 overflow-y-auto"
+                >
+                    {messages.length === 0 && (
+                        <div className="flex items-start gap-3">
+                            <div className="w-9 h-9 bg-gradient-to-br from-purple-600 to-blue-600 rounded-lg flex items-center justify-center">
+                                <Bot className="w-5 h-5 text-white" />
+                            </div>
+                            <div className="bg-gray-100 rounded-xl p-4 text-sm text-gray-800">
+                                Hello Doctor 👋 I’m your AI Clinical Assistant. I can help you analyze patient progress, adherence, and therapy risks.
+                            </div>
+                        </div>
+                    )}
+
+                    {messages.map((message, index) => (
                         <div
                             key={index}
                             className={`flex ${
-                                msg.sender === "user" ? "justify-end" : "justify-start"
+                                message.role === "user"
+                                    ? "justify-end"
+                                    : "justify-start"
                             }`}
                         >
                             <div className="max-w-2xl">
-                                {msg.sender === "ai" && (
+
+                                {message.role === "model" && (
                                     <div className="flex items-start gap-3">
                                         <div className="w-9 h-9 bg-gradient-to-br from-purple-600 to-blue-600 rounded-lg flex items-center justify-center">
                                             <Bot className="w-5 h-5 text-white" />
                                         </div>
                                         <div className="bg-gray-100 rounded-xl p-4 text-sm text-gray-800">
-                                            {msg.text}
+                                            {message.content}
                                         </div>
                                     </div>
                                 )}
 
-                                {msg.sender === "user" && (
+                                {message.role === "user" && (
                                     <div className="bg-teal-600 text-white rounded-xl p-4 text-sm">
-                                        {msg.text}
+                                        {message.content}
                                     </div>
                                 )}
+
                             </div>
                         </div>
                     ))}
+
+                    {isLoading && (
+                        <div className="flex items-start gap-3">
+                            <div className="w-9 h-9 bg-gradient-to-br from-purple-600 to-blue-600 rounded-lg flex items-center justify-center">
+                                <Bot className="w-5 h-5 text-white animate-pulse" />
+                            </div>
+                            <div className="bg-gray-100 rounded-xl p-4 text-sm text-gray-600">
+                                AI is thinking...
+                            </div>
+                        </div>
+                    )}
                 </div>
 
-                {/* Input Placeholder (disabled for now) */}
+                {/* Input */}
                 <div className="border-t border-gray-200 p-4">
+
                     {/* Quick Actions */}
                     <div className="mb-3 flex flex-wrap gap-2">
                         {[
@@ -117,18 +133,22 @@ export default function DoctorAICompanion() {
                             </button>
                         ))}
                     </div>
+
                     <div className="flex gap-3">
                         <input
                             value={input}
                             onChange={(e) => setInput(e.target.value)}
-                            onKeyDown={(e) => e.key === "Enter" && handleSend()}
+                            onKeyDown={(e) =>
+                                e.key === "Enter" && handleSend()
+                            }
                             placeholder="Ask me anything about your patients..."
+                            disabled={isLoading}
                             className="flex-1 px-4 py-3 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"
                         />
 
                         <button
                             onClick={handleSend}
-                            disabled={!input.trim()}
+                            disabled={!input.trim() || isLoading}
                             className="px-5 py-3 bg-teal-600 text-white rounded-lg hover:bg-teal-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition"
                         >
                             Send
@@ -136,19 +156,19 @@ export default function DoctorAICompanion() {
                     </div>
                 </div>
             </div>
+
             {/* Premium AI Info */}
             <div className="mt-4 bg-purple-50 border border-purple-200 rounded-lg p-4">
                 <p className="text-sm text-gray-700">
                     <span className="font-semibold text-purple-800">
-                     Premium AI Features:
-                     </span>{" "}
+                        Premium AI Features:
+                    </span>{" "}
                     This clinical AI assistant is designed to analyze patient adherence,
                     rehabilitation progress, and therapy risks using secure Firebase Cloud
                     Functions and advanced machine learning models. All data access is
                     role-based and compliant with healthcare data privacy standards.
                 </p>
             </div>
-
         </div>
     );
 }
