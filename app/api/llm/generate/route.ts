@@ -64,3 +64,28 @@ function buildGeneratePrompt(
         const peakGrip = Math.max(0, ...sessions.map((s) => s.metrics.peakGripForce ?? 0));
         const avgCognitive = avg(sessions.map((s) => s.metrics.cognitiveAccuracyPercent));
         const avgEndurance = avg(sessions.map((s) => s.metrics.muscleEnduranceDropPercent));
+
+        const patientSummary = `
+        Patient: ${patient.name} — ${patient.condition}
+        Adherence this week: ${adherence}% (${completed}/7 sessions completed)
+        Peak grip force: ${peakGrip} kPa
+        Cognitive accuracy: ${avgCognitive}%
+        Endurance drop: ${avgEndurance}%
+        Active streak: ${patient.gamification?.currentStreak ?? 0} days
+        `;
+
+        if (type === "feedback") {
+            return `${patientSummary}
+        You are writing a feedback message FROM a doctor TO their patient in a rehabilitation app.
+        
+        Requirements:
+        - Address the patient directly by first name (${patient.name.split(" ")[0]})
+        - Reference 2-3 SPECIFIC metrics from the data above
+        - Acknowledge something positive first
+        - Mention one area to improve if the data shows it (keep it encouraging, not critical)
+        - Under 80 words
+        - Tone: warm, professional, like a caring doctor who actually reviewed the chart
+        - Do NOT start with "Dear" — start directly with their first name
+        - Do NOT use generic phrases like "keep up the good work" without context
+        `;
+          }
