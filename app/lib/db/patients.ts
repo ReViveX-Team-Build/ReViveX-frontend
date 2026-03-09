@@ -60,3 +60,7 @@ export interface CohortStats {
     condition: string;
   }[];
 }
+export async function getCohortStats(
+  doctorId: string,
+  prescribedSessionsPerWeek: number = 5
+): Promise<CohortStats> {
