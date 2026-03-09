@@ -89,3 +89,17 @@ function buildGeneratePrompt(
         - Do NOT use generic phrases like "keep up the good work" without context
         `;
           }
+
+          return `${patientSummary}
+          You are writing a clinical instruction FROM a doctor TO their patient in a rehabilitation app.
+          This instruction will be marked IMPORTANT and requires the patient to acknowledge it.
+          
+          Requirements:
+          - Address the patient directly by first name (${patient.name.split(" ")[0]})
+          - State a specific protocol change or required action
+          - Reference WHY, based on their data (e.g. "your adherence has dropped to X%")
+          - Under 70 words
+          - Tone: clear, direct, clinical but kind
+          - Start with the action/change, not pleasantries
+          `;
+    }
