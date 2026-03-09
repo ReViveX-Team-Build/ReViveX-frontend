@@ -5,6 +5,13 @@ import { getConversationHistory, saveMessage, ChatMessage } from "../db/conversa
 
 export type AiRole = "patient" | "doctor";
 
+export type AiMode =
+    | "chat"
+    | "weekly_analysis"
+    | "progress_insight"
+    | "triage"
+    | "weekly_summary";
+
 export function useAiCompanion(uid: string, role: AiRole = "patient") {
     const [messages, setMessages] = useState<ChatMessage[]>([]);
     const [isLoading, setIsLoading] = useState(false);
@@ -21,7 +28,7 @@ export function useAiCompanion(uid: string, role: AiRole = "patient") {
         loadHistory();
     }, [uid]);
 
-    const sendMessage = async (content: string) => {
+    const sendMessage = async (content: string, mode: AiMode = "chat") => {
         if (!content.trim() || !uid) return;
 
         const userMessage: ChatMessage = {
@@ -34,10 +41,9 @@ export function useAiCompanion(uid: string, role: AiRole = "patient") {
         setMessages((prev) => [...prev, userMessage]);
         setIsLoading(true);
 
-        // choose correct API route depending on role
-        const endpoint = role === "doctor"
-            ? "/api/llm/doctor"
-            : "/api/llm/patient";
+        // Select correct API route
+        const endpoint =
+            role === "doctor" ? "/api/llm/doctor" : "/api/llm/patient";
 
         try {
             // Save user message to Firestore
@@ -50,7 +56,8 @@ export function useAiCompanion(uid: string, role: AiRole = "patient") {
                 },
                 body: JSON.stringify({
                     message: content,
-                    uid
+                    uid,
+                    mode
                 })
             });
 
@@ -66,7 +73,7 @@ export function useAiCompanion(uid: string, role: AiRole = "patient") {
 
                 setMessages((prev) => [...prev, aiMessage]);
 
-                // Save AI response to Firestore
+                // Save AI reply
                 await saveMessage(uid, "model", data.reply);
             }
 
