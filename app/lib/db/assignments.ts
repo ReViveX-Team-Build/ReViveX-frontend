@@ -55,3 +55,39 @@ export async function getPendingAssignments(
   );
   return snap.docs.map((d) => ({ id: d.id, ...d.data() } as Assignment));
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// READ — doctor view
+// ─────────────────────────────────────────────────────────────────────────────
+
+// All assignments the doctor has created across all patients
+export async function getDoctorAssignments(
+  doctorId: string,
+  maxResults: number = 50
+): Promise<Assignment[]> {
+  const snap = await getDocs(
+    query(
+      collection(db, "assignments"),
+      where("doctorId", "==", doctorId),
+      orderBy("assignedDate", "desc"),
+      limit(maxResults)
+    )
+  );
+  return snap.docs.map((d) => ({ id: d.id, ...d.data() } as Assignment));
+}
+
+// Assignments for one specific patient from the doctor's view
+export async function getAssignmentsForPatient(
+  doctorId: string,
+  patientId: string
+): Promise<Assignment[]> {
+  const snap = await getDocs(
+    query(
+      collection(db, "assignments"),
+      where("doctorId", "==", doctorId),
+      where("patientId", "==", patientId),
+      orderBy("assignedDate", "desc")
+    )
+  );
+  return snap.docs.map((d) => ({ id: d.id, ...d.data() } as Assignment));
+}
