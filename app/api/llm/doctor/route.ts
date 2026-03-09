@@ -28,3 +28,10 @@ export async function POST(req: Request) {
     const cohort = await getCohortStats(uid);
 
     const doctorName = doctor ? (doctor as any).name ?? "Doctor" : "Doctor";
+
+    const systemPrompt = buildDoctorPrompt(doctorName, cohort, mode);
+
+    const model = genAI.getGenerativeModel({
+        model: MODEL,
+        systemInstruction: systemPrompt,
+      });
