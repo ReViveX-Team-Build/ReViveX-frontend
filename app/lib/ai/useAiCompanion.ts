@@ -1,4 +1,7 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+
+// TODO: enable after conversations.ts is pushed
+// import { getConversationHistory } from "../db/conversations";
 
 export type ChatMessage = {
     role: "user" | "model";
@@ -8,6 +11,15 @@ export type ChatMessage = {
 export function useAiCompanion() {
     const [messages, setMessages] = useState<ChatMessage[]>([]);
     const [isLoading, setIsLoading] = useState(false);
+
+    useEffect(() => {
+        async function loadHistory() {
+            // const history = await getConversationHistory();
+            // setMessages(history);
+        }
+
+        loadHistory();
+    }, []);
 
     const sendMessage = async (content: string) => {
         if (!content.trim()) return;
