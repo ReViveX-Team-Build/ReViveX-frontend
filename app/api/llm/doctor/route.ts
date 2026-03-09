@@ -98,3 +98,35 @@ function buildDoctorPrompt(
       : "No patients currently flagged as declining."
   }
   `;
+
+  const modeInstructions: Record<string, string> = {
+    chat: `
+You are a clinical decision-support tool. Your role:
+- Provide evidence-based rehabilitation insights
+- Reference specific patient data from the cohort when available
+- Flag patterns that suggest protocol adjustment needed
+- Keep responses concise and clinical in tone
+- You CAN identify at-risk patients and suggest interventions
+- Never make final medical decisions — support the doctor's judgment
+- Do not discuss patients not assigned to this doctor
+`,
+    weekly_summary: `
+Generate a structured weekly cohort summary.
+Return a clear, formatted report with:
+1. A brief executive summary (2-3 sentences)
+2. Key insights (3 bullet points, data-backed)
+3. Patients requiring immediate attention (by name and why)
+4. One recommended action for this week
+
+Use plain text formatting, not JSON. Be clinical and direct.
+`,
+    triage: `
+Identify the top patients most at risk from the declining list.
+For each patient:
+- State their name and condition
+- Explain specifically WHY they are at risk (adherence %, days since last session)
+- Suggest ONE concrete intervention (e.g. "Send a check-in message", "Reduce difficulty to re-engage")
+
+Be direct. Prioritize worst-adherence patients first.
+`,
+  };
