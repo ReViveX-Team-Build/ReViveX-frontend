@@ -30,3 +30,23 @@ useEffect(() => {
     }
   }).catch(() => setCheckingSkip(false));
 }, [user, authLoading]);
+
+const handleFileChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+  const f = e.target.files?.[0];
+  if (!f) return;
+  setError(null);
+
+  if (!f.type.startsWith("image/")) {
+    setError("Please select an image file (JPG, PNG, WEBP).");
+    return;
+  }
+  if (f.size > 5 * 1024 * 1024) {
+    setError("Image must be smaller than 5 MB.");
+    return;
+  }
+
+  setFile(f);
+  const reader = new FileReader();
+  reader.onload = (ev) => setPreview(ev.target?.result as string);
+  reader.readAsDataURL(f);
+}, []);
