@@ -70,3 +70,20 @@ const handleUpload = useCallback(async () => {
     setUploading(false);
   }
 }, [file, user, router]);
+
+return (
+  <>
+    <style>{PAGE_CSS}</style>
+    <div className="onb-root">
+      <div className="onb-card">
+        <div className="step-bar">
+          <div className="step-dot active" />
+          <div className="step-dot pending" />
+          <div className="step-dot pending" />
+          <span className="step-label">STEP 1 / 3</span>
+        </div>
+        {/* avatar zone, upload button, error box, CTA, skip link */}
+      </div>
+    </div>
+  </>
+);
