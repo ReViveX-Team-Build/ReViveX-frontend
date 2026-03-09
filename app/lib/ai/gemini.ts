@@ -1,12 +1,34 @@
+// lib/ai/gemini.ts
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
+if (!process.env.GEMINI_API_KEY) {
+  throw new Error("GEMINI_API_KEY is not set in .env.local");
+}
 
-export async function askGemini(prompt: string) {
-    const model = genAI.getGenerativeModel({
-        model: "gemini-3-flash-preview"
-    });
+export const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+export const GEMINI_MODEL = "gemini-2.5-flash"; // ✅ upgraded from 1.5-flash-8b
 
-    const result = await model.generateContent(prompt);
-    return result.response.text();
+export async function generateOnce(prompt: string): Promise<string> {
+  const model = genAI.getGenerativeModel({ model: GEMINI_MODEL });
+  const result = await model.generateContent(prompt);
+  return result.response.text();
+}
+
+export async function chatWithHistory(
+  systemPrompt: string,
+  history: { role: "user" | "model"; content: string }[],
+  newMessage: string
+): Promise<string> {
+  const model = genAI.getGenerativeModel({
+    model: GEMINI_MODEL,
+    systemInstruction: systemPrompt,
+  });
+
+  const geminiHistory = history
+    .filter((_, i) => !(i === 0 && history[0].role === "model"))
+    .map((m) => ({ role: m.role, parts: [{ text: m.content }] }));
+
+  const chat = model.startChat({ history: geminiHistory });
+  const result = await chat.sendMessage(newMessage);
+  return result.response.text();
 }
