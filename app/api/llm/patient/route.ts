@@ -73,3 +73,100 @@ export async function POST(req: Request) {
       protocol: TherapyProtocol | null,
       doctorMessages: any[]
     ) {
+
+        const last7 = sessions.slice(0, 7);
+        const last30 = sessions.slice(0, 30);
+      
+        const avg = (nums: (number | undefined)[]): number => {
+          const valid = nums.filter((n): n is number => n !== undefined && !isNaN(n));
+          if (!valid.length) return 0;
+          return Math.round((valid.reduce((a, b) => a + b, 0) / valid.length) * 10) / 10;
+        };
+      
+        const gripValues = last30
+          .map((s) => s.metrics.peakGripForce)
+          .filter((v): v is number => v != null);
+      
+        const gripStart = gripValues.at(-1) ?? 0;
+        const gripCurrent = gripValues.at(0) ?? 0;
+      
+        const gripImprovementPct =
+          gripStart > 0
+            ? Math.round(((gripCurrent - gripStart) / gripStart) * 100)
+            : 0;
+      
+        const rightAvg = avg(bilateral.right.map((s) => s.metrics.peakGripForce));
+        const leftAvg  = avg(bilateral.left.map((s) => s.metrics.peakGripForce));
+      
+        const symmetryRatio =
+          leftAvg > 0 ? Math.round((rightAvg / leftAvg) * 100) : 0;
+      
+        const completedDays = new Set(
+          sessions
+            .filter((s) => s.durationSeconds > 60)
+            .map((s) => s.timestamp.toDate().toDateString())
+        );
+      
+        let streak = 0;
+        const check = new Date();
+      
+        while (completedDays.has(check.toDateString())) {
+          streak++;
+          check.setDate(check.getDate() - 1);
+        }
+      
+        const prescribed = protocol?.sessionsPerWeek ?? 5;
+        const completedThisWeek = last7.filter((s) => s.durationSeconds > 60).length;
+      
+        const adherencePct = Math.round((completedThisWeek / prescribed) * 100);
+      
+        const lastInstruction =
+          doctorMessages.find((m: any) => m.type === "instruction")?.content?.slice(0, 200) ?? null;
+      
+        const lastFeedback =
+          doctorMessages.find((m: any) => m.type === "feedback")?.content?.slice(0, 200) ?? null;
+      
+        return {
+          name: patient?.name ?? "Patient",
+          condition: patient?.condition ?? "Unknown",
+          totalXp: patient?.gamification?.totalXp ?? 0,
+          streak,
+          adherencePct,
+          completedThisWeek,
+          prescribed,
+          avgGrip: avg(last7.map((s) => s.metrics.peakGripForce)),
+          peakGrip: Math.max(0, ...last7.map((s) => s.metrics.peakGripForce ?? 0)),
+          avgReactionMs: avg(last7.map((s) => s.metrics.reactionTimeMs)),
+          avgCognitiveAccuracy: avg(last7.map((s) => s.metrics.cognitiveAccuracyPercent)),
+          avgEnduranceDrop: avg(last7.map((s) => s.metrics.muscleEnduranceDropPercent)),
+          gripStart,
+          gripCurrent,
+          gripImprovementPct,
+          rightHandAvg: rightAvg,
+          leftHandAvg: leftAvg,
+          symmetryRatio,
+          currentGame: protocol?.gameId ?? "unassigned",
+          targetHand: protocol?.targetHand ?? "right",
+          difficulty: protocol?.settings?.difficulty ?? "medium",
+          sessionsPerWeek: prescribed,
+          lastInstruction,
+          lastFeedback,
+        };
+      }
+      
+      function buildPatientPrompt(ctx: ReturnType<typeof buildPatientContext>, mode: string): string {
+      
+        const base = `
+      You are ReViveX, a warm and supportive AI rehabilitation companion for ${ctx.name}.
+      ...
+      `;
+      
+        const modeInstructions: Record<string, string> = {
+          chat: `...`,
+          weekly_analysis: `...`,
+          home_insight: `...`,
+          progress_insight: `...`,
+        };
+      
+        return base + (modeInstructions[mode] ?? modeInstructions.chat);
+      }
