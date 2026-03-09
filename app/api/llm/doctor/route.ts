@@ -35,3 +35,10 @@ export async function POST(req: Request) {
         model: MODEL,
         systemInstruction: systemPrompt,
       });
+
+      const firstUserIdx = history.findIndex((m) => m.role === "user");
+      const geminiHistory = (firstUserIdx > 0 ? history.slice(firstUserIdx) : history)
+        .map((m) => ({
+          role: m.role,
+          parts: [{ text: m.content }],
+        }));
