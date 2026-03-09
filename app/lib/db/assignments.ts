@@ -91,3 +91,24 @@ export async function getAssignmentsForPatient(
   );
   return snap.docs.map((d) => ({ id: d.id, ...d.data() } as Assignment));
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// UPDATE
+// ─────────────────────────────────────────────────────────────────────────────
+
+export async function updateAssignmentStatus(
+  assignmentId: string,
+  status: AssignmentStatus
+): Promise<void> {
+  await updateDoc(doc(db, "assignments", assignmentId), {
+    status,
+    ...(status === "completed" ? { completedDate: Timestamp.now() } : {}),
+  });
+}
+
+export async function updateAssignment(
+  assignmentId: string,
+  updates: Partial<Pick<Assignment, "note" | "targetDuration" | "gameType" | "gameId">>
+): Promise<void> {
+  await updateDoc(doc(db, "assignments", assignmentId), updates);
+}
