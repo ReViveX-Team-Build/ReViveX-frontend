@@ -42,3 +42,21 @@ export async function unlockLevel(uid: string, level: number): Promise<void> {
     });
   }
 }
+
+export interface CohortStats {
+  totalPatients: number;
+  highAdherence: number;
+  mediumAdherence: number;
+  lowAdherence: number;
+  avgAdherencePercent: number;
+  avgGripImprovement: number;
+  missedSessionsTotal: number;
+  devicesOffline: number;
+  decliningPatients: {
+    uid: string;
+    name: string;
+    adherencePercent: number;
+    lastSessionDate: Date | null;
+    condition: string;
+  }[];
+}
