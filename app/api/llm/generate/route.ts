@@ -29,3 +29,10 @@ export async function POST(req: Request) {
       if (!patient) {
         return NextResponse.json({ error: "Patient not found" }, { status: 404 });
       }
+
+      const prompt = buildGeneratePrompt(patient, sessions, type);
+
+      const model = genAI.getGenerativeModel({ model: MODEL });
+      const result = await model.generateContent(prompt);
+      const generated = result.response.text();
+      
