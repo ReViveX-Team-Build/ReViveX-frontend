@@ -19,3 +19,13 @@ export async function POST(req: Request) {
           { status: 400 }
         );
       }
+
+      const [patient, sessions, messages] = await Promise.all([
+        getPatientData(patientUid),
+        getRecentSessions(patientUid, 7),
+        getInboxMessages(patientUid),
+      ]);
+
+      if (!patient) {
+        return NextResponse.json({ error: "Patient not found" }, { status: 404 });
+      }
