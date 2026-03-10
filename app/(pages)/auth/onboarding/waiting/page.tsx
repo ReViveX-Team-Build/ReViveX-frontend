@@ -155,4 +155,18 @@ const PAGE_CSS = `
     text:   "Consistent daily sessions lead to 3× faster recovery outcomes on average.",
   },
 ];
+export default function OnboardingWaiting() {
+  const router = useRouter();
+  const [user, authLoading] = useAuthState(auth);
 
+  const [doctorName,  setDoctorName]  = useState<string>("");
+  const [doctorPhoto, setDoctorPhoto] = useState<string | null>(null);
+  const [accepted,    setAccepted]    = useState(false);
+  const [loading,     setLoading]     = useState(true);
+
+  // Holds the Firestore unsubscribe fn so we can clean up on unmount
+  const unsubRef = useRef<(() => void) | null>(null);
+
+  // Two-letter avatar fallback
+  const initials = (name: string) =>
+    name.split(" ").slice(0, 2).map(n => n[0]).join("").toUpperCase();
