@@ -6,7 +6,7 @@ if (!process.env.GEMINI_API_KEY) {
 }
 
 export const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-export const GEMINI_MODEL = "gemini-2.5-flash"; // ✅ upgraded from 1.5-flash-8b
+export const GEMINI_MODEL = "gemini-2.5-flash";
 
 export async function generateOnce(prompt: string): Promise<string> {
   const model = genAI.getGenerativeModel({ model: GEMINI_MODEL });
