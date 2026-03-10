@@ -262,3 +262,68 @@ useEffect(() => {
               }
             </div>
           </div>
+          {/* Accepted branch */}
+          {accepted ? (
+            <>
+              <div style={{
+                display: "inline-flex", alignItems: "center", gap: 8,
+                background: "rgba(16,185,129,0.10)", border: "1px solid rgba(16,185,129,0.30)",
+                borderRadius: 999, padding: "5px 14px", marginBottom: 14,
+              }}>
+                <CheckCircle2 size={13} color="#10b981" />
+                <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10, fontWeight: 700, color: "#10b981", letterSpacing: "0.14em" }}>
+                  REQUEST ACCEPTED
+                </span>
+              </div>
+              <h2 style={{ fontSize: 22, fontWeight: 800, color: "#0B1E33", marginBottom: 8 }}>
+                You're all set! 🎉
+              </h2>
+              <p style={{ fontSize: 14, color: "#64748b", lineHeight: 1.65 }}>
+                {doctorName || "Your doctor"} has accepted your request. Taking you to your portal…
+              </p>
+            </>
+          ) : (
+            /* Pending branch */
+            <>
+              <div style={{
+                display: "inline-flex", alignItems: "center", gap: 8,
+                background: "rgba(45,212,191,0.10)", border: "1px solid rgba(45,212,191,0.30)",
+                borderRadius: 999, padding: "5px 14px", marginBottom: 14,
+              }}>
+                <Clock size={13} color="#2DD4BF" />
+                <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10, fontWeight: 700, color: "#2DD4BF", letterSpacing: "0.14em" }}>
+                  AWAITING APPROVAL
+                </span>
+              </div>
+              <h2 style={{ fontSize: 22, fontWeight: 800, color: "#0B1E33", marginBottom: 8 }}>
+                Request sent!
+              </h2>
+              <p style={{ fontSize: 14, color: "#64748b", lineHeight: 1.65 }}>
+                Your request is waiting for approval. This page will update automatically — no need to refresh.
+              </p>
+
+              {/* Doctor identity chip — only shown when name is available */}
+              {doctorName && (
+                <div className="doctor-chip">
+                  <div className="doctor-chip-avatar">
+                    {doctorPhoto
+                      ? <img src={doctorPhoto} alt={doctorName} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                      : <span style={{ fontSize: 12, fontWeight: 800, color: "#2DD4BF" }}>{initials(doctorName)}</span>
+                    }
+                  </div>
+                  <div style={{ textAlign: "left" }}>
+                    <div style={{ fontSize: 13.5, fontWeight: 700, color: "#0B1E33" }}>{doctorName}</div>
+                    <div style={{ fontSize: 11.5, color: "#94a3b8" }}>Request pending review</div>
+                  </div>
+                  {/* Amber pulse dot — visual indicator that the request is live */}
+                  <div style={{
+                    width: 8, height: 8, borderRadius: "50%",
+                    background: "#f59e0b",
+                    boxShadow: "0 0 6px rgba(245,158,11,0.60)",
+                    marginLeft: 4,
+                    animation: "breathe 2s ease-in-out infinite",
+                  }} />
+                </div>
+              )}
+            </>
+          )}
