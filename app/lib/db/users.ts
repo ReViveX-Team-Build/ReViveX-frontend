@@ -8,7 +8,7 @@ export async function getUser(uid: string) {
   if (snap.exists()) {
     return { id: snap.id, ...snap.data() };
   }
-  return null;
+  return null; 
 }
 
 export const getPatientsByDoctor = async (doctorId: string): Promise<PatientData[]> => {
@@ -36,7 +36,7 @@ export async function updateProfilePicture(uid: string, url: string) {
   await updateDoc(docRef, { profilePictureUrl: url });
 }
 
-export async function getDoctorsForListing(): Promise<  // ← was `Promise` missing the `<`
+export async function getDoctorsForListing(): Promise<  
   Pick<DoctorData, "uid" | "name" | "specialization" | "profilePictureUrl" | "doctorId">[]
 > {
   const q = query(
