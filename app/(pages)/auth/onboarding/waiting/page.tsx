@@ -198,3 +198,28 @@ useEffect(() => {
       }
 
       setLoading(false);
+      // Listen for status changes in real-time — no page refresh needed
+      const patientDocRef = doc(db, "users", user.uid);
+      const unsub = onSnapshot(patientDocRef, (snap) => {
+        if (!snap.exists()) return;
+        const status = snap.data().connectionStatus as string;
+
+        if (status === "accepted") {
+          setAccepted(true);
+          // Short celebration delay before navigating
+          setTimeout(() => router.push("/patients/home"), 1400);
+        } else if (status === "rejected") {
+          router.push("/auth/onboarding/rejected");
+        }
+      });
+
+      unsubRef.current = unsub;
+
+    }).catch((err) => {
+      console.error("Waiting page load error:", err);
+      setLoading(false);
+    });
+
+    // Unsubscribe from Firestore listener on unmount
+    return () => { unsubRef.current?.(); };
+  }, [user, authLoading]);
