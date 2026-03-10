@@ -223,3 +223,42 @@ useEffect(() => {
     // Unsubscribe from Firestore listener on unmount
     return () => { unsubRef.current?.(); };
   }, [user, authLoading]);
+  if (authLoading || loading) {
+    return (
+      <>
+        <style>{PAGE_CSS}</style>
+        <div className="onb-root">
+          <Loader2
+            size={36}
+            style={{ color: "#2DD4BF", animation: "spin 1s linear infinite" }}
+          />
+        </div>
+      </>
+    );
+  }
+  return (
+    <>
+      <style>{PAGE_CSS}</style>
+      <div className="onb-root">
+        <div className="onb-card">
+
+          {/* Step progress — all three dots visible, last one active */}
+          <div className="step-bar">
+            <div className="step-dot done" />
+            <div className="step-dot done" />
+            <div className="step-dot active" />
+            <span className="step-label">STEP 3 / 3</span>
+          </div>
+
+          {/* Three staggered ripple rings + centre orb */}
+          <div className="pulse-orb-wrap">
+            <div className="pulse-ripple" />
+            <div className="pulse-ripple" />
+            <div className="pulse-ripple" />
+            <div className={`pulse-orb ${accepted ? "success" : ""}`}>
+              {accepted
+                ? <CheckCircle2 size={34} color="#ffffff" />
+                : <Clock        size={34} color="#2DD4BF" />
+              }
+            </div>
+          </div>
