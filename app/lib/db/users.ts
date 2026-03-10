@@ -8,7 +8,7 @@ export async function getUser(uid: string) {
   if (snap.exists()) {
     return { id: snap.id, ...snap.data() };
   }
-  return null; 
+  return null;
 }
 
 export const getPatientsByDoctor = async (doctorId: string): Promise<PatientData[]> => {
@@ -36,7 +36,7 @@ export async function updateProfilePicture(uid: string, url: string) {
   await updateDoc(docRef, { profilePictureUrl: url });
 }
 
-export async function getDoctorsForListing(): Promise<  
+export async function getDoctorsForListing(): Promise<        // ← Promise< not Promise
   Pick<DoctorData, "uid" | "name" | "specialization" | "profilePictureUrl" | "doctorId">[]
 > {
   const q = query(
@@ -51,4 +51,13 @@ export async function getDoctorsForListing(): Promise<
     profilePictureUrl: d.data().profilePictureUrl ?? null,
     doctorId:          d.data().doctorId,
   }));
+}
+
+export async function getDoctorData(uid: string): Promise<DoctorData | null> {
+  const docRef = doc(db, "users", uid);
+  const snap = await getDoc(docRef);
+  if (snap.exists()) {
+    return { uid: snap.id, ...snap.data() } as DoctorData;
+  }
+  return null;
 }
