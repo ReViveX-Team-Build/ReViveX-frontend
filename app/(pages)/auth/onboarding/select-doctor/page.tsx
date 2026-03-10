@@ -237,3 +237,33 @@ const PAGE_CSS = `
       d.doctorId.toLowerCase().includes(q)
     ));
   }, [search, doctors]);
+  // Open confirm modal for the tapped card
+  const handleSelect = useCallback((doctor: DoctorListing) => {
+    setSelected(doctor);
+    setShowModal(true);
+    setError(null);
+  }, []);
+
+  // Write to Firestore then navigate to waiting screen
+  const handleConfirm = useCallback(async () => {
+    if (!selected || !user) return;
+    setSubmitting(true);
+    setError(null);
+    try {
+      await updateDoc(doc(db, "users", user.uid), {
+        assignedDoctorId: selected.uid,
+        connectionStatus: "pending",
+      });
+      await sendConnectionRequest(user.uid, patientName || "A new patient", selected.uid);
+      router.push("/auth/onboarding/waiting");
+    } catch (err: any) {
+      console.error("Connection request failed:", err);
+      setError("Something went wrong. Please try again.");
+    } finally {
+      setSubmitting(false);
+    }
+  }, [selected, user, patientName, router]);
+
+  // Two-letter avatar fallback from display name
+  const initials = (name: string) =>
+    name.split(" ").slice(0, 2).map(n => n[0]).join("").toUpperCase();
