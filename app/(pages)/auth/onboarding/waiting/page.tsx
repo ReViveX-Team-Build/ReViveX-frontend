@@ -1,5 +1,6 @@
 "use client";
 
+
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useAuthState } from "react-firebase-hooks/auth";
@@ -8,6 +9,9 @@ import { doc, onSnapshot } from "firebase/firestore";
 import { getPatientData, getDoctorData } from "@/app/lib/db/users";
 import { Loader2, Clock, Stethoscope, CheckCircle2, BrainCircuit } from "lucide-react";
 
+// ─────────────────────────────────────────────────────────────────────────────
+// STYLES
+// ─────────────────────────────────────────────────────────────────────────────
 const PAGE_CSS = `
   @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap');
 
@@ -39,20 +43,23 @@ const PAGE_CSS = `
     60%  { transform: scale(1.12); }
     100% { transform: scale(1);   opacity: 1; }
   }
-`;
-/* append to PAGE_CSS */
 
   .onb-root {
     min-height: 100vh;
-    display: flex; align-items: center; justify-content: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     padding: 24px 16px;
     background: linear-gradient(135deg, #F0F4F8 0%, #e8eef8 50%, #F0F4F8 100%);
-    position: relative; overflow: hidden;
+    position: relative;
+    overflow: hidden;
   }
   .onb-root::before {
-    content: ''; position: absolute;
+    content: '';
+    position: absolute;
     top: -180px; right: -180px;
-    width: 500px; height: 500px; border-radius: 50%;
+    width: 500px; height: 500px;
+    border-radius: 50%;
     background: radial-gradient(circle, rgba(45,212,191,0.09) 0%, transparent 70%);
     pointer-events: none;
   }
@@ -63,29 +70,38 @@ const PAGE_CSS = `
     border: 1px solid rgba(226,232,240,0.9);
     box-shadow: 0 8px 48px rgba(11,30,51,0.10), 0 2px 8px rgba(11,30,51,0.04);
     padding: 44px 48px;
-    width: 100%; max-width: 480px;
+    width: 100%;
+    max-width: 480px;
     animation: fadeUp 0.52s cubic-bezier(0.22,1,0.36,1) both;
     text-align: center;
-    position: relative; z-index: 1;
+    position: relative;
+    z-index: 1;
   }
 
-  .step-bar { display: flex; align-items: center; gap: 8px; margin-bottom: 36px; }
+  .step-bar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 36px;
+  }
   .step-dot { width: 32px; height: 6px; border-radius: 999px; }
   .step-dot.done    { background: #2DD4BF; }
   .step-dot.active  { background: #2DD4BF; width: 48px; }
   .step-dot.pending { background: rgba(11,30,51,0.12); }
   .step-label { margin-left: auto; font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; color: #94a3b8; letter-spacing: 0.12em; }
-  /* append to PAGE_CSS */
 
   /* Pulse orb */
   .pulse-orb-wrap {
     position: relative;
     width: 120px; height: 120px;
     margin: 0 auto 28px;
-    display: flex; align-items: center; justify-content: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
   }
   .pulse-ripple {
-    position: absolute; inset: 0;
+    position: absolute;
+    inset: 0;
     border-radius: 50%;
     border: 2px solid rgba(45,212,191,0.35);
     animation: ripple 2.2s ease-out infinite;
@@ -93,12 +109,16 @@ const PAGE_CSS = `
   .pulse-ripple:nth-child(2) { animation-delay: 0.7s; }
   .pulse-ripple:nth-child(3) { animation-delay: 1.4s; }
   .pulse-orb {
-    width: 80px; height: 80px; border-radius: 50%;
+    width: 80px; height: 80px;
+    border-radius: 50%;
     background: linear-gradient(135deg, #0B1E33 0%, #1e3a5f 100%);
-    display: flex; align-items: center; justify-content: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     animation: breathe 3s ease-in-out infinite;
     box-shadow: 0 0 0 8px rgba(45,212,191,0.08), 0 8px 32px rgba(11,30,51,0.22);
-    position: relative; z-index: 1;
+    position: relative;
+    z-index: 1;
   }
   .pulse-orb.success {
     background: linear-gradient(135deg, #059669, #10b981);
@@ -108,14 +128,18 @@ const PAGE_CSS = `
 
   /* Doctor chip */
   .doctor-chip {
-    display: inline-flex; align-items: center; gap: 10px;
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
     background: rgba(11,30,51,0.05);
     border: 1px solid rgba(226,232,240,0.9);
-    border-radius: 14px; padding: 10px 18px;
+    border-radius: 14px;
+    padding: 10px 18px;
     margin: 18px auto;
   }
   .doctor-chip-avatar {
-    width: 32px; height: 32px; border-radius: 50%;
+    width: 32px; height: 32px;
+    border-radius: 50%;
     background: linear-gradient(135deg, #0B1E33, #1e3a5f);
     display: flex; align-items: center; justify-content: center;
     overflow: hidden;
@@ -124,61 +148,75 @@ const PAGE_CSS = `
 
   /* Tips */
   .tips-list {
-    text-align: left; margin-top: 28px;
+    text-align: left;
+    margin-top: 28px;
     border-top: 1px solid rgba(226,232,240,0.9);
     padding-top: 24px;
-    display: flex; flex-direction: column; gap: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
   }
   .tip-row {
-    display: flex; align-items: flex-start; gap: 12px;
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
     animation: tipSlide 0.35s ease both;
   }
   .tip-icon {
-    width: 32px; height: 32px; border-radius: 10px;
+    width: 32px; height: 32px;
+    border-radius: 10px;
     display: flex; align-items: center; justify-content: center;
     flex-shrink: 0;
   }
-  const TIPS = [
+`;
+
+// ─────────────────────────────────────────────────────────────────────────────
+// TIPS shown while waiting
+// ─────────────────────────────────────────────────────────────────────────────
+const TIPS = [
   {
-    icon:   <BrainCircuit size={16} color="#8b5cf6" />,
+    icon: <BrainCircuit size={16} color="#8b5cf6" />,
     iconBg: "rgba(139,92,246,0.10)",
-    text:   "ReViveX uses AI to personalize your therapy based on real sensor data from every session.",
+    text: "ReViveX uses AI to personalize your therapy based on real sensor data from every session.",
   },
   {
-    icon:   <Stethoscope size={16} color="#2DD4BF" />,
+    icon: <Stethoscope size={16} color="#2DD4BF" />,
     iconBg: "rgba(45,212,191,0.10)",
-    text:   "Your doctor will assign a custom therapy protocol once they accept your request.",
+    text: "Your doctor will assign a custom therapy protocol once they accept your request.",
   },
   {
-    icon:   <CheckCircle2 size={16} color="#f59e0b" />,
+    icon: <CheckCircle2 size={16} color="#f59e0b" />,
     iconBg: "rgba(245,158,11,0.10)",
-    text:   "Consistent daily sessions lead to 3× faster recovery outcomes on average.",
+    text: "Consistent daily sessions lead to 3× faster recovery outcomes on average.",
   },
 ];
+
+// ─────────────────────────────────────────────────────────────────────────────
+// COMPONENT
+// ─────────────────────────────────────────────────────────────────────────────
 export default function OnboardingWaiting() {
   const router = useRouter();
   const [user, authLoading] = useAuthState(auth);
 
-  const [doctorName,  setDoctorName]  = useState<string>("");
-  const [doctorPhoto, setDoctorPhoto] = useState<string | null>(null);
-  const [accepted,    setAccepted]    = useState(false);
-  const [loading,     setLoading]     = useState(true);
-
-  // Holds the Firestore unsubscribe fn so we can clean up on unmount
+  const [doctorName,   setDoctorName]   = useState<string>("");
+  const [doctorPhoto,  setDoctorPhoto]  = useState<string | null>(null);
+  const [accepted,     setAccepted]     = useState(false);
+  const [loading,      setLoading]      = useState(true);
   const unsubRef = useRef<(() => void) | null>(null);
 
-  // Two-letter avatar fallback
+  // Initials helper
   const initials = (name: string) =>
     name.split(" ").slice(0, 2).map(n => n[0]).join("").toUpperCase();
 
-useEffect(() => {
+  useEffect(() => {
     if (authLoading) return;
     if (!user) { router.replace("/auth/patient/signin"); return; }
 
+    // 1. Load patient data to get assignedDoctorId + current status
     getPatientData(user.uid).then(async (patient) => {
       if (!patient) { router.replace("/auth/patient/signin"); return; }
 
-      // Redirect immediately if status is already resolved
+      // Route guard — check existing status before subscribing
       if (patient.connectionStatus === "accepted") {
         router.replace("/patients/home"); return;
       }
@@ -186,11 +224,11 @@ useEffect(() => {
         router.replace("/auth/onboarding/rejected"); return;
       }
       if (!patient.assignedDoctorId) {
-        // No doctor chosen yet — send back to pick one
+        // No doctor selected yet — push back to select-doctor
         router.replace("/auth/onboarding/select-doctor"); return;
       }
 
-      // Fetch the assigned doctor's display details
+      // 2. Fetch doctor details for the waiting card
       const doctor = await getDoctorData(patient.assignedDoctorId);
       if (doctor) {
         setDoctorName(doctor.name);
@@ -198,7 +236,8 @@ useEffect(() => {
       }
 
       setLoading(false);
-      // Listen for status changes in real-time — no page refresh needed
+
+      // 3. Real-time listener on patient's own user doc
       const patientDocRef = doc(db, "users", user.uid);
       const unsub = onSnapshot(patientDocRef, (snap) => {
         if (!snap.exists()) return;
@@ -206,7 +245,7 @@ useEffect(() => {
 
         if (status === "accepted") {
           setAccepted(true);
-          // Short celebration delay before navigating
+          // Brief celebration delay then redirect
           setTimeout(() => router.push("/patients/home"), 1400);
         } else if (status === "rejected") {
           router.push("/auth/onboarding/rejected");
@@ -214,35 +253,34 @@ useEffect(() => {
       });
 
       unsubRef.current = unsub;
-
     }).catch((err) => {
       console.error("Waiting page load error:", err);
       setLoading(false);
     });
 
-    // Unsubscribe from Firestore listener on unmount
     return () => { unsubRef.current?.(); };
   }, [user, authLoading]);
+
+  // ─── Loading ────────────────────────────────────────────────────────────────
   if (authLoading || loading) {
     return (
       <>
         <style>{PAGE_CSS}</style>
         <div className="onb-root">
-          <Loader2
-            size={36}
-            style={{ color: "#2DD4BF", animation: "spin 1s linear infinite" }}
-          />
+          <Loader2 size={36} style={{ color: "#2DD4BF", animation: "spin 1s linear infinite" }} />
         </div>
       </>
     );
   }
+
+  // ─── Main UI ────────────────────────────────────────────────────────────────
   return (
     <>
       <style>{PAGE_CSS}</style>
       <div className="onb-root">
         <div className="onb-card">
 
-          {/* Step progress — all three dots visible, last one active */}
+          {/* Step bar */}
           <div className="step-bar">
             <div className="step-dot done" />
             <div className="step-dot done" />
@@ -250,19 +288,21 @@ useEffect(() => {
             <span className="step-label">STEP 3 / 3</span>
           </div>
 
-          {/* Three staggered ripple rings + centre orb */}
+          {/* Pulsing orb */}
           <div className="pulse-orb-wrap">
             <div className="pulse-ripple" />
             <div className="pulse-ripple" />
             <div className="pulse-ripple" />
             <div className={`pulse-orb ${accepted ? "success" : ""}`}>
-              {accepted
-                ? <CheckCircle2 size={34} color="#ffffff" />
-                : <Clock        size={34} color="#2DD4BF" />
-              }
+              {accepted ? (
+                <CheckCircle2 size={34} color="#ffffff" />
+              ) : (
+                <Clock size={34} color="#2DD4BF" />
+              )}
             </div>
           </div>
-          {/* Accepted branch */}
+
+          {/* Status text */}
           {accepted ? (
             <>
               <div style={{
@@ -283,7 +323,6 @@ useEffect(() => {
               </p>
             </>
           ) : (
-            /* Pending branch */
             <>
               <div style={{
                 display: "inline-flex", alignItems: "center", gap: 8,
@@ -302,20 +341,23 @@ useEffect(() => {
                 Your request is waiting for approval. This page will update automatically — no need to refresh.
               </p>
 
-              {/* Doctor identity chip — only shown when name is available */}
+              {/* Doctor chip */}
               {doctorName && (
                 <div className="doctor-chip">
                   <div className="doctor-chip-avatar">
-                    {doctorPhoto
-                      ? <img src={doctorPhoto} alt={doctorName} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-                      : <span style={{ fontSize: 12, fontWeight: 800, color: "#2DD4BF" }}>{initials(doctorName)}</span>
-                    }
+                    {doctorPhoto ? (
+                      <img src={doctorPhoto} alt={doctorName}
+                        style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                    ) : (
+                      <span style={{ fontSize: 12, fontWeight: 800, color: "#2DD4BF" }}>
+                        {initials(doctorName)}
+                      </span>
+                    )}
                   </div>
                   <div style={{ textAlign: "left" }}>
                     <div style={{ fontSize: 13.5, fontWeight: 700, color: "#0B1E33" }}>{doctorName}</div>
                     <div style={{ fontSize: 11.5, color: "#94a3b8" }}>Request pending review</div>
                   </div>
-                  {/* Amber pulse dot — visual indicator that the request is live */}
                   <div style={{
                     width: 8, height: 8, borderRadius: "50%",
                     background: "#f59e0b",
@@ -327,3 +369,45 @@ useEffect(() => {
               )}
             </>
           )}
+
+          {/* Tips */}
+          {!accepted && (
+            <div className="tips-list">
+              <p style={{ fontSize: 11.5, fontWeight: 700, color: "#94a3b8", letterSpacing: "0.10em", textTransform: "uppercase", marginBottom: 4, fontFamily: "'JetBrains Mono', monospace" }}>
+                While you wait
+              </p>
+              {TIPS.map((tip, i) => (
+                <div key={i} className="tip-row" style={{ animationDelay: `${0.2 + i * 0.10}s` }}>
+                  <div className="tip-icon" style={{ background: tip.iconBg }}>
+                    {tip.icon}
+                  </div>
+                  <p style={{ fontSize: 13, color: "#64748b", lineHeight: 1.6 }}>
+                    {tip.text}
+                  </p>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Change doctor link */}
+          {!accepted && (
+            <button
+              onClick={() => router.push("/auth/onboarding/select-doctor")}
+              style={{
+                display: "block", margin: "20px auto 0",
+                background: "none", border: "none",
+                fontSize: 13, color: "#94a3b8",
+                cursor: "pointer", fontFamily: "'Plus Jakarta Sans', sans-serif",
+                transition: "color 0.2s",
+              }}
+              onMouseEnter={e => (e.currentTarget.style.color = "#64748b")}
+              onMouseLeave={e => (e.currentTarget.style.color = "#94a3b8")}
+            >
+              Choose a different doctor
+            </button>
+          )}
+        </div>
+      </div>
+    </>
+  );
+}
