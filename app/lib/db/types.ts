@@ -12,6 +12,7 @@ export interface UserProfile {
 export interface PatientData extends UserProfile {
   condition: "Stroke" | "Parkinson's" | "Other";
   assignedDoctorId: string;
+  connectionStatus: "pending" | "accepted" | "rejected"; // ← ADDED
   gamification: {
     totalXp: number;
     currentStreak: number;
@@ -24,13 +25,20 @@ export interface PatientData extends UserProfile {
   };
 }
 
+// ← ADDED — needed by the select-doctor onboarding page
+export interface DoctorData extends UserProfile {
+  doctorId: string;
+  specialization: string;
+  profilePictureUrl?: string;
+}
+
 // --- THERAPY PROTOCOLS ---
 export interface TherapyProtocol {
   id?: string;
   doctorId: string;
   patientId: string;
   gameId: "synapse_racer" | "stability_game";
-  level: number; // 1-5
+  level: number;
   targetHand: "left" | "right" | "both";
   hardwareFocus: "mpx_pressure" | "mpu_motion";
   assignedDate: Timestamp;
@@ -41,15 +49,11 @@ export interface TherapyProtocol {
   };
 }
 
-
 export interface SessionMetrics {
-  // MPX50DP (Pressure) Metrics - Synapse Racer
-  reactionTimeMs?: number; 
+  reactionTimeMs?: number;
   peakGripForce?: number;
-  muscleEnduranceDropPercent?: number; 
+  muscleEnduranceDropPercent?: number;
   cognitiveAccuracyPercent?: number;
-
-  // MPU6050 (Motion) Metrics - Stability Game
   tremorAmplitude?: number;
   driftDistance?: number;
   movementSmoothness?: number;
@@ -57,22 +61,22 @@ export interface SessionMetrics {
 
 export interface GameSession {
   id?: string;
-  userId: string;       
-  protocolId: string; 
+  userId: string;
+  protocolId: string;
   gameId: string;
-  timestamp: Timestamp; 
+  timestamp: Timestamp;
   durationSeconds: number;
   targetHand: "left" | "right";
-  metrics: SessionMetrics; 
-  aiSummary?: string; 
+  metrics: SessionMetrics;
+  aiSummary?: string;
 }
 
 // --- COMMUNICATIONS (Chat & Alerts) ---
 export interface Communication {
   id?: string;
-  senderId: string; 
+  senderId: string;
   receiverId: string;
-  type: "instruction" | "feedback" | "direct_message" | "ai_insight";
+  type: "instruction" | "feedback" | "direct_message" | "ai_insight" | "connection_request"; // ← ADDED connection_request
   content: string;
   timestamp: Timestamp;
   isRead: boolean;
