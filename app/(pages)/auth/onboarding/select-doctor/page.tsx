@@ -228,3 +228,12 @@ const PAGE_CSS = `
       setError("Could not load doctor list. Please try again.");
     }).finally(() => setLoading(false));
   }, [user, authLoading]);
+  useEffect(() => {
+    if (!search.trim()) { setFiltered(doctors); return; }
+    const q = search.toLowerCase();
+    setFiltered(doctors.filter(d =>
+      d.name.toLowerCase().includes(q) ||
+      d.specialization.toLowerCase().includes(q) ||
+      d.doctorId.toLowerCase().includes(q)
+    ));
+  }, [search, doctors]);
