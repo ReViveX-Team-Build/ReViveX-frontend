@@ -1,165 +1,130 @@
-'use client';
+"use client";
 
-import { useState } from "react";
-
-type Session = {
-  id: number;
-  date: string;
-  time: string;
-  type: string;
-  status: "Upcoming" | "Completed" | "Missed";
-};
-
-export default function PatientSchedulePage() {
-  const [sessions] = useState<Session[]>([
+export default function SchedulePage() {
+  const sessions = [
     {
-      id: 1,
-      date: "2026-03-05",
-      time: "09:00 AM",
-      type: "Grip Strength Training",
-      status: "Upcoming",
-    },
-    {
-      id: 2,
-      date: "2026-03-03",
+      date: "Sunday, Nov 17, 2025",
       time: "10:30 AM",
-      type: "Cognitive Memory Exercise",
-      status: "Completed",
+      hand: "Right Hand",
+      status: "upcoming",
     },
     {
-      id: 3,
-      date: "2026-02-28",
-      time: "08:45 AM",
-      type: "Grip Strength Training",
-      status: "Missed",
+      date: "Monday, Nov 18, 2025",
+      time: "10:30 AM",
+      hand: "Right Hand",
+      status: "upcoming",
     },
-  ]);
+    {
+      date: "Tuesday, Nov 19, 2025",
+      time: "10:30 AM",
+      hand: "Right Hand",
+      status: "upcoming",
+    },
+    {
+      date: "Friday, Nov 15, 2025",
+      time: "10:30 AM",
+      hand: "Right Hand",
+      status: "completed",
+    },
+    {
+      date: "Monday, Nov 11, 2025",
+      time: "10:30 AM",
+      hand: "Right Hand",
+      status: "missed",
+    },
+  ];
 
-  const upcomingSessions = sessions.filter((s) => s.status === "Upcoming");
-  const pastSessions = sessions.filter((s) => s.status !== "Upcoming");
+  const upcomingSessions = sessions.filter(
+    (s) => s.status === "upcoming"
+  );
+
+  const pastSessions = sessions.filter(
+    (s) => s.status !== "upcoming"
+  );
 
   return (
-    <div className="p-8 max-w-6xl">
-
-      <header className="mb-8">
-        <h1 className="text-2xl font-bold text-[#0B1E33]">
+    <div className="p-10 max-w-4xl mx-auto space-y-8">
+      {/* Header */}
+      <div>
+        <h1 className="text-2xl font-semibold text-slate-800">
           My Schedule
         </h1>
-        <p className="text-gray-500 mt-1">
-          View upcoming sessions and track your therapy schedule
+        <p className="text-slate-500 mt-1">
+          View your upcoming and past therapy sessions
         </p>
-      </header>
+      </div>
 
-      <div className="space-y-8">
+      {/* Upcoming Sessions */}
+      <div className="bg-white rounded-xl shadow p-6">
+        <h2 className="font-semibold text-slate-700 mb-4">
+          Upcoming Sessions
+        </h2>
 
-        {/* Next Session */}
-        <section className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
-          <h2 className="font-bold text-[#0B1E33] mb-4">
-            Next Session
-          </h2>
-
-          {upcomingSessions.length > 0 ? (
-            <div className="flex justify-between items-center border border-gray-200 rounded-xl p-4">
+        <div className="space-y-4">
+          {upcomingSessions.map((session, index) => (
+            <div
+              key={index}
+              className="flex justify-between items-center border rounded-lg p-4 bg-teal-50"
+            >
               <div>
-                <p className="font-semibold text-gray-800">
-                  {upcomingSessions[0].type}
+                <p className="font-medium text-slate-800">
+                  {session.date}
                 </p>
-                <p className="text-sm text-gray-500">
-                  {upcomingSessions[0].date} at {upcomingSessions[0].time}
+                <p className="text-sm text-slate-500">
+                  ⏰ {session.time} • ✋ {session.hand}
                 </p>
               </div>
 
-              <button className="bg-teal-600 hover:bg-teal-500 text-white px-5 py-2 rounded-xl font-semibold transition">
-                Start Session
-              </button>
+              <span className="text-sm bg-teal-400 text-white px-3 py-1 rounded-full">
+                Scheduled
+              </span>
             </div>
-          ) : (
-            <p className="text-gray-500 text-sm">
-              No upcoming sessions scheduled.
-            </p>
-          )}
-        </section>
+          ))}
+        </div>
+      </div>
 
-        {/* Upcoming Sessions */}
-        <section className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
-          <h2 className="font-bold text-[#0B1E33] mb-4">
-            Upcoming Sessions
-          </h2>
+      {/* Past Sessions */}
+      <div className="bg-white rounded-xl shadow p-6">
+        <h2 className="font-semibold text-slate-700 mb-4">
+          Past Sessions
+        </h2>
 
-          <div className="space-y-4">
-            {upcomingSessions.map((session) => (
-              <SessionCard key={session.id} session={session} />
-            ))}
+        <div className="space-y-4">
+          {pastSessions.map((session, index) => (
+            <div
+              key={index}
+              className="flex justify-between items-center border rounded-lg p-4 bg-slate-50"
+            >
+              <div className="flex items-start gap-3">
+                <span>
+                  {session.status === "completed" ? "✅" : "⭕"}
+                </span>
+                <div>
+                  <p className="font-medium text-slate-800">
+                    {session.date}
+                  </p>
+                  <p className="text-sm text-slate-500">
+                    ⏰ {session.time} • ✋ {session.hand}
+                  </p>
+                </div>
+              </div>
 
-            {upcomingSessions.length === 0 && (
-              <p className="text-sm text-gray-500">
-                No upcoming sessions.
-              </p>
-            )}
-          </div>
-        </section>
-
-        {/* Session History */}
-        <section className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
-          <h2 className="font-bold text-[#0B1E33] mb-4">
-            Session History
-          </h2>
-
-          <div className="space-y-4">
-            {pastSessions.map((session) => (
-              <SessionCard key={session.id} session={session} />
-            ))}
-
-            {pastSessions.length === 0 && (
-              <p className="text-sm text-gray-500">
-                No session history available.
-              </p>
-            )}
-          </div>
-        </section>
-
-        {/* Reminders */}
-        <section className="bg-[#F7F9FC] rounded-2xl p-6 border border-gray-200">
-          <h2 className="font-bold text-[#0B1E33] mb-4">
-            Reminders
-          </h2>
-
-          <p className="text-sm text-gray-600 mb-4">
-            Make sure notifications are enabled so you never miss a session.
-          </p>
-
-          <button className="px-5 py-2 rounded-xl border border-gray-300 hover:bg-gray-100 transition">
-            Manage Reminder Settings
-          </button>
-        </section>
-
+              <span
+                className={`text-xs px-3 py-1 rounded-full ${
+                  session.status === "completed"
+                    ? "bg-green-500 text-white"
+                    : "bg-gray-300 text-gray-700"
+                }`}
+              >
+                {session.status === "completed"
+                  ? "Completed"
+                  : "Missed"}
+              </span>
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   );
 }
 
-function SessionCard({ session }: { session: Session }) {
-  const statusColor =
-    session.status === "Completed"
-      ? "bg-green-100 text-green-600"
-      : session.status === "Missed"
-      ? "bg-red-100 text-red-600"
-      : "bg-yellow-100 text-yellow-600";
-
-  return (
-    <div className="flex justify-between items-center border border-gray-200 rounded-xl p-4">
-      <div>
-        <p className="font-semibold text-gray-800">
-          {session.type}
-        </p>
-        <p className="text-sm text-gray-500">
-          {session.date} at {session.time}
-        </p>
-      </div>
-
-      <span className={`px-3 py-1 text-xs rounded-full ${statusColor}`}>
-        {session.status}
-      </span>
-    </div>
-  );
-}

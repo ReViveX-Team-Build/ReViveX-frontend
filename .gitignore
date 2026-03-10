@@ -20,6 +20,10 @@
 # production
 /build
 
+#env files
+.env.local
+.env
+
 # misc
 .DS_Store
 *.pem
@@ -43,3 +47,7 @@ next-env.d.ts
 
 /.idea
 /.vscode
+
+# local env files
+.env*.local
+.env
