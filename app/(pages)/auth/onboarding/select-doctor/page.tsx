@@ -147,3 +147,43 @@ const PAGE_CSS = `
   .doctor-card.selected .select-badge { background: #2DD4BF; border-color: #2DD4BF; }
 
   .empty-state { text-align: center; padding: 48px 24px; color: #94a3b8; }
+
+  /* append to PAGE_CSS */
+
+  .modal-backdrop {
+    position: fixed; inset: 0;
+    background: rgba(11,30,51,0.40);
+    backdrop-filter: blur(6px);
+    z-index: 200;
+  }
+  .modal-card {
+    position: fixed; top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    background: #ffffff;
+    border-radius: 22px;
+    border: 1px solid rgba(226,232,240,0.9);
+    box-shadow: 0 24px 80px rgba(11,30,51,0.16);
+    padding: 36px 40px;
+    width: 90%; max-width: 400px;
+    z-index: 201;
+    animation: modalIn 0.32s cubic-bezier(0.22,1,0.36,1) both;
+  }
+
+  .cta-btn {
+    width: 100%; display: flex; align-items: center; justify-content: center; gap: 10px;
+    background: #0B1E33; color: #fff;
+    border: none; border-radius: 12px; padding: 14px 24px;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 14.5px; font-weight: 700;
+    cursor: pointer; position: relative; overflow: hidden;
+    transition: transform 0.15s, box-shadow 0.2s;
+  }
+  .cta-btn:hover:not(:disabled)      { transform: translateY(-1px); box-shadow: 0 8px 24px rgba(11,30,51,0.22); }
+  .cta-btn:disabled                  { opacity: 0.48; cursor: not-allowed; }
+  .cta-btn .shimmer                  { position: absolute; top: 0; left: 0; width: 40%; height: 100%; background: rgba(255,255,255,0.12); animation: shimmer 2.2s ease-in-out infinite; pointer-events: none; }
+  .cta-btn.teal                      { background: #2DD4BF; color: #061422; box-shadow: 0 4px 20px rgba(45,212,191,0.30); }
+  .cta-btn.teal:hover:not(:disabled) { box-shadow: 0 8px 28px rgba(45,212,191,0.45); }
+  .cta-btn.ghost                     { background: transparent; color: #64748b; border: 1.5px solid rgba(226,232,240,0.9); box-shadow: none; }
+  .cta-btn.ghost:hover               { background: #F8FAFC; color: #0B1E33; }
+
+  
