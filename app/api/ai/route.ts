@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { generateOnce } from "../../lib/ai/gemini";
+import { askGemini  } from "../../lib/ai/gemini";
 import { db } from "../../lib/firebase";
 import { collection, getDocs } from "firebase/firestore";
 

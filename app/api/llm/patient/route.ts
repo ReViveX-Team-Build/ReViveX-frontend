@@ -1,11 +1,3 @@
-<<<<<<< HEAD
-import { NextResponse } from "next/server";
-
-// Placeholder until implementation is added
-export async function POST() {
-  return NextResponse.json({ message: "Not implemented" }, { status: 501 });
-}
-=======
 // app/api/llm/patient/route.ts
 import { NextResponse } from "next/server";
 import { GoogleGenerativeAI } from "@google/generative-ai";
@@ -249,4 +241,3 @@ Return ONLY this JSON (no markdown fences, no preamble):
 
   return base + (modeInstructions[mode] ?? modeInstructions.chat);
 }
->>>>>>> isuri-feature-branch

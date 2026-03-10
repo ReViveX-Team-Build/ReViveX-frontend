@@ -1,11 +1,3 @@
-<<<<<<< HEAD
-import { NextResponse } from "next/server";
-
-// Placeholder until implementation is added
-export async function POST() {
-  return NextResponse.json({ message: "Not implemented" }, { status: 501 });
-}
-=======
 // app/api/llm/generate/route.ts
 // Doctor's premium "AI Generate" button — creates personalised feedback or
 // instruction for a specific patient, which the doctor can review then send.
@@ -120,4 +112,3 @@ Requirements:
 - Start with the action/change, not pleasantries
 `;
 }
->>>>>>> isuri-feature-branch

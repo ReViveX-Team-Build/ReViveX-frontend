@@ -1,11 +1,3 @@
-<<<<<<< HEAD
-import { NextResponse } from "next/server";
-
-// Placeholder until implementation is added
-export async function POST() {
-  return NextResponse.json({ message: "Not implemented" }, { status: 501 });
-}
-=======
 // app/api/llm/doctor/route.ts
 import { NextResponse } from "next/server";
 import { GoogleGenerativeAI } from "@google/generative-ai";
@@ -149,4 +141,3 @@ Be direct. Prioritize worst-adherence patients first.
 
   return base + (modeInstructions[mode] ?? modeInstructions.chat);
 }
->>>>>>> isuri-feature-branch
