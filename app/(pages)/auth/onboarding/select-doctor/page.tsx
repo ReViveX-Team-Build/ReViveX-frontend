@@ -202,4 +202,29 @@ const PAGE_CSS = `
   const [showModal,  setShowModal]  = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error,      setError]      = useState<string | null>(null);
-  
+  useEffect(() => {
+    if (authLoading) return;
+    if (!user) { router.replace("/auth/patient/signin"); return; }
+
+    Promise.all([
+      getDoctorsForListing(),
+      getPatientData(user.uid),
+    ]).then(([docs, patientData]) => {
+      // Already accepted → go straight to app
+      if (patientData?.connectionStatus === "accepted") {
+        router.replace("/patients/home");
+        return;
+      }
+      // Request already sent → wait for doctor to accept
+      if (patientData?.connectionStatus === "pending") {
+        router.replace("/auth/onboarding/waiting");
+        return;
+      }
+
+      setPatientName(patientData?.name ?? "");
+      setDoctors(docs);
+      setFiltered(docs);
+    }).catch(() => {
+      setError("Could not load doctor list. Please try again.");
+    }).finally(() => setLoading(false));
+  }, [user, authLoading]);
