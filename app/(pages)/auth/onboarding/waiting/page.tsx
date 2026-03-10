@@ -170,3 +170,31 @@ export default function OnboardingWaiting() {
   // Two-letter avatar fallback
   const initials = (name: string) =>
     name.split(" ").slice(0, 2).map(n => n[0]).join("").toUpperCase();
+
+useEffect(() => {
+    if (authLoading) return;
+    if (!user) { router.replace("/auth/patient/signin"); return; }
+
+    getPatientData(user.uid).then(async (patient) => {
+      if (!patient) { router.replace("/auth/patient/signin"); return; }
+
+      // Redirect immediately if status is already resolved
+      if (patient.connectionStatus === "accepted") {
+        router.replace("/patients/home"); return;
+      }
+      if (patient.connectionStatus === "rejected") {
+        router.replace("/auth/onboarding/rejected"); return;
+      }
+      if (!patient.assignedDoctorId) {
+        // No doctor chosen yet — send back to pick one
+        router.replace("/auth/onboarding/select-doctor"); return;
+      }
+
+      // Fetch the assigned doctor's display details
+      const doctor = await getDoctorData(patient.assignedDoctorId);
+      if (doctor) {
+        setDoctorName(doctor.name);
+        setDoctorPhoto(doctor.profilePictureUrl ?? null);
+      }
+
+      setLoading(false);
