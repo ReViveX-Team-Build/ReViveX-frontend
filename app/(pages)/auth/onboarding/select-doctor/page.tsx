@@ -186,4 +186,20 @@ const PAGE_CSS = `
   .cta-btn.ghost                     { background: transparent; color: #64748b; border: 1.5px solid rgba(226,232,240,0.9); box-shadow: none; }
   .cta-btn.ghost:hover               { background: #F8FAFC; color: #0B1E33; }
 
+  export default function OnboardingSelectDoctor() {
+  const router = useRouter();
+  const [user, authLoading] = useAuthState(auth);
+
+  // Data
+  const [doctors,     setDoctors]     = useState<DoctorListing[]>([]);
+  const [filtered,    setFiltered]    = useState<DoctorListing[]>([]);
+  const [patientName, setPatientName] = useState("");
+
+  // UI
+  const [loading,    setLoading]    = useState(true);
+  const [search,     setSearch]     = useState("");
+  const [selected,   setSelected]   = useState<DoctorListing | null>(null);
+  const [showModal,  setShowModal]  = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [error,      setError]      = useState<string | null>(null);
   
