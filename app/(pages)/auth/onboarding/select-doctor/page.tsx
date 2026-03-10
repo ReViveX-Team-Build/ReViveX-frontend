@@ -25,3 +25,8 @@ import {
   Stethoscope, Search, UserCheck,
   Loader2, ChevronRight, X, CheckCircle2,
 } from "lucide-react";
+// Narrow Pick — only the fields the listing view actually needs
+type DoctorListing = Pick
+  DoctorData,
+  "uid" | "name" | "specialization" | "profilePictureUrl" | "doctorId"
+>;
