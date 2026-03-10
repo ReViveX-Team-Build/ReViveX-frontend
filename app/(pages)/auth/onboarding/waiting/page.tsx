@@ -75,5 +75,68 @@ const PAGE_CSS = `
   .step-dot.active  { background: #2DD4BF; width: 48px; }
   .step-dot.pending { background: rgba(11,30,51,0.12); }
   .step-label { margin-left: auto; font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; color: #94a3b8; letter-spacing: 0.12em; }
+  /* append to PAGE_CSS */
+
+  /* Pulse orb */
+  .pulse-orb-wrap {
+    position: relative;
+    width: 120px; height: 120px;
+    margin: 0 auto 28px;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .pulse-ripple {
+    position: absolute; inset: 0;
+    border-radius: 50%;
+    border: 2px solid rgba(45,212,191,0.35);
+    animation: ripple 2.2s ease-out infinite;
+  }
+  .pulse-ripple:nth-child(2) { animation-delay: 0.7s; }
+  .pulse-ripple:nth-child(3) { animation-delay: 1.4s; }
+  .pulse-orb {
+    width: 80px; height: 80px; border-radius: 50%;
+    background: linear-gradient(135deg, #0B1E33 0%, #1e3a5f 100%);
+    display: flex; align-items: center; justify-content: center;
+    animation: breathe 3s ease-in-out infinite;
+    box-shadow: 0 0 0 8px rgba(45,212,191,0.08), 0 8px 32px rgba(11,30,51,0.22);
+    position: relative; z-index: 1;
+  }
+  .pulse-orb.success {
+    background: linear-gradient(135deg, #059669, #10b981);
+    animation: successBurst 0.5s ease both;
+    box-shadow: 0 0 0 12px rgba(16,185,129,0.12), 0 8px 32px rgba(16,185,129,0.30);
+  }
+
+  /* Doctor chip */
+  .doctor-chip {
+    display: inline-flex; align-items: center; gap: 10px;
+    background: rgba(11,30,51,0.05);
+    border: 1px solid rgba(226,232,240,0.9);
+    border-radius: 14px; padding: 10px 18px;
+    margin: 18px auto;
+  }
+  .doctor-chip-avatar {
+    width: 32px; height: 32px; border-radius: 50%;
+    background: linear-gradient(135deg, #0B1E33, #1e3a5f);
+    display: flex; align-items: center; justify-content: center;
+    overflow: hidden;
+    border: 1.5px solid rgba(45,212,191,0.25);
+  }
+
+  /* Tips */
+  .tips-list {
+    text-align: left; margin-top: 28px;
+    border-top: 1px solid rgba(226,232,240,0.9);
+    padding-top: 24px;
+    display: flex; flex-direction: column; gap: 12px;
+  }
+  .tip-row {
+    display: flex; align-items: flex-start; gap: 12px;
+    animation: tipSlide 0.35s ease both;
+  }
+  .tip-icon {
+    width: 32px; height: 32px; border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
   
 
