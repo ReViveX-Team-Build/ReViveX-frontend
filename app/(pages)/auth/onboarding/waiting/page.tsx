@@ -138,5 +138,21 @@ const PAGE_CSS = `
     display: flex; align-items: center; justify-content: center;
     flex-shrink: 0;
   }
-  
+  const TIPS = [
+  {
+    icon:   <BrainCircuit size={16} color="#8b5cf6" />,
+    iconBg: "rgba(139,92,246,0.10)",
+    text:   "ReViveX uses AI to personalize your therapy based on real sensor data from every session.",
+  },
+  {
+    icon:   <Stethoscope size={16} color="#2DD4BF" />,
+    iconBg: "rgba(45,212,191,0.10)",
+    text:   "Your doctor will assign a custom therapy protocol once they accept your request.",
+  },
+  {
+    icon:   <CheckCircle2 size={16} color="#f59e0b" />,
+    iconBg: "rgba(245,158,11,0.10)",
+    text:   "Consistent daily sessions lead to 3× faster recovery outcomes on average.",
+  },
+];
 
