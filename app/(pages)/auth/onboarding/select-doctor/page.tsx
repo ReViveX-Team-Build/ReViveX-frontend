@@ -58,3 +58,51 @@ const PAGE_CSS = `
     to   { opacity: 1; transform: translateY(0); }
   }
 `;
+/* append to PAGE_CSS */
+
+  .onb-root {
+    min-height: 100vh;
+    background: linear-gradient(135deg, #F0F4F8 0%, #e8eef8 50%, #F0F4F8 100%);
+    padding: 32px 16px 48px;
+    position: relative;
+    overflow: hidden;
+  }
+  .onb-root::before {
+    content: ''; position: absolute;
+    top: -160px; right: -160px;
+    width: 460px; height: 460px; border-radius: 50%;
+    background: radial-gradient(circle, rgba(45,212,191,0.09) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .onb-root::after {
+    content: ''; position: absolute;
+    bottom: -100px; left: -100px;
+    width: 360px; height: 360px; border-radius: 50%;
+    background: radial-gradient(circle, rgba(139,92,246,0.07) 0%, transparent 70%);
+    pointer-events: none;
+  }
+
+  .onb-header { max-width: 640px; margin: 0 auto 28px; animation: fadeUp 0.48s cubic-bezier(0.22,1,0.36,1) both; }
+
+  .step-bar { display: flex; align-items: center; gap: 8px; margin-bottom: 24px; }
+  .step-dot { width: 32px; height: 6px; border-radius: 999px; transition: background 0.3s; }
+  .step-dot.done    { background: #2DD4BF; }
+  .step-dot.active  { background: #2DD4BF; width: 48px; }
+  .step-dot.pending { background: rgba(11,30,51,0.12); }
+  .step-label { margin-left: auto; font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; color: #94a3b8; letter-spacing: 0.12em; }
+
+  .search-bar {
+    display: flex; align-items: center; gap: 10px;
+    background: #ffffff;
+    border: 1.5px solid rgba(226,232,240,0.9);
+    border-radius: 14px; padding: 12px 18px;
+    box-shadow: 0 2px 8px rgba(11,30,51,0.05);
+    margin-top: 20px;
+  }
+  .search-bar input {
+    flex: 1; border: none; outline: none;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 14px; color: #0B1E33; background: transparent;
+  }
+  .search-bar input::placeholder { color: #cbd5e1; }
+  
