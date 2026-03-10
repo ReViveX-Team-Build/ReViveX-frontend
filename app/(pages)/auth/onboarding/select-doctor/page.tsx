@@ -105,4 +105,45 @@ const PAGE_CSS = `
     font-size: 14px; color: #0B1E33; background: transparent;
   }
   .search-bar input::placeholder { color: #cbd5e1; }
-  
+  /* append to PAGE_CSS */
+
+  .doctors-grid { max-width: 640px; margin: 0 auto; display: grid; grid-template-columns: 1fr; gap: 12px; }
+
+  .doctor-card {
+    background: #ffffff;
+    border: 1.5px solid rgba(226,232,240,0.9);
+    border-radius: 18px; padding: 18px 20px;
+    display: flex; align-items: center; gap: 16px;
+    cursor: pointer;
+    transition: border-color 0.2s, box-shadow 0.2s, transform 0.15s;
+    animation: cardIn 0.38s ease both;
+    position: relative; overflow: hidden;
+  }
+  .doctor-card:hover        { border-color: #2DD4BF; box-shadow: 0 4px 24px rgba(45,212,191,0.15); transform: translateY(-2px); }
+  .doctor-card.selected     { border-color: #2DD4BF; box-shadow: 0 4px 28px rgba(45,212,191,0.20); background: rgba(45,212,191,0.03); }
+
+  .doctor-avatar {
+    width: 52px; height: 52px; border-radius: 50%;
+    background: linear-gradient(135deg, #0B1E33, #1e3a5f);
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0; overflow: hidden;
+    border: 2px solid rgba(45,212,191,0.20);
+  }
+  .doctor-avatar img   { width: 100%; height: 100%; object-fit: cover; }
+  .doctor-initials     { font-size: 18px; font-weight: 800; color: #2DD4BF; letter-spacing: 0.05em; }
+
+  .doctor-info  { flex: 1; min-width: 0; }
+  .doctor-name  { font-size: 15px; font-weight: 700; color: #0B1E33; margin-bottom: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .doctor-spec  { font-size: 12.5px; color: #64748b; display: flex; align-items: center; gap: 5px; }
+  .doctor-id    { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: #94a3b8; margin-top: 4px; }
+
+  .select-badge {
+    width: 30px; height: 30px; border-radius: 50%;
+    background: rgba(45,212,191,0.12);
+    border: 1.5px solid rgba(45,212,191,0.35);
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0; transition: background 0.2s, border-color 0.2s;
+  }
+  .doctor-card.selected .select-badge { background: #2DD4BF; border-color: #2DD4BF; }
+
+  .empty-state { text-align: center; padding: 48px 24px; color: #94a3b8; }
