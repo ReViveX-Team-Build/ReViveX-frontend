@@ -267,3 +267,124 @@ const PAGE_CSS = `
   // Two-letter avatar fallback from display name
   const initials = (name: string) =>
     name.split(" ").slice(0, 2).map(n => n[0]).join("").toUpperCase();
+  if (authLoading || loading) {
+    return (
+      <>
+        <style>{PAGE_CSS}</style>
+        <div className="onb-root" style={{ display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 16 }}>
+            <Loader2 size={36} style={{ color: "#2DD4BF", animation: "spin 1s linear infinite" }} />
+            <span style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", color: "#64748b", fontSize: 14 }}>
+              Loading doctors…
+            </span>
+          </div>
+        </div>
+      </>
+    );
+  }
+
+  return (
+    <>
+      <style>{PAGE_CSS}</style>
+      <div className="onb-root">
+
+        <div className="onb-header">
+          {/* Step progress dots */}
+          <div className="step-bar">
+            <div className="step-dot done" />
+            <div className="step-dot active" />
+            <div className="step-dot pending" />
+            <span className="step-label">STEP 2 / 3</span>
+          </div>
+
+          {/* Section pill */}
+          <div style={{
+            display: "inline-flex", alignItems: "center", gap: 8,
+            background: "rgba(139,92,246,0.10)", border: "1px solid rgba(139,92,246,0.30)",
+            borderRadius: 999, padding: "5px 14px", marginBottom: 14,
+          }}>
+            <Stethoscope size={13} color="#8b5cf6" />
+            <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10, fontWeight: 700, color: "#8b5cf6", letterSpacing: "0.14em" }}>
+              CHOOSE YOUR DOCTOR
+            </span>
+          </div>
+
+          <h1 style={{ fontSize: 26, fontWeight: 800, color: "#0B1E33", lineHeight: 1.22, marginBottom: 8 }}>
+            Select your rehabilitation doctor
+          </h1>
+          <p style={{ fontSize: 14, color: "#64748b", lineHeight: 1.65 }}>
+            Your doctor will review your request and set up your therapy protocol.
+            You can change this later from your settings.
+          </p>
+
+          {/* Search bar */}
+          <div className="search-bar">
+            <Search size={16} color="#94a3b8" />
+            <input
+              type="text"
+              placeholder="Search by name or specialization…"
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+            />
+            {search && (
+              <button
+                onClick={() => setSearch("")}
+                style={{ background: "none", border: "none", cursor: "pointer", color: "#94a3b8", display: "flex" }}
+              >
+                <X size={16} />
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* Doctor cards grid — error banner + empty state + mapped cards */}
+        <div className="doctors-grid">
+          {error && !showModal && (
+            <div style={{
+              background: "rgba(255,71,87,0.07)", border: "1px solid rgba(255,71,87,0.25)",
+              borderRadius: 12, padding: "12px 16px", color: "#dc2626",
+              fontSize: 13, display: "flex", alignItems: "center", gap: 8,
+            }}>
+              <X size={15} /> {error}
+            </div>
+          )}
+
+          {filtered.length === 0 && !loading && (
+            <div className="empty-state">
+              <Stethoscope size={40} style={{ margin: "0 auto 12px", display: "block", color: "#cbd5e1" }} />
+              <p style={{ fontWeight: 600, color: "#94a3b8" }}>No doctors found</p>
+              <p style={{ fontSize: 13, marginTop: 4 }}>Try a different search term.</p>
+            </div>
+          )}
+
+          {filtered.map((doctor, i) => (
+            <div
+              key={doctor.uid}
+              className={`doctor-card ${selected?.uid === doctor.uid ? "selected" : ""}`}
+              style={{ animationDelay: `${i * 0.05}s` }}
+              onClick={() => handleSelect(doctor)}
+            >
+              <div className="doctor-avatar">
+                {doctor.profilePictureUrl
+                  ? <img src={doctor.profilePictureUrl} alt={doctor.name} />
+                  : <span className="doctor-initials">{initials(doctor.name)}</span>
+                }
+              </div>
+              <div className="doctor-info">
+                <div className="doctor-name">{doctor.name}</div>
+                <div className="doctor-spec">
+                  <Stethoscope size={11} color="#94a3b8" />
+                  {doctor.specialization}
+                </div>
+                <div className="doctor-id">ID: {doctor.doctorId.toUpperCase()}</div>
+              </div>
+              <div className="select-badge">
+                {selected?.uid === doctor.uid
+                  ? <CheckCircle2 size={16} color="#ffffff" />
+                  : <ChevronRight size={16} color="#2DD4BF" />
+                }
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
