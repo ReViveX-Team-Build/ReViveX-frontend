@@ -161,4 +161,20 @@ const PAGE_CSS = `
       setResetting(false);
     }).catch(() => setResetting(false));
   }, [user, authLoading]);
+  // Navigate back to doctor selection so they can try again
+  const handleChooseAgain = () => {
+    router.push("/auth/onboarding/select-doctor");
+  };
+
+  // Sign out via Firebase Auth then redirect to the signin page
+  const handleSignOut = async () => {
+    setSigningOut(true);
+    try {
+      await signOut(auth);
+      router.push("/auth/patient/signin");
+    } catch (err) {
+      console.error("Sign out error:", err);
+      setSigningOut(false);
+    }
+  };
   
