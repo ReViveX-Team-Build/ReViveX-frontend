@@ -57,3 +57,58 @@ const PANEL_CSS = `
     100% { background: transparent; }
   }
 `;
+/* append to PANEL_CSS */
+
+  /* Transparent full-screen backdrop — clicking it closes the panel */
+  .rp-backdrop {
+    position: fixed; inset: 0;
+    z-index: 300;
+  }
+
+  .rp-panel {
+    position: absolute;
+    top: calc(100% + 10px); right: 0;
+    width: 360px; max-height: 520px;
+    background: #ffffff;
+    border-radius: 20px;
+    border: 1px solid rgba(226,232,240,0.9);
+    box-shadow: 0 16px 60px rgba(11,30,51,0.15), 0 4px 12px rgba(11,30,51,0.07);
+    z-index: 301;
+    animation: panelSlideIn 0.28s cubic-bezier(0.22,1,0.36,1) both;
+    display: flex; flex-direction: column;
+    overflow: hidden;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+  }
+
+  .rp-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 18px 20px 14px;
+    border-bottom: 1px solid rgba(226,232,240,0.9);
+    flex-shrink: 0;
+  }
+
+  .rp-badge {
+    display: inline-flex; align-items: center; gap: 7px;
+    background: rgba(45,212,191,0.10);
+    border: 1px solid rgba(45,212,191,0.30);
+    border-radius: 999px; padding: 4px 12px;
+  }
+
+  .rp-count {
+    min-width: 20px; height: 20px; border-radius: 999px;
+    background: #ef4444; color: #fff;
+    font-size: 11px; font-weight: 800;
+    display: flex; align-items: center; justify-content: center;
+    padding: 0 5px;
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  .rp-close {
+    width: 30px; height: 30px; border-radius: 50%;
+    background: #F8FAFC;
+    border: 1px solid rgba(226,232,240,0.9);
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; transition: background 0.2s;
+  }
+  .rp-close:hover { background: #F0F4F8; }
+  
