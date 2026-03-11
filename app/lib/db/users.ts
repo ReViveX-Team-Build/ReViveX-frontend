@@ -25,14 +25,16 @@ export const getPatientsByDoctor = async (doctorId: string): Promise<PatientData
   return patients;
 };
 
+// ✅ FIXED - Changed from "patients" to "users"
 export async function getPatientData(uid: string): Promise<PatientData | null> {
-  const docRef = doc(db, "patients", uid);
+  const docRef = doc(db, "users", uid);  // ← Changed here
   const snap = await getDoc(docRef);
   return snap.exists() ? ({ uid: snap.id, ...snap.data() } as PatientData) : null;
 }
 
+// ✅ FIXED - Changed from "patients" to "users"
 export async function updateProfilePicture(uid: string, url: string) {
-  const docRef = doc(db, "patients", uid);
+  const docRef = doc(db, "users", uid);  // ← Changed here
   await updateDoc(docRef, { profilePictureUrl: url });
 }
 
