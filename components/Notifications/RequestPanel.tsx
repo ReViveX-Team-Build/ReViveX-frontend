@@ -280,4 +280,30 @@ export function RequestPanel({ doctorUid, onClose }: RequestPanelProps) {
       ));
     }
   }, [doctorUid]);
+  const handleDecline = useCallback(async (item: RequestItem) => {
+    if (!item.comm.id) return;
+
+    setRequests(prev => prev.map(r =>
+      r.comm.id === item.comm.id ? { ...r, actionLoading: true } : r
+    ));
+
+    try {
+      await rejectPatientRequest(item.comm.senderId, item.comm.id);
+
+      setRequests(prev => prev.map(r =>
+        r.comm.id === item.comm.id ? { ...r, removing: true, actionLoading: false } : r
+      ));
+      setTimeout(() => {
+        setRequests(prev => prev.filter(r => r.comm.id !== item.comm.id));
+      }, 380);
+    } catch (err) {
+      console.error("Decline failed:", err);
+      setRequests(prev => prev.map(r =>
+        r.comm.id === item.comm.id ? { ...r, actionLoading: false } : r
+      ));
+    }
+  }, []);
+
+  // Visible count excludes cards currently animating out
+  const pendingCount = requests.filter(r => !r.removing).length;
   
