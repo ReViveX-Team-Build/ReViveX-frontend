@@ -254,4 +254,30 @@ export function RequestPanel({ doctorUid, onClose }: RequestPanelProps) {
     unsubRef.current = unsub;
     return () => unsub();
   }, [doctorUid]);
+  const handleAccept = useCallback(async (item: RequestItem) => {
+    if (!item.comm.id) return;
+
+    // Show spinner on this card's buttons
+    setRequests(prev => prev.map(r =>
+      r.comm.id === item.comm.id ? { ...r, actionLoading: true } : r
+    ));
+
+    try {
+      await acceptPatientRequest(item.comm.senderId, doctorUid, item.comm.id);
+
+      // Trigger CSS fade-out animation
+      setRequests(prev => prev.map(r =>
+        r.comm.id === item.comm.id ? { ...r, removing: true, actionLoading: false } : r
+      ));
+      // Remove from DOM after animation completes
+      setTimeout(() => {
+        setRequests(prev => prev.filter(r => r.comm.id !== item.comm.id));
+      }, 380);
+    } catch (err) {
+      console.error("Accept failed:", err);
+      setRequests(prev => prev.map(r =>
+        r.comm.id === item.comm.id ? { ...r, actionLoading: false } : r
+      ));
+    }
+  }, [doctorUid]);
   
