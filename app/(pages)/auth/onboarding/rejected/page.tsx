@@ -120,3 +120,13 @@ const PAGE_CSS = `
   .cta-btn.navy:hover:not(:disabled) { box-shadow: 0 8px 24px rgba(11,30,51,0.22); }
   .cta-btn.ghost                     { background: transparent; color: #94a3b8; border: 1.5px solid rgba(226,232,240,0.9); }
   .cta-btn.ghost:hover:not(:disabled){ color: #64748b; background: #F8FAFC; }
+  export default function OnboardingRejected() {
+  const router = useRouter();
+  const [user, authLoading] = useAuthState(auth);
+
+  // True while we're resetting the patient's connection state in Firestore
+  const [resetting,  setResetting]  = useState(true);
+
+  // True while the sign-out Firebase call is in-flight
+  const [signingOut, setSigningOut] = useState(false);
+  
