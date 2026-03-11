@@ -332,4 +332,121 @@ export function RequestPanel({ doctorUid, onClose }: RequestPanelProps) {
             <X size={14} color="#64748b" />
           </button>
         </div>
-        
+        {/* Scrollable body */}
+        <div className="rp-body">
+          {panelLoading ? (
+            // Initial load spinner
+            <div className="rp-empty">
+              <Loader2 size={28} style={{ color: "#2DD4BF", animation: "spin 1s linear infinite" }} />
+              <span style={{ fontSize: 13, color: "#94a3b8" }}>Loading requests…</span>
+            </div>
+          ) : requests.length === 0 ? (
+            // Zero state
+            <div className="rp-empty">
+              <div style={{
+                width: 52, height: 52, borderRadius: "50%",
+                background: "#F8FAFC", border: "1.5px solid rgba(226,232,240,0.9)",
+                display: "flex", alignItems: "center", justifyContent: "center",
+              }}>
+                <Bell size={22} color="#cbd5e1" />
+              </div>
+              <p style={{ fontWeight: 700, fontSize: 14, color: "#94a3b8" }}>No pending requests</p>
+              <p style={{ fontSize: 12.5, color: "#cbd5e1" }}>New patient requests will appear here.</p>
+            </div>
+          ) : (
+            requests.map((item, i) => (
+              <div
+                key={item.comm.id}
+                className={`req-card ${item.removing ? "removing" : ""}`}
+                style={{ animationDelay: `${i * 0.06}s` }}
+              >
+                {item.loading ? (
+                  // Skeleton placeholder while patient data fetches
+                  <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "4px 0" }}>
+                    <div style={{
+                      width: 42, height: 42, borderRadius: "50%",
+                      background: "linear-gradient(90deg, #F0F4F8 25%, #e8eef8 50%, #F0F4F8 75%)",
+                      flexShrink: 0,
+                    }} />
+                    <div style={{ flex: 1 }}>
+                      <div style={{ width: "55%", height: 12, borderRadius: 6, background: "#F0F4F8", marginBottom: 6 }} />
+                      <div style={{ width: "35%", height: 10, borderRadius: 6, background: "#F8FAFC" }} />
+                    </div>
+                  </div>
+                ) : (
+                  <>
+                    {/* Avatar + name + ID + timestamp */}
+                    <div className="req-top">
+                      <div className="req-avatar">
+                        {item.patient?.profilePictureUrl
+                          ? <img src={item.patient.profilePictureUrl} alt={item.patient.name} />
+                          : <span style={{ fontSize: 14, fontWeight: 800, color: "#2DD4BF" }}>
+                              {item.patient?.name ? initials(item.patient.name) : "?"}
+                            </span>
+                        }
+                      </div>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div className="req-name">{item.patient?.name ?? "Unknown Patient"}</div>
+                        <div className="req-meta">
+                          <Stethoscope size={11} color="#94a3b8" />
+                          ID: {item.patient?.patientId ?? "–"}
+                        </div>
+                      </div>
+                      <div className="req-time">
+                        {item.comm.timestamp ? timeAgo(item.comm.timestamp as Timestamp) : "—"}
+                      </div>
+                    </div>
+
+                    {/* Condition pill */}
+                    {item.patient?.condition && (
+                      <div className="req-condition">
+                        <BrainCircuit size={11} style={{ marginRight: 4 }} />
+                        {item.patient.condition}
+                      </div>
+                    )}
+
+                    {/* Message excerpt — clamped to 2 lines */}
+                    <p style={{
+                      fontSize: 12.5, color: "#64748b", lineHeight: 1.55,
+                      marginBottom: 12,
+                      display: "-webkit-box",
+                      WebkitLineClamp: 2,
+                      WebkitBoxOrient: "vertical" as any,
+                      overflow: "hidden",
+                    }}>
+                      {item.comm.content}
+                    </p>
+
+                    {/* Accept / Decline buttons */}
+                    <div className="req-actions">
+                      <button className="req-btn accept" onClick={() => handleAccept(item)} disabled={item.actionLoading}>
+                        {item.actionLoading
+                          ? <Loader2 size={14} style={{ animation: "spin 1s linear infinite" }} />
+                          : <CheckCircle2 size={14} />
+                        }
+                        Accept
+                      </button>
+                      <button className="req-btn decline" onClick={() => handleDecline(item)} disabled={item.actionLoading}>
+                        <XCircle size={14} />
+                        Decline
+                      </button>
+                    </div>
+                  </>
+                )}
+              </div>
+            ))
+          )}
+        </div>
+
+        {/* Footer count — only shown when there are cards */}
+        {!panelLoading && requests.length > 0 && (
+          <div className="rp-footer">
+            <span style={{ fontSize: 11.5, color: "#94a3b8" }}>
+              {pendingCount} request{pendingCount !== 1 ? "s" : ""} awaiting your response
+            </span>
+          </div>
+        )}
+      </div>
+    </>
+  );
+}
