@@ -12,7 +12,9 @@ export interface UserProfile {
 export interface PatientData extends UserProfile {
   condition: "Stroke" | "Parkinson's" | "Other";
   assignedDoctorId: string;
-  connectionStatus: "pending" | "accepted" | "rejected"; // ← ADDED
+  connectionStatus: "pending" | "accepted" | "rejected" | "none"; // ← added "none"
+  patientId: string;            // ← ADDED — used by RequestPanel for display
+  profilePictureUrl?: string;   // ← ADDED — used by RequestPanel avatar
   gamification: {
     totalXp: number;
     currentStreak: number;
@@ -25,7 +27,6 @@ export interface PatientData extends UserProfile {
   };
 }
 
-// ← ADDED — needed by the select-doctor onboarding page
 export interface DoctorData extends UserProfile {
   doctorId: string;
   specialization: string;
@@ -76,7 +77,7 @@ export interface Communication {
   id?: string;
   senderId: string;
   receiverId: string;
-  type: "instruction" | "feedback" | "direct_message" | "ai_insight" | "connection_request"; // ← ADDED connection_request
+  type: "instruction" | "feedback" | "direct_message" | "ai_insight" | "connection_request";
   content: string;
   timestamp: Timestamp;
   isRead: boolean;

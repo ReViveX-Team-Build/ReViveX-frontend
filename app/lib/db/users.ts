@@ -25,10 +25,10 @@ export const getPatientsByDoctor = async (doctorId: string): Promise<PatientData
   return patients;
 };
 
-export async function getPatientData(uid: string) {
+export async function getPatientData(uid: string): Promise<PatientData | null> {
   const docRef = doc(db, "patients", uid);
   const snap = await getDoc(docRef);
-  return snap.exists() ? snap.data() : null;
+  return snap.exists() ? ({ uid: snap.id, ...snap.data() } as PatientData) : null;
 }
 
 export async function updateProfilePicture(uid: string, url: string) {
@@ -36,9 +36,7 @@ export async function updateProfilePicture(uid: string, url: string) {
   await updateDoc(docRef, { profilePictureUrl: url });
 }
 
-export async function getDoctorsForListing(): Promise<        // ← Promise< not Promise
-  Pick<DoctorData, "uid" | "name" | "specialization" | "profilePictureUrl" | "doctorId">[]
-> {
+export async function getDoctorsForListing(): Promise<Pick<DoctorData, "uid" | "name" | "specialization" | "profilePictureUrl" | "doctorId">[]> {
   const q = query(
     collection(db, "users"),
     where("role", "==", "doctor")

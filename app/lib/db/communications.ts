@@ -181,7 +181,6 @@ export async function seedCommunications(
   console.log('✅ Communications seeded successfully.');
 }
 
-// ← ADDED — called by the onboarding select-doctor page when a patient picks a doctor
 export async function sendConnectionRequest(
   patientUid:  string,
   patientName: string,
@@ -197,4 +196,38 @@ export async function sendConnectionRequest(
     isRead:      false,
     isImportant: true,
   });
+}
+
+// ← ADDED — called by RequestPanel when doctor taps Accept
+// Marks the notification read and flips patient's connectionStatus to "accepted"
+export async function acceptPatientRequest(
+  patientUid: string,
+  doctorUid:  string,
+  commId:     string
+): Promise<void> {
+  await Promise.all([
+    updateDoc(doc(db, 'communications', commId), {
+      isRead: true,
+    }),
+    updateDoc(doc(db, 'users', patientUid), {
+      connectionStatus: 'accepted',
+      assignedDoctorId: doctorUid,
+    }),
+  ]);
+}
+
+// ← ADDED — called by RequestPanel when doctor taps Decline
+// Marks the notification read and flips patient's connectionStatus to "rejected"
+export async function rejectPatientRequest(
+  patientUid: string,
+  commId:     string
+): Promise<void> {
+  await Promise.all([
+    updateDoc(doc(db, 'communications', commId), {
+      isRead: true,
+    }),
+    updateDoc(doc(db, 'users', patientUid), {
+      connectionStatus: 'rejected',
+    }),
+  ]);
 }
