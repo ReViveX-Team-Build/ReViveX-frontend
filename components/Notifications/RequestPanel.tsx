@@ -306,4 +306,30 @@ export function RequestPanel({ doctorUid, onClose }: RequestPanelProps) {
 
   // Visible count excludes cards currently animating out
   const pendingCount = requests.filter(r => !r.removing).length;
-  
+  return (
+    <>
+      <style>{PANEL_CSS}</style>
+
+      {/* Transparent backdrop — click outside to close */}
+      <div className="rp-backdrop" onClick={onClose} />
+
+      <div className="rp-panel">
+
+        {/* Header */}
+        <div className="rp-header">
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <div className="rp-badge">
+              <Bell size={13} color="#2DD4BF" />
+              <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10.5, fontWeight: 700, color: "#0B1E33" }}>
+                Patient Requests
+              </span>
+            </div>
+            {pendingCount > 0 && (
+              <div className="rp-count">{pendingCount}</div>
+            )}
+          </div>
+          <button className="rp-close" onClick={onClose}>
+            <X size={14} color="#64748b" />
+          </button>
+        </div>
+        
