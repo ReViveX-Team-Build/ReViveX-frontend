@@ -177,4 +177,17 @@ const PAGE_CSS = `
       setSigningOut(false);
     }
   };
+  if (authLoading || resetting) {
+    return (
+      <>
+        <style>{PAGE_CSS}</style>
+        <div className="onb-root">
+          <Loader2
+            size={36}
+            style={{ color: "#ef4444", animation: "spin 1s linear infinite" }}
+          />
+        </div>
+      </>
+    );
+  }
   
