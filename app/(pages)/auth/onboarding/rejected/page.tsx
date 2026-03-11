@@ -190,4 +190,34 @@ const PAGE_CSS = `
       </>
     );
   }
-  
+  return (
+    <>
+      <style>{PAGE_CSS}</style>
+      <div className="onb-root">
+        <div className="onb-card">
+
+          {/* Shaking XCircle icon */}
+          <div className="reject-icon-wrap">
+            <XCircle size={40} color="#ef4444" />
+          </div>
+
+          {/* Declined status pill */}
+          <div style={{
+            display: "inline-flex", alignItems: "center", gap: 8,
+            background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.25)",
+            borderRadius: 999, padding: "5px 14px", marginBottom: 16,
+          }}>
+            <XCircle size={12} color="#ef4444" />
+            <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10, fontWeight: 700, color: "#ef4444", letterSpacing: "0.14em" }}>
+              REQUEST DECLINED
+            </span>
+          </div>
+
+          <h2 style={{ fontSize: 23, fontWeight: 800, color: "#0B1E33", marginBottom: 10 }}>
+            Your request wasn't accepted
+          </h2>
+          <p style={{ fontSize: 14, color: "#64748b", lineHeight: 1.7 }}>
+            The doctor you selected wasn't able to take on new patients at this time.
+            Don't worry — you can request a different doctor below.
+          </p>
+          
