@@ -214,3 +214,44 @@ function timeAgo(ts: Timestamp): string {
 function initials(name: string): string {
   return name.split(" ").slice(0, 2).map(n => n[0]).join("").toUpperCase();
 }
+export function RequestPanel({ doctorUid, onClose }: RequestPanelProps) {
+  const [requests,     setRequests]     = useState<RequestItem[]>([]);
+  const [panelLoading, setPanelLoading] = useState(true);
+  const unsubRef = useRef<(() => void) | null>(null);
+
+  // Subscribe to all unread connection_request comms sent to this doctor
+  useEffect(() => {
+    if (!doctorUid) return;
+
+    const q = query(
+      collection(db, "communications"),
+      where("receiverId", "==", doctorUid),
+      where("type",       "==", "connection_request"),
+      where("isRead",     "==", false),
+      orderBy("timestamp", "desc")
+    );
+
+    const unsub = onSnapshot(q, async (snap) => {
+      const comms = snap.docs.map(d => ({ id: d.id, ...d.data() } as Communication));
+
+      // Immediately populate list with loading skeletons
+      const items: RequestItem[] = comms.map(comm => ({
+        comm, patient: null, loading: true, removing: false, actionLoading: false,
+      }));
+      setRequests(items);
+      setPanelLoading(false);
+
+      // Enrich each item with its patient's profile data in parallel
+      const enriched = await Promise.all(
+        comms.map(async (comm) => {
+          const patient = await getPatientData(comm.senderId).catch(() => null);
+          return { comm, patient, loading: false, removing: false, actionLoading: false };
+        })
+      );
+      setRequests(enriched);
+    });
+
+    unsubRef.current = unsub;
+    return () => unsub();
+  }, [doctorUid]);
+  
