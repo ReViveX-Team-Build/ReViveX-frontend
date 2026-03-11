@@ -71,4 +71,52 @@ const PAGE_CSS = `
     position: relative; z-index: 1;
     text-align: center;
   }
-  
+  /* append to PAGE_CSS */
+
+  /* Shaking red icon circle */
+  .reject-icon-wrap {
+    width: 88px; height: 88px; border-radius: 50%;
+    background: rgba(239,68,68,0.08);
+    border: 2px solid rgba(239,68,68,0.22);
+    display: flex; align-items: center; justify-content: center;
+    margin: 0 auto 28px;
+    animation: shake 0.55s ease 0.3s both;
+  }
+
+  /* Numbered steps card */
+  .next-steps {
+    text-align: left;
+    background: #F8FAFC;
+    border: 1px solid rgba(226,232,240,0.9);
+    border-radius: 16px; padding: 20px 22px;
+    margin: 24px 0 28px;
+    display: flex; flex-direction: column; gap: 14px;
+  }
+  .next-step-row {
+    display: flex; align-items: flex-start; gap: 12px;
+    animation: slideIn 0.32s ease both;
+  }
+  .step-num {
+    width: 24px; height: 24px; border-radius: 50%;
+    background: #0B1E33; color: #ffffff;
+    font-size: 11px; font-weight: 800;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0; margin-top: 1px;
+  }
+
+  /* Shared CTA button variants */
+  .cta-btn {
+    width: 100%; display: flex; align-items: center; justify-content: center; gap: 10px;
+    border: none; border-radius: 14px; padding: 15px 24px;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 15px; font-weight: 700;
+    cursor: pointer; position: relative; overflow: hidden;
+    transition: transform 0.15s, box-shadow 0.2s;
+  }
+  .cta-btn:hover:not(:disabled)      { transform: translateY(-1px); }
+  .cta-btn:disabled                  { opacity: 0.5; cursor: not-allowed; }
+  .cta-btn .shimmer                  { position: absolute; top: 0; left: 0; width: 40%; height: 100%; background: rgba(255,255,255,0.14); animation: shimmer 2.2s ease-in-out infinite; pointer-events: none; }
+  .cta-btn.navy                      { background: #0B1E33; color: #fff; }
+  .cta-btn.navy:hover:not(:disabled) { box-shadow: 0 8px 24px rgba(11,30,51,0.22); }
+  .cta-btn.ghost                     { background: transparent; color: #94a3b8; border: 1.5px solid rgba(226,232,240,0.9); }
+  .cta-btn.ghost:hover:not(:disabled){ color: #64748b; background: #F8FAFC; }
