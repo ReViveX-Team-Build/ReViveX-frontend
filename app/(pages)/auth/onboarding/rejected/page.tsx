@@ -129,4 +129,36 @@ const PAGE_CSS = `
 
   // True while the sign-out Firebase call is in-flight
   const [signingOut, setSigningOut] = useState(false);
+  useEffect(() => {
+    if (authLoading) return;
+    if (!user) { router.replace("/auth/patient/signin"); return; }
+
+    getPatientData(user.uid).then(async (patient) => {
+      if (!patient) { router.replace("/auth/patient/signin"); return; }
+
+      // Guard against direct URL access — redirect if they shouldn't be here
+      if (patient.connectionStatus === "accepted") {
+        router.replace("/patients/home"); return;
+      }
+
+      // Already cleaned up from a previous visit — just show the page
+      if (patient.connectionStatus === "none") {
+        setResetting(false); return;
+      }
+
+      // Reset so the patient can start the select-doctor flow fresh
+      if (patient.connectionStatus === "rejected") {
+        try {
+          await updateDoc(doc(db, "users", user.uid), {
+            connectionStatus: "none",
+            assignedDoctorId: null,
+          });
+        } catch (err) {
+          console.error("Reset failed:", err);
+        }
+      }
+
+      setResetting(false);
+    }).catch(() => setResetting(false));
+  }, [user, authLoading]);
   
