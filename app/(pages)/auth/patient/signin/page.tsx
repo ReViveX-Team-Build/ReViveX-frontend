@@ -32,8 +32,30 @@ export default function PatientSignInPage() {
         result = await signInWithEmail(email, password);
       }
       
-      if (result.success) {
-        router.push("/patients/home");
+      if (result.success && result.user) {
+        // Route based on onboarding completion status
+        const patient = result.user;
+        
+        // Check onboarding steps in order
+        if (!patient.profilePictureUrl) {
+          // Step 1: No profile photo yet
+          router.push("/auth/onboarding/photo");
+        } else if (!patient.assignedDoctorId || patient.connectionStatus === "none") {
+          // Step 2: No doctor selected yet
+          router.push("/auth/onboarding/select-doctor");
+        } else if (patient.connectionStatus === "pending") {
+          // Step 3: Waiting for doctor approval
+          router.push("/auth/onboarding/waiting");
+        } else if (patient.connectionStatus === "rejected") {
+          // Step 3b: Request was rejected
+          router.push("/auth/onboarding/rejected");
+        } else if (patient.connectionStatus === "accepted") {
+          // Fully onboarded! Go to patient dashboard
+          router.push("/patients/home");
+        } else {
+          // Fallback - restart onboarding
+          router.push("/auth/onboarding/photo");
+        }
       } else {
         setError(result.error || "Sign in failed");
       }
