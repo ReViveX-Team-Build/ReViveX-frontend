@@ -111,4 +111,27 @@ const PANEL_CSS = `
     cursor: pointer; transition: background 0.2s;
   }
   .rp-close:hover { background: #F0F4F8; }
+  /* append to PANEL_CSS */
+
+  .rp-body {
+    overflow-y: auto; flex: 1;
+    padding: 12px;
+    display: flex; flex-direction: column; gap: 10px;
+  }
+  .rp-body::-webkit-scrollbar       { width: 4px; }
+  .rp-body::-webkit-scrollbar-track { background: transparent; }
+  .rp-body::-webkit-scrollbar-thumb { background: rgba(11,30,51,0.10); border-radius: 4px; }
+
+  .rp-empty {
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    padding: 36px 20px; gap: 10px;
+    color: #94a3b8; text-align: center;
+  }
+
+  .rp-footer {
+    padding: 12px 16px;
+    border-top: 1px solid rgba(226,232,240,0.9);
+    text-align: center; flex-shrink: 0;
+  }
   
