@@ -134,4 +134,57 @@ const PANEL_CSS = `
     border-top: 1px solid rgba(226,232,240,0.9);
     text-align: center; flex-shrink: 0;
   }
+  /* append to PANEL_CSS */
+
+  .req-card {
+    border: 1.5px solid rgba(226,232,240,0.9);
+    border-radius: 14px; padding: 14px 16px;
+    background: #ffffff;
+    animation: cardSlideIn 0.25s ease both;
+    transition: border-color 0.2s;
+  }
+  .req-card:hover               { border-color: rgba(45,212,191,0.35); }
+  .req-card.removing            { animation: fadeOut 0.35s ease forwards; pointer-events: none; overflow: hidden; }
+  .req-card.accepted-flash      { animation: successFlash 0.6s ease both; }
+
+  .req-top    { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; }
+
+  .req-avatar {
+    width: 42px; height: 42px; border-radius: 50%;
+    background: linear-gradient(135deg, #0B1E33, #1e3a5f);
+    display: flex; align-items: center; justify-content: center;
+    overflow: hidden; flex-shrink: 0;
+    border: 2px solid rgba(45,212,191,0.20);
+  }
+  .req-avatar img { width: 100%; height: 100%; object-fit: cover; }
+
+  .req-name      { font-size: 14px; font-weight: 700; color: #0B1E33; }
+  .req-meta      { font-size: 12px; color: #64748b; display: flex; align-items: center; gap: 4px; margin-top: 2px; }
+  .req-time      { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: #94a3b8; margin-left: auto; flex-shrink: 0; }
+
+  .req-condition {
+    display: inline-flex; align-items: center;
+    background: rgba(139,92,246,0.08);
+    border: 1px solid rgba(139,92,246,0.20);
+    border-radius: 999px; padding: 2px 8px;
+    font-size: 10.5px; font-weight: 700; color: #8b5cf6;
+    margin-top: 6px; margin-bottom: 10px;
+  }
+
+  .req-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+
+  .req-btn {
+    display: flex; align-items: center; justify-content: center; gap: 7px;
+    border: none; border-radius: 10px; padding: 9px 14px;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 12.5px; font-weight: 700;
+    cursor: pointer;
+    transition: transform 0.12s, box-shadow 0.15s;
+  }
+  .req-btn:hover:not(:disabled)         { transform: translateY(-1px); }
+  .req-btn:disabled                     { opacity: 0.5; cursor: not-allowed; }
+  .req-btn.accept                       { background: #2DD4BF; color: #061422; box-shadow: 0 2px 10px rgba(45,212,191,0.25); }
+  .req-btn.accept:hover:not(:disabled)  { box-shadow: 0 4px 16px rgba(45,212,191,0.40); }
+  .req-btn.decline                      { background: rgba(239,68,68,0.08); color: #ef4444; border: 1px solid rgba(239,68,68,0.25); }
+  .req-btn.decline:hover:not(:disabled) { background: rgba(239,68,68,0.14); }
   
