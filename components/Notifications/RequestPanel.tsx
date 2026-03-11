@@ -187,4 +187,30 @@ const PANEL_CSS = `
   .req-btn.accept:hover:not(:disabled)  { box-shadow: 0 4px 16px rgba(45,212,191,0.40); }
   .req-btn.decline                      { background: rgba(239,68,68,0.08); color: #ef4444; border: 1px solid rgba(239,68,68,0.25); }
   .req-btn.decline:hover:not(:disabled) { background: rgba(239,68,68,0.14); }
-  
+  // Shape of each enriched request row in local state
+interface RequestItem {
+  comm:          Communication;
+  patient:       PatientData | null;
+  loading:       boolean;   // true while patient data is being fetched
+  removing:      boolean;   // true while fade-out animation plays
+  actionLoading: boolean;   // true while accept/decline API call is in-flight
+}
+
+interface RequestPanelProps {
+  doctorUid: string;
+  onClose:   () => void;
+}
+
+// Converts a Firestore Timestamp to a human-readable "X ago" string
+function timeAgo(ts: Timestamp): string {
+  const diff = Math.floor((Date.now() - ts.toMillis()) / 1000);
+  if (diff < 60)    return "just now";
+  if (diff < 3600)  return `${Math.floor(diff / 60)}m ago`;
+  if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
+  return `${Math.floor(diff / 86400)}d ago`;
+}
+
+// Generates two-letter initials for avatar fallback
+function initials(name: string): string {
+  return name.split(" ").slice(0, 2).map(n => n[0]).join("").toUpperCase();
+}
