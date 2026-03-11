@@ -450,3 +450,22 @@ export function RequestPanel({ doctorUid, onClose }: RequestPanelProps) {
     </>
   );
 }
+// Convenience wrapper — drop this into the doctor nav bar.
+// Usage: <NotificationBell doctorUid={uid} />
+export function NotificationBell({ doctorUid }: { doctorUid: string }) {
+  const [open,  setOpen]  = useState(false);
+  const [count, setCount] = useState(0);
+
+  // Keep the red dot count in sync with Firestore in real-time
+  useEffect(() => {
+    if (!doctorUid) return;
+    const q = query(
+      collection(db, "communications"),
+      where("receiverId", "==", doctorUid),
+      where("type",       "==", "connection_request"),
+      where("isRead",     "==", false)
+    );
+    const unsub = onSnapshot(q, (snap) => setCount(snap.size));
+    return () => unsub();
+  }, [doctorUid]);
+  
