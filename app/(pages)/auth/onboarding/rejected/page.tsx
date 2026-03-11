@@ -220,4 +220,53 @@ const PAGE_CSS = `
             The doctor you selected wasn't able to take on new patients at this time.
             Don't worry — you can request a different doctor below.
           </p>
-          
+          {/* Numbered steps telling the patient what to do next */}
+          <div className="next-steps">
+            <p style={{
+              fontSize: 11, fontWeight: 700, color: "#94a3b8",
+              letterSpacing: "0.12em", textTransform: "uppercase",
+              fontFamily: "'JetBrains Mono', monospace",
+            }}>
+              What to do next
+            </p>
+
+            {[
+              "Choose a different doctor from the list.",
+              "Send them a connection request.",
+              "Wait for their approval to unlock your therapy portal.",
+            ].map((text, i) => (
+              <div key={i} className="next-step-row" style={{ animationDelay: `${0.15 + i * 0.08}s` }}>
+                <div className="step-num">{i + 1}</div>
+                <p style={{ fontSize: 13.5, color: "#475569", lineHeight: 1.6 }}>{text}</p>
+              </div>
+            ))}
+          </div>
+
+          {/* Primary + ghost action buttons */}
+          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+            <button className="cta-btn navy" onClick={handleChooseAgain}>
+              <div className="shimmer" />
+              <Stethoscope size={17} />
+              Choose a Different Doctor
+              <ArrowRight size={17} />
+            </button>
+
+            <button className="cta-btn ghost" onClick={handleSignOut} disabled={signingOut}>
+              {signingOut
+                ? <Loader2 size={16} style={{ animation: "spin 1s linear infinite" }} />
+                : <LogOut size={16} />
+              }
+              Sign Out
+            </button>
+          </div>
+
+          {/* Small disclaimer at the bottom */}
+          <p style={{ fontSize: 11.5, color: "#cbd5e1", marginTop: 20, lineHeight: 1.6 }}>
+            If you believe this was a mistake, contact your healthcare provider directly.
+          </p>
+
+        </div>
+      </div>
+    </>
+  );
+}
