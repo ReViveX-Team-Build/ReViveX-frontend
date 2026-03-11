@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Lottie from 'lottie-react';
-import doctorAnimation from '@/public/animations/patient-animation.json';
+import doctorAnimation from '@/public/animations/doctor-animation.json';
 import { registerPatient } from "@/app/lib/auth/patientAuth";
 
 export default function PatientSignUpPage() {
@@ -14,7 +14,7 @@ export default function PatientSignUpPage() {
     email: "",
     password: "",
     confirmPassword: "",
-    doctorId: ""  // Optional field to link to a doctor
+    doctorId: ""
   });
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -108,10 +108,10 @@ export default function PatientSignUpPage() {
           </div>
 
           <button
-            onClick={() => router.push("/auth/patient/signin")}
+            onClick={() => router.push("/auth/onboarding/photo")}
             className="w-full bg-gradient-to-r from-purple-500 to-pink-600 text-white py-3 rounded-lg font-semibold shadow-lg hover:shadow-xl transition-all"
           >
-            Continue to Sign In
+            Continue to Setup
           </button>
         </div>
       </div>
@@ -194,7 +194,6 @@ export default function PatientSignUpPage() {
                       value={formData.email}
                       onChange={handleChange}
                       placeholder="patient@example.com"
-                      autoComplete="off"
                       className="w-full px-4 py-2.5 border-2 border-gray-200 rounded-lg focus:outline-none focus:border-purple-500 transition-colors text-gray-900"
                       required
                     />
@@ -212,7 +211,6 @@ export default function PatientSignUpPage() {
                         value={formData.password}
                         onChange={handleChange}
                         placeholder="Minimum 6 characters"
-                        autoComplete="new-password"
                         className="w-full px-4 py-2.5 border-2 border-gray-200 rounded-lg focus:outline-none focus:border-purple-500 transition-colors text-gray-900"
                         required
                       />
@@ -238,7 +236,6 @@ export default function PatientSignUpPage() {
                         value={formData.confirmPassword}
                         onChange={handleChange}
                         placeholder="Re-enter password"
-                        autoComplete="new-password"
                         className="w-full px-4 py-2.5 border-2 border-gray-200 rounded-lg focus:outline-none focus:border-purple-500 transition-colors text-gray-900"
                         required
                       />
