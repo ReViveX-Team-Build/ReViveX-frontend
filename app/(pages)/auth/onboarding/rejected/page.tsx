@@ -38,3 +38,37 @@ const PAGE_CSS = `
     80%       { transform: translateX(4px); }
   }
 `;
+  .onb-root {
+    min-height: 100vh;
+    display: flex; align-items: center; justify-content: center;
+    padding: 24px 16px;
+    background: linear-gradient(135deg, #F0F4F8 0%, #fce8e8 40%, #F0F4F8 100%);
+    position: relative; overflow: hidden;
+  }
+  .onb-root::before {
+    content: ''; position: absolute;
+    top: -160px; right: -160px;
+    width: 440px; height: 440px; border-radius: 50%;
+    background: radial-gradient(circle, rgba(239,68,68,0.07) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .onb-root::after {
+    content: ''; position: absolute;
+    bottom: -120px; left: -120px;
+    width: 360px; height: 360px; border-radius: 50%;
+    background: radial-gradient(circle, rgba(139,92,246,0.06) 0%, transparent 70%);
+    pointer-events: none;
+  }
+
+  .onb-card {
+    background: #ffffff;
+    border-radius: 28px;
+    border: 1px solid rgba(239,68,68,0.18);
+    box-shadow: 0 8px 48px rgba(239,68,68,0.08), 0 2px 8px rgba(11,30,51,0.04);
+    padding: 44px 48px;
+    width: 100%; max-width: 460px;
+    animation: fadeUp 0.52s cubic-bezier(0.22,1,0.36,1) both;
+    position: relative; z-index: 1;
+    text-align: center;
+  }
+  
