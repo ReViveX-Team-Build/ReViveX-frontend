@@ -1,7 +1,13 @@
 "use client";
 import {
-  LineChart, Line, XAxis, YAxis, CartesianGrid,
-  Tooltip, Legend, ResponsiveContainer
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
 } from "recharts";
 
 const data = [
@@ -16,8 +22,8 @@ const data = [
 
 export default function ProgressTrendChart() {
   return (
-    <div className="bg-white rounded-xl border border-slate-200 p-6 shadow-sm">
-      <h2 className="text-base font-semibold text-slate-700 mb-4">
+    <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-6 shadow-sm">
+      <h2 className="text-base font-semibold text-slate-700 dark:text-slate-200 mb-4">
         7-Month Progress Trend
       </h2>
       <ResponsiveContainer width="100%" height={280}>

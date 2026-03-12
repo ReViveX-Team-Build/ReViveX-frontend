@@ -10,8 +10,8 @@ const COLORS = ["#14b8a6", "#ef4444"];
 
 export default function DeviceStatusChart() {
   return (
-    <div className="bg-white rounded-xl border border-slate-200 p-6 shadow-sm">
-      <h2 className="text-base font-semibold text-slate-700 mb-4">
+    <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-6 shadow-sm">
+      <h2 className="text-base font-semibold text-slate-700 dark:text-slate-200 mb-4">
         Device Status
       </h2>
       <ResponsiveContainer width="100%" height={220}>
@@ -22,8 +22,7 @@ export default function DeviceStatusChart() {
             cy="50%"
             innerRadius={60}
             outerRadius={90}
-            dataKey="value"
-          >
+            dataKey="value">
             {data.map((entry, index) => (
               <Cell key={index} fill={COLORS[index]} />
             ))}
@@ -31,7 +30,7 @@ export default function DeviceStatusChart() {
           <Tooltip />
         </PieChart>
       </ResponsiveContainer>
-      <div className="mt-4 space-y-2 text-sm text-slate-600">
+      <div className="mt-4 space-y-2 text-sm text-slate-600 dark:text-slate-300">
         <div className="flex justify-between">
           <span>Online Rate</span>
           <span className="font-semibold">96.6%</span>

@@ -9,6 +9,7 @@ import { getPatientsByDoctor } from '../../../lib/db/users';
 import { getCohortSessionsThisWeek, getLastSessionPerPatient } from '../../../lib/db/sessions';
 import { collection, query, where, getDocs } from 'firebase/firestore';
 import { PatientData, TherapyProtocol } from '../../../lib/db/types';
+import { useDarkMode } from "@/app/lib/hooks/useDarkMode";
 
 // ─── MOCK FLAG — set false to restore full Firebase + auth flow ────────────
 const USE_MOCK = true;
@@ -72,15 +73,28 @@ const CSS = `
   @media(max-width:1100px){.mpp-stats{flex-wrap:wrap!important}.mpp-stat{min-width:calc(50% - 8px)}}
   @media(max-width:860px){.mpp-filter-row{flex-wrap:wrap!important}.mpp-selects{flex-wrap:wrap}}
   @media(max-width:600px){.mpp .mpp-pad{padding:20px 14px!important}.mpp-title{font-size:22px!important}}
+  /* ── Dark mode overrides ── */
+  .dark .mpp-search { background: #334155; border-color: #475569; color: #f1f5f9; }
+  .dark .mpp-search::placeholder { color: #64748b; }
+  .dark .mpp-search:focus { background: #1e293b; border-color: rgba(45,212,191,.65); }
+  .dark .mpp-select { background-color: #334155 !important; border-color: #475569; color: #f1f5f9; }
+  .dark .mpp-select:focus { border-color: rgba(45,212,191,.65); }
+  .dark .mpp-stat { background: #1e293b !important; border-color: #334155 !important; box-shadow: 0 2px 14px rgba(0,0,0,.18) !important; }
+  .dark .mpp-view-btn { background: #1e293b; color: #f1f5f9; border-color: #475569; }
+  .dark .mpp-view-btn:hover { background: #f1f5f9; color: #0B1E33; border-color: #f1f5f9; }
+  .dark .mpp-condition { background: rgba(241,245,249,.07); color: #94a3b8; border-color: rgba(241,245,249,.10); }
+  .dark .mpp-tr:hover td { background: rgba(45,212,191,.07) !important; }
+  .dark .mpp-proto-set { border-color: #1e293b; }
 `;
 
 function AdherenceBar({ value, delay=0 }: { value:number; delay?:number }) {
   const [w, setW] = useState(0);
+  const isDark = useDarkMode();
   const color = adherenceColor(value);
   useEffect(() => { const t = setTimeout(() => setW(value), delay); return () => clearTimeout(t); }, [value, delay]);
   return (
     <div style={{ display:'flex', alignItems:'center', gap:8 }}>
-      <div style={{ width:64, height:5, background:'#e2e8f0', borderRadius:99, overflow:'hidden', flexShrink:0 }}>
+      <div style={{ width:64, height:5, background: isDark ? '#334155' : '#e2e8f0', borderRadius:99, overflow:'hidden', flexShrink:0 }}>
         <div style={{ height:'100%', borderRadius:99, width:`${w}%`, background:color, transition:'width 1s cubic-bezier(.22,1,.36,1)', position:'relative' }}>
           <div style={{ position:'absolute', inset:0, background:'linear-gradient(90deg,transparent,rgba(255,255,255,.45),transparent)', animation:'mppShimmer 2.2s ease-in-out infinite' }}/>
         </div>
@@ -91,40 +105,44 @@ function AdherenceBar({ value, delay=0 }: { value:number; delay?:number }) {
 }
 
 function SubBadge({ type }: { type:string }) {
+  const isDark = useDarkMode();
   const isAI = type === 'AI Companion';
   return (
-    <span style={{ display:'inline-flex', alignItems:'center', gap:5, padding:'4px 11px', borderRadius:99, background:isAI?'#0B1E33':'#f1f5f9', color:isAI?'#2DD4BF':'#475569', fontSize:11, fontWeight:700, border:isAI?'1px solid rgba(45,212,191,.18)':'1px solid #e2e8f0', whiteSpace:'nowrap' }}>
+    <span style={{ display:'inline-flex', alignItems:'center', gap:5, padding:'4px 11px', borderRadius:99, background:isAI?'#0B1E33': isDark ? '#334155' : '#f1f5f9', color:isAI?'#2DD4BF': isDark ? '#94a3b8' : '#475569', fontSize:11, fontWeight:700, border:isAI?'1px solid rgba(45,212,191,.18)': isDark ? '1px solid #475569' : '1px solid #e2e8f0', whiteSpace:'nowrap' }}>
       {isAI ? <Bot size={10}/> : <Shield size={10}/>}{type}
     </span>
   );
 }
 
 function StatusDot({ status }: { status:string }) {
+  const isDark = useDarkMode();
   const color = statusColor(status);
   return (
     <div style={{ display:'flex', alignItems:'center', gap:7 }}>
       <div style={{ width:7, height:7, borderRadius:'50%', background:color, boxShadow:`0 0 5px ${color}80`, flexShrink:0 }}/>
-      <span style={{ fontSize:12.5, fontWeight:600, color:'#334155' }}>{status}</span>
+      <span style={{ fontSize:12.5, fontWeight:600, color: isDark ? '#94a3b8' : '#334155' }}>{status}</span>
     </div>
   );
 }
 
 function TH({ children, accent }: { children:React.ReactNode; accent?:boolean }) {
+  const isDark = useDarkMode();
   return (
-    <th style={{ padding:'13px 16px', textAlign:'left', fontSize:10, fontWeight:700, color:accent?'#6366f1':'#64748b', textTransform:'uppercase', letterSpacing:'0.10em', fontFamily:"'JetBrains Mono',monospace", borderBottom:`1.5px solid ${accent?'rgba(99,102,241,.18)':'#e2e8f0'}`, background:accent?'rgba(99,102,241,.025)':'#fff', whiteSpace:'nowrap' }}>
+    <th style={{ padding:'13px 16px', textAlign:'left', fontSize:10, fontWeight:700, color:accent?'#6366f1': isDark ? '#94a3b8' : '#64748b', textTransform:'uppercase', letterSpacing:'0.10em', fontFamily:"'JetBrains Mono',monospace", borderBottom:`1.5px solid ${accent?'rgba(99,102,241,.18)': isDark ? '#334155' : '#e2e8f0'}`, background:accent? (isDark ? 'rgba(99,102,241,.06)' : 'rgba(99,102,241,.025)') : isDark ? '#1e293b' : '#fff', whiteSpace:'nowrap' }}>
       {children}
     </th>
   );
 }
 
 function StatCard({ label, value, color, icon, delay }: { label:string; value:number|string; color:string; icon:React.ReactNode; delay:number }) {
+  const isDark = useDarkMode();
   return (
     <div className="mpp-stat" style={{ animationDelay:`${delay}s` }}>
       <div style={{ display:'flex', alignItems:'center', gap:10 }}>
         <div style={{ width:34, height:34, borderRadius:10, background:`${color}14`, border:`1px solid ${color}28`, display:'flex', alignItems:'center', justifyContent:'center', color, flexShrink:0 }}>{icon}</div>
         <div>
-          <div className="mono" style={{ fontSize:8.5, color:'#94a3b8', textTransform:'uppercase', letterSpacing:'0.14em', fontWeight:700 }}>{label}</div>
-          <div style={{ fontSize:22, fontWeight:800, color:'#0B1E33', lineHeight:1.15 }}>{value}</div>
+          <div className="mono" style={{ fontSize:8.5, color: isDark ? '#64748b' : '#94a3b8', textTransform:'uppercase', letterSpacing:'0.14em', fontWeight:700 }}>{label}</div>
+          <div style={{ fontSize:22, fontWeight:800, color: isDark ? '#f1f5f9' : '#0B1E33', lineHeight:1.15 }}>{value}</div>
         </div>
       </div>
     </div>
@@ -140,6 +158,7 @@ export default function DoctorPatientsPage() {
   const [adherenceFilter, setAdherenceFilter] = useState('all');
   const [conditionFilter, setConditionFilter] = useState('all');
   const [mounted, setMounted] = useState(false);
+  const isDark = useDarkMode();
 
   useEffect(() => { setMounted(true); }, []);
 
@@ -214,14 +233,14 @@ export default function DoctorPatientsPage() {
   if (!mounted) return null;
 
   return (
-    <div className="mpp" style={{ minHeight:'100vh', background:'#F0F4F8' }}>
+    <div className="mpp" style={{ minHeight:'100vh', background: isDark ? '#0f172a' : '#F0F4F8' }}>
       <style>{CSS}</style>
       <div className="mpp-pad" style={{ maxWidth:1300, margin:'0 auto', padding:'32px 28px' }}>
 
         <div style={{ marginBottom:24, animation:'mppFadeUp .45s ease both', display:'flex', alignItems:'flex-start', justifyContent:'space-between' }}>
           <div>
-            <h1 className="mpp-title" style={{ fontSize:26, fontWeight:800, color:'#0B1E33', margin:0 }}>My Patients</h1>
-            <p style={{ fontSize:14, color:'#64748b', marginTop:5, fontWeight:500 }}>Manage, monitor, and assign therapy protocols to all your patients</p>
+            <h1 className="mpp-title" style={{ fontSize:26, fontWeight:800, color: isDark ? '#f1f5f9' : '#0B1E33', margin:0 }}>My Patients</h1>
+            <p style={{ fontSize:14, color: isDark ? '#94a3b8' : '#64748b', marginTop:5, fontWeight:500 }}>Manage, monitor, and assign therapy protocols to all your patients</p>
           </div>
           <div style={{ display:'flex', alignItems:'center', gap:10 }}>
             {USE_MOCK && (
@@ -230,7 +249,7 @@ export default function DoctorPatientsPage() {
                 <span className="mono" style={{ fontSize:9.5, color:'#fbbf24', fontWeight:700, textTransform:'uppercase', letterSpacing:'0.12em' }}>Demo Data</span>
               </div>
             )}
-            <button onClick={() => window.location.reload()} style={{ display:'inline-flex', alignItems:'center', gap:6, padding:'9px 16px', borderRadius:12, background:'#fff', border:'1.5px solid #e2e8f0', fontSize:13, fontWeight:700, color:'#64748b', cursor:'pointer' }}>
+            <button onClick={() => window.location.reload()} style={{ display:'inline-flex', alignItems:'center', gap:6, padding:'9px 16px', borderRadius:12, background: isDark ? '#1e293b' : '#fff', border: `1.5px solid ${isDark ? '#334155' : '#e2e8f0'}`, fontSize:13, fontWeight:700, color: isDark ? '#94a3b8' : '#64748b', cursor:'pointer' }}>
               <RefreshCw size={14}/> Refresh
             </button>
           </div>
@@ -242,7 +261,7 @@ export default function DoctorPatientsPage() {
           <div style={{ display:'flex', alignItems:'center', justifyContent:'center', height:320 }}>
             <div style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:12 }}>
               <Loader2 size={32} color="#2DD4BF" style={{ animation:'spin 1s linear infinite' }}/>
-              <span style={{ fontSize:13, fontWeight:600, color:'#64748b' }}>Loading patient data…</span>
+              <span style={{ fontSize:13, fontWeight:600, color: isDark ? '#94a3b8' : '#64748b' }}>Loading patient data…</span>
             </div>
           </div>
         ) : (
@@ -279,14 +298,14 @@ export default function DoctorPatientsPage() {
             </div>
 
             {displayPatients.length === 0 ? (
-              <div style={{ background:'#fff', border:'2px solid #2DD4BF', borderRadius:18, padding:'52px', textAlign:'center', boxShadow:'0 4px 28px rgba(45,212,191,.10)' }}>
+              <div style={{ background: isDark ? '#1e293b' : '#fff', border:'2px solid #2DD4BF', borderRadius:18, padding:'52px', textAlign:'center', boxShadow:'0 4px 28px rgba(45,212,191,.10)' }}>
                 <User size={36} color="#cbd5e1" style={{ marginBottom:12 }}/>
-                <p style={{ fontSize:15, fontWeight:700, color:'#0B1E33', marginBottom:6 }}>No patients yet</p>
-                <p style={{ fontSize:13, color:'#94a3b8' }}>Patients will appear here once they link to your account.</p>
+                <p style={{ fontSize:15, fontWeight:700, color: isDark ? '#f1f5f9' : '#0B1E33', marginBottom:6 }}>No patients yet</p>
+                <p style={{ fontSize:13, color: isDark ? '#64748b' : '#94a3b8' }}>Patients will appear here once they link to your account.</p>
               </div>
             ) : (
               <>
-                <div style={{ background:'#fff', border:'2px solid #2DD4BF', borderRadius:18, overflow:'hidden', boxShadow:'0 4px 28px rgba(45,212,191,.10)', animation:'mppFadeUp .45s ease .14s both' }}>
+                <div style={{ background: isDark ? '#1e293b' : '#fff', border:'2px solid #2DD4BF', borderRadius:18, overflow:'hidden', boxShadow:'0 4px 28px rgba(45,212,191,.10)', animation:'mppFadeUp .45s ease .14s both' }}>
                   <div className="mpp-scroll" style={{ overflowX:'auto' }}>
                     <table style={{ width:'100%', borderCollapse:'collapse', minWidth:980 }}>
                       <thead>
@@ -297,12 +316,12 @@ export default function DoctorPatientsPage() {
                           const ac = adherenceColor(p.adherence);
                           return (
                             <tr key={p.id} className="mpp-tr" style={{ animationDelay:`${.14+i*.035}s` }}>
-                              <td style={{ padding:'14px 16px', borderBottom:'1.5px dashed rgba(45,212,191,.22)', verticalAlign:'middle' }}>
+                              <td style={{ padding:'14px 16px', borderBottom:`1.5px dashed rgba(45,212,191,.22)`, verticalAlign:'middle' }}>
                                 <div style={{ display:'flex', alignItems:'center', gap:10 }}>
                                   <div style={{ width:32, height:32, borderRadius:10, flexShrink:0, background:`linear-gradient(135deg,${ac}28,${ac}14)`, border:`1.5px solid ${ac}38`, display:'flex', alignItems:'center', justifyContent:'center', fontSize:9.5, fontWeight:800, color:ac }}>
                                     {p.name.split(' ').map(w=>w[0]).slice(0,2).join('')}
                                   </div>
-                                  <span style={{ fontSize:13, fontWeight:700, color:'#0B1E33' }}>{p.name}</span>
+                                  <span style={{ fontSize:13, fontWeight:700, color: isDark ? '#f1f5f9' : '#0B1E33' }}>{p.name}</span>
                                 </div>
                               </td>
                               <td style={{ padding:'14px 16px', borderBottom:'1.5px dashed rgba(45,212,191,.22)', verticalAlign:'middle' }}>
@@ -315,7 +334,7 @@ export default function DoctorPatientsPage() {
                                 <AdherenceBar value={p.adherence} delay={120+i*30}/>
                               </td>
                               <td style={{ padding:'14px 16px', borderBottom:'1.5px dashed rgba(45,212,191,.22)', verticalAlign:'middle' }}>
-                                <span className="mono" style={{ fontSize:12, color:'#475569', fontWeight:500 }}>{p.lastSession}</span>
+                                <span className="mono" style={{ fontSize:12, color: isDark ? '#94a3b8' : '#475569', fontWeight:500 }}>{p.lastSession}</span>
                               </td>
                               <td style={{ padding:'14px 16px', borderBottom:'1.5px dashed rgba(45,212,191,.22)', verticalAlign:'middle' }}>
                                 <StatusDot status={p.status}/>
@@ -323,7 +342,7 @@ export default function DoctorPatientsPage() {
                               <td style={{ padding:'14px 16px', borderBottom:'1.5px dashed rgba(45,212,191,.22)', verticalAlign:'middle' }}>
                                 <SubBadge type={p.sub}/>
                               </td>
-                              <td style={{ padding:'14px 16px', borderBottom:'1.5px dashed rgba(45,212,191,.22)', borderLeft:'1px solid rgba(99,102,241,.10)', background:'rgba(99,102,241,.012)', verticalAlign:'middle' }}>
+                              <td style={{ padding:'14px 16px', borderBottom:'1.5px dashed rgba(45,212,191,.22)', borderLeft:`1px solid rgba(99,102,241,.10)`, background: isDark ? 'rgba(99,102,241,.06)' : 'rgba(99,102,241,.012)', verticalAlign:'middle' }}>
                                 <Link href={`/doctor/protocols?patient=${p.id}`} className={`mpp-proto-btn${p.hasProtocol?' has-protocol':''}`}>
                                   {p.hasProtocol && <div className="mpp-proto-set"/>}
                                   <ClipboardList size={13}/>{p.hasProtocol?'Edit Protocol':'Set Protocol'}
@@ -338,7 +357,7 @@ export default function DoctorPatientsPage() {
                             </tr>
                           );
                         })}
-                        {filtered.length===0 && <tr><td colSpan={10} style={{ padding:'52px', textAlign:'center', color:'#94a3b8', fontSize:14, fontWeight:500 }}>No patients match your filters.</td></tr>}
+                        {filtered.length===0 && <tr><td colSpan={10} style={{ padding:'52px', textAlign:'center', color: isDark ? '#64748b' : '#94a3b8', fontSize:14, fontWeight:500 }}>No patients match your filters.</td></tr>}
                       </tbody>
                     </table>
                   </div>
@@ -348,7 +367,7 @@ export default function DoctorPatientsPage() {
                     <div style={{ width:8, height:8, borderRadius:'50%', background:'#22c55e' }}/>
                     <span className="mono" style={{ fontSize:9.5, color:'#6366f1', fontWeight:600, letterSpacing:'0.08em' }}>Green dot = protocol already set</span>
                   </div>
-                  <span className="mono" style={{ fontSize:10.5, color:'#94a3b8', letterSpacing:'0.08em' }}>{filtered.length} of {displayPatients.length} patients</span>
+                  <span className="mono" style={{ fontSize:10.5, color: isDark ? '#64748b' : '#94a3b8', letterSpacing:'0.08em' }}>{filtered.length} of {displayPatients.length} patients</span>
                 </div>
               </>
             )}

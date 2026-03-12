@@ -23,10 +23,10 @@ export default function DoctorReportsPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-semibold text-slate-800">
+          <h1 className="text-2xl font-semibold text-slate-800 dark:text-slate-100">
             Reports & Analytics
           </h1>
-          <p className="text-slate-500 mt-1">
+          <p className="text-slate-500 dark:text-slate-400 mt-1">
             Comprehensive clinical performance metrics and outcomes
           </p>
         </div>
@@ -74,7 +74,6 @@ export default function DoctorReportsPage() {
         </div>
         <DeviceStatusChart />
       </div>
-
     </div>
   );
 }
