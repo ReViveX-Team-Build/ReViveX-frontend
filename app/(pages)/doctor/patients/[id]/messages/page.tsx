@@ -11,6 +11,7 @@ import { getCohortSessionsThisWeek } from '../../../../../lib/db/sessions';
 import { subscribeToDirect, sendDirectMessage, sendFromDoctor } from '../../../../../lib/db/communications';
 import { collection, query, where, getDocs, Timestamp } from 'firebase/firestore';
 import { Communication, TherapyProtocol } from '../../../../../lib/db/types';
+import { useDarkMode } from "@/app/lib/hooks/useDarkMode";
 
 // ─── MOCK FLAG — set false to restore full Firebase + auth flow ────────────
 const USE_MOCK = true;
@@ -106,12 +107,29 @@ const CSS = `
   .dm-lock{position:absolute;inset:0;background:rgba(248,247,255,.92);backdrop-filter:blur(3px);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;z-index:10}
   @media(max-width:820px){.dm-sidebar-wrap{display:none!important}.dm-main-col{border-radius:20px!important}}
   @media(max-width:600px){.dm{padding:14px!important;gap:12px!important}.dm-tab span.dm-tab-label{display:none!important}}
+  /* ── Dark mode overrides ── */
+  .dark .dm-patient-btn:hover { background: rgba(45,212,191,.12); }
+  .dark .dm-patient-btn.active { background: linear-gradient(135deg,rgba(45,212,191,.18),rgba(8,145,178,.12)); border-color: rgba(45,212,191,.30); }
+  .dark .dm-bubble-doc { background: #1e293b; color: #f1f5f9; border-color: #334155; }
+  .dark .dm-send-btn:disabled { background: #334155; color: #64748b; box-shadow: none; animation: none; }
+  .dark .dm-input { background: #334155; border-color: #475569; color: #f1f5f9; }
+  .dark .dm-input::placeholder { color: #64748b; }
+  .dark .dm-input:focus { background: #1e293b; border-color: rgba(45,212,191,.50); }
+  .dark .dm-textarea { background: #334155; border-color: #475569; color: #f1f5f9; }
+  .dark .dm-textarea::placeholder { color: #64748b; }
+  .dark .dm-textarea:focus { background: #1e293b; border-color: rgba(45,212,191,.50); }
+  .dark .dm-title-input { background: #334155; border-color: #475569; color: #f1f5f9; }
+  .dark .dm-title-input::placeholder { color: #64748b; font-weight: 500; }
+  .dark .dm-title-input:focus { background: #1e293b; border-color: rgba(45,212,191,.50); }
+  .dark .dm-sent-item { background: #1e293b; border-color: #334155; }
+  .dark .dm-lock { background: rgba(15,23,42,.97); }
 `;
 
 function MiniBar({value,color}:{value:number;color:string}){
   const [w,setW]=useState(0);
+  const isDark = useDarkMode();
   useEffect(()=>{const t=setTimeout(()=>setW(value),200);return()=>clearTimeout(t);},[value]);
-  return <div style={{width:46,height:4,background:'rgba(11,30,51,.08)',borderRadius:99,overflow:'hidden',flexShrink:0}}><div style={{height:'100%',borderRadius:99,width:`${w}%`,background:color,transition:'width .9s cubic-bezier(.22,1,.36,1)'}}/></div>;
+  return <div style={{width:46,height:4,background: isDark ? 'rgba(241,245,249,.10)' : 'rgba(11,30,51,.08)',borderRadius:99,overflow:'hidden',flexShrink:0}}><div style={{height:'100%',borderRadius:99,width:`${w}%`,background:color,transition:'width .9s cubic-bezier(.22,1,.36,1)'}}/></div>;
 }
 
 export default function DoctorMessagingHub() {
@@ -119,6 +137,7 @@ export default function DoctorMessagingHub() {
   const initId = Array.isArray(id) ? id[0] : (id ?? '');
   const [user, authLoading] = useAuthState(auth);
   const [mounted, setMounted] = useState(false);
+  const isDark = useDarkMode();
 
   const [selectedId,      setSelectedId]      = useState(initId);
   const [panel,           setPanel]           = useState<ActivePanel>('chat');
@@ -307,12 +326,12 @@ export default function DoctorMessagingHub() {
         {chatLoading ? (
           <div style={{display:'flex',alignItems:'center',justifyContent:'center',flex:1,gap:10}}>
             <Loader2 size={20} color="#2DD4BF" style={{animation:'dmSpin 1s linear infinite'}}/>
-            <span style={{fontSize:13,color:'#94a3b8'}}>Loading messages…</span>
+            <span style={{fontSize:13,color: isDark ? '#64748b' : '#94a3b8'}}>Loading messages…</span>
           </div>
         ) : (
           <>
             <div style={{textAlign:'center',marginBottom:4}}>
-              <span className="mono" style={{fontSize:9,color:'#94a3b8',textTransform:'uppercase',letterSpacing:'0.14em',background:'rgba(240,244,248,.9)',padding:'3px 12px',borderRadius:99}}>
+              <span className="mono" style={{fontSize:9,color:'#94a3b8',textTransform:'uppercase',letterSpacing:'0.14em',background: isDark ? 'rgba(30,41,59,.8)' : 'rgba(240,244,248,.9)',padding:'3px 12px',borderRadius:99}}>
                 {chatMessages.length===0?'Start the conversation':USE_MOCK?'Sample conversation':'Messages'}
               </span>
             </div>
@@ -323,7 +342,7 @@ export default function DoctorMessagingHub() {
                   {!isDoc && <div style={{width:28,height:28,borderRadius:9,background:`${aColor}22`,border:`1.5px solid ${aColor}44`,display:'flex',alignItems:'center',justifyContent:'center',fontSize:9,fontWeight:800,color:aColor,flexShrink:0}}>{patient?initials(patient.name):'?'}</div>}
                   <div className={isDoc?'dm-bubble-doc':'dm-bubble-pat'}>
                     <p style={{fontSize:13.5,lineHeight:1.62,margin:0,position:'relative',zIndex:1}}>{msg.text}</p>
-                    <p className="mono" style={{fontSize:9,marginTop:5,textAlign:'right',position:'relative',zIndex:1,color:isDoc?'#94a3b8':'rgba(11,30,51,.45)'}}>{msg.time}</p>
+                    <p className="mono" style={{fontSize:9,marginTop:5,textAlign:'right',position:'relative',zIndex:1,color:isDoc? (isDark ? '#64748b' : '#94a3b8') :'rgba(11,30,51,.45)'}}>{msg.time}</p>
                   </div>
                   {isDoc && <div style={{width:28,height:28,borderRadius:9,background:'linear-gradient(135deg,#2DD4BF,#0891b2)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:9,fontWeight:800,color:'#0B1E33',flexShrink:0}}>Dr</div>}
                 </div>
@@ -333,7 +352,7 @@ export default function DoctorMessagingHub() {
           </>
         )}
       </div>
-      <div style={{padding:'12px 18px',borderTop:'1px solid rgba(226,232,240,.8)',background:'#fafbfd',display:'flex',alignItems:'center',gap:9}}>
+      <div style={{padding:'12px 18px',borderTop: `1px solid ${isDark ? '#334155' : 'rgba(226,232,240,.8)'}`,background: isDark ? '#0f172a' : '#fafbfd',display:'flex',alignItems:'center',gap:9}}>
         <input ref={chatInputRef} className="dm-input" type="text" value={chatInput} onChange={e=>setChatInput(e.target.value)} onKeyDown={handleChatKey}
           placeholder={patient?`Message ${patient.name.split(' ')[0]}${USE_MOCK?' (demo)':''}…`:'Select a patient…'} disabled={!patient||sending}/>
         <button className="dm-send-btn" onClick={sendChat} disabled={!chatInput.trim()||!patient||sending}>
@@ -346,7 +365,7 @@ export default function DoctorMessagingHub() {
   const ComposeForm = ({typeLabel,typeColor,title,setTitle,content,setContent,important,setImportant,onSend,sentItems,hint}:{typeLabel:string;typeColor:string;title:string;setTitle:(v:string)=>void;content:string;setContent:(v:string)=>void;important:boolean;setImportant:(v:boolean)=>void;onSend:()=>void;sentItems:SentItem[];hint:string}) => (
     <div className="dm-scroll" style={{flex:1,overflowY:'auto',padding:'20px 22px',display:'flex',flexDirection:'column',gap:14}}>
       <div style={{display:'flex',alignItems:'flex-start',gap:9,padding:'10px 14px',background:`${typeColor}08`,border:`1px solid ${typeColor}28`,borderRadius:12}}>
-        <Info size={13} color={typeColor} style={{flexShrink:0,marginTop:1}}/><p style={{fontSize:12,color:'#475569',margin:0,lineHeight:1.6}}>{hint}</p>
+        <Info size={13} color={typeColor} style={{flexShrink:0,marginTop:1}}/><p style={{fontSize:12,color: isDark ? '#94a3b8' : '#475569',margin:0,lineHeight:1.6}}>{hint}</p>
       </div>
       <div>
         <label className="mono" style={{display:'block',fontSize:9,color:'#94a3b8',textTransform:'uppercase',letterSpacing:'0.14em',fontWeight:700,marginBottom:7}}>Title</label>
@@ -359,10 +378,10 @@ export default function DoctorMessagingHub() {
       <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',flexWrap:'wrap',gap:10}}>
         <button className="dm-toggle" onClick={()=>setImportant(!important)}>
           {important?<ToggleRight size={22} color={typeColor}/>:<ToggleLeft size={22} color="#cbd5e1"/>}
-          <span style={{fontSize:12.5,fontWeight:700,color:important?typeColor:'#94a3b8'}}>Mark as Important</span>
+          <span style={{fontSize:12.5,fontWeight:700,color:important?typeColor: isDark ? '#64748b' : '#94a3b8'}}>Mark as Important</span>
           {important&&<span style={{display:'inline-flex',alignItems:'center',gap:4,padding:'2px 9px',borderRadius:99,background:'rgba(239,68,68,.08)',border:'1px solid rgba(239,68,68,.22)',fontSize:9,fontWeight:800,color:'#ef4444',fontFamily:"'JetBrains Mono',monospace",letterSpacing:'0.10em'}}><AlertCircle size={8}/>IMPORTANT</span>}
         </button>
-        <button className="dm-compose-btn" onClick={onSend} disabled={!title.trim()||!content.trim()} style={{background:title.trim()&&content.trim()?`linear-gradient(135deg,${typeColor},${typeColor}cc)`:'rgba(226,232,240,.9)',color:title.trim()&&content.trim()?'#fff':'#94a3b8',boxShadow:title.trim()&&content.trim()?`0 6px 22px ${typeColor}38`:'none'}}>
+        <button className="dm-compose-btn" onClick={onSend} disabled={!title.trim()||!content.trim()} style={{background:title.trim()&&content.trim()?`linear-gradient(135deg,${typeColor},${typeColor}cc)`:'rgba(226,232,240,.9)',color:title.trim()&&content.trim()?'#fff': isDark ? '#64748b' : '#94a3b8',boxShadow:title.trim()&&content.trim()?`0 6px 22px ${typeColor}38`:'none'}}>
           <Send size={14} style={{position:'relative',zIndex:1}}/><span style={{position:'relative',zIndex:1}}>Send {typeLabel}{USE_MOCK?' (Demo)':''}</span>
         </button>
       </div>
@@ -374,12 +393,12 @@ export default function DoctorMessagingHub() {
               <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:5}}>
                 <div style={{display:'flex',alignItems:'center',gap:7}}>
                   <CheckCircle2 size={13} color={typeColor}/>
-                  <span style={{fontSize:13,fontWeight:700,color:'#0B1E33'}}>{item.title}</span>
+                  <span style={{fontSize:13,fontWeight:700,color: isDark ? '#f1f5f9' : '#0B1E33'}}>{item.title}</span>
                   {item.isImportant&&<span style={{padding:'1px 7px',borderRadius:99,background:'rgba(239,68,68,.07)',border:'1px solid rgba(239,68,68,.20)',fontSize:8.5,fontWeight:800,color:'#ef4444',fontFamily:"'JetBrains Mono',monospace",letterSpacing:'0.10em'}}>IMPORTANT</span>}
                 </div>
                 <span className="mono" style={{fontSize:9,color:'#94a3b8'}}>{item.time}</span>
               </div>
-              <p style={{fontSize:12,color:'#64748b',margin:0,lineHeight:1.62,display:'-webkit-box',WebkitLineClamp:2,WebkitBoxOrient:'vertical',overflow:'hidden'}}>{item.content}</p>
+              <p style={{fontSize:12,color: isDark ? '#94a3b8' : '#64748b',margin:0,lineHeight:1.62,display:'-webkit-box',WebkitLineClamp:2,WebkitBoxOrient:'vertical',overflow:'hidden'}}>{item.content}</p>
             </div>
           ))}
         </div>
@@ -393,30 +412,30 @@ export default function DoctorMessagingHub() {
         <div className="dm-lock">
           <div style={{width:52,height:52,borderRadius:16,background:'linear-gradient(135deg,#6366f1,#8b5cf6)',display:'flex',alignItems:'center',justifyContent:'center',boxShadow:'0 6px 22px rgba(99,102,241,.35)'}}><Crown size={22} color="#fff"/></div>
           <div style={{textAlign:'center'}}>
-            <p style={{fontSize:15,fontWeight:800,color:'#0B1E33',margin:'0 0 5px'}}>AI Companion Plan Required</p>
-            <p style={{fontSize:12,color:'#64748b',margin:'0 0 14px',maxWidth:260,lineHeight:1.65}}>{patient?.name.split(' ')[0]??'This patient'} is on the Standard plan. Upgrade to unlock AI-generated clinical messages.</p>
+            <p style={{fontSize:15,fontWeight:800,color: isDark ? '#f1f5f9' : '#0B1E33',margin:'0 0 5px'}}>AI Companion Plan Required</p>
+            <p style={{fontSize:12,color: isDark ? '#94a3b8' : '#64748b',margin:'0 0 14px',maxWidth:260,lineHeight:1.65}}>{patient?.name.split(' ')[0]??'This patient'} is on the Standard plan. Upgrade to unlock AI-generated clinical messages.</p>
             <div style={{display:'inline-flex',alignItems:'center',gap:7,padding:'8px 18px',borderRadius:12,background:'linear-gradient(135deg,rgba(99,102,241,.12),rgba(139,92,246,.08))',border:'1.5px solid rgba(99,102,241,.25)',fontSize:12,fontWeight:700,color:'#6366f1'}}><Shield size={13}/>Standard Plan — No AI Access</div>
           </div>
         </div>
       )}
       <div style={{display:'flex',alignItems:'center',gap:10,padding:'12px 16px',background:'linear-gradient(135deg,rgba(99,102,241,.08),rgba(139,92,246,.05))',border:'1.5px solid rgba(99,102,241,.18)',borderRadius:14}}>
         <div style={{width:36,height:36,borderRadius:11,background:'linear-gradient(135deg,#6366f1,#8b5cf6)',display:'flex',alignItems:'center',justifyContent:'center',boxShadow:'0 4px 14px rgba(99,102,241,.30)',flexShrink:0,animation:'dmAiPulse 3s ease-in-out infinite'}}><Sparkles size={16} color="#fff"/></div>
-        <div><div style={{fontSize:13,fontWeight:800,color:'#0B1E33'}}>AI Clinical Generator</div><div className="mono" style={{fontSize:8.5,color:'rgba(99,102,191,.75)',textTransform:'uppercase',letterSpacing:'0.14em',marginTop:2}}>Powered by Gemini · AI Companion Plan</div></div>
+        <div><div style={{fontSize:13,fontWeight:800,color: isDark ? '#f1f5f9' : '#0B1E33'}}>AI Clinical Generator</div><div className="mono" style={{fontSize:8.5,color:'rgba(99,102,191,.75)',textTransform:'uppercase',letterSpacing:'0.14em',marginTop:2}}>Powered by Gemini · AI Companion Plan</div></div>
         <div style={{marginLeft:'auto',display:'flex',alignItems:'center',gap:5,padding:'4px 10px',borderRadius:99,background:'#0B1E33',border:'1px solid rgba(45,212,191,.20)'}}><Zap size={10} color="#2DD4BF"/><span className="mono" style={{fontSize:8.5,color:'#2DD4BF',fontWeight:700,letterSpacing:'0.10em'}}>PREMIUM</span></div>
       </div>
       <div>
         <label className="mono" style={{display:'block',fontSize:9,color:'#94a3b8',textTransform:'uppercase',letterSpacing:'0.14em',fontWeight:700,marginBottom:8}}>Generate Type</label>
         <div style={{display:'flex',gap:8}}>
           {(['feedback','instruction'] as const).map(mode=>(
-            <button key={mode} onClick={()=>{setAiMode(mode);setAiDraft('');setAiTitle('');}} style={{flex:1,padding:'10px',borderRadius:12,cursor:'pointer',background:aiMode===mode?(mode==='feedback'?'rgba(45,212,191,.10)':'rgba(245,158,11,.10)'):'rgba(240,244,248,.8)',border:`1.5px solid ${aiMode===mode?(mode==='feedback'?'rgba(45,212,191,.35)':'rgba(245,158,11,.35)'):'rgba(226,232,240,.9)'}`,color:aiMode===mode?(mode==='feedback'?'#0891b2':'#92400e'):'#94a3b8',fontSize:12.5,fontWeight:800,transition:'all .2s',fontFamily:"'Plus Jakarta Sans',sans-serif"}}>
+            <button key={mode} onClick={()=>{setAiMode(mode);setAiDraft('');setAiTitle('');}} style={{flex:1,padding:'10px',borderRadius:12,cursor:'pointer',background:aiMode===mode?(mode==='feedback'?'rgba(45,212,191,.10)':'rgba(245,158,11,.10)'): isDark ? 'rgba(30,41,59,.8)' : 'rgba(240,244,248,.8)',border:`1.5px solid ${aiMode===mode?(mode==='feedback'?'rgba(45,212,191,.35)':'rgba(245,158,11,.35)'): isDark ? '#334155' : 'rgba(226,232,240,.9)'}`,color:aiMode===mode?(mode==='feedback'?'#0891b2':'#92400e'): isDark ? '#64748b' : '#94a3b8',fontSize:12.5,fontWeight:800,transition:'all .2s',fontFamily:"'Plus Jakarta Sans',sans-serif"}}>
               {mode==='feedback'?'📊 Feedback':'📋 Instruction'}
             </button>
           ))}
         </div>
       </div>
-      <div style={{padding:'10px 14px',background:'rgba(240,244,248,.8)',border:'1px solid rgba(226,232,240,.9)',borderRadius:12}}>
+      <div style={{padding:'10px 14px',background: isDark ? 'rgba(30,41,59,.5)' : 'rgba(240,244,248,.8)',border: `1px solid ${isDark ? '#334155' : 'rgba(226,232,240,.9)'}`,borderRadius:12}}>
         <p className="mono" style={{fontSize:9,color:'#94a3b8',textTransform:'uppercase',letterSpacing:'0.12em',margin:'0 0 4px',fontWeight:700}}>AI Context</p>
-        <p style={{fontSize:12,color:'#475569',margin:0,lineHeight:1.65}}>Gemini will generate a personalised <span style={{color:aiMode==='feedback'?'#2DD4BF':'#f59e0b',fontWeight:700}}>{aiMode}</span> for <span style={{fontWeight:700,color:'#0B1E33'}}>{patient?.name??'patient'}</span> — condition: {patient?.condition}, adherence: {patient?.adherence??0}%.</p>
+        <p style={{fontSize:12,color: isDark ? '#94a3b8' : '#475569',margin:0,lineHeight:1.65}}>Gemini will generate a personalised <span style={{color:aiMode==='feedback'?'#2DD4BF':'#f59e0b',fontWeight:700}}>{aiMode}</span> for <span style={{fontWeight:700,color: isDark ? '#f1f5f9' : '#0B1E33'}}>{patient?.name??'patient'}</span> — condition: {patient?.condition}, adherence: {patient?.adherence??0}%.</p>
       </div>
       <button className="dm-ai-btn" onClick={generateAI} disabled={aiLoading||!canUseAI} style={{width:'100%',opacity:!canUseAI?.45:1}}>
         {aiLoading?<div style={{width:14,height:14,border:'2.5px solid rgba(99,102,241,.25)',borderTopColor:'#6366f1',borderRadius:'50%',animation:'dmSpin .75s linear infinite'}}/>:<Sparkles size={14}/>}
@@ -429,7 +448,7 @@ export default function DoctorMessagingHub() {
             <span className="mono" style={{fontSize:9,color:'#6366f1',textTransform:'uppercase',letterSpacing:'0.14em',fontWeight:700}}>AI Draft — Edit before sending</span>
           </div>
           <input className="dm-title-input" value={aiTitle} onChange={e=>setAiTitle(e.target.value)} placeholder="Draft title…" style={{marginBottom:10}}/>
-          <textarea className="dm-textarea" rows={5} value={aiDraft} onChange={e=>setAiDraft(e.target.value)} style={{border:'1.5px solid rgba(99,102,241,.28)',background:'rgba(99,102,191,.04)'}}/>
+          <textarea className="dm-textarea" rows={5} value={aiDraft} onChange={e=>setAiDraft(e.target.value)} style={{border:'1.5px solid rgba(99,102,241,.28)',background: isDark ? 'rgba(99,102,191,.08)' : 'rgba(99,102,191,.04)'}}/>
           <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginTop:10,flexWrap:'wrap',gap:8}}>
             <div style={{display:'flex',alignItems:'center',gap:6,fontSize:11,color:'#94a3b8'}}><Bot size={12} color="#6366f1"/>AI-generated · Review before sending</div>
             <button className="dm-compose-btn" onClick={sendAiDraft} style={{background:'linear-gradient(135deg,#6366f1,#8b5cf6)',color:'#fff',boxShadow:'0 6px 22px rgba(99,102,241,.32)',padding:'11px 20px'}}>
@@ -442,12 +461,12 @@ export default function DoctorMessagingHub() {
         <div style={{marginTop:4}}>
           <div className="mono" style={{fontSize:9,color:'#94a3b8',textTransform:'uppercase',letterSpacing:'0.14em',marginBottom:10,fontWeight:700}}>AI Messages Sent</div>
           {(aiSent[selectedId]??[]).map(item=>(
-            <div key={item.id} className="dm-sent-item" style={{borderColor:'rgba(99,102,241,.20)',background:'rgba(99,102,191,.03)',marginBottom:8}}>
+            <div key={item.id} className="dm-sent-item" style={{borderColor:'rgba(99,102,241,.20)',background: isDark ? 'rgba(99,102,191,.08)' : 'rgba(99,102,191,.03)',marginBottom:8}}>
               <div style={{display:'flex',alignItems:'center',gap:7,marginBottom:4}}>
-                <Bot size={12} color="#6366f1"/><span style={{fontSize:12.5,fontWeight:700,color:'#0B1E33'}}>{item.title}</span>
+                <Bot size={12} color="#6366f1"/><span style={{fontSize:12.5,fontWeight:700,color: isDark ? '#f1f5f9' : '#0B1E33'}}>{item.title}</span>
                 <span className="mono" style={{fontSize:8.5,color:'#6366f1',background:'rgba(99,102,241,.08)',border:'1px solid rgba(99,102,241,.18)',padding:'1px 6px',borderRadius:6,marginLeft:'auto'}}>AI</span>
               </div>
-              <p style={{fontSize:12,color:'#64748b',margin:0,lineHeight:1.62,display:'-webkit-box',WebkitLineClamp:2,WebkitBoxOrient:'vertical',overflow:'hidden'}}>{item.content}</p>
+              <p style={{fontSize:12,color: isDark ? '#94a3b8' : '#64748b',margin:0,lineHeight:1.62,display:'-webkit-box',WebkitLineClamp:2,WebkitBoxOrient:'vertical',overflow:'hidden'}}>{item.content}</p>
             </div>
           ))}
         </div>
@@ -456,12 +475,12 @@ export default function DoctorMessagingHub() {
   );
 
   return (
-    <div className="dm" style={{height:'100vh',background:'#F0F4F8',display:'flex',flexDirection:'column',padding:'20px',gap:14,overflow:'hidden'}}>
+    <div className="dm" style={{height:'100vh',background: isDark ? '#0f172a' : '#F0F4F8',display:'flex',flexDirection:'column',padding:'20px',gap:14,overflow:'hidden'}}>
       <style>{CSS}</style>
 
       {/* Top nav */}
       <div style={{display:'flex',alignItems:'center',gap:12,animation:'dmFadeUp .45s ease both',flexShrink:0}}>
-        <Link href="/doctor/patients" style={{display:'inline-flex',alignItems:'center',gap:7,padding:'8px 14px',borderRadius:12,background:'#fff',border:'1.5px solid rgba(226,232,240,.9)',fontSize:13,fontWeight:700,color:'#64748b',textDecoration:'none'}}>
+        <Link href="/doctor/patients" style={{display:'inline-flex',alignItems:'center',gap:7,padding:'8px 14px',borderRadius:12,background: isDark ? '#1e293b' : '#fff',border: `1.5px solid ${isDark ? '#334155' : 'rgba(226,232,240,.9)'}`,fontSize:13,fontWeight:700,color: isDark ? '#94a3b8' : '#64748b',textDecoration:'none'}}>
           <ArrowLeft size={14}/> Back to Patients
         </Link>
         <span className="mono" style={{fontSize:9.5,color:'#94a3b8',letterSpacing:'0.14em',textTransform:'uppercase'}}>Patient Messaging Hub</span>
@@ -476,18 +495,18 @@ export default function DoctorMessagingHub() {
       <div style={{display:'flex',gap:14,flex:1,minHeight:0,animation:'dmFadeUp .50s ease .06s both'}}>
 
         {/* Sidebar */}
-        <div className="dm-sidebar-wrap" style={{width:268,flexShrink:0,background:'#fff',borderRadius:20,border:'1px solid rgba(226,232,240,.9)',boxShadow:'0 2px 18px rgba(11,30,51,.055)',display:'flex',flexDirection:'column',overflow:'hidden'}}>
-          <div style={{padding:'16px 15px 12px',borderBottom:'1px solid rgba(226,232,240,.8)',background:'linear-gradient(135deg,#f8fdfc,#f0fdfb)'}}>
+        <div className="dm-sidebar-wrap" style={{width:268,flexShrink:0,background: isDark ? '#1e293b' : '#fff',borderRadius:20,border: `1px solid ${isDark ? '#334155' : 'rgba(226,232,240,.9)'}`,boxShadow: isDark ? '0 2px 18px rgba(0,0,0,.22)' : '0 2px 18px rgba(11,30,51,.055)',display:'flex',flexDirection:'column',overflow:'hidden'}}>
+          <div style={{padding:'16px 15px 12px',borderBottom: `1px solid ${isDark ? '#334155' : 'rgba(226,232,240,.8)'}`,background: isDark ? 'linear-gradient(135deg,#1e293b,#162032)' : 'linear-gradient(135deg,#f8fdfc,#f0fdfb)'}}>
             <div style={{display:'flex',alignItems:'center',gap:9,marginBottom:11}}>
               <div style={{width:32,height:32,borderRadius:10,background:'rgba(45,212,191,.10)',display:'flex',alignItems:'center',justifyContent:'center',color:'#2DD4BF'}}><User size={15}/></div>
               <div>
-                <div style={{fontSize:13.5,fontWeight:800,color:'#0B1E33'}}>All Patients</div>
+                <div style={{fontSize:13.5,fontWeight:800,color: isDark ? '#f1f5f9' : '#0B1E33'}}>All Patients</div>
                 <div className="mono" style={{fontSize:8.5,color:USE_MOCK?'#fbbf24':'#94a3b8',textTransform:'uppercase',letterSpacing:'0.12em'}}>{patientsLoading?'…':`${sidebarPatients.length} ${USE_MOCK?'demo ':''}patients`}</div>
               </div>
             </div>
             <div style={{position:'relative'}}>
               <Search size={13} color="#94a3b8" style={{position:'absolute',left:10,top:'50%',transform:'translateY(-50%)',pointerEvents:'none'}}/>
-              <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search…" style={{width:'100%',padding:'8px 10px 8px 30px',background:'rgba(240,244,248,.9)',border:'1px solid rgba(226,232,240,.9)',borderRadius:10,fontSize:12,color:'#0B1E33',outline:'none',fontFamily:"'Plus Jakarta Sans',sans-serif"}}/>
+              <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search…" style={{width:'100%',padding:'8px 10px 8px 30px',background: isDark ? '#334155' : 'rgba(240,244,248,.9)',border: `1px solid ${isDark ? '#475569' : 'rgba(226,232,240,.9)'}`,borderRadius:10,fontSize:12,color: isDark ? '#f1f5f9' : '#0B1E33',outline:'none',fontFamily:"'Plus Jakarta Sans',sans-serif"}}/>
             </div>
           </div>
           <div className="dm-sidebar" style={{flex:1,overflowY:'auto',padding:'8px'}}>
@@ -503,28 +522,28 @@ export default function DoctorMessagingHub() {
                     <div style={{width:38,height:38,borderRadius:12,background:isA?'linear-gradient(135deg,#2DD4BF,#0891b2)':`${ac}18`,border:`1.5px solid ${isA?'transparent':ac+'38'}`,display:'flex',alignItems:'center',justifyContent:'center',fontSize:10.5,fontWeight:800,color:isA?'#0B1E33':ac}}>
                       {initials(p.name)}
                     </div>
-                    <div style={{position:'absolute',bottom:-1,right:-1,width:9,height:9,borderRadius:'50%',background:sc,border:'2px solid #fff',animation:'dmDot 2.2s ease-in-out infinite'}}/>
+                    <div style={{position:'absolute',bottom:-1,right:-1,width:9,height:9,borderRadius:'50%',background:sc,border: `2px solid ${isDark ? '#1e293b' : '#fff'}`,animation:'dmDot 2.2s ease-in-out infinite'}}/>
                   </div>
                   <div style={{flex:1,minWidth:0,textAlign:'left'}}>
                     <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',gap:4}}>
-                      <span style={{fontSize:12.5,fontWeight:700,color:'#0B1E33',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap',maxWidth:108}}>{p.name}</span>
+                      <span style={{fontSize:12.5,fontWeight:700,color: isDark ? '#f1f5f9' : '#0B1E33',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap',maxWidth:108}}>{p.name}</span>
                       <MiniBar value={p.adherence} color={ac}/>
                     </div>
                     <div style={{display:'flex',alignItems:'center',gap:5,marginTop:2}}>
                       <span className="mono" style={{fontSize:8.5,color:'#2DD4BF',background:'rgba(45,212,191,.08)',padding:'1px 5px',borderRadius:5}}>{p.pid}</span>
                       {p.isAIPlan&&<div style={{display:'flex',alignItems:'center',gap:3,background:'#0B1E33',borderRadius:6,padding:'1px 6px'}}><Bot size={8} color="#2DD4BF"/><span className="mono" style={{fontSize:7.5,color:'#2DD4BF',fontWeight:700}}>AI</span></div>}
-                      <span style={{fontSize:10,color:'#94a3b8'}}>{p.condition}</span>
+                      <span style={{fontSize:10,color: isDark ? '#64748b' : '#94a3b8'}}>{p.condition}</span>
                     </div>
                   </div>
                 </button>
               );
             })}
-            {!patientsLoading&&filtered.length===0&&<div style={{textAlign:'center',padding:'24px 12px',color:'#94a3b8',fontSize:12}}>No patients found</div>}
+            {!patientsLoading&&filtered.length===0&&<div style={{textAlign:'center',padding:'24px 12px',color: isDark ? '#64748b' : '#94a3b8',fontSize:12}}>No patients found</div>}
           </div>
         </div>
 
         {/* Main column */}
-        <div className="dm-main-col" style={{flex:1,display:'flex',flexDirection:'column',minWidth:0,background:'#fff',borderRadius:20,border:'1px solid rgba(226,232,240,.9)',boxShadow:'0 2px 18px rgba(11,30,51,.055)',overflow:'hidden'}}>
+        <div className="dm-main-col" style={{flex:1,display:'flex',flexDirection:'column',minWidth:0,background: isDark ? '#1e293b' : '#fff',borderRadius:20,border: `1px solid ${isDark ? '#334155' : 'rgba(226,232,240,.9)'}`,boxShadow: isDark ? '0 2px 18px rgba(0,0,0,.22)' : '0 2px 18px rgba(11,30,51,.055)',overflow:'hidden'}}>
           {patient ? (
             <>
               {/* Hero header */}
@@ -562,7 +581,7 @@ export default function DoctorMessagingHub() {
               </div>
 
               {/* Tabs */}
-              <div style={{display:'flex',gap:6,padding:'10px 16px',borderBottom:'1px solid rgba(226,232,240,.8)',background:'rgba(248,250,252,.95)',flexShrink:0}}>
+              <div style={{display:'flex',gap:6,padding:'10px 16px',borderBottom: `1px solid ${isDark ? '#334155' : 'rgba(226,232,240,.8)'}`,background: isDark ? 'rgba(15,23,42,.95)' : 'rgba(248,250,252,.95)',flexShrink:0}}>
                 {[
                   {id:'chat'        as ActivePanel,icon:<MessageCircle size={16}/>,label:'Chat',       color:{active:'rgba(45,212,191,.09)',border:'rgba(45,212,191,.28)',text:'#0891b2'}},
                   {id:'instruction' as ActivePanel,icon:<AlertCircle size={16}/>, label:'Instruction',color:{active:'rgba(245,158,11,.08)',border:'rgba(245,158,11,.28)',text:'#b45309'}},
