@@ -11,10 +11,12 @@ export default function AIMessageRenderer({
 }: AIMessageRendererProps) {
   const teal   = variant === "patient" ? "#2DD4BF" : "#14b8a6";
   const accent = variant === "patient" ? "text-teal-600"  : "text-teal-500";
-  const bold   = variant === "patient" ? "text-[#0A2E4C]" : "text-gray-800";
+  const bold   = variant === "patient"
+    ? "text-[#0A2E4C] dark:text-slate-100"
+    : "text-gray-800 dark:text-slate-200";
   const quote  = variant === "patient"
-    ? "border-[#2DD4BF] bg-teal-50 text-teal-800"
-    : "border-teal-500 bg-teal-50/60 text-teal-900";
+    ? "border-[#2DD4BF] bg-teal-50 text-teal-800 dark:bg-teal-900/20 dark:text-teal-300"
+    : "border-teal-500 bg-teal-50/60 text-teal-900 dark:bg-teal-900/20 dark:text-teal-300";
 
   // Split the full content into a flat array of typed tokens
   const lines = content.split("\n");
@@ -37,7 +39,7 @@ export default function AIMessageRenderer({
               className="mt-1.5 w-1.5 h-1.5 rounded-full flex-shrink-0"
               style={{ background: teal }}
             />
-            <span className="text-sm leading-relaxed text-gray-700">
+            <span className="text-sm leading-relaxed text-gray-700 dark:text-slate-300">
               {renderInline(item.replace(/^[-*]\s+/, ""), bold)}
             </span>
           </li>
@@ -60,7 +62,7 @@ export default function AIMessageRenderer({
             >
               {i + 1}
             </span>
-            <span className="text-sm leading-relaxed text-gray-700">
+            <span className="text-sm leading-relaxed text-gray-700 dark:text-slate-300">
               {renderInline(item.replace(/^\d+\.\s+/, ""), bold)}
             </span>
           </li>
@@ -145,7 +147,7 @@ export default function AIMessageRenderer({
     flushBullets();
     flushNumbered();
     elements.push(
-      <p key={`p-${keyIdx++}`} className="text-sm leading-relaxed text-gray-700">
+      <p key={`p-${keyIdx++}`} className="text-sm leading-relaxed text-gray-700 dark:text-slate-300">
         {renderInline(line, bold)}
       </p>
     );
@@ -179,7 +181,7 @@ function renderInline(text: string, boldClass: string): React.ReactNode[] {
     // *italic*
     if (/^\*[^*]+\*$/.test(part)) {
       return (
-        <em key={i} className="italic text-gray-600">
+        <em key={i} className="italic text-gray-600 dark:text-slate-400">
           {part.slice(1, -1)}
         </em>
       );
@@ -189,7 +191,7 @@ function renderInline(text: string, boldClass: string): React.ReactNode[] {
       return (
         <code
           key={i}
-          className="px-1.5 py-0.5 rounded bg-teal-50 text-teal-700 text-xs font-mono border border-teal-100"
+          className="px-1.5 py-0.5 rounded bg-teal-50 text-teal-700 text-xs font-mono border border-teal-100 dark:bg-teal-900/20 dark:text-teal-300 dark:border-teal-700/50"
         >
           {part.slice(1, -1)}
         </code>
