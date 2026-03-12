@@ -15,6 +15,7 @@ import {
   Brain,
   Footprints,
   ChevronRight,
+  Sparkles,
   Shield,
   CircleCheck,
   Bot,
@@ -135,6 +136,7 @@ function AdherenceBar({ value, delay = 0 }: { value: number; delay?: number }) {
         boxShadow: "0 0 12px rgba(45,212,191,0.5)",
         position: "relative",
       }}>
+        {/* Shimmer sweep */}
         <div style={{
           position: "absolute", inset: 0,
           background: "linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.35) 50%, transparent 100%)",
@@ -149,12 +151,14 @@ function AdherenceBar({ value, delay = 0 }: { value: number; delay?: number }) {
 function AIRobot() {
   return (
     <div style={{ position: "relative", width: 72, height: 72, animation: "robotFloat 3s ease-in-out infinite" }}>
+      {/* Body */}
       <div style={{
         width: 52, height: 44, background: "linear-gradient(135deg, #2DD4BF, #0891b2)",
         borderRadius: 14, margin: "12px auto 0",
         position: "relative", boxShadow: "0 8px 24px rgba(45,212,191,0.40)",
         display: "flex", alignItems: "center", justifyContent: "center",
       }}>
+        {/* Eyes */}
         <div style={{ display: "flex", gap: 8 }}>
           <div style={{ width: 10, height: 10, background: "#fff", borderRadius: "50%", position: "relative" }}>
             <div style={{ width: 5, height: 5, background: "#0B1E33", borderRadius: "50%", position: "absolute", top: 2, left: 2, animation: "eyeBlink 4s ease-in-out infinite" }} />
@@ -163,6 +167,7 @@ function AIRobot() {
             <div style={{ width: 5, height: 5, background: "#0B1E33", borderRadius: "50%", position: "absolute", top: 2, left: 2, animation: "eyeBlink 4s ease-in-out infinite 0.1s" }} />
           </div>
         </div>
+        {/* Mouth dots */}
         <div style={{ position: "absolute", bottom: 9, display: "flex", gap: 4 }}>
           {[0,1,2].map(i => (
             <div key={i} style={{
@@ -173,16 +178,19 @@ function AIRobot() {
           ))}
         </div>
       </div>
+      {/* Head */}
       <div style={{
         width: 40, height: 22, background: "linear-gradient(135deg, #0891b2, #2DD4BF)",
         borderRadius: "10px 10px 4px 4px",
         position: "absolute", top: 0, left: 16,
         boxShadow: "0 -2px 10px rgba(45,212,191,0.30)",
       }}>
+        {/* Antenna */}
         <div style={{ width: 3, height: 10, background: "#2DD4BF", borderRadius: 99, position: "absolute", top: -9, left: "50%", transform: "translateX(-50%)" }}>
           <div style={{ width: 7, height: 7, background: "#fff", borderRadius: "50%", position: "absolute", top: -4, left: -2, boxShadow: "0 0 8px #2DD4BF", animation: "antennaPulse 1.5s ease-in-out infinite" }} />
         </div>
       </div>
+      {/* Arms */}
       <div style={{ position: "absolute", top: 22, left: 2, width: 8, height: 22, background: "linear-gradient(180deg,#2DD4BF,#0891b2)", borderRadius: 99, animation: "armWave 3s ease-in-out infinite" }} />
       <div style={{ position: "absolute", top: 22, right: 2, width: 8, height: 22, background: "linear-gradient(180deg,#2DD4BF,#0891b2)", borderRadius: 99, animation: "armWave 3s ease-in-out infinite 0.5s" }} />
     </div>
@@ -272,6 +280,14 @@ const CSS = `
     95%  { opacity:0.5; }
     100% { top:105%; opacity:0; }
   }
+  @keyframes msgFadeIn {
+    from { opacity:0; transform:translateX(-10px) scale(0.96); }
+    to   { opacity:1; transform:translateX(0) scale(1); }
+  }
+  @keyframes wifiPulse {
+    0%,100% { opacity:1; }
+    50%     { opacity:0.4; }
+  }
   @keyframes headerShine {
     0%   { transform:translateX(-200%) skewX(-15deg); }
     100% { transform:translateX(400%)  skewX(-15deg); }
@@ -294,82 +310,56 @@ const CSS = `
   /* ── Component Transitions ─────────────────────────────── */
   .pat-card { transition:transform 0.3s ease, box-shadow 0.3s ease; }
   .pat-card:hover { transform:translateY(-4px); box-shadow:0 20px 60px rgba(11,30,51,0.12) !important; }
+
   .stat-chip { transition:all 0.25s ease; }
   .stat-chip:hover { transform:translateY(-3px) scale(1.03); }
+
   .teal-btn { transition:all 0.25s ease; position:relative; overflow:hidden; }
   .teal-btn::after {
-    content:''; position:absolute; inset:0;
+    content:'';
+    position:absolute; inset:0;
     background:linear-gradient(90deg,transparent,rgba(255,255,255,0.25),transparent);
     animation:headerShine 2.5s ease-in-out infinite;
   }
   .teal-btn:hover { transform:translateY(-2px); box-shadow:0 12px 40px rgba(45,212,191,0.45) !important; }
+
   .ai-btn { transition:all 0.22s ease; }
   .ai-btn:hover { background:rgba(45,212,191,0.18) !important; transform:scale(1.02); }
+
   .hw-card { transition:all 0.3s ease; }
   .hw-card:hover { transform:translateY(-3px); box-shadow:0 16px 44px rgba(11,30,51,0.10) !important; }
 
-  /* ── Fully Responsive Layout Classes ─────────────────────────── */
-  .resp-header          { display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:14px; }
-  .resp-header-left     { display:flex; align-items:center; gap:18px; }
-  .resp-header-right    { display:flex; gap:12px; flex-wrap:wrap; }
-  .resp-two-col         { display:grid; grid-template-columns:1.15fr 1fr; gap:20px; margin-bottom:20px; }
-  .resp-session-container { display:flex; align-items:flex-start; gap:20px; }
-  .resp-session-grid    { display:grid; grid-template-columns:1fr 1fr; gap:8px 24px; flex:1; }
-  .resp-adherence-head  { display:flex; align-items:center; justify-content:space-between; margin-bottom:12px; gap:10px; }
-  .resp-stats-grid      { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; }
-  .resp-arcs-row        { display:flex; justify-content:center; gap:32px; margin-top:18px; padding-top:16px; border-top:1px solid #f1f5f9; flex-wrap:wrap; }
-  .resp-hw-grid         { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
-  .resp-hw-row          { display:flex; align-items:center; gap:18px; position:relative; z-index:2; }
-  .resp-robot-layout    { display:flex; align-items:flex-end; gap:14px; margin-bottom:18px; }
+  /* ── Responsive Layout Classes ─────────────────────────── */
+  .resp-header        { display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:14px; }
+  .resp-header-left   { display:flex; align-items:center; gap:18px; }
+  .resp-header-right  { display:flex; gap:12px; flex-wrap:wrap; }
+  .resp-two-col       { display:grid; grid-template-columns:1.15fr 1fr; gap:20px; margin-bottom:20px; }
+  .resp-session-grid  { display:grid; grid-template-columns:1fr 1fr; gap:8px 24px; flex:1; }
+  .resp-stats-grid    { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; }
+  .resp-arcs-row      { display:flex; justify-content:center; gap:32px; margin-top:18px; padding-top:16px; border-top:1px solid #f1f5f9; }
+  .resp-hw-grid       { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
 
-  /* Tablets */
   @media (max-width:1024px) {
     .resp-two-col { grid-template-columns:1fr; }
   }
 
-  /* Standard Mobile */
   @media (max-width:640px) {
-    .pat-dash main    { padding:16px 14px !important; }
-    .pat-card         { padding:20px !important; }
-    .resp-header      { flex-direction:column; align-items:flex-start; }
-    .resp-header-right { width:100%; display:grid; grid-template-columns:1fr 1fr; }
-    .resp-header-right > div { flex:unset; justify-content:center; }
+    .pat-dash main  { padding:16px 14px !important; }
+    .resp-header    { flex-direction:column; align-items:flex-start; }
+    .resp-header-right { width:100%; }
+    .resp-header-right > div { flex:1; min-width:0; }
     .resp-header-left { gap:12px; }
-    .resp-header-left h1 { font-size:1.4rem !important; }
-    
-    .resp-session-container { flex-direction:column; align-items:center; text-align:center; gap:16px; }
-    .resp-session-grid { grid-template-columns:1fr 1fr; text-align:left; }
-    
-    .resp-adherence-head { flex-direction:column; align-items:flex-start; }
-    .resp-adherence-head > div:last-child { align-self:flex-start; margin-top:8px; }
-    
-    .resp-hw-grid     { grid-template-columns:1fr; gap:12px; }
-    .resp-hw-row      { flex-direction:column; align-items:flex-start; gap:12px; }
-    
-    .resp-arcs-row    { gap:18px; }
-    .stat-chip        { padding:12px 8px !important; }
-    .resp-robot-hide  { display:none; }
-    .resp-robot-layout { align-items:center; }
-  }
-
-  /* Small Mobile (iPhone SE etc) */
-  @media (max-width:480px) {
-    /* Magic trick: turns the 3 tight squares into a clean vertical list */
-    .resp-stats-grid { grid-template-columns:1fr; gap:8px; } 
-    .resp-stats-grid .stat-chip { 
-      display:flex; align-items:center; text-align:left; gap:14px; padding:12px 16px !important; 
-    }
-    .resp-stats-grid .stat-chip > div:first-child { margin-bottom:0; }
-    .resp-stats-grid .stat-chip > div:nth-child(2) { flex:1; font-size:1.3rem !important; }
-    .resp-stats-grid .stat-chip > div:last-child { margin-top:0; font-size:9.5px !important; }
-    
-    .resp-session-grid { grid-template-columns:1fr; gap:12px; }
+    .resp-two-col   { grid-template-columns:1fr; gap:14px; }
+    .resp-hw-grid   { grid-template-columns:1fr; gap:12px; }
+    .resp-arcs-row  { gap:18px; }
+    .stat-chip      { padding:10px 8px !important; }
+    .resp-robot-hide { display:none; }
   }
 
   @media (max-width:380px) {
-    .resp-header-right { grid-template-columns:1fr; }
-    .resp-arcs-row     { flex-direction:column; align-items:flex-start; gap:16px; }
-    .resp-arcs-row > div { flex-direction:row; gap:16px; width:100%; }
+    .resp-session-grid { grid-template-columns:1fr; }
+    .resp-arcs-row     { gap:12px; }
+    .resp-stats-grid   { gap:5px; }
   }
 `;
 
@@ -523,7 +513,7 @@ export default function PatientHome() {
               <div className="mono" style={{ fontSize: 9.5, color: "#94a3b8", textTransform: "uppercase",
                 letterSpacing: "0.16em", marginBottom: 16 }}>Next Therapy Session</div>
 
-              <div className="resp-session-container">
+              <div style={{ display: "flex", alignItems: "flex-start", gap: 20 }}>
                 {/* Calendar visual */}
                 <div style={{
                   width: 60, height: 64, borderRadius: 14,
@@ -568,7 +558,7 @@ export default function PatientHome() {
               border: "1px solid rgba(226,232,240,0.8)",
               borderRadius: 18, padding: "20px",
             }}>
-              <div className="resp-adherence-head">
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
                 <div>
                   <div style={{ fontSize: 14, fontWeight: 700, color: "#0B1E33" }}>Weekly Adherence Score</div>
                   <div className="mono" style={{ fontSize: 10, color: "#94a3b8", marginTop: 3 }}>
@@ -594,10 +584,7 @@ export default function PatientHome() {
                       : "rgba(45,212,191,0.12)",
                     boxShadow: i < adherence.completed ? "0 0 6px rgba(45,212,191,0.4)" : "none",
                     transition: "all 0.3s ease",
-                    animationName: "cardPop",
-                    animationDuration: "0.4s",
-                    animationTimingFunction: "cubic-bezier(0.22,1,0.36,1)",
-                    animationFillMode: "both",
+                    animation: "cardPop 0.4s cubic-bezier(0.22,1,0.36,1) both",
                     animationDelay: `${0.6 + i * 0.08}s`,
                   } as React.CSSProperties} />
                 ))}
@@ -660,7 +647,7 @@ export default function PatientHome() {
                 </div>
 
                 {/* Robot + Chat */}
-                <div className="resp-robot-layout">
+                <div style={{ display: "flex", alignItems: "flex-end", gap: 14, marginBottom: 18 }}>
                   <div className="resp-robot-hide"><AIRobot /></div>
                   {/* Chat bubble */}
                   <div style={{
@@ -719,7 +706,7 @@ export default function PatientHome() {
               border: "1px solid rgba(226,232,240,0.8)",
               boxShadow: "0 2px 20px rgba(11,30,51,0.06)",
             }}>
-              <div style={{ display: "flex", alignItems: "center", justifyItems: "center", justifyContent: "space-between", marginBottom: 18 }}>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 18 }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                   <div style={{ width: 34, height: 34, borderRadius: 10,
                     background: "rgba(45,212,191,0.10)",
@@ -742,13 +729,10 @@ export default function PatientHome() {
                     borderRadius: 16, padding: "14px 12px",
                     textAlign: "center",
                     border: `1px solid ${s.color}22`,
-                    animationName: "statBounce",
-                    animationDuration: "0.55s",
-                    animationTimingFunction: "cubic-bezier(0.22,1,0.36,1)",
-                    animationFillMode: "both",
+                    animation: "statBounce 0.55s cubic-bezier(0.22,1,0.36,1) both",
                     animationDelay: `${0.4 + i * 0.1}s`,
                     cursor: "default",
-                  } as React.CSSProperties}>
+                  }}>
                     <div style={{ display: "flex", justifyContent: "center", marginBottom: 8 }}>
                       <div style={{ width: 30, height: 30, borderRadius: 9,
                         background: `${s.color}20`,
@@ -833,7 +817,7 @@ export default function PatientHome() {
                 </div>
               </div>
 
-              <div className="resp-hw-row">
+              <div className="resp-header-left" style={{ position: "relative", zIndex: 2 }}>
                 {/* WiFi Icon */}
                 <div style={{ position: "relative" }}>
                   <div style={{
@@ -889,7 +873,7 @@ export default function PatientHome() {
                 <span style={{ fontSize: 14, fontWeight: 700, color: "#0B1E33" }}>Input Device Confirmed</span>
               </div>
 
-              <div className="resp-hw-row">
+              <div style={{ display: "flex", gap: 18, alignItems: "center", position: "relative", zIndex: 2 }}>
                 {/* Bulb SVG Icon */}
                 <div style={{
                   width: 72, height: 80, borderRadius: 16,
