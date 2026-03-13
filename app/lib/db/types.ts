@@ -15,7 +15,7 @@ export interface UserProfile {
 
 export interface PatientData extends UserProfile {
   role: "patient";
-  
+
   patientId: string;
   condition: "Stroke" | "Parkinson's" | "TBI" | "Post-Surgery" | "Other";
   assignedDoctorId: string | null;
@@ -48,7 +48,7 @@ export interface DoctorData extends UserProfile {
 // ─────────────────────────────────────────────────────────────────────────────
 
 export type GameId =
-  | "synapse_racer"    
+  | "synapse_racer"
   | "rhythm_reef"
   | "grip_surge"
   | "precision_hold"
@@ -59,7 +59,7 @@ export interface TherapyProtocol {
   doctorId: string;
   patientId: string;
   gameId: GameId;
-  level: number;                              
+  level: number;
   targetHand: "left" | "right" | "both";
   hardwareFocus: "mpx_pressure" | "mpu_motion";
   assignedDate: Timestamp;
@@ -68,7 +68,7 @@ export interface TherapyProtocol {
   settings: {
     difficulty: "easy" | "medium" | "hard" | "expert";
     gripMvcPercent: number;
-    audioHints: boolean;      
+    audioHints: boolean;
     visualGuides: boolean;
     tremorFilter: boolean;
   };
@@ -79,16 +79,16 @@ export interface TherapyProtocol {
 // ─────────────────────────────────────────────────────────────────────────────
 
 export interface SessionMetrics {
-  reactionTimeMs?: number;               
-  peakGripForce?: number;                
-  muscleEnduranceDropPercent?: number;   
-  cognitiveAccuracyPercent?: number;     
+  reactionTimeMs?: number;
+  peakGripForce?: number;
+  muscleEnduranceDropPercent?: number;
+  cognitiveAccuracyPercent?: number;
   rawSensorData?: number[];
 
   // MPU6050 motion sensor (Stability Core)
-  tremorAmplitude?: number;              // √(SDx²+SDy²+SDz²)
-  driftDistance?: number;                // avg Euclidean distance from target
-  movementSmoothness?: number;           // (Accel_current−Accel_previous)/Time (jerk)
+  tremorAmplitude?: number; // √(SDx²+SDy²+SDz²)
+  driftDistance?: number; // avg Euclidean distance from target
+  movementSmoothness?: number; // (Accel_current−Accel_previous)/Time (jerk)
 }
 
 export interface GameSession {
@@ -114,10 +114,10 @@ export interface Assignment {
   id?: string;
   doctorId: string;
   patientId: string;
-  gameType: string;        // display name e.g. "Rhythm Reef"
+  gameType: string; // display name e.g. "Rhythm Reef"
   gameId: GameId;
   note: string;
-  targetDuration: number;  // minutes
+  targetDuration: number; // minutes
   status: AssignmentStatus;
   assignedDate: Timestamp;
   completedDate?: Timestamp;
@@ -136,11 +136,29 @@ export interface Communication {
     | "feedback"
     | "direct_message"
     | "ai_insight"
-    | "connection_request"   // patient → doctor during onboarding
-    | "session_alert";       // system-generated low-adherence alerts
+    | "connection_request" // patient → doctor during onboarding
+    | "session_alert"; // system-generated low-adherence alerts
   content: string;
   title: string;
   timestamp: Timestamp;
   isRead: boolean;
   isImportant?: boolean;
+  sessionId?: string;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// SCHEDULED SESSIONS
+// ─────────────────────────────────────────────────────────────────────────────
+
+export interface ScheduledSession {
+  id?: string;
+  doctorId: string;
+  patientId: string;
+  gameId: GameId;
+  level: number;
+  scheduledDate: string;
+  scheduledTime: string;
+  durationMinutes: number;
+  status: "scheduled" | "completed" | "missed" | "cancelled";
+  createdAt: Timestamp;
 }
