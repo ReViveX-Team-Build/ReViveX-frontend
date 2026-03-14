@@ -1,4 +1,5 @@
 // lib/ai/gemini.ts
+
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
 if (!process.env.GEMINI_API_KEY) {
@@ -6,7 +7,9 @@ if (!process.env.GEMINI_API_KEY) {
 }
 
 export const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-export const GEMINI_MODEL = "gemini-2.5-flash";
+
+
+export const GEMINI_MODEL = "gemini-2.0-flash";
 
 export async function generateOnce(prompt: string): Promise<string> {
   const model = genAI.getGenerativeModel({ model: GEMINI_MODEL });
@@ -24,6 +27,7 @@ export async function chatWithHistory(
     systemInstruction: systemPrompt,
   });
 
+  // Gemini requires history to start with a user message
   const geminiHistory = history
     .filter((_, i) => !(i === 0 && history[0].role === "model"))
     .map((m) => ({ role: m.role, parts: [{ text: m.content }] }));
