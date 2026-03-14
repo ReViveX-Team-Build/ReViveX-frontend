@@ -1,32 +1,33 @@
-// src/app/lib/firebase.js
-// Restoring this file - do not delete
+// lib/firebase.ts
+
 import { initializeApp, getApps, getApp } from "firebase/app";
 import { getAuth } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
+import { getStorage } from "firebase/storage";
 import { getAnalytics, isSupported } from "firebase/analytics";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyCwkdpqLcanaH4wyok3ZZ7Nb0OFqB2xXWU",
-  authDomain: "revivex-live.firebaseapp.com",
-  projectId: "revivex-live",
-  storageBucket: "revivex-live.firebasestorage.app",
-  messagingSenderId: "73394415032",
-  appId: "1:73394415032:web:c59db85eed8c59ba9d9b4d",
-  measurementId: "G-SKW7Q8FJ54"
+  apiKey:            process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
+  authDomain:        process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
+  projectId:         process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
+  storageBucket:     process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
+  appId:             process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
+  measurementId:     process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID,
 };
 
-// Initialize App (Prevents creating it twice)
+// Prevents duplicate app initialization in Next.js dev mode
 const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
 
-export const auth = getAuth(app);
-export const db = getFirestore(app);
+export const auth    = getAuth(app);
+export const db      = getFirestore(app);
+export const storage = getStorage(app);
 
-let analytics;
+// Analytics only runs client-side
+let analytics: ReturnType<typeof getAnalytics> | undefined;
 if (typeof window !== "undefined") {
   isSupported().then((yes) => {
-    if (yes) {
-      analytics = getAnalytics(app);
-    }
+    if (yes) analytics = getAnalytics(app);
   });
 }
 
