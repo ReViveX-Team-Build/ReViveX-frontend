@@ -1,12 +1,5 @@
 // lib/seedDatabase.ts
-// Run ONCE from DevTools to populate Firestore with realistic mock data.
-//
-// ⚠️  REPLACE REAL_DOCTOR_UID with the actual UID from Firebase Auth console.
-//     Current real doctor: dasuni → At7huRhhIBReUdlALY8vtsTZktx2
-//
-// ⚠️  PATIENT_ID is a mock Firestore doc ID — not a real Firebase Auth UID.
-//     This patient cannot log in. It is used for doctor-side view testing only.
-//     To test the patient portal, create a real Auth account and use that UID.
+
 
 import { db } from "./firebase";
 import {

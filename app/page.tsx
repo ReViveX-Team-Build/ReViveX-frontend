@@ -738,10 +738,12 @@ function DeviceHoloCanvas({ mouse }: { mouse: { x: number; y: number } }) {
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext("2d")!;
-    const dpr = () => window.devicePixelRatio || 1;
+    let cachedDpr = window.devicePixelRatio || 1;
+    const dpr = () => cachedDpr;
 
     const resize = () => {
-      const d = dpr();
+      cachedDpr = window.devicePixelRatio || 1;
+      const d = cachedDpr;
       canvas.width  = canvas.offsetWidth  * d;
       canvas.height = canvas.offsetHeight * d;
     };
@@ -1034,7 +1036,8 @@ function DeviceHoloCanvas({ mouse }: { mouse: { x: number; y: number } }) {
       tiltVY = (tiltVY + (targetTY - tiltY) * 0.04) * 0.88;
       tiltX += tiltVX; tiltY += tiltVY;
 
-      // ── Hex grid background dots ──────────────────────────
+      // ── Hex grid background dots — redrawn every 3 frames (imperceptible, big perf gain) ──
+      if (frame % 3 === 0) {
       ctx.save();
       const hexR = 28;
       for(let row=0; row<Math.ceil(H/hexR/2)+1; row++) {
@@ -1050,9 +1053,11 @@ function DeviceHoloCanvas({ mouse }: { mouse: { x: number; y: number } }) {
         }
       }
       ctx.restore();
+      }
 
       // ── Circuit traces (radiating from device) ─────────────
       ctx.save();
+      ctx.shadowBlur = 0;
       traces.forEach(tr => {
         tr.pulseT += tr.pulseSpd;
         if(tr.pulseT > 1) tr.pulseT = 0;
@@ -1092,7 +1097,7 @@ function DeviceHoloCanvas({ mouse }: { mouse: { x: number; y: number } }) {
 
       // ── Orbital rings ──────────────────────────────────────
       RINGS.forEach((ring, ri) => {
-        const STEPS = 120;
+        const STEPS = 72;
         ctx.save();
         ctx.lineWidth = 1;
 
@@ -1410,7 +1415,8 @@ function DeviceHoloCanvas({ mouse }: { mouse: { x: number; y: number } }) {
         width:"100%", height:"100%",
         display:"block",
         pointerEvents:"auto",
-        zIndex:20
+        zIndex:20,
+        willChange:"transform",
       }}
     />
   );
@@ -2081,7 +2087,7 @@ function HeroSection() {
 
       <div className="scanline" />
 
-      <FloatingParticles count={28} />
+      <FloatingParticles count={16} />
 
       {/* Neural network layer */}
 
@@ -2147,40 +2153,92 @@ function HeroSection() {
           </p>
         </Reveal>
 
-        {/* CTA pill */}
+        {/* CTA pill - Patient & Doctor Access */}
         <Reveal dir="up" delay={1.5}>
           <div style={{
             display: "flex", flexDirection: "row", alignItems: "center", gap: 8, padding: 8,
             borderRadius: 32, background: "rgba(255,255,255,.03)",
-            border: "1px solid rgba(255,255,255,.09)",
+            border: "1px solid rgba(255,255,255,.07)",
             backdropFilter: "blur(24px)",
             boxShadow: "0 24px 64px rgba(0,0,0,.6), inset 0 1px 0 rgba(255,255,255,.04)",
             width: "fit-content",
           }}>
-            <MagButton onClick={() => router.push("/patients/home")}
+            <MagButton onClick={() => router.push("/auth/patient/signin")}
               className="btn-shim fB"
               style={{
                 position: "relative", overflow: "hidden",
                 display: "flex", alignItems: "center", gap: 12,
-                padding: "16px 36px", borderRadius: 24, fontSize: 14, letterSpacing: ".12em",
+                padding: "18px 44px", borderRadius: 24, fontSize: 15, letterSpacing: ".12em",
                 background: "#2DD4BF", color: "#080f1a", border: "none",
                 boxShadow: "0 0 55px rgba(45,212,191,.42)"
               }}>
-              <Play size={15} style={{ fill: "#080f1a", position: "relative", zIndex: 1 }} />
-              <span style={{ position: "relative", zIndex: 1 }}>Patient Portal</span>
+              <Play size={16} style={{ fill: "#080f1a", position: "relative", zIndex: 1 }} />
+              <span style={{ position: "relative", zIndex: 1 }}>Patient Sign In</span>
             </MagButton>
-            <div style={{ width: 1, height: 42, background: "rgba(255,255,255,.07)" }} />
-            <MagButton onClick={() => router.push("/doctor/home")}
+            <div style={{ width: 1, height: 46, background: "rgba(255,255,255,.06)" }} />
+            <MagButton onClick={() => router.push("/auth/doctor/signin")}
               className="fB"
               style={{
-                display: "flex", alignItems: "center", gap: 10,
-                padding: "16px 32px", borderRadius: 24, fontSize: 14, letterSpacing: ".12em",
-                background: "transparent", color: "rgba(255,255,255,.82)", border: "none"
+                display: "flex", alignItems: "center", gap: 12,
+                padding: "18px 44px", borderRadius: 24, fontSize: 15, letterSpacing: ".12em",
+                background: "transparent", color: "rgba(255,255,255,.78)", border: "none"
               }}>
-              <Stethoscope size={15} />
-              Clinician Access
-              <ArrowRight size={12} style={{ opacity: .45 }} />
+              <Stethoscope size={16} />
+              Doctor Sign In
+              <ArrowRight size={13} style={{ opacity: .4 }} />
             </MagButton>
+          </div>
+        </Reveal>
+
+        {/* Signup links */}
+        <Reveal dir="up" delay={1.8}>
+          <div style={{
+            display: "flex", alignItems: "center", gap: 18,
+            marginTop: 24, justifyContent: "center"
+          }}>
+            <span className="fM" style={{
+              fontSize: 9, color: "rgba(255,255,255,.28)",
+              textTransform: "uppercase", letterSpacing: ".22em"
+            }}>
+              New user?
+            </span>
+            <a
+              href="/auth/patient/signup"
+              data-mag
+              className="fM"
+              style={{
+                fontSize: 9, textTransform: "uppercase", letterSpacing: ".20em",
+                color: "#2DD4BF", textDecoration: "none",
+                padding: "6px 14px", borderRadius: 99,
+                border: "1px solid rgba(45,212,191,.2)", transition: "all .3s"
+              }}
+              onMouseEnter={e => (e.currentTarget.style.background = "rgba(45,212,191,.08)")}
+              onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
+            >
+              Patient Signup
+            </a>
+            <span style={{ color: "rgba(255,255,255,.15)" }}>·</span>
+            <a
+              href="/auth/doctor/signup"
+              data-mag
+              className="fM"
+              style={{
+                fontSize: 9, textTransform: "uppercase", letterSpacing: ".20em",
+                color: "rgba(255,255,255,.45)", textDecoration: "none",
+                padding: "6px 14px", borderRadius: 99,
+                border: "1px solid rgba(255,255,255,.1)", transition: "all .3s"
+              }}
+              onMouseEnter={e => {
+                e.currentTarget.style.color = "rgba(255,255,255,.85)";
+                e.currentTarget.style.background = "rgba(255,255,255,.05)";
+              }}
+              onMouseLeave={e => {
+                e.currentTarget.style.color = "rgba(255,255,255,.45)";
+                e.currentTarget.style.background = "transparent";
+              }}
+            >
+              Doctor Signup
+            </a>
           </div>
         </Reveal>
 
@@ -2222,7 +2280,7 @@ function HeroSection() {
 }
 
 //  ROAD BRIDGE  
-function RoadBridge() {
+const RoadBridge = React.memo(function RoadBridge() {
   const ref = useRef<HTMLDivElement>(null);
   const { scrollYProgress: p } = useScroll({ target: ref, offset: ["start start", "end start"] });
 
@@ -2348,10 +2406,10 @@ function RoadBridge() {
       </motion.div>
     </div>
   );
-}
+});
 //  PROBLEM SECTION  
 
-function ProblemSection() {
+const ProblemSection = React.memo(function ProblemSection() {
 
   return (
 
@@ -2510,7 +2568,7 @@ function ProblemSection() {
 
   );
 
-}
+});
 
 
 //  DARK BRIDGE 
@@ -2593,7 +2651,7 @@ function DarkBridge() {
 
 //  SOLUTION SECTION
 
-function SolutionSection() {
+const SolutionSection = React.memo(function SolutionSection() {
   return (
     <section id="solution" data-theme="dark" style={{ background: "linear-gradient(180deg, #04101a 0%, #061421 60%, #060e1a 100%)", padding: "120px 40px", position: "relative", overflow: "hidden" }}>
       <div className="sol-orb-1" />
@@ -2660,14 +2718,14 @@ function SolutionSection() {
       </div>
     </section>
   );
-}
+});
 
 
 
 //  OFFER SECTION  — white bento grid
 
 
-function OfferSection() {
+const OfferSection = React.memo(function OfferSection() {
 
   return (
 
@@ -2875,14 +2933,14 @@ function OfferSection() {
 
   );
 
-}
+});
 
 
 //  WHY SECTION
 
 
 
-function WhySection() {
+const WhySection = React.memo(function WhySection() {
 
   const POINTS = [
 
@@ -2975,14 +3033,14 @@ function WhySection() {
 
   );
 
-}
+});
 
 
 //  MARQUEE STRIP
 
 
 
-function MarqueeStrip() {
+const MarqueeStrip = React.memo(function MarqueeStrip() {
 
   const A = ["MOTOR RECOVERY", "COGNITIVE TRAINING", "GRIP STRENGTH", "TREMOR DETECTION", "DUAL-TASK PROTOCOL", "AI ADAPTATION", "TELE-REHABILITATION", "NEUROPLASTICITY"];
 
@@ -3038,7 +3096,7 @@ function MarqueeStrip() {
 
   );
 
-}
+});
 
 //  FOOTER + CONTACT
 
