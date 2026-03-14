@@ -1,22 +1,33 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
-const apiKey = process.env.GEMINI_API_KEY;
-
-if (!apiKey) {
-  throw new Error("GEMINI_API_KEY is missing in environment variables");
+if (!process.env.GEMINI_API_KEY) {
+  throw new Error("GEMINI_API_KEY is not set in .env.local");
 }
 
-const genAI = new GoogleGenerativeAI(apiKey);
+export const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+export const GEMINI_MODEL = "gemini-2.5-flash";
 
-export async function askGemini(systemPrompt: string, userMessage: string) {
+export async function generateOnce(prompt: string): Promise<string> {
+  const model = genAI.getGenerativeModel({ model: GEMINI_MODEL });
+  const result = await model.generateContent(prompt);
+  return result.response.text();
+}
 
+export async function chatWithHistory(
+  systemPrompt: string,
+  history: { role: "user" | "model"; content: string }[],
+  newMessage: string
+): Promise<string> {
   const model = genAI.getGenerativeModel({
-    model: "gemini-2.0-flash"
+    model: GEMINI_MODEL,
+    systemInstruction: systemPrompt,
   });
 
-  const fullPrompt = `${systemPrompt}\n\nPatient asks: ${userMessage}`;
+  const geminiHistory = history
+    .filter((_, i) => !(i === 0 && history[0].role === "model"))
+    .map((m) => ({ role: m.role, parts: [{ text: m.content }] }));
 
-  const result = await model.generateContent(fullPrompt);
-
+  const chat = model.startChat({ history: geminiHistory });
+  const result = await chat.sendMessage(newMessage);
   return result.response.text();
 }

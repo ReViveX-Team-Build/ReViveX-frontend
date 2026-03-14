@@ -1,4 +1,15 @@
-"use client";
+const mockAdherenceData = {
+  nextSession: {
+    data: "Feb 10 2025",
+    time: "10.30 AM",
+    hand: "Right Hand",
+  },
+  weekly: {
+    completed: 5,
+    total: 7,
+    percentage: 71,
+  },
+};
 
 import React, { useState, useEffect, useRef } from "react";
 import Link from "next/link";
@@ -400,105 +411,142 @@ export default function PatientHome() {
           backgroundSize: "52px 52px" }} />
       </div>
 
-      <main style={{ maxWidth: 1100, margin: "0 auto", padding: "28px 24px", position: "relative", zIndex: 1 }}>
+        {/* Bottom Grid Placeholders */}
+        
+        <div className='bg-white p-6 rounded-2xl shadow-sm border-gray-100'>
+          <h4 className='text-lg font-semibold text-[#0B1E33] mb-6'>
+            Session & Adherence Status
+          </h4>
 
-        {/* ══════════════════════════════════════════════════════════════
-            SECTION 1 · WELCOME HEADER
-        ══════════════════════════════════════════════════════════════ */}
-        <div className="resp-header" style={{
-          animation: "fadeUp 0.65s cubic-bezier(0.22,1,0.36,1) both",
-          background: "#fff",
-          borderRadius: 22,
-          padding: "20px 28px",
-          marginBottom: 24,
-          border: "1.5px solid rgba(45,212,191,0.25)",
-          boxShadow: "0 4px 32px rgba(11,30,51,0.07)",
-          position: "relative", overflow: "hidden",
-        }}>
-          {/* Subtle teal glow top-left */}
-          <div style={{ position: "absolute", top: -30, left: -30, width: 180, height: 180,
-            background: "radial-gradient(circle, rgba(45,212,191,0.08), transparent 70%)" }} />
-          {/* Shimmer */}
-          <div style={{ position: "absolute", inset: 0, overflow: "hidden", pointerEvents: "none" }}>
-            <div style={{ position: "absolute", inset: 0,
-              background: "linear-gradient(90deg,transparent,rgba(45,212,191,0.06),transparent)",
-              animation: "headerShine 4s ease-in-out infinite" }} />
-          </div>
+          {/* Next Therapy Session */}
 
-          <div className="resp-header-left" style={{ position: "relative", zIndex: 2 }}>
-            {/* Avatar */}
-            <div style={{ position: "relative" }}>
-              <div style={{
-                width: 52, height: 52, borderRadius: 16,
-                background: "linear-gradient(135deg, #2DD4BF 0%, #0891b2 100%)",
-                display: "flex", alignItems: "center", justifyContent: "center",
-                boxShadow: "0 0 0 3px rgba(45,212,191,0.20), 0 6px 20px rgba(45,212,191,0.28)",
-                animation: "deviceGlow 3s ease-in-out infinite",
-              }}>
-                <span style={{ fontSize: 17, fontWeight: 800, color: "#fff", letterSpacing: "-0.02em" }}>PB</span>
+          <div className='bg-gray-50 rounded-xl p-5 mb-6'>
+            <h5 className='font-semibold text-[#0B1E33] mb-4'>
+              Next Therapy Session
+            </h5>
+
+            <div className='grid grid-cols-1 sm:grid-cols-3 gap-6 text-sm'>
+              <div className='flex items-center gap-3'>
+                <div className='w-10 h-10 rounded-full bg-teal-100 flex items-center justify-center'>
+                📅
+                </div>
+                <div>
+                  <p className='text-gray-500'>Date</p>
+                  <p className='font-semibold text-teal-600'>{mockAdherenceData.nextSession.data}</p>
+                </div>
               </div>
-              {/* Online dot */}
-              <div style={{ position: "absolute", bottom: -2, right: -2, width: 14, height: 14,
-                background: "#10b981", borderRadius: "50%", border: "2.5px solid #fff",
-                boxShadow: "0 0 8px rgba(16,185,129,0.6)" }} />
-            </div>
-            <div>
-              <p className="mono" style={{ fontSize: 10, color: "rgba(45,212,191,0.7)", textTransform: "uppercase",
-                letterSpacing: "0.18em", marginBottom: 3 }}>NEURO-REHAB PATIENT</p>
-              <h1 style={{ fontSize: "clamp(1.3rem,2.4vw,1.7rem)", fontWeight: 800, color: "#0B1E33", margin: 0, lineHeight: 1.15 }}>
-                Welcome Back, <span style={{ color: "#2DD4BF" }}>{patient.name}</span>! 👋
-              </h1>
-              <p style={{ fontSize: 13, color: "#94a3b8", marginTop: 4, fontWeight: 500 }}>
-                Track your therapy progress and stay motivated
-              </p>
-            </div>
-          </div>
 
-          {/* Right: XP + Streak */}
-          <div className="resp-header-right" style={{ position: "relative", zIndex: 2 }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 8,
-              background: "rgba(245,158,11,0.08)", border: "1px solid rgba(245,158,11,0.20)",
-              borderRadius: 14, padding: "10px 16px" }}>
-              <span style={{ fontSize: 18 }}>🔥</span>
-              <div>
-                <div className="mono" style={{ fontSize: 9, color: "#f59e0b", textTransform: "uppercase", letterSpacing: "0.14em" }}>Streak</div>
-                <div style={{ fontSize: 16, fontWeight: 800, color: "#0B1E33", lineHeight: 1 }}>{patient.streak} Days</div>
+              <div className='flex items-center gap-3'>
+                <div className='w-10 h-10 rounded-full bg-teal-100 flex items-center justify-center'>
+                ⏰
+                </div>
+                <div>
+                  <p className='text-gray-500'>Time</p>
+                  <p className='font-semibold text-teal-600'>{mockAdherenceData.nextSession.time}</p>
+                </div>
               </div>
-            </div>
-            <div style={{ display: "flex", alignItems: "center", gap: 8,
-              background: "rgba(45,212,191,0.08)", border: "1px solid rgba(45,212,191,0.20)",
-              borderRadius: 14, padding: "10px 16px" }}>
-              <Zap size={18} color="#2DD4BF" fill="#2DD4BF" />
-              <div>
-                <div className="mono" style={{ fontSize: 9, color: "#2DD4BF", textTransform: "uppercase", letterSpacing: "0.14em" }}>Total XP</div>
-                <div style={{ fontSize: 16, fontWeight: 800, color: "#0B1E33", lineHeight: 1 }}>
-                  <AnimNum to={patient.xp} delay={400} />
+
+              <div className='flex items-center gap-3'>
+                <div className='w-10 h-10 rounded-full bg-teal-100 flex items-center justify-center'>
+                ✋
+                </div>
+                <div>
+                  <p className='text-gray-500'>Prescribed Hand</p>
+                  <p className='font-semibold text-teal-600'>{mockAdherenceData.nextSession.hand}</p>
                 </div>
               </div>
             </div>
           </div>
+
+          {/* Weekly Adherence */}
+
+          <div className='bg-green-50 rounded-xl p-5'>
+            <div className='flex items-center justify-between mb-3'>
+              <h5 className='font-semibold text-[#0B1E33]'>
+                Weekly Adherence Score
+              </h5>
+
+              <p className='text-2xl font-bold text-green-600'>
+                {mockAdherenceData.weekly.percentage}%
+              </p>
+            </div>
+
+            {/* Progress Bar */}
+
+            <div className='w-full h-2 bg-gray-200 rounded-full overflow-hidden mb-3'>
+              <div 
+              className='h-full bg-amber-600'
+              style={{
+                width: `${mockAdherenceData.weekly.percentage}%`,
+              }}
+              />
+            </div>
+
+            <p className='text-sm text-gray-600'>
+              {mockAdherenceData.weekly.completed} /{" "}
+              {mockAdherenceData.weekly.total} sessions completed this week 
+            </p>
+          </div>
         </div>
 
-        {/* ══════════════════════════════════════════════════════════════
-            SECTION 2 · TWO-COLUMN MAIN
-        ══════════════════════════════════════════════════════════════ */}
-        <div className="resp-two-col">
+        <div className='bg-white p-6 rounded-2xl shadow-sm border border-gray-100 h-48'>
+          <h4 className='font-bold text-[#0B1E33] mb-4'>AI Companion</h4>
+          <div className='h-full flex items-center justify-center text-gray-400 bg-gray-50 
+          rounded-xl border border-dashed border-gray-200'>
+            Chat Bot Loading....
+          </div>
+        </div>
 
-          {/* ── LEFT: Session & Adherence ─────────────────────────────── */}
-          <div className="pat-card" style={{
-            animation: "cardPop 0.6s cubic-bezier(0.22,1,0.36,1) 0.12s both",
-            background: "#fff",
-            borderRadius: 24, padding: "26px",
-            border: "1px solid rgba(226,232,240,0.8)",
-            boxShadow: "0 2px 20px rgba(11,30,51,0.06)",
-            display: "flex", flexDirection: "column", gap: 18,
-          }}>
-            {/* Card header */}
-            <div>
-              <div className="mono" style={{ fontSize: 9.5, color: "#2DD4BF", textTransform: "uppercase",
-                letterSpacing: "0.18em", fontWeight: 600, marginBottom: 4 }}>Weekly Adherence Score</div>
-              <h2 style={{ fontSize: 18, fontWeight: 800, color: "#0B1E33", margin: 0 }}>Session & Adherence Status</h2>
+        <div className='bg-white p-6 rounded-2xl shadow-sm border-gray-100'>
+          <div className='flex items-center justify-between mb-6'>
+          <h4 className='text-lg font-semibold text-[#0B1E33] mb-6'>
+            Quick Stats
+          </h4>
+
+          <button className='flex items-center gap-2 text-teal-500 font-medium hover:text-teal-600 transition'>
+                 View Deyails →
+            </button>
+          </div>
+          
+          <div className='grid grid-cols-1 sm:grid-cols-3 gap-6'>
+            <div className='rounded-x1 p-5 border border-green-200 bg-gradient-to-br from-green-50 to-white'>
+              <div className='flex items-center gap-2 text-green-600 mb-2'>
+                <span>📈</span>
+                <p className='text-sm font-medium'>Grip Strength</p>
+              </div>
+              <p className='text-2xl font-bold text-green-700'>
+                +15% <span className='text-sm'>↗</span>
+              </p>
             </div>
+
+            <div className='rounded-xl p-5 border border-teal-200 bg-gradient-to-br from-teal-50 to-white'>
+              <div className='flex items-center gap-2 text-teal-600 mb-2'>
+              <span>🧠</span>
+              <p className='text-sm font-medium'>Meomory Sucess</p>
+              </div>
+              <p className='text-2xl font-bold text-teal-700'>85%</p>
+            </div>
+
+            <div className='rounded-xl p-5 border border-teal-200 bg-gradient-to-br from-teal-50 to-white'>
+              <div className='flex items-center gap-2 text-teal-600 mb-2'>
+              <span>📊</span>
+              <p className='text-sm font-medium'>Journey</p>
+              </div>
+              <p className='text-2xl font-bold text-teal-700'>40%</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Hardware Status and Input Confirmation */}
+        <div className='bg-white rounded-2xl shadow-sm border-gray-100 p-6'>
+            <h4 className='text-lg font-semibold text-[#0B1E33] mb-6'>
+              Hardware Status & Input Confirmation
+            </h4> 
+
+          <div className='grid grid-cols-1 sm:grid-cols-2 gap-6'>
+            <div className='rounded-xl border border-green-200 bg-gradient-to-br from-green-50 to-white p-6'>
+                <div className='flex items-center justify-between mb-4'>
+                <h5 className='font-semibold text-[#0B1E33]'>Device Status</h5>
 
             {/* Next Therapy Session Inner Card */}
             <div style={{
@@ -564,15 +612,6 @@ export default function PatientHome() {
                   <div className="mono" style={{ fontSize: 10, color: "#94a3b8", marginTop: 3 }}>
                     {adherence.completed}/{adherence.total} Sessions Completed This Week
                   </div>
-                </div>
-                <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
-                  <span style={{ fontSize: "2rem", fontWeight: 800, color: "#2DD4BF", lineHeight: 1,
-                    textShadow: "0 0 20px rgba(45,212,191,0.4)" }}>
-                    <AnimNum to={adherence.score} suffix="%" delay={500} />
-                  </span>
-                </div>
-              </div>
-              <AdherenceBar value={adherence.score} delay={600} />
 
               {/* Session dots */}
               <div style={{ display: "flex", gap: 6, marginTop: 12 }}>
@@ -637,12 +676,8 @@ export default function PatientHome() {
                     <Bot size={19} />
                   </div>
                   <div>
-                    <h3 style={{ fontSize: 16, fontWeight: 800, color: "#0B1E33", margin: 0 }}>AI Companion</h3>
-                    <div style={{ display: "flex", alignItems: "center", gap: 5, marginTop: 2 }}>
-                      <div style={{ width: 6, height: 6, borderRadius: "50%", background: "#10b981",
-                        boxShadow: "0 0 6px #10b981", animation: "wifiPulse 2s ease-in-out infinite" }} />
-                      <span className="mono" style={{ fontSize: 9, color: "#10b981", fontWeight: 600, letterSpacing: "0.10em" }}>ACTIVE</span>
-                    </div>
+                    <p className='text-sm text-gray-500'>Device ID</p>
+                    <p className='text-lg font-semibold text-[#0B1E33]'>R-103</p>
                   </div>
                 </div>
 
@@ -839,35 +874,14 @@ export default function PatientHome() {
                 </div>
 
                 <div>
-                  <div className="mono" style={{ fontSize: 9, color: "#94a3b8",
-                    textTransform: "uppercase", letterSpacing: "0.14em", marginBottom: 4 }}>Device ID</div>
-                  <div style={{ fontSize: 22, fontWeight: 800, color: "#0B1E33", letterSpacing: "-0.02em" }}>R-103</div>
-                  <div style={{ display: "flex", gap: 4, marginTop: 8 }}>
-                    {[1,2,3,4,5].map(bar => (
-                      <div key={bar} style={{
-                        width: 5,
-                        height: bar * 5 + 6,
-                        borderRadius: 3,
-                        background: bar <= 4 ? "#2DD4BF" : "rgba(45,212,191,0.15)",
-                        boxShadow: bar <= 4 ? "0 0 4px rgba(45,212,191,0.4)" : "none",
-                        alignSelf: "flex-end",
-                      }} />
-                    ))}
-                  </div>
-                </div>
-              </div>
-            </div>
+                  <p className='font-semibold text-[#0B1E33]'>
+                    BP Bulb Pressure Sensor
+                  </p>
 
-            {/* Input Device */}
-            <div className="hw-card" style={{
-              background: "linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%)",
-              borderRadius: 18, padding: "22px",
-              border: "1.5px solid rgba(14,165,233,0.20)",
-              boxShadow: "0 2px 16px rgba(14,165,233,0.07)",
-              position: "relative", overflow: "hidden",
-            }}>
-              <div style={{ position: "absolute", top: -20, right: -20, width: 120, height: 120,
-                background: "radial-gradient(circle, rgba(14,165,233,0.07), transparent 70%)" }} />
+                  <p className='text-sm text-gray-500'>
+                    Rubber inflation bulb with tube 
+                  </p>
+                </div>  
 
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 18, position: "relative", zIndex: 2 }}>
                 <span style={{ fontSize: 14, fontWeight: 700, color: "#0B1E33" }}>Input Device Confirmed</span>
@@ -917,23 +931,13 @@ export default function PatientHome() {
                 </div>
               </div>
 
-              {/* Signal bars bottom */}
-              <div style={{ marginTop: 14, paddingTop: 14, borderTop: "1px solid rgba(14,165,233,0.12)",
-                display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                <span className="mono" style={{ fontSize: 9, color: "#94a3b8", textTransform: "uppercase", letterSpacing: "0.12em" }}>Signal Strength</span>
-                <div style={{ display: "flex", gap: 3, alignItems: "flex-end" }}>
-                  {[6,10,14,18,14].map((h, i) => (
-                    <div key={i} style={{
-                      width: 5, height: h,
-                      borderRadius: 3,
-                      background: i < 4 ? `rgba(45,212,191,${0.5 + i * 0.12})` : "rgba(45,212,191,0.12)",
-                      boxShadow: i < 4 ? "0 0 4px rgba(45,212,191,0.35)" : "none",
-                    }} />
-                  ))}
-                </div>
-              </div>
+              <p className='flex items-center gap-2 text-green-600 font-medium text-sm'>
+                System Ready
+              </p>
+
             </div>
           </div>
+          
         </div>
 
       </main>

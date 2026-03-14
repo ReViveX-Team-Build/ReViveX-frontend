@@ -1,248 +1,360 @@
 "use client";
+// app/(pages)/patients/ai-companion/page.tsx
 
 import { useState, useRef, useEffect } from "react";
-import { Bot } from "lucide-react";
-import { Crown, Check } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { useAuthState } from "react-firebase-hooks/auth";
+import { auth } from "@/app/lib/firebase";
+import {
+    Bot, Crown, Check, Sparkles, Zap, TrendingUp,
+    Calendar, Trophy, Heart, Send, ChevronRight,
+    Activity, Loader2,
+} from "lucide-react";
+import { useAiCompanion } from "@/app/lib/ai/useAiCompanion";
+import AIMessageRenderer from "@/components/ai/AIMessageRenderer";
 
+// ─────────────────────────────────────────────────────────────────────────────
+// QUICK ACTIONS
+// ─────────────────────────────────────────────────────────────────────────────
+const QUICK_ACTIONS = [
+    { label: "How did I do this week?",             icon: TrendingUp, mode: "weekly_analysis" as const },
+    { label: "When's my next milestone?",           icon: Trophy,     mode: "chat"            as const },
+    { label: "Why does my grip drop near the end?", icon: Activity,   mode: "chat"            as const },
+    { label: "Am I on track for my goal?",          icon: Zap,        mode: "chat"            as const },
+    { label: "What does my doctor's note mean?",    icon: Heart,      mode: "chat"            as const },
+    { label: "Tips for today's session",            icon: Calendar,   mode: "chat"            as const },
+];
+
+// ─────────────────────────────────────────────────────────────────────────────
+// COMPONENT
+// ─────────────────────────────────────────────────────────────────────────────
 export default function PatientAICompanion() {
-    type Message = {
-        id: string;
-        sender: "user" | "ai";
-        text: string;
-        timestamp: string;
-    };
+    const router  = useRouter();
 
-    const [messages, setMessages] = useState<Message[]>([
-        {
-            id: "1",
-            sender: "ai",
-            text:
-                "Hello John! 👋 I’m your AI companion here to support you through your rehabilitation journey. How are you feeling today?",
-            timestamp: "10:00 AM",
-        },
-    ]);
+    // ── Real auth ────────────────────────────────────────────────────────────
+    const [user, authLoading] = useAuthState(auth);
+
+    // ── AI hook — only passes real uid once auth resolves ────────────────────
+    // When uid is "" the hook's sendMessage guard (if (!uid) return) blocks calls.
+    const { messages, sendMessage, isLoading } = useAiCompanion(
+        user?.uid ?? "",
+        "patient"
+    );
 
     const [inputValue, setInputValue] = useState("");
     const scrollRef = useRef<HTMLDivElement>(null);
 
+    // Auto-scroll on new messages
     useEffect(() => {
         if (scrollRef.current) {
             scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
         }
-    }, [messages]);
+    }, [messages, isLoading]);
 
-
-
-    const handleSendMessage = async () => {
-        if (!inputValue.trim()) return;
-
-        const userMessage: Message = {
-            id: Date.now().toString(),
-            sender: "user",
-            text: inputValue,
-            timestamp: new Date().toLocaleTimeString([], {
-                hour: "2-digit",
-                minute: "2-digit",
-            }),
-        };
-
-        setMessages((prev) => [...prev, userMessage]);
-        setInputValue("");
-
-        try {
-            const res = await fetch("/api/ai-companion", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify({ message: userMessage.text }),
-            });
-
-            const data = await res.json();
-
-            const aiMessage: Message = {
-                id: (Date.now() + 1).toString(),
-                sender: "ai",
-                text: data.reply || "No response from AI",
-                timestamp: new Date().toLocaleTimeString([], {
-                    hour: "2-digit",
-                    minute: "2-digit",
-                }),
-            };
-
-            setMessages((prev) => [...prev, aiMessage]);
-        } catch (error) {
-            console.error("Frontend error:", error);
+    // Redirect if not authenticated
+    useEffect(() => {
+        if (!authLoading && !user) {
+            router.replace("/auth/patient/signin");
         }
+    }, [user, authLoading, router]);
+
+    // ── Handlers ─────────────────────────────────────────────────────────────
+    const handleSend = async (
+        text?: string,
+        mode?: "chat" | "weekly_analysis"
+    ) => {
+        const content = text ?? inputValue;
+        if (!content.trim() || isLoading || !user) return;
+        if (!text) setInputValue("");
+        await sendMessage(content, mode ?? "chat");
     };
 
+    // ── Auth loading spinner ──────────────────────────────────────────────────
+    if (authLoading) {
+        return (
+            <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 via-white to-teal-50/30">
+                <div className="flex flex-col items-center gap-3">
+                    <Loader2 className="h-8 w-8 text-[#2DD4BF] animate-spin" />
+                    <p className="text-sm text-gray-400">Loading companion…</p>
+                </div>
+            </div>
+        );
+    }
+
+    // ── Not logged in (briefly shown before redirect) ─────────────────────────
+    if (!user) return null;
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // RENDER
+    // ─────────────────────────────────────────────────────────────────────────
     return (
-        <div className="p-4 sm:p-6 lg:p-8">
+        <div className="p-4 sm:p-6 lg:p-8 min-h-screen bg-gradient-to-br from-slate-50 via-white to-teal-50/30">
             <div className="max-w-7xl mx-auto">
 
-                {/* Page Header */}
-                <div className="mb-8">
-                    <h2 className="text-[#0A2E4C] mb-2">
-                        AI Companion
-                    </h2>
-                    <p className="text-gray-600">
-                        Your personal rehabilitation support assistant
+                {/* ── Header ──────────────────────────────────────────────── */}
+                <div className="mb-6">
+                    <div className="flex items-center gap-2 mb-1">
+                        <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#2DD4BF] to-[#0A2E4C] flex items-center justify-center">
+                            <Bot className="h-4 w-4 text-white" />
+                        </div>
+                        <h2 className="text-[#0A2E4C] text-2xl font-bold tracking-tight">
+                            AI Companion
+                        </h2>
+                        <span className="flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs font-semibold">
+                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                            Online
+                        </span>
+                    </div>
+                    <p className="text-gray-500 text-sm">
+                        Your personal rehabilitation support assistant · Powered by Gemini
                     </p>
                 </div>
 
-                {/* Main Layout */}
-                <div className="grid gap-6 lg:grid-cols-3">
+                <div className="grid gap-5 lg:grid-cols-[1fr_320px]">
 
-                    {/* Chat Area Placeholder */}
-                    <div className="bg-white shadow-lg rounded-xl h-[calc(100vh-250px)] flex flex-col">
+                    {/* ── Chat panel ──────────────────────────────────────── */}
+                    <div className="bg-white border border-gray-100 shadow-sm rounded-2xl flex flex-col h-[calc(100vh-220px)] overflow-hidden">
 
-                        {/* Chat Messages */}
-                        <div
-                            ref={scrollRef}
-                            className="flex-1 p-4 space-y-4 overflow-y-auto"
-                        >
-                            {messages.map((message) => (
+                        {/* Chat header bar */}
+                        <div className="px-5 py-3.5 bg-gradient-to-r from-[#0A2E4C] to-[#0d3a5c] flex items-center gap-3">
+                            <div className="w-9 h-9 rounded-full bg-gradient-to-br from-[#2DD4BF] to-teal-400 flex items-center justify-center flex-shrink-0 shadow-md">
+                                <Bot className="h-5 w-5 text-white" />
+                            </div>
+                            <div className="flex-1">
+                                <p className="text-white font-semibold text-sm leading-none">
+                                    ReViveX Companion
+                                </p>
+                                <p className="text-teal-300 text-xs mt-0.5">
+                                    Analysing your sessions in real-time
+                                </p>
+                            </div>
+                            <Sparkles className="h-4 w-4 text-teal-300" />
+                        </div>
+
+                        {/* Messages area */}
+                        <div ref={scrollRef} className="flex-1 p-5 space-y-4 overflow-y-auto">
+
+                            {/* Empty state */}
+                            {messages.length === 0 && !isLoading && (
+                                <div className="flex flex-col items-center justify-center h-full gap-4">
+                                    <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-[#2DD4BF]/20 to-teal-100 flex items-center justify-center">
+                                        <Bot className="h-8 w-8 text-[#2DD4BF]" />
+                                    </div>
+                                    <div className="text-center">
+                                        <p className="text-[#0A2E4C] font-semibold text-base">
+                                            Hello! I'm your ReViveX companion.
+                                        </p>
+                                        <p className="text-gray-400 text-sm mt-1 max-w-xs">
+                                            Ask me about your progress, sessions, or tap a quick action below.
+                                        </p>
+                                    </div>
+                                    <div className="flex flex-wrap gap-2 justify-center max-w-md">
+                                        {QUICK_ACTIONS.slice(0, 3).map((a) => (
+                                            <button
+                                                key={a.label}
+                                                onClick={() => handleSend(a.label, a.mode)}
+                                                disabled={isLoading}
+                                                className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-teal-50 border border-teal-200 text-teal-700 text-xs font-medium hover:bg-teal-100 transition disabled:opacity-50"
+                                            >
+                                                <a.icon className="h-3 w-3" />
+                                                {a.label}
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Message list */}
+                            {messages.map((message, i) => (
                                 <div
-                                    key={message.id}
-                                    className={`flex ${
-                                        message.sender === "user" ? "justify-end" : "justify-start"
-                                    }`}
+                                    key={message.id ?? i}
+                                    className={`flex ${message.role === "user" ? "justify-end" : "justify-start"}`}
                                 >
-                                    {message.sender === "ai" && (
-                                        <div className="flex items-start gap-3 max-w-[80%]">
-                                            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#2DD4BF] to-[#0A2E4C] flex items-center justify-center">
-                                                <Bot className="h-5 w-5 text-white" />
+                                    {/* AI bubble */}
+                                    {message.role === "model" && (
+                                        <div className="flex items-start gap-2.5 max-w-[85%]">
+                                            <div className="w-7 h-7 rounded-full bg-gradient-to-br from-[#2DD4BF] to-[#0A2E4C] flex items-center justify-center flex-shrink-0 mt-0.5 shadow-sm">
+                                                <Bot className="h-3.5 w-3.5 text-white" />
                                             </div>
-                                            <div className="bg-[#F8F9FA] text-[#0A2E4C] rounded-lg p-3">
-                                                <p className="text-sm">{message.text}</p>
-                                                <p className="text-xs text-gray-500 mt-1">
-                                                    {message.timestamp}
-                                                </p>
+                                            <div className="bg-gray-50 border border-gray-100 rounded-2xl rounded-tl-sm px-4 py-3 shadow-sm min-w-0 overflow-hidden">
+                                                <AIMessageRenderer
+                                                    content={message.content}
+                                                    variant="patient"
+                                                />
                                             </div>
                                         </div>
                                     )}
 
-                                    {message.sender === "user" && (
-                                        <div className="bg-[#2DD4BF] text-white rounded-lg p-3 max-w-[80%]">
-                                            <p className="text-sm">{message.text}</p>
-                                            <p className="text-xs text-white/70 mt-1 text-right">
-                                                {message.timestamp}
+                                    {/* User bubble */}
+                                    {message.role === "user" && (
+                                        <div className="bg-gradient-to-br from-[#2DD4BF] to-teal-500 text-white rounded-2xl rounded-tr-sm px-4 py-3 max-w-[82%] shadow-sm">
+                                            <p className="text-sm leading-relaxed">
+                                                {message.content}
                                             </p>
                                         </div>
                                     )}
                                 </div>
                             ))}
+
+                            {/* Typing indicator */}
+                            {isLoading && (
+                                <div className="flex items-start gap-2.5">
+                                    <div className="w-7 h-7 rounded-full bg-gradient-to-br from-[#2DD4BF] to-[#0A2E4C] flex items-center justify-center flex-shrink-0 mt-0.5 shadow-sm">
+                                        <Bot className="h-3.5 w-3.5 text-white" />
+                                    </div>
+                                    <div className="bg-gray-50 border border-gray-100 rounded-2xl rounded-tl-sm px-4 py-3.5 shadow-sm">
+                                        <div className="flex gap-1.5 items-center">
+                                            <span className="w-2 h-2 rounded-full bg-teal-400 animate-bounce" style={{ animationDelay: "0ms" }} />
+                                            <span className="w-2 h-2 rounded-full bg-teal-400 animate-bounce" style={{ animationDelay: "150ms" }} />
+                                            <span className="w-2 h-2 rounded-full bg-teal-400 animate-bounce" style={{ animationDelay: "300ms" }} />
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
                         </div>
 
-                        {/* Input Placeholder */}
-                        <div className="border-t p-4">
-                            <div className="flex gap-2">
+                        {/* Quick action chips */}
+                        <div className="px-4 pt-3 flex gap-2 flex-wrap border-t border-gray-50">
+                            {QUICK_ACTIONS.map((a) => (
+                                <button
+                                    key={a.label}
+                                    onClick={() => handleSend(a.label, a.mode)}
+                                    disabled={isLoading}
+                                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-teal-50 border border-teal-100 text-teal-700 text-xs font-medium hover:bg-teal-100 hover:border-teal-300 transition disabled:opacity-40 whitespace-nowrap"
+                                >
+                                    <a.icon className="h-3 w-3 flex-shrink-0" />
+                                    {a.label}
+                                </button>
+                            ))}
+                        </div>
+
+                        {/* Input */}
+                        <div className="p-4">
+                            <div className="flex gap-2 items-center bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 focus-within:border-[#2DD4BF] focus-within:ring-2 focus-within:ring-[#2DD4BF]/20 transition">
                                 <input
                                     value={inputValue}
                                     onChange={(e) => setInputValue(e.target.value)}
-                                    onKeyDown={(e) => e.key === "Enter" && handleSendMessage()}
-                                    placeholder="Type your message..."
-                                    className="flex-1 px-4 py-3 border rounded-lg text-sm"
+                                    onKeyDown={(e) => {
+                                        if (e.key === "Enter" && !e.shiftKey) {
+                                            e.preventDefault();
+                                            handleSend();
+                                        }
+                                    }}
+                                    placeholder="Ask about your progress, sessions, or recovery..."
+                                    disabled={isLoading}
+                                    className="flex-1 bg-transparent text-sm text-[#0A2E4C] placeholder:text-gray-400 outline-none"
                                 />
                                 <button
-                                    onClick={handleSendMessage}
-                                    className="bg-[#2DD4BF] hover:bg-[#2DD4BF]/90 text-white px-4 rounded-lg"
+                                    onClick={() => handleSend()}
+                                    disabled={!inputValue.trim() || isLoading}
+                                    className="w-8 h-8 rounded-lg bg-[#2DD4BF] hover:bg-teal-400 text-white flex items-center justify-center transition disabled:opacity-40 disabled:cursor-not-allowed flex-shrink-0"
                                 >
-                                    Send
+                                    <Send className="h-3.5 w-3.5" />
                                 </button>
                             </div>
+                            <p className="text-center text-gray-300 text-xs mt-2">
+                                AI responses are supportive guidance, not medical advice.
+                            </p>
                         </div>
                     </div>
 
-                    {/* Plans / Info Placeholder */}
-                    <div className="space-y-6">
+                    {/* ── Sidebar ─────────────────────────────────────────── */}
+                    <div className="space-y-4">
 
-                        {/* Current Plan */}
-                        <div className="bg-white shadow-lg rounded-xl p-6">
-                            <h3 className="text-[#0A2E4C] mb-3">
+                        {/* Current plan */}
+                        <div className="bg-white border border-gray-100 shadow-sm rounded-2xl p-5">
+                            <h3 className="text-[#0A2E4C] font-semibold text-sm mb-3 flex items-center gap-2">
+                                <Activity className="h-4 w-4 text-[#2DD4BF]" />
                                 Current Plan
                             </h3>
-
-                            <div className="bg-[#2DD4BF]/10 border border-[#2DD4BF]/20 rounded-lg p-4">
-                                <p className="text-[#0A2E4C]">
-                                    Text Chat
+                            <div className="bg-gradient-to-br from-teal-50 to-teal-100/50 border border-[#2DD4BF]/20 rounded-xl p-4">
+                                <div className="flex items-center gap-2 mb-1">
+                                    <span className="w-2 h-2 rounded-full bg-[#2DD4BF] animate-pulse" />
+                                    <p className="text-[#0A2E4C] font-semibold text-sm">
+                                        Text Companion
+                                    </p>
+                                </div>
+                                <p className="text-xs text-gray-500 leading-relaxed">
+                                    Unlimited AI-powered chat with your rehab data analysed in real-time.
                                 </p>
-                                <p className="text-sm text-gray-600 mt-1">
-                                    Free plan with unlimited text-based AI support
-                                </p>
+                                <div className="mt-3 flex flex-wrap gap-1.5">
+                                    {["Session Analysis", "Progress Tracking", "Doctor Context"].map((f) => (
+                                        <span
+                                            key={f}
+                                            className="px-2 py-0.5 rounded-full bg-white border border-teal-200 text-teal-700 text-xs font-medium"
+                                        >
+                                            {f}
+                                        </span>
+                                    ))}
+                                </div>
                             </div>
                         </div>
 
-                        {/* Premium Plans */}
-                        <div className="bg-white shadow-lg rounded-xl p-6">
+                        {/* Premium plans */}
+                        <div className="bg-white border border-gray-100 shadow-sm rounded-2xl p-5">
                             <div className="flex items-center gap-2 mb-4">
-                                <Crown className="h-5 w-5 text-amber-500" />
-                                <h3 className="text-[#0A2E4C]">
-                                    Premium Plans
-                                </h3>
+                                <Crown className="h-4 w-4 text-amber-500" />
+                                <h3 className="text-[#0A2E4C] font-semibold text-sm">Premium Plans</h3>
                             </div>
 
-                            {/* Voice Companion */}
-                            <div className="border-2 border-amber-300 rounded-lg p-4 mb-4">
-                                <p className="text-[#0A2E4C] mb-1">
-                                    Voice Companion
-                                </p>
-                                <p className="text-2xl text-[#0A2E4C] mb-3">
-                                    $29<span className="text-sm text-gray-600">/month</span>
-                                </p>
-
-                                <ul className="space-y-2 text-sm mb-4">
-                                    <li className="flex items-start gap-2">
-                                        <Check className="h-4 w-4 text-green-500 mt-0.5" />
-                                        <span>Real-time voice guidance</span>
-                                    </li>
-                                    <li className="flex items-start gap-2">
-                                        <Check className="h-4 w-4 text-green-500 mt-0.5" />
-                                        <span>Hands-free interaction</span>
-                                    </li>
-                                    <li className="flex items-start gap-2">
-                                        <Check className="h-4 w-4 text-green-500 mt-0.5" />
-                                        <span>Personalized encouragement</span>
-                                    </li>
+                            {/* Voice */}
+                            <div className="border border-amber-200 bg-amber-50/50 rounded-xl p-4 mb-3">
+                                <div className="flex items-start justify-between mb-2">
+                                    <div>
+                                        <p className="text-[#0A2E4C] font-semibold text-sm">Voice Companion</p>
+                                        <p className="text-2xl font-bold text-amber-600 mt-0.5">
+                                            $29<span className="text-xs font-normal text-gray-500">/mo</span>
+                                        </p>
+                                    </div>
+                                    <Crown className="h-5 w-5 text-amber-400" />
+                                </div>
+                                <ul className="space-y-1.5 text-xs text-gray-600 mb-3">
+                                    {["Real-time voice guidance", "Hands-free interaction", "Personalised encouragement"].map((f) => (
+                                        <li key={f} className="flex items-center gap-1.5">
+                                            <Check className="h-3 w-3 text-amber-500 flex-shrink-0" />
+                                            {f}
+                                        </li>
+                                    ))}
                                 </ul>
-
-                                <button className="w-full bg-amber-600 hover:bg-amber-700 text-white py-2 rounded-lg">
-                                    Upgrade Now
+                                <button className="w-full bg-amber-500 hover:bg-amber-600 text-white py-2 rounded-lg text-xs font-semibold transition flex items-center justify-center gap-1">
+                                    Upgrade Now <ChevronRight className="h-3 w-3" />
                                 </button>
                             </div>
 
-                            {/* Advanced Analytics */}
-                            <div className="border-2 border-[#2DD4BF] rounded-lg p-4">
-                                <p className="text-[#0A2E4C] mb-1">
-                                    Advanced Analytics
-                                </p>
-                                <p className="text-2xl text-[#0A2E4C] mb-3">
-                                    $19<span className="text-sm text-gray-600">/month</span>
-                                </p>
-
-                                <ul className="space-y-2 text-sm mb-4">
-                                    <li className="flex items-start gap-2">
-                                        <Check className="h-4 w-4 text-green-500 mt-0.5" />
-                                        <span>Detailed progress insights</span>
-                                    </li>
-                                    <li className="flex items-start gap-2">
-                                        <Check className="h-4 w-4 text-green-500 mt-0.5" />
-                                        <span>Weekly AI reports</span>
-                                    </li>
-                                    <li className="flex items-start gap-2">
-                                        <Check className="h-4 w-4 text-green-500 mt-0.5" />
-                                        <span>Recovery trend predictions</span>
-                                    </li>
+                            {/* Analytics */}
+                            <div className="border border-[#2DD4BF]/30 bg-teal-50/40 rounded-xl p-4">
+                                <div className="flex items-start justify-between mb-2">
+                                    <div>
+                                        <p className="text-[#0A2E4C] font-semibold text-sm">Advanced Analytics</p>
+                                        <p className="text-2xl font-bold text-[#0A2E4C] mt-0.5">
+                                            $19<span className="text-xs font-normal text-gray-500">/mo</span>
+                                        </p>
+                                    </div>
+                                    <Sparkles className="h-5 w-5 text-[#2DD4BF]" />
+                                </div>
+                                <ul className="space-y-1.5 text-xs text-gray-600 mb-3">
+                                    {["Detailed progress insights", "Weekly AI reports", "Recovery trend predictions"].map((f) => (
+                                        <li key={f} className="flex items-center gap-1.5">
+                                            <Check className="h-3 w-3 text-[#2DD4BF] flex-shrink-0" />
+                                            {f}
+                                        </li>
+                                    ))}
                                 </ul>
-
-                                <button className="w-full border border-[#2DD4BF] text-[#2DD4BF] py-2 rounded-lg hover:bg-[#2DD4BF]/10">
+                                <button className="w-full border border-[#2DD4BF] text-[#2DD4BF] py-2 rounded-lg text-xs font-semibold hover:bg-[#2DD4BF]/10 transition">
                                     Upgrade
                                 </button>
                             </div>
+                        </div>
 
+                        {/* Disclaimer */}
+                        <div className="bg-blue-50 border border-blue-100 rounded-xl p-4">
+                            <p className="text-xs text-blue-700 leading-relaxed">
+                                <span className="font-semibold">About your AI companion:</span>{" "}
+                                Responses are personalised using your real session data and doctor
+                                instructions. Always follow your neurologist's prescribed protocol.
+                            </p>
                         </div>
                     </div>
-
                 </div>
             </div>
         </div>

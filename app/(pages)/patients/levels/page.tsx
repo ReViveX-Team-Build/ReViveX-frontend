@@ -698,7 +698,7 @@ export default function LevelsPage() {
   // Overrides the hardcoded 'locked' status based on Firebase data
   const dynamicLevels = BASE_LEVELS.map(level => ({
     ...level,
-    locked: patientData ? !patientData.gamification.unlockedLevels.includes(level.id) : level.locked
+    locked: !(patientData?.gamification?.unlockedLevels ?? [1]).includes(level.id)
   }));
 
   const filteredLevels = activeCategory === "ALL" ? dynamicLevels : dynamicLevels.filter(l => l.category === activeCategory);

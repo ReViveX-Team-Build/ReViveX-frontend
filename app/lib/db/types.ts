@@ -1,6 +1,10 @@
+// lib/db/types.ts
 import { Timestamp } from "firebase/firestore";
 
-// --- USERS (Patients & Doctors) ---
+// ─────────────────────────────────────────────────────────────────────────────
+// USERS
+// ─────────────────────────────────────────────────────────────────────────────
+
 export interface UserProfile {
   uid: string;
   role: "patient" | "doctor";
@@ -10,8 +14,14 @@ export interface UserProfile {
 }
 
 export interface PatientData extends UserProfile {
-  condition: "Stroke" | "Parkinson's" | "Other";
-  assignedDoctorId: string;
+  role: "patient";
+  
+  patientId: string;
+  condition: "Stroke" | "Parkinson's" | "TBI" | "Post-Surgery" | "Other";
+  assignedDoctorId: string | null;
+  connectionStatus: "none" | "pending" | "accepted" | "rejected";
+  subscriptionPlan: "standard" | "ai_companion";
+  profilePictureUrl?: string;
   gamification: {
     totalXp: number;
     currentStreak: number;
@@ -24,56 +34,113 @@ export interface PatientData extends UserProfile {
   };
 }
 
-// --- THERAPY PROTOCOLS ---
+export interface DoctorData extends UserProfile {
+  role: "doctor";
+  doctorId: string;
+  specialization: string;
+  licenseNumber?: string;
+  profilePictureUrl?: string;
+  subscriptionPlan?: "standard" | "premium";
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// THERAPY PROTOCOLS
+// ─────────────────────────────────────────────────────────────────────────────
+
+export type GameId =
+  | "synapse_racer"    
+  | "rhythm_reef"
+  | "grip_surge"
+  | "precision_hold"
+  | "stability_core";
+
 export interface TherapyProtocol {
   id?: string;
   doctorId: string;
   patientId: string;
-  gameId: "synapse_racer" | "stability_game";
-  level: number; // 1-5
+  gameId: GameId;
+  level: number;                              
   targetHand: "left" | "right" | "both";
   hardwareFocus: "mpx_pressure" | "mpu_motion";
   assignedDate: Timestamp;
+  doctorNote?: string;
+  sessionsPerWeek: number;
   settings: {
     difficulty: "easy" | "medium" | "hard" | "expert";
-    audioHints: boolean;
+    gripMvcPercent: number;
+    audioHints: boolean;      
     visualGuides: boolean;
+    tremorFilter: boolean;
   };
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+// SESSIONS & METRICS
+// ─────────────────────────────────────────────────────────────────────────────
 
 export interface SessionMetrics {
-  // MPX50DP (Pressure) Metrics - Synapse Racer
-  reactionTimeMs?: number; 
-  peakGripForce?: number;
-  muscleEnduranceDropPercent?: number; 
-  cognitiveAccuracyPercent?: number;
+  reactionTimeMs?: number;               
+  peakGripForce?: number;                
+  muscleEnduranceDropPercent?: number;   
+  cognitiveAccuracyPercent?: number;     
+  rawSensorData?: number[];
 
-  // MPU6050 (Motion) Metrics - Stability Game
-  tremorAmplitude?: number;
-  driftDistance?: number;
-  movementSmoothness?: number;
+  // MPU6050 motion sensor (Stability Core)
+  tremorAmplitude?: number;              // √(SDx²+SDy²+SDz²)
+  driftDistance?: number;                // avg Euclidean distance from target
+  movementSmoothness?: number;           // (Accel_current−Accel_previous)/Time (jerk)
 }
 
 export interface GameSession {
   id?: string;
-  userId: string;       
-  protocolId: string; 
-  gameId: string;
-  timestamp: Timestamp; 
+  userId: string;
+  protocolId: string;
+  gameId: GameId;
+  level: number;
+  timestamp: Timestamp;
   durationSeconds: number;
   targetHand: "left" | "right";
-  metrics: SessionMetrics; 
-  aiSummary?: string; 
+  metrics: SessionMetrics;
+  aiSummary?: string;
 }
 
-// --- COMMUNICATIONS (Chat & Alerts) ---
+// ─────────────────────────────────────────────────────────────────────────────
+// ASSIGNMENTS
+// ─────────────────────────────────────────────────────────────────────────────
+
+export type AssignmentStatus = "pending" | "active" | "completed" | "cancelled";
+
+export interface Assignment {
+  id?: string;
+  doctorId: string;
+  patientId: string;
+  gameType: string;        // display name e.g. "Rhythm Reef"
+  gameId: GameId;
+  note: string;
+  targetDuration: number;  // minutes
+  status: AssignmentStatus;
+  assignedDate: Timestamp;
+  completedDate?: Timestamp;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// COMMUNICATIONS
+// ─────────────────────────────────────────────────────────────────────────────
+
 export interface Communication {
   id?: string;
-  senderId: string; 
+  senderId: string;
   receiverId: string;
-  type: "instruction" | "feedback" | "direct_message" | "ai_insight";
+  type:
+    | "instruction"
+    | "feedback"
+    | "direct_message"
+    | "ai_insight"
+    | "connection_request"   // patient → doctor during onboarding
+    | "session_alert";       // system-generated low-adherence alerts
   content: string;
+  title: string;
   timestamp: Timestamp;
   isRead: boolean;
+  isImportant?: boolean;
 }
