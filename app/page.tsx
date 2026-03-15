@@ -716,22 +716,63 @@ const DeviceHoloCanvas = React.memo(function DeviceHoloCanvas({
     if (!el || typeof window === "undefined") return;
 
     let renderer: any = null;
-    let frameId    = 0;
+    let frameId = 0;
     let model: any = null;
     let cleanup: (() => void) | undefined;
 
+    // ── Drag state ────────────────────────────────────────
+    let isDragging = false;
+    let lastX = 0, lastY = 0;
+    let rotX  = 0.2, rotY = 0.4;
+    let velX  = 0,   velY = 0;
+
+    const onPointerDown = (e: PointerEvent) => {
+      isDragging = true;
+      lastX = e.clientX;
+      lastY = e.clientY;
+      velX = 0;
+      velY = 0;
+      (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
+      (e.currentTarget as HTMLElement).style.cursor = "grabbing";
+      e.preventDefault();
+    };
+
+    const onPointerMove = (e: PointerEvent) => {
+      if (!isDragging) return;
+      const dx = e.clientX - lastX;
+      const dy = e.clientY - lastY;
+      rotY += dx * 0.008;
+      rotX += dy * 0.008;
+      velY = dx * 0.008;
+      velX = dy * 0.008;
+      lastX = e.clientX;
+      lastY = e.clientY;
+      if (model) {
+        model.rotation.x = rotX;
+        model.rotation.y = rotY;
+      }
+      e.preventDefault();
+    };
+
+    const onPointerUp = (e: PointerEvent) => {
+      isDragging = false;
+      (e.currentTarget as HTMLElement).style.cursor = "grab";
+    };
+
     const init = async () => {
-      const THREE      = await import("three");
+      const THREE = await import("three");
       const { GLTFLoader } = await import(
-        /* webpackChunkName: "gltf-loader" */
         "three/examples/jsm/loaders/GLTFLoader.js" as any
       );
 
       // ── Scene ─────────────────────────────────────────────
-      const scene    = new THREE.Scene();
+      const scene  = new THREE.Scene();
       const W = el.clientWidth, H = el.clientHeight;
-      const camera   = new THREE.PerspectiveCamera(42, W / H, 0.1, 100);
-      camera.position.set(0, 0.4, 4.5);
+      // Camera pulled back, positioned slightly higher so model
+      // sits level with the "REWIRING" headline
+      const camera = new THREE.PerspectiveCamera(38, W / H, 0.1, 100);
+      camera.position.set(0, 0.8, 5.0);
+      camera.lookAt(0, 0.3, 0);
 
       renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
       renderer.setSize(W, H);
@@ -739,27 +780,49 @@ const DeviceHoloCanvas = React.memo(function DeviceHoloCanvas({
       renderer.setClearColor(0x000000, 0);
       (renderer as any).outputColorSpace = "srgb";
       renderer.shadowMap.enabled = true;
+      renderer.toneMapping = (THREE as any).ACESFilmicToneMapping;
+      renderer.toneMappingExposure = 1.8;
       el.appendChild(renderer.domElement);
 
-      // ── Lighting — teal-themed to match page ──────────────
-      scene.add(new THREE.AmbientLight(0xffffff, 0.7));
+      // ── Attach drag events to the actual canvas element ───
+      // The canvas sits on top and intercepts all pointer events.
+      // We must listen on it directly — not the parent div.
+      const cv = renderer.domElement;
+      cv.style.cursor = "grab";
+      cv.addEventListener("pointerdown", onPointerDown);
+      cv.addEventListener("pointermove", onPointerMove);
+      cv.addEventListener("pointerup",   onPointerUp);
+      cv.addEventListener("pointerleave", onPointerUp);
 
-      const key = new THREE.DirectionalLight(0xffffff, 2.0);
-      key.position.set(3, 5, 5);
+      // ── Lighting — bright, cool, teal-accented ────────────
+      // Strong ambient so model never looks dark
+      scene.add(new THREE.AmbientLight(0xd4eeff, 2.4));
+
+      // Main white key light from top-front
+      const key = new THREE.DirectionalLight(0xffffff, 3.5);
+      key.position.set(2, 6, 5);
       key.castShadow = true;
       scene.add(key);
 
-      const teal1 = new THREE.PointLight(0x2DD4BF, 3.5, 14);
-      teal1.position.set(-3, 2, 3);
+      // Cool blue fill from opposite side
+      const fill = new THREE.DirectionalLight(0xa8d8ff, 2.0);
+      fill.position.set(-4, 2, 3);
+      scene.add(fill);
+
+      // Teal rim light from behind-below — signature glow
+      const teal1 = new THREE.PointLight(0x2DD4BF, 6.0, 18);
+      teal1.position.set(-2, -1, -3);
       scene.add(teal1);
 
-      const teal2 = new THREE.PointLight(0x0d9488, 2.2, 10);
-      teal2.position.set(3, -2, -3);
+      // Warm teal accent from front-left
+      const teal2 = new THREE.PointLight(0x14b8a6, 4.0, 12);
+      teal2.position.set(3, 3, 4);
       scene.add(teal2);
 
-      const rim = new THREE.DirectionalLight(0x2DD4BF, 0.7);
-      rim.position.set(-4, -3, -5);
-      scene.add(rim);
+      // Ground bounce — soft warm white
+      const bounce = new THREE.PointLight(0xffffff, 2.5, 10);
+      bounce.position.set(0, -4, 2);
+      scene.add(bounce);
 
       // ── Load GLB ──────────────────────────────────────────
       const loader = new (GLTFLoader as any)();
@@ -768,7 +831,6 @@ const DeviceHoloCanvas = React.memo(function DeviceHoloCanvas({
         (gltf: any) => {
           model = gltf.scene;
 
-          // Auto-center and scale to fit view
           const box    = new THREE.Box3().setFromObject(model);
           const center = box.getCenter(new THREE.Vector3());
           const size   = box.getSize(new THREE.Vector3());
@@ -776,15 +838,18 @@ const DeviceHoloCanvas = React.memo(function DeviceHoloCanvas({
           const scale  = 2.8 / maxDim;
 
           model.scale.setScalar(scale);
-          model.position.copy(center.multiplyScalar(-scale));
+          // Shift center down by scale then nudge up +0.4 to align
+          // with the "REWIRING" headline on the left
+          const offset = center.multiplyScalar(-scale);
+          model.position.set(offset.x, offset.y + 0.4, offset.z);
 
-          // Enable shadows on all meshes
           model.traverse((child: any) => {
             if (child.isMesh) {
               child.castShadow    = true;
               child.receiveShadow = true;
               if (child.material) {
-                child.material.envMapIntensity = 1.4;
+                child.material.envMapIntensity = 2.0;
+                child.material.needsUpdate    = true;
               }
             }
           });
@@ -805,23 +870,23 @@ const DeviceHoloCanvas = React.memo(function DeviceHoloCanvas({
       window.addEventListener("resize", onResize);
 
       // ── Render loop ───────────────────────────────────────
-      let autoAngle = 0;
       const draw = () => {
         frameId = requestAnimationFrame(draw);
 
-        if (model) {
-          // Mouse-driven rotation — reads MotionValue directly (zero React renders)
-          const targetX = mouse.y.get() * -0.55;
-          const targetY = mouse.x.get() * 1.1 + autoAngle;
-          model.rotation.x += (targetX - model.rotation.x) * 0.06;
-          model.rotation.y += (targetY - model.rotation.y) * 0.06;
-          autoAngle += 0.004; // gentle auto-rotate
+        if (model && !isDragging) {
+          // Inertia after release — smoothly coast to a stop
+          velX *= 0.90;
+          velY *= 0.90;
+          rotX += velX;
+          rotY += velY;
+          model.rotation.x = rotX;
+          model.rotation.y = rotY;
         }
 
-        // Pulse teal point lights for atmosphere
+        // Pulse teal lights gently
         const t = Date.now() * 0.001;
-        teal1.intensity = 3.0 + Math.sin(t * 1.5) * 0.8;
-        teal2.intensity = 1.8 + Math.sin(t * 1.1 + 1.0) * 0.6;
+        teal1.intensity = 5.5 + Math.sin(t * 1.3) * 1.0;
+        teal2.intensity = 3.5 + Math.sin(t * 0.9 + 1.0) * 0.8;
 
         renderer.render(scene, camera);
       };
@@ -836,12 +901,19 @@ const DeviceHoloCanvas = React.memo(function DeviceHoloCanvas({
 
     return () => {
       cancelAnimationFrame(frameId);
+      el.removeEventListener("pointerdown", onPointerDown);
+      el.removeEventListener("pointermove", onPointerMove);
+      el.removeEventListener("pointerup",   onPointerUp);
+      el.removeEventListener("pointerleave",onPointerUp);
       if (cleanup) cleanup();
       if (renderer) {
+        const cv = renderer.domElement;
+        cv.removeEventListener("pointerdown", onPointerDown);
+        cv.removeEventListener("pointermove", onPointerMove);
+        cv.removeEventListener("pointerup",   onPointerUp);
+        cv.removeEventListener("pointerleave",onPointerUp);
         renderer.dispose();
-        if (el.contains(renderer.domElement)) {
-          el.removeChild(renderer.domElement);
-        }
+        if (el.contains(cv)) el.removeChild(cv);
       }
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
