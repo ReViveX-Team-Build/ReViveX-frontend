@@ -10,7 +10,7 @@ import { useRouter } from "next/navigation";
 
 import {
 
-  motion, AnimatePresence,
+  motion, AnimatePresence, useMotionValue,
 
   useScroll, useTransform, useSpring,
 
@@ -354,7 +354,7 @@ const CSS = `
   @keyframes opacityPulse {
     0%,100%{opacity:1} 50%{opacity:.55}
   }
-  .aml { position:absolute; border-radius:50%; pointer-events:none; filter:blur(70px); animation: opacityPulse 8s ease-in-out infinite; }
+  .aml { position:absolute; border-radius:50%; pointer-events:none; animation: opacityPulse 8s ease-in-out infinite; }
   .aml-a { animation: drift-a 22s ease-in-out infinite, opacityPulse 9s ease-in-out infinite; }
   .aml-b { animation: drift-b 28s ease-in-out infinite, opacityPulse 11s ease-in-out infinite; }
   .aml-c { animation: drift-c 18s ease-in-out infinite, opacityPulse 7s  ease-in-out infinite; }
@@ -427,27 +427,19 @@ function useLenis() {
 }
 
 function useMouseParallax() {
-
-  const [pos, setPos] = useState({ x: 0, y: 0 });
+  const x = useMotionValue(0);
+  const y = useMotionValue(0);
 
   useEffect(() => {
-
-    const h = (e: MouseEvent) => setPos({
-
-      x: e.clientX / window.innerWidth - 0.5,
-
-      y: e.clientY / window.innerHeight - 0.5,
-
-    });
-
-    window.addEventListener("mousemove", h);
-
+    const h = (e: MouseEvent) => {
+      x.set(e.clientX / window.innerWidth - 0.5);
+      y.set(e.clientY / window.innerHeight - 0.5);
+    };
+    window.addEventListener("mousemove", h, { passive: true });
     return () => window.removeEventListener("mousemove", h);
+  }, [x, y]);
 
-  }, []);
-
-  return pos;
-
+  return { x, y };
 }
 
 
@@ -689,1002 +681,298 @@ function MagButton({ children, onClick, style = {}, className = "", type = "butt
   );
 
 }
-function FloatingParticles({ count = 35 }: { count?: number }) {
+function FloatingParticles({ count = 12 }: { count?: number }) {
   const P = useMemo(() => Array.from({ length: count }, (_, i) => ({
     id: i,
     x: Math.random() * 100,
-    size: Math.random() * 2.5 + 0.5,
-    dur: Math.random() * 12 + 8,
-    delay: Math.random() * 15,
-    opacity: Math.random() * 0.3 + 0.05,
-    drift: (Math.random() - 0.5) * 60, // Horizontal sway distance
+    size: Math.random() * 2 + 0.5,
+    dur: Math.random() * 14 + 10,
+    delay: Math.random() * 16,
   })), [count]);
-
-  const vh = typeof window !== "undefined" ? window.innerHeight : 900;
 
   return (
     <div style={{ position: "absolute", inset: 0, overflow: "hidden", pointerEvents: "none" }}>
+      <style>{`@keyframes floatUpFade{0%{transform:translateY(0);opacity:0}10%{opacity:.2}90%{opacity:.05}100%{transform:translateY(-110vh);opacity:0}}`}</style>
       {P.map(p => (
-        <motion.div key={p.id}
-          style={{
-            position: "absolute", left: `${p.x}%`, bottom: -20,
-            width: p.size, height: p.size, borderRadius: "50%",
-            background: "#2DD4BF",
-            boxShadow: `0 0 ${p.size * 3}px rgba(45,212,191,0.8)`
-          }}
-          animate={{
-            y: [0, -(vh * 1.2)],
-            x: [0, p.drift, -p.drift, 0],
-            opacity: [0, p.opacity, p.opacity, 0]
-          }}
-          transition={{
-            duration: p.dur,
-            delay: p.delay,
-            repeat: Infinity,
-            ease: "easeInOut"
-          }}
-        />
+        <div key={p.id} style={{
+          position: "absolute", left: `${p.x}%`, bottom: -20,
+          width: p.size, height: p.size, borderRadius: "50%", background: "#2DD4BF",
+          animation: `floatUpFade ${p.dur}s ${p.delay}s ease-in infinite`,
+        }} />
       ))}
     </div>
   );
 }
 
-function DeviceHoloCanvas({ mouse }: { mouse: { x: number; y: number } }) {
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  const mouseRef  = useRef(mouse);
-  useEffect(() => { mouseRef.current = mouse; }, [mouse]);
+const DeviceHoloCanvas = React.memo(function DeviceHoloCanvas({
+  mouse,
+}: {
+  mouse: { x: any; y: any };
+}) {
+  const mountRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext("2d")!;
-    let cachedDpr = window.devicePixelRatio || 1;
-    const dpr = () => cachedDpr;
+    const el = mountRef.current;
+    if (!el || typeof window === "undefined") return;
 
-    const resize = () => {
-      cachedDpr = window.devicePixelRatio || 1;
-      const d = cachedDpr;
-      canvas.width  = canvas.offsetWidth  * d;
-      canvas.height = canvas.offsetHeight * d;
-    };
-    resize();
-    window.addEventListener("resize", resize);
+    let renderer: any = null;
+    let frameId    = 0;
+    let model: any = null;
+    let cleanup: (() => void) | undefined;
 
-    // ── COLOR PALETTE SYSTEM ───────────────────────────────────
-    const PALETTES = [
-      { r:45,  g:212, b:191 },  // teal
-      { r:168, g:85,  b:247 },  // purple
-      { r:6,   g:182, b:212 },  // cyan
-      { r:251, g:146, b:60  },  // amber
-    ];
-    let frame = 0;
+    const init = async () => {
+      const THREE      = await import("three");
+      const { GLTFLoader } = await import(
+        /* webpackChunkName: "gltf-loader" */
+        "three/examples/jsm/loaders/GLTFLoader.js" as any
+      );
 
-    const getThemeColor = (opacity = 1, shift = 0) => {
-      const t = (frame * 0.004 + shift) % PALETTES.length;
-      const ai = Math.floor(t), bi = (ai + 1) % PALETTES.length;
-      const f = t % 1;
-      const ease = f * f * (3 - 2 * f);
-      const r = PALETTES[ai].r * (1-ease) + PALETTES[bi].r * ease;
-      const g = PALETTES[ai].g * (1-ease) + PALETTES[bi].g * ease;
-      const b = PALETTES[ai].b * (1-ease) + PALETTES[bi].b * ease;
-      return `rgba(${r|0},${g|0},${b|0},${opacity})`;
-    };
-    const getRGB = (shift = 0) => {
-      const t = (frame * 0.004 + shift) % PALETTES.length;
-      const ai = Math.floor(t), bi = (ai + 1) % PALETTES.length;
-      const f = (t % 1); const ease = f*f*(3-2*f);
-      return {
-        r: PALETTES[ai].r*(1-ease)+PALETTES[bi].r*ease,
-        g: PALETTES[ai].g*(1-ease)+PALETTES[bi].g*ease,
-        b: PALETTES[ai].b*(1-ease)+PALETTES[bi].b*ease,
+      // ── Scene ─────────────────────────────────────────────
+      const scene    = new THREE.Scene();
+      const W = el.clientWidth, H = el.clientHeight;
+      const camera   = new THREE.PerspectiveCamera(42, W / H, 0.1, 100);
+      camera.position.set(0, 0.4, 4.5);
+
+      renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+      renderer.setSize(W, H);
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+      renderer.setClearColor(0x000000, 0);
+      (renderer as any).outputColorSpace = "srgb";
+      renderer.shadowMap.enabled = true;
+      el.appendChild(renderer.domElement);
+
+      // ── Lighting — teal-themed to match page ──────────────
+      scene.add(new THREE.AmbientLight(0xffffff, 0.7));
+
+      const key = new THREE.DirectionalLight(0xffffff, 2.0);
+      key.position.set(3, 5, 5);
+      key.castShadow = true;
+      scene.add(key);
+
+      const teal1 = new THREE.PointLight(0x2DD4BF, 3.5, 14);
+      teal1.position.set(-3, 2, 3);
+      scene.add(teal1);
+
+      const teal2 = new THREE.PointLight(0x0d9488, 2.2, 10);
+      teal2.position.set(3, -2, -3);
+      scene.add(teal2);
+
+      const rim = new THREE.DirectionalLight(0x2DD4BF, 0.7);
+      rim.position.set(-4, -3, -5);
+      scene.add(rim);
+
+      // ── Load GLB ──────────────────────────────────────────
+      const loader = new (GLTFLoader as any)();
+      loader.load(
+        "/images/revivex_3d.glb",
+        (gltf: any) => {
+          model = gltf.scene;
+
+          // Auto-center and scale to fit view
+          const box    = new THREE.Box3().setFromObject(model);
+          const center = box.getCenter(new THREE.Vector3());
+          const size   = box.getSize(new THREE.Vector3());
+          const maxDim = Math.max(size.x, size.y, size.z);
+          const scale  = 2.8 / maxDim;
+
+          model.scale.setScalar(scale);
+          model.position.copy(center.multiplyScalar(-scale));
+
+          // Enable shadows on all meshes
+          model.traverse((child: any) => {
+            if (child.isMesh) {
+              child.castShadow    = true;
+              child.receiveShadow = true;
+              if (child.material) {
+                child.material.envMapIntensity = 1.4;
+              }
+            }
+          });
+
+          scene.add(model);
+        },
+        undefined,
+        (err: any) => console.warn("GLB load error:", err)
+      );
+
+      // ── Resize ────────────────────────────────────────────
+      const onResize = () => {
+        const w = el.clientWidth, h = el.clientHeight;
+        camera.aspect = w / h;
+        camera.updateProjectionMatrix();
+        renderer.setSize(w, h);
+      };
+      window.addEventListener("resize", onResize);
+
+      // ── Render loop ───────────────────────────────────────
+      let autoAngle = 0;
+      const draw = () => {
+        frameId = requestAnimationFrame(draw);
+
+        if (model) {
+          // Mouse-driven rotation — reads MotionValue directly (zero React renders)
+          const targetX = mouse.y.get() * -0.55;
+          const targetY = mouse.x.get() * 1.1 + autoAngle;
+          model.rotation.x += (targetX - model.rotation.x) * 0.06;
+          model.rotation.y += (targetY - model.rotation.y) * 0.06;
+          autoAngle += 0.004; // gentle auto-rotate
+        }
+
+        // Pulse teal point lights for atmosphere
+        const t = Date.now() * 0.001;
+        teal1.intensity = 3.0 + Math.sin(t * 1.5) * 0.8;
+        teal2.intensity = 1.8 + Math.sin(t * 1.1 + 1.0) * 0.6;
+
+        renderer.render(scene, camera);
+      };
+      draw();
+
+      return () => {
+        window.removeEventListener("resize", onResize);
       };
     };
 
-    // ── ISO PROJECTION ─────────────────────────────────────────
-    // Device sits in world space; mouse tilts the whole scene
-    let tiltX = 0, tiltY = 0, tiltVX = 0, tiltVY = 0;
+    init().then((c) => { cleanup = c; });
 
-    const project = (wx: number, wy: number, wz: number, cx: number, cy: number) => {
-      // Apply mouse tilt
-      const cosX = Math.cos(tiltX), sinX = Math.sin(tiltX);
-      const cosY = Math.cos(tiltY), sinY = Math.sin(tiltY);
-      // Rotate around Y
-      const x1 = wx * cosY + wz * sinY;
-      const z1 = -wx * sinY + wz * cosY;
-      // Rotate around X
-      const y2 = wy * cosX - z1 * sinX;
-      const z2 = wy * sinX + z1 * cosX;
-      // Iso-ish perspective
-      const SCALE = 0.85, FOV = 480;
-      const s = FOV / (z2 + FOV);
-      return { px: cx + x1 * s * SCALE, py: cy - y2 * s * SCALE, depth: z2 };
-    };
-
-    // ── DEVICE GEOMETRY ────────────────────────────────────────
-    // Base unit: box w=120, h=35, d=90 centered at (0,0,0) bottom
-    const BASE = { w:120, h:36, d:88 };
-    const SCREEN = { w:88, h:68, d:5 };
-
-    // 8 corners of base box (y goes up)
-    const baseVerts = (): [number,number,number][] => {
-      const [hw,hh,hd] = [BASE.w/2, BASE.h/2, BASE.d/2];
-      return [
-        [-hw, hh,-hd],[ hw, hh,-hd],[ hw, hh, hd],[-hw, hh, hd],  // top face
-        [-hw,-hh,-hd],[ hw,-hh,-hd],[ hw,-hh, hd],[-hw,-hh, hd],  // bottom face
-      ];
-    };
-
-    // Screen slab sitting on top, angled back 25°
-    const screenVerts = (): [number,number,number][] => {
-      const [hw,hh,hd] = [SCREEN.w/2, SCREEN.h/2, SCREEN.d/2];
-      const tilt = 0.40; // radians backward tilt
-      const baseY = BASE.h/2;
-      const verts: [number,number,number][] = [
-        [-hw,-hh,-hd],[ hw,-hh,-hd],[ hw, hh,-hd],[-hw, hh,-hd],
-        [-hw,-hh, hd],[ hw,-hh, hd],[ hw, hh, hd],[-hw, hh, hd],
-      ];
-      // Apply Y-axis tilt and position on top of base
-      return verts.map(([x,y,z]) => {
-        const newY = y * Math.cos(tilt) - z * Math.sin(tilt);
-        const newZ = y * Math.sin(tilt) + z * Math.cos(tilt);
-        return [x, newY + baseY + hh * Math.cos(tilt) + 4, newZ - hd * Math.sin(tilt) - 8];
-      });
-    };
-
-    const BOX_FACES = [
-      [0,1,2,3],  // top
-      [4,5,6,7],  // bottom
-      [0,1,5,4],  // front
-      [2,3,7,6],  // back
-      [0,3,7,4],  // left
-      [1,2,6,5],  // right
-    ];
-
-    // ── ORBITAL RINGS ──────────────────────────────────────────
-    type Ring = { tiltX:number; tiltZ:number; radius:number; speed:number; nodes:number; phase:number; colorShift:number };
-    const RINGS: Ring[] = [
-      { tiltX:0.35, tiltZ:0.0, radius:200, speed:0.012, nodes:6, phase:0,         colorShift:0   },
-      { tiltX:0.9,  tiltZ:0.5, radius:230, speed:-0.008, nodes:5, phase:1.2,      colorShift:1   },
-      { tiltX:0.15, tiltZ:1.1, radius:175, speed:0.018,  nodes:4, phase:2.4,      colorShift:2   },
-    ];
-
-    // ── DATA PACKETS on rings ─────────────────────────────────
-    type Packet = { ring:number; angle:number; speed:number; colorShift:number; trail:[number,number][] };
-    const packets: Packet[] = [];
-    RINGS.forEach((r, ri) => {
-      for(let i=0;i<3;i++) packets.push({
-        ring:ri, angle:Math.random()*Math.PI*2,
-        speed: r.speed * (0.8+Math.random()*0.4),
-        colorShift: ri * 0.66 + i * 0.2,
-        trail:[],
-      });
-    });
-
-    // ── CIRCUIT TRACES ────────────────────────────────────────
-    type Trace = { pts:[number,number][]; pulseT:number; pulseSpd:number };
-    const traces: Trace[] = [];
-    for(let i=0;i<12;i++) {
-      const ang = (i/12)*Math.PI*2;
-      const r = 100+Math.random()*60;
-      const x = Math.cos(ang)*r, y = Math.sin(ang)*r;
-      const mid = [ x*0.4 + (Math.random()-.5)*40, y*0.4 + (Math.random()-.5)*40 ];
-      traces.push({
-        pts: [[0,0], mid as [number,number], [x,y]],
-        pulseT: Math.random(), pulseSpd: 0.004+Math.random()*0.006,
-      });
-    }
-
-    // ── DATA NODES ────────────────────────────────────────────
-    type Node = { x:number; y:number; vx:number; vy:number; life:number; maxLife:number; size:number; text?:string };
-    const nodes: Node[] = [];
-    const DATA_LABELS = ["84kPa","±0.02g","87%","ECG","IMU","BLE","SPI","ADC","GPIO","PWM","NTP","OTA"];
-    let labelIdx = 0;
-
-    // ── SCREEN DATA (ECG-like graph) ───────────────────────────
-    const screenData: number[] = Array.from({length:40}, (_,i) => {
-      // ECG-like: mostly flat with spikes
-      const x = (i/40)*Math.PI*4;
-      return Math.sin(x)*0.2 + (Math.sin(x*6)>0.85 ? Math.sin(x*6)*2 : 0);
-    });
-    let screenOffset = 0;
-
-    // ── BULB PULSE ────────────────────────────────────────────
-    let bulbPulse = 0;
-
-    // ── FLOATING HUD LABELS ───────────────────────────────────
-    type HUD = { label:string; val:string; x:number; y:number; alpha:number; drift:number; colorShift:number };
-    const HUDS: HUD[] = [
-      { label:"GRIP",     val:"84 kPa",  x:-195, y:-90,  alpha:0, drift:0,   colorShift:0   },
-      { label:"TREMOR",   val:"±0.02g",  x: 195, y:-70,  alpha:0, drift:0.6, colorShift:0.9 },
-      { label:"ADHERENCE",val:"87%",     x:-185, y: 95,  alpha:0, drift:1.1, colorShift:1.6 },
-      { label:"XP PTS",   val:"+280",    x: 185, y:100,  alpha:0, drift:1.9, colorShift:2.3 },
-    ];
-
-    // ── SHOCKWAVE SYSTEM ──────────────────────────────────────
-    type Wave = { x:number; y:number; r:number; maxR:number; alpha:number; colorShift:number };
-    const waves: Wave[] = [];
-    let nextWave = 60;
-
-    // ── MAIN DRAW ─────────────────────────────────────────────
-    let raf = 0;
-
-    const drawBox = (
-      verts: [number,number,number][],
-      cx: number, cy: number,
-      fillAlpha: number,
-      strokeAlpha: number,
-      blur: number,
-      colorShift = 0,
-    ) => {
-      const pv = verts.map(v => project(v[0], v[1], v[2], cx, cy));
-      const col = getRGB(colorShift);
-      const csStr = `${col.r|0},${col.g|0},${col.b|0}`;
-
-      // Draw visible faces (simple depth sort: just draw back then front)
-      const faceOrder = [1,3,5,2,0,4]; // roughly back to front
-      faceOrder.forEach(fi => {
-        const face = BOX_FACES[fi];
-        ctx.beginPath();
-        face.forEach((vi, i) => {
-          const p = pv[vi];
-          i === 0 ? ctx.moveTo(p.px, p.py) : ctx.lineTo(p.px, p.py);
-        });
-        ctx.closePath();
-        ctx.fillStyle = `rgba(${csStr},${fillAlpha * (fi===0 ? 1 : fi===2 ? 0.7 : 0.4)})`;
-        ctx.strokeStyle = `rgba(${csStr},${strokeAlpha})`;
-        ctx.lineWidth = 1.2;
-        ctx.shadowBlur = blur;
-        ctx.shadowColor = `rgba(${csStr},0.8)`;
-        ctx.fill();
-        ctx.stroke();
-      });
-    };
-
-    const drawScreenContent = (sv: ReturnType<typeof project>[], cx: number, cy: number) => {
-      // Screen face is face index 0 (front face of screen box) = verts 0,1,2,3
-      const [p0,p1,p2,p3] = [sv[4],sv[5],sv[6],sv[7]]; // front face of screen
-      if (!p0 || !p1 || !p2 || !p3) return;
-
-      ctx.save();
-      // Clip to screen quad
-      ctx.beginPath();
-      ctx.moveTo(p0.px,p0.py); ctx.lineTo(p1.px,p1.py);
-      ctx.lineTo(p2.px,p2.py); ctx.lineTo(p3.px,p3.py);
-      ctx.closePath();
-      ctx.clip();
-
-      // Screen background
-      ctx.fillStyle = "rgba(2,12,24,0.95)";
-      ctx.fill();
-
-      // Estimate screen center and axes for drawing content inside
-      const scx = (p0.px+p1.px+p2.px+p3.px)/4;
-      const scy = (p0.py+p1.py+p2.py+p3.py)/4;
-      const sw  = Math.hypot(p1.px-p0.px, p1.py-p0.py) * 0.8;
-      const sh  = Math.hypot(p3.py-p0.py, p3.px-p0.px) * 0.75;
-
-      const col = getRGB(0.5);
-      const cStr = `${col.r|0},${col.g|0},${col.b|0}`;
-
-      // Draw ECG-like waveform
-      const waveY = scy + sh*0.12;
-      const waveH = sh*0.32;
-      const waveX0 = scx - sw/2;
-      const waveXW = sw;
-      ctx.beginPath();
-      screenData.forEach((v, i) => {
-        const x = waveX0 + (i/screenData.length)*waveXW;
-        const y = waveY - v*waveH;
-        i===0 ? ctx.moveTo(x,y) : ctx.lineTo(x,y);
-      });
-      ctx.strokeStyle = `rgba(${cStr},0.9)`;
-      ctx.lineWidth = 1.4;
-      ctx.shadowBlur = 8;
-      ctx.shadowColor = `rgba(${cStr},1)`;
-      ctx.stroke();
-
-      // Bar graph at bottom
-      for(let i=0;i<8;i++) {
-        const bx = scx - sw/2 + (i/8)*sw + sw/16;
-        const bh = (0.3+Math.sin(frame*0.05+i)*0.2)*sh*0.3;
-        const by = scy + sh*0.35;
-        const alpha = 0.3 + 0.4*(i/8);
-        const g = ctx.createLinearGradient(bx, by-bh, bx, by);
-        g.addColorStop(0, `rgba(${cStr},${alpha})`);
-        g.addColorStop(1, `rgba(${cStr},0.05)`);
-        ctx.fillStyle = g;
-        ctx.fillRect(bx, by-bh, sw/8-2, bh);
-      }
-
-      // Top label
-      ctx.font = "bold 7px monospace";
-      ctx.fillStyle = `rgba(${cStr},0.7)`;
-      ctx.textAlign = "center";
-      ctx.shadowBlur = 4;
-      ctx.fillText("REVIVEX · LIVE", scx, scy - sh*0.42);
-
-      // Scan line
-      const scanY = scy - sh/2 + ((frame*1.5) % (sh+4));
-      ctx.fillStyle = `rgba(${cStr},0.08)`;
-      ctx.fillRect(scx-sw/2, scanY, sw, 2);
-
-      ctx.restore();
-    };
-
-    // Ring point in 3D
-    const ringPt = (ring: Ring, angle: number): [number,number,number] => {
-      const x = Math.cos(angle) * ring.radius;
-      const y = Math.sin(angle) * ring.radius * Math.cos(ring.tiltX) - Math.sin(angle)*ring.radius*0.2;
-      const z = Math.sin(angle) * ring.radius * Math.sin(ring.tiltX) + Math.cos(angle)*ring.radius*Math.sin(ring.tiltZ)*0.5;
-      return [x, y, z];
-    };
-
-    const draw = () => {
-      frame++;
-      const d = dpr();
-      const W = canvas.width/d, H = canvas.height/d;
-      const CX = W * 0.50, CY = H * 0.50;
-
-      ctx.setTransform(d,0,0,d,0,0);
-      ctx.clearRect(0,0,W,H);
-
-      // ── Mouse tilt physics ─────────────────────────────────
-      const mx = mouseRef.current;
-      const targetTY = mx.x * 0.3;
-      const targetTX = mx.y * -0.18;
-      tiltVX = (tiltVX + (targetTX - tiltX) * 0.04) * 0.88;
-      tiltVY = (tiltVY + (targetTY - tiltY) * 0.04) * 0.88;
-      tiltX += tiltVX; tiltY += tiltVY;
-
-      // ── Hex grid background dots — redrawn every 3 frames (imperceptible, big perf gain) ──
-      if (frame % 3 === 0) {
-      ctx.save();
-      const hexR = 28;
-      for(let row=0; row<Math.ceil(H/hexR/2)+1; row++) {
-        for(let col=0; col<Math.ceil(W/hexR)+2; col++) {
-          const x = col*hexR*1.73 + (row%2)*hexR*0.87 - hexR;
-          const y = row*hexR*1.5 - hexR;
-          const dist = Math.hypot(x-CX, y-CY);
-          const fade = Math.max(0, 1 - dist/380);
-          if(fade<0.01) continue;
-          const pulse = Math.sin(frame*0.02 + dist*0.02)*0.5+0.5;
-          ctx.fillStyle = getThemeColor(fade * 0.045 * pulse);
-          ctx.beginPath(); ctx.arc(x, y, 1.2, 0, Math.PI*2); ctx.fill();
+    return () => {
+      cancelAnimationFrame(frameId);
+      if (cleanup) cleanup();
+      if (renderer) {
+        renderer.dispose();
+        if (el.contains(renderer.domElement)) {
+          el.removeChild(renderer.domElement);
         }
       }
-      ctx.restore();
-      }
-
-      // ── Circuit traces (radiating from device) ─────────────
-      ctx.save();
-      ctx.shadowBlur = 0;
-      traces.forEach(tr => {
-        tr.pulseT += tr.pulseSpd;
-        if(tr.pulseT > 1) tr.pulseT = 0;
-
-        const [p0, p1, p2] = tr.pts;
-        const screenP0 = { px: CX + p0[0], py: CY + p0[1] };
-        const screenP1 = { px: CX + p1[0], py: CY + p1[1] };
-        const screenP2 = { px: CX + p2[0], py: CY + p2[1] };
-
-        // Draw trace line (faint)
-        ctx.beginPath();
-        ctx.moveTo(screenP0.px, screenP0.py);
-        ctx.quadraticCurveTo(screenP1.px, screenP1.py, screenP2.px, screenP2.py);
-        ctx.strokeStyle = getThemeColor(0.06);
-        ctx.lineWidth = 0.8;
-        ctx.shadowBlur = 0;
-        ctx.stroke();
-
-        // Draw moving pulse dot
-        const t = tr.pulseT;
-        const bx = (1-t)*(1-t)*screenP0.px + 2*(1-t)*t*screenP1.px + t*t*screenP2.px;
-        const by = (1-t)*(1-t)*screenP0.py + 2*(1-t)*t*screenP1.py + t*t*screenP2.py;
-        ctx.shadowBlur = 12;
-        ctx.shadowColor = getThemeColor(1);
-        ctx.fillStyle = getThemeColor(0.9);
-        ctx.beginPath(); ctx.arc(bx, by, 2.5, 0, Math.PI*2); ctx.fill();
-
-        // End node glow
-        const endFade = Math.sin(frame*0.03 + tr.pulseSpd*200)*0.3+0.7;
-        ctx.shadowBlur = 18;
-        ctx.fillStyle = getThemeColor(0.35*endFade);
-        ctx.beginPath(); ctx.arc(screenP2.px, screenP2.py, 5, 0, Math.PI*2); ctx.fill();
-        ctx.fillStyle = getThemeColor(0.9*endFade);
-        ctx.beginPath(); ctx.arc(screenP2.px, screenP2.py, 1.5, 0, Math.PI*2); ctx.fill();
-      });
-      ctx.restore();
-
-      // ── Orbital rings ──────────────────────────────────────
-      RINGS.forEach((ring, ri) => {
-        const STEPS = 72;
-        ctx.save();
-        ctx.lineWidth = 1;
-
-        // Draw ring path (dashed neon)
-        for(let i=0; i<STEPS; i++) {
-          const a0 = (i/STEPS)*Math.PI*2;
-          const a1 = ((i+1)/STEPS)*Math.PI*2;
-          if(i%4 < 2) continue; // dashed effect
-          const p0 = ringPt(ring, a0), p1 = ringPt(ring, a1);
-          const s0 = project(p0[0],p0[1],p0[2], CX,CY);
-          const s1 = project(p1[0],p1[1],p1[2], CX,CY);
-          const depth = (s0.depth+s1.depth)*0.5;
-          const alpha = 0.06 + Math.max(0, -depth/400)*0.12;
-          ctx.beginPath();
-          ctx.moveTo(s0.px,s0.py); ctx.lineTo(s1.px,s1.py);
-          ctx.strokeStyle = getThemeColor(alpha, ri*0.66);
-          ctx.shadowBlur = 8;
-          ctx.shadowColor = getThemeColor(0.4, ri*0.66);
-          ctx.stroke();
-        }
-
-        // Ring nodes (glowing dots at even positions)
-        for(let n=0; n<ring.nodes; n++) {
-          const a = (n/ring.nodes)*Math.PI*2 + frame*0.003*Math.sign(ring.speed);
-          const p = ringPt(ring, a);
-          const sp = project(p[0],p[1],p[2], CX,CY);
-          const pulse = Math.sin(frame*0.06 + n)*0.3+0.7;
-          const depth = sp.depth;
-          const sz = 3.5 * (1 + Math.max(0,-depth/500)*0.5) * pulse;
-          ctx.shadowBlur = 20;
-          ctx.shadowColor = getThemeColor(0.9, ri*0.66);
-          ctx.fillStyle = getThemeColor(0.8*pulse, ri*0.66);
-          ctx.beginPath(); ctx.arc(sp.px,sp.py,sz,0,Math.PI*2); ctx.fill();
-          ctx.fillStyle = "rgba(255,255,255,0.9)";
-          ctx.beginPath(); ctx.arc(sp.px,sp.py,1.2,0,Math.PI*2); ctx.fill();
-        }
-        ctx.restore();
-      });
-
-      // ── Data packets traveling along rings ─────────────────
-      packets.forEach(pkt => {
-        pkt.angle += pkt.speed * 1.8;
-        const ring = RINGS[pkt.ring];
-        const p3d = ringPt(ring, pkt.angle);
-        const sp = project(p3d[0],p3d[1],p3d[2], CX,CY);
-
-        // Trail
-        pkt.trail.push([sp.px, sp.py]);
-        if(pkt.trail.length > 18) pkt.trail.shift();
-        for(let ti=1; ti<pkt.trail.length; ti++) {
-          const a = (ti/pkt.trail.length) * 0.6;
-          ctx.beginPath();
-          ctx.moveTo(pkt.trail[ti-1][0], pkt.trail[ti-1][1]);
-          ctx.lineTo(pkt.trail[ti][0],   pkt.trail[ti][1]);
-          ctx.strokeStyle = getThemeColor(a, pkt.colorShift);
-          ctx.lineWidth = (ti/pkt.trail.length)*3;
-          ctx.shadowBlur = 10; ctx.shadowColor = getThemeColor(0.7,pkt.colorShift);
-          ctx.stroke();
-        }
-        // Head
-        ctx.save();
-        ctx.shadowBlur = 22; ctx.shadowColor = getThemeColor(1,pkt.colorShift);
-        ctx.fillStyle = "rgba(255,255,255,0.95)";
-        ctx.beginPath(); ctx.arc(sp.px,sp.py,3.2,0,Math.PI*2); ctx.fill();
-        ctx.restore();
-      });
-
-      // ── Shockwaves ────────────────────────────────────────
-      nextWave--;
-      if(nextWave<=0) {
-        waves.push({ x:CX, y:CY, r:0, maxR:260, alpha:0.6, colorShift:Math.random()*3 });
-        nextWave = 80+Math.floor(Math.random()*60);
-      }
-      for(let i=waves.length-1; i>=0; i--) {
-        const w=waves[i];
-        w.r += 2.8; w.alpha *= 0.965;
-        if(w.r >= w.maxR || w.alpha < 0.01) { waves.splice(i,1); continue; }
-        const prog = w.r/w.maxR;
-        ctx.beginPath();
-        ctx.ellipse(w.x, w.y, w.r, w.r*0.38, 0, 0, Math.PI*2);
-        ctx.strokeStyle = getThemeColor(w.alpha*(1-prog), w.colorShift);
-        ctx.lineWidth = 1.5*(1-prog*0.6);
-        ctx.shadowBlur = 16; ctx.shadowColor = getThemeColor(0.6, w.colorShift);
-        ctx.stroke();
-      }
-
-      // ── Floating HUD labels ───────────────────────────────
-      HUDS.forEach((hud, hi) => {
-        hud.alpha += 0.008;
-        const a = (Math.sin(frame*0.012 + hud.drift) * 0.25 + 0.75) * Math.min(1, hud.alpha);
-        const dy = Math.sin(frame*0.016 + hud.drift*2) * 6;
-        const sx = CX + hud.x, sy = CY + hud.y + dy;
-        const col = getRGB(hud.colorShift);
-        const cStr = `${col.r|0},${col.g|0},${col.b|0}`;
-
-        // Box
-        ctx.save();
-        ctx.shadowBlur = 20; ctx.shadowColor = `rgba(${cStr},0.4)`;
-        ctx.fillStyle = `rgba(2,12,24,${0.75*a})`;
-        ctx.strokeStyle = `rgba(${cStr},${0.4*a})`;
-        ctx.lineWidth = 1;
-        const bw=72, bh=32, br=6;
-        ctx.beginPath();
-        ctx.roundRect(sx-bw/2, sy-bh/2, bw, bh, br);
-        ctx.fill(); ctx.stroke();
-
-        // Label + value
-        ctx.shadowBlur = 6;
-        ctx.font = `500 7px "Space Mono",monospace`;
-        ctx.fillStyle = `rgba(${cStr},${0.55*a})`;
-        ctx.textAlign = "center";
-        ctx.fillText(hud.label, sx, sy-4);
-        ctx.font = `bold 11px "Space Mono",monospace`;
-        ctx.fillStyle = `rgba(255,255,255,${0.9*a})`;
-        ctx.fillText(hud.val, sx, sy+8);
-
-        // Connector dot
-        ctx.fillStyle = `rgba(${cStr},${0.7*a})`;
-        ctx.beginPath(); ctx.arc(sx, sy+bh/2, 2.5, 0, Math.PI*2); ctx.fill();
-        ctx.restore();
-      });
-
-      // ── 3D Device ─────────────────────────────────────────
-      ctx.save();
-      // Draw base box
-      const bvRaw = baseVerts();
-      const bvProj = bvRaw.map(v => project(v[0],v[1],v[2],CX,CY));
-
-      // Face rendering (back to front)
-      const baseFaceAlphas = [0.18, 0.04, 0.12, 0.04, 0.08, 0.14];
-      [1,3,5,2,4,0].forEach((fi, di) => {
-        const face = BOX_FACES[fi];
-        ctx.beginPath();
-        face.forEach((vi,i) => {
-          i===0 ? ctx.moveTo(bvProj[vi].px, bvProj[vi].py) : ctx.lineTo(bvProj[vi].px, bvProj[vi].py);
-        });
-        ctx.closePath();
-        const col = getRGB(0);
-        const cStr = `${col.r|0},${col.g|0},${col.b|0}`;
-        ctx.fillStyle = `rgba(4,14,30,0.88)`;
-        ctx.shadowBlur = 0; ctx.fill();
-        ctx.strokeStyle = `rgba(${cStr},${0.35+di*0.03})`;
-        ctx.lineWidth = 1.4; ctx.shadowBlur = 12;
-        ctx.shadowColor = `rgba(${cStr},0.7)`;
-        ctx.stroke();
-      });
-
-      // Logo "R" on front face
-      const frontFace = BOX_FACES[2].map(vi => bvProj[vi]);
-      const lx = frontFace.reduce((s,p)=>s+p.px,0)/4;
-      const ly = frontFace.reduce((s,p)=>s+p.py,0)/4;
-      ctx.font = "bold 9px 'Bebas Neue',sans-serif";
-      ctx.fillStyle = getThemeColor(0.9);
-      ctx.shadowBlur = 14; ctx.shadowColor = getThemeColor(1);
-      ctx.textAlign = "center"; ctx.textBaseline="middle";
-      ctx.fillText("R", lx, ly);
-      ctx.textBaseline = "alphabetic";
-
-      // LED strip on top edge of front face
-      const tf0 = bvProj[0], tf1 = bvProj[1];
-      for(let li=0; li<12; li++) {
-        const t2 = li/11;
-        const lx2 = tf0.px+(tf1.px-tf0.px)*t2;
-        const ly2 = tf0.py+(tf1.py-tf0.py)*t2;
-        const on = Math.sin(frame*0.08+li*0.7)>0.2;
-        ctx.fillStyle = on ? getThemeColor(0.85) : getThemeColor(0.15);
-        ctx.shadowBlur = on ? 10 : 0;
-        ctx.shadowColor = getThemeColor(1);
-        ctx.beginPath(); ctx.arc(lx2, ly2, 1.8, 0, Math.PI*2); ctx.fill();
-      }
-
-      // ── Screen slab ────────────────────────────────────────
-      const svRaw = screenVerts();
-      const svProj = svRaw.map(v => project(v[0],v[1],v[2],CX,CY));
-
-      // Draw screen frame (all faces)
-      [1,3,5,2,4,0].forEach(fi => {
-        const face = BOX_FACES[fi];
-        ctx.beginPath();
-        face.forEach((vi,i) => {
-          i===0 ? ctx.moveTo(svProj[vi].px, svProj[vi].py) : ctx.lineTo(svProj[vi].px, svProj[vi].py);
-        });
-        ctx.closePath();
-        ctx.fillStyle = "rgba(8,20,40,0.9)";
-        ctx.fill();
-        const col = getRGB(0.2);
-        ctx.strokeStyle = `rgba(${col.r|0},${col.g|0},${col.b|0},0.5)`;
-        ctx.lineWidth=1.2; ctx.shadowBlur=8; ctx.shadowColor=getThemeColor(0.5);
-        ctx.stroke();
-      });
-
-      // Screen content on front face
-      drawScreenContent(svProj, CX, CY);
-
-      // ── Cable + Bulb ───────────────────────────────────────
-      // Cable starts from left side of base
-      const cableStart = project(-BASE.w/2, 0, BASE.d*0.3, CX, CY);
-      const bulbAngle = frame * 0.011;
-      const bulbX = -BASE.w/2 - 110 + Math.sin(bulbAngle)*20;
-      const bulbY = 15 + Math.cos(bulbAngle*0.7)*12;
-      const bulbZ = BASE.d*0.2 + Math.sin(bulbAngle*0.5)*15;
-      const cableMid = project(-BASE.w/2-60, 30, BASE.d*0.3, CX, CY);
-      const bulbPos = project(bulbX, bulbY, bulbZ, CX, CY);
-
-      // Draw cable as bezier
-      ctx.beginPath();
-      ctx.moveTo(cableStart.px, cableStart.py);
-      ctx.quadraticCurveTo(cableMid.px, cableMid.py, bulbPos.px, bulbPos.py);
-      ctx.strokeStyle = "rgba(60,80,100,0.7)";
-      ctx.lineWidth = 3; ctx.shadowBlur = 0; ctx.stroke();
-      ctx.strokeStyle = getThemeColor(0.25);
-      ctx.lineWidth = 1; ctx.shadowBlur = 6; ctx.shadowColor = getThemeColor(0.8);
-      ctx.stroke();
-
-      // Bulb body
-      bulbPulse = Math.sin(frame*0.05)*0.25+0.75;
-      const bulbR = 18 * bulbPulse;
-      const col3 = getRGB(1.5);
-      const cStr3 = `${col3.r|0},${col3.g|0},${col3.b|0}`;
-
-      // Outer glow
-      const bulbGrad = ctx.createRadialGradient(bulbPos.px,bulbPos.py,0, bulbPos.px,bulbPos.py,bulbR*2.2);
-      bulbGrad.addColorStop(0,   `rgba(${cStr3},0.25)`);
-      bulbGrad.addColorStop(0.5, `rgba(${cStr3},0.10)`);
-      bulbGrad.addColorStop(1,   "transparent");
-      ctx.fillStyle = bulbGrad; ctx.shadowBlur=0;
-      ctx.beginPath(); ctx.arc(bulbPos.px,bulbPos.py,bulbR*2.2,0,Math.PI*2); ctx.fill();
-
-      // Bulb shell
-      ctx.beginPath(); ctx.ellipse(bulbPos.px,bulbPos.py,bulbR,bulbR*0.82,0,0,Math.PI*2);
-      ctx.fillStyle = `rgba(4,14,28,0.88)`;
-      ctx.strokeStyle = `rgba(${cStr3},${0.6+bulbPulse*0.3})`;
-      ctx.lineWidth=1.5; ctx.shadowBlur=18; ctx.shadowColor=`rgba(${cStr3},0.7)`;
-      ctx.fill(); ctx.stroke();
-
-      // Sensor lines inside bulb
-      for(let si=0;si<4;si++) {
-        const a = (si/4)*Math.PI + frame*0.022;
-        const sr = bulbR*0.55;
-        ctx.beginPath();
-        ctx.moveTo(bulbPos.px+Math.cos(a)*sr*0.3, bulbPos.py+Math.sin(a)*sr*0.3*0.82);
-        ctx.lineTo(bulbPos.px+Math.cos(a)*sr,     bulbPos.py+Math.sin(a)*sr*0.82);
-        ctx.strokeStyle = `rgba(${cStr3},${0.5*bulbPulse})`;
-        ctx.lineWidth=1; ctx.shadowBlur=6; ctx.stroke();
-      }
-      // Core
-      ctx.fillStyle = `rgba(255,255,255,${0.85*bulbPulse})`;
-      ctx.shadowBlur=10; ctx.shadowColor="white";
-      ctx.beginPath(); ctx.arc(bulbPos.px,bulbPos.py,3.5,0,Math.PI*2); ctx.fill();
-
-      // Pressure wave rings from bulb
-      for(let pw=0;pw<3;pw++) {
-        const pr = ((frame*0.8 + pw*25) % 55);
-        const pa = Math.max(0, 1 - pr/55) * 0.5;
-        ctx.beginPath();
-        ctx.ellipse(bulbPos.px,bulbPos.py, pr, pr*0.82, 0, 0, Math.PI*2);
-        ctx.strokeStyle = `rgba(${cStr3},${pa})`;
-        ctx.lineWidth=1; ctx.shadowBlur=8; ctx.stroke();
-      }
-
-      ctx.restore();
-
-      // ── Spawn data nodes from device ─────────────────────
-      if(frame % 40 === 0) {
-        nodes.push({
-          x: CX + (Math.random()-.5)*50,
-          y: CY - 60 + (Math.random()-.5)*30,
-          vx: (Math.random()-.5)*1.8,
-          vy: -(1+Math.random()*1.5),
-          life:0, maxLife:80+Math.floor(Math.random()*40),
-          size:1.5+Math.random()*2,
-          text: DATA_LABELS[(labelIdx++)%DATA_LABELS.length],
-        });
-      }
-      for(let i=nodes.length-1;i>=0;i--) {
-        const n=nodes[i]; n.x+=n.vx; n.y+=n.vy; n.vx*=0.99; n.life++;
-        const a2 = Math.sin((n.life/n.maxLife)*Math.PI)*0.85;
-        ctx.save();
-        ctx.shadowBlur=10; ctx.shadowColor=getThemeColor(0.8);
-        ctx.fillStyle=getThemeColor(a2);
-        ctx.beginPath(); ctx.arc(n.x,n.y,n.size,0,Math.PI*2); ctx.fill();
-        if(n.text && n.life<50) {
-          ctx.font="6px 'Space Mono',monospace";
-          ctx.fillStyle=getThemeColor(a2*0.8);
-          ctx.textAlign="center"; ctx.shadowBlur=4;
-          ctx.fillText(n.text, n.x, n.y-8);
-        }
-        ctx.restore();
-        if(n.life>=n.maxLife) nodes.splice(i,1);
-      }
-
-      // ── Master device glow ─────────────────────────────
-      ctx.save();
-      ctx.globalCompositeOperation = "lighter";
-      const masterGlow = ctx.createRadialGradient(CX,CY,0, CX,CY,220);
-      masterGlow.addColorStop(0, getThemeColor(0.04));
-      masterGlow.addColorStop(1, "transparent");
-      ctx.fillStyle = masterGlow;
-      ctx.beginPath(); ctx.arc(CX,CY,220,0,Math.PI*2); ctx.fill();
-      ctx.restore();
-
-      screenOffset = (screenOffset + 0.4) % 100;
-      raf = requestAnimationFrame(draw);
     };
-
-    raf = requestAnimationFrame(draw);
-    return () => { cancelAnimationFrame(raf); window.removeEventListener("resize", resize); };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return (
-    <canvas
-      ref={canvasRef}
+    <div
+      ref={mountRef}
       style={{
-        position:"absolute", inset:0,
-        width:"100%", height:"100%",
-        display:"block",
-        pointerEvents:"auto",
-        zIndex:20,
-        willChange:"transform",
+        position:   "absolute",
+        inset:      0,
+        width:      "100%",
+        height:     "100%",
+        zIndex:     20,
+        willChange: "transform",
       }}
     />
   );
-}
-
+});
 function MedicalCursor() {
-
-  const crossRef = useRef<HTMLDivElement>(null);
-
-  const ringRef = useRef<HTMLDivElement>(null);
-
-  const trailRef = useRef<Array<HTMLDivElement | null>>([]);
-
-  const histRef = useRef<Array<{ x: number; y: number }>>([]);
-
   const TRAIL = 8;
-
-
-
   const [mode, setMode] = useState<"default" | "hover" | "click">("default");
-
   const [light, setLight] = useState(false);
 
+  const mx = useMotionValue(-400);
+  const my = useMotionValue(-400);
 
+  const smoothConfig = { damping: 25, stiffness: 600, mass: 0.5 };
+  const rx = useSpring(mx, smoothConfig);
+  const ry = useSpring(my, smoothConfig);
+
+  const trailSprings = Array.from({ length: TRAIL - 1 }).map((_, i) => ({
+    x: useSpring(mx, { damping: 20 + i * 2, stiffness: 400 - i * 40, mass: 0.8 }),
+    y: useSpring(my, { damping: 20 + i * 2, stiffness: 400 - i * 40, mass: 0.8 }),
+  }));
 
   useEffect(() => {
-
-    let mx = -400, my = -400, rx = -400, ry = -400, raf = 0;
-
-
-
+    let themeCheckFrame = 0;
     const onMove = (e: MouseEvent) => {
-
-      mx = e.clientX; my = e.clientY;
-
-      let el = document.elementFromPoint(mx, my) as HTMLElement | null;
-
-      while (el) {
-
-        if (el.dataset?.theme === "light") { setLight(true); break; }
-
-        if (el.dataset?.theme === "dark") { setLight(false); break; }
-
-        el = el.parentElement;
-
+      mx.set(e.clientX);
+      my.set(e.clientY);
+      if (themeCheckFrame++ % 30 === 0) {
+        let el = document.elementFromPoint(e.clientX, e.clientY) as HTMLElement | null;
+        while (el) {
+          if (el.dataset?.theme === "light") { setLight(true); break; }
+          if (el.dataset?.theme === "dark")  { setLight(false); break; }
+          el = el.parentElement;
+        }
       }
-
     };
-
     const onDown = () => setMode("click");
+    const onUp   = () => setMode(m => m === "click" ? "default" : m);
+    const onIn   = () => setMode("hover");
+    const onOut  = () => setMode("default");
 
-    const onUp = () => setMode(m => m === "click" ? "default" : m);
-
-    const onIn = () => setMode("hover");
-
-    const onOut = () => setMode("default");
-
-
-
-    document.addEventListener("mousemove", onMove);
-
+    document.addEventListener("mousemove", onMove, { passive: true });
     document.addEventListener("mousedown", onDown);
-
     document.addEventListener("mouseup", onUp);
 
-    document.querySelectorAll("button,a,[data-mag]").forEach(el => {
-
-      el.addEventListener("mouseenter", onIn);
-
-      el.addEventListener("mouseleave", onOut);
-
-    });
-
-
-
-    const tick = () => {
-
-      if (crossRef.current) {
-
-        crossRef.current.style.left = `${mx}px`;
-
-        crossRef.current.style.top = `${my}px`;
-
-      }
-
-      rx += (mx - rx) * 0.1; ry += (my - ry) * 0.1;
-
-      if (ringRef.current) {
-
-        ringRef.current.style.left = `${rx}px`;
-
-        ringRef.current.style.top = `${ry}px`;
-
-      }
-
-      histRef.current.unshift({ x: mx, y: my });
-
-      if (histRef.current.length > TRAIL) histRef.current.pop();
-
-      trailRef.current.forEach((dot, i) => {
-
-        const p = histRef.current[i + 1];
-
-        if (!dot || !p) return;
-
-        dot.style.left = `${p.x}px`;
-
-        dot.style.top = `${p.y}px`;
-
-        dot.style.opacity = `${(1 - i / TRAIL) * 0.32}`;
-
-        const s = `${3.5 - i * 0.38}px`;
-
-        dot.style.width = s; dot.style.height = s;
-
-      });
-
-      raf = requestAnimationFrame(tick);
-
-    };
-
-    raf = requestAnimationFrame(tick);
-
-
+    const els = document.querySelectorAll("button,a,[data-mag]");
+    els.forEach(el => { el.addEventListener("mouseenter", onIn); el.addEventListener("mouseleave", onOut); });
 
     return () => {
-
       document.removeEventListener("mousemove", onMove);
-
       document.removeEventListener("mousedown", onDown);
-
       document.removeEventListener("mouseup", onUp);
-
-      cancelAnimationFrame(raf);
-
+      els.forEach(el => { el.removeEventListener("mouseenter", onIn); el.removeEventListener("mouseleave", onOut); });
     };
+  }, [mx, my]);
 
-  }, []);
-
-
-
-  const C = light ? "#0B1E33" : "#2DD4BF";
-
+  const C  = light ? "#0B1E33" : "#2DD4BF";
   const sz = mode === "hover" ? 54 : mode === "click" ? 22 : 32;
 
-
-
   return (
-
     <>
+      {trailSprings.map(({ x, y }, i) => {
+        const s = `${3.5 - i * 0.38}px`;
+        return (
+          <motion.div key={i}
+            style={{ x, y, position: "fixed", top: 0, left: 0, zIndex: 99990, pointerEvents: "none", willChange: "transform" }}>
+            <div style={{ width: s, height: s, borderRadius: "50%", background: C, transform: "translate(-50%,-50%)", opacity: (1 - i / TRAIL) * 0.32 }} />
+          </motion.div>
+        );
+      })}
 
-      {Array.from({ length: TRAIL - 1 }).map((_, i) => (
+      <motion.div style={{ x: rx, y: ry, position: "fixed", top: 0, left: 0, zIndex: 99997, pointerEvents: "none", willChange: "transform" }}>
+        <div style={{
+          width: mode === "hover" ? 64 : mode === "click" ? 14 : 42,
+          height: mode === "hover" ? 64 : mode === "click" ? 14 : 42,
+          borderRadius: mode === "hover" ? 12 : "50%",
+          border: `1px solid ${C}`,
+          opacity: mode === "hover" ? .6 : .25,
+          background: mode === "hover" ? `${C}0b` : "transparent",
+          boxShadow: mode === "hover" ? `0 0 32px ${C}35` : "none",
+          transform: "translate(-50%,-50%)",
+          transition: "width .28s, height .28s, border-radius .3s, opacity .3s, background .3s, box-shadow .3s",
+        }} />
+      </motion.div>
 
-        <div key={i} ref={el => { trailRef.current[i] = el; }}
-
-          style={{
-            position: "fixed", zIndex: 99990, pointerEvents: "none",
-
-            width: 4, height: 4, borderRadius: "50%", background: C, transform: "translate(-50%,-50%)"
-          }} />
-
-      ))}
-
-      <div ref={ringRef} style={{
-
-        position: "fixed", zIndex: 99997, pointerEvents: "none",
-
-        width: mode === "hover" ? 64 : mode === "click" ? 14 : 42,
-
-        height: mode === "hover" ? 64 : mode === "click" ? 14 : 42,
-
-        borderRadius: mode === "hover" ? 12 : "50%",
-
-        border: `1px solid ${C}`,
-
-        opacity: mode === "hover" ? .6 : .25,
-
-        background: mode === "hover" ? `${C}0b` : "transparent",
-
-        boxShadow: mode === "hover" ? `0 0 32px ${C}35` : "none",
-
-        transform: "translate(-50%,-50%)",
-
-        transition: "width .28s, height .28s, border-radius .3s, opacity .3s",
-
-      }} />
-
-      <div ref={crossRef} style={{ position: "fixed", zIndex: 99999, pointerEvents: "none", transform: "translate(-50%,-50%)" }}>
-
+      <motion.div style={{ x: mx, y: my, position: "fixed", top: 0, left: 0, zIndex: 99999, pointerEvents: "none", willChange: "transform" }}>
         <svg width={sz} height={sz} viewBox="-20 -20 40 40"
-
-          style={{ display: "block", transition: "width .22s, height .22s" }}>
-
+          style={{ display: "block", transition: "width .22s, height .22s", transform: "translate(-50%,-50%)" }}>
           <line x1="-17" y1="0" x2="-7" y2="0" stroke={C} strokeWidth={mode === "click" ? 1 : 1.5} strokeLinecap="round" />
-
           <line x1="7" y1="0" x2="17" y2="0" stroke={C} strokeWidth={mode === "click" ? 1 : 1.5} strokeLinecap="round" />
-
           <line x1="0" y1="-17" x2="0" y2="-7" stroke={C} strokeWidth={mode === "click" ? 1 : 1.5} strokeLinecap="round" />
-
           <line x1="0" y1="7" x2="0" y2="17" stroke={C} strokeWidth={mode === "click" ? 1 : 1.5} strokeLinecap="round" />
-
           <circle cx="0" cy="0" r={mode === "click" ? 1.2 : 1.9} fill={C} />
-
           <g className="arc-cw">
-
-            <path d="M-14,0 A14,14 0 0,1 0,-14" stroke={C} strokeWidth="1.5" fill="none"
-
-              style={{ filter: `drop-shadow(0 0 4px ${C})` }} />
-
+            <path d="M-14,0 A14,14 0 0,1 0,-14" stroke={C} strokeWidth="1.5" fill="none" style={{ filter: `drop-shadow(0 0 4px ${C})` }} />
           </g>
-
           <g className="arc-ccw">
-
             <path d="M14,0 A14,14 0 0,1 0,14" stroke={C} strokeWidth="1.5" fill="none" opacity=".5" />
-
           </g>
-
           <line x1="-13" y1="-13" x2="-10" y2="-10" stroke={C} strokeWidth=".7" opacity=".4" />
-
           <line x1="13" y1="-13" x2="10" y2="-10" stroke={C} strokeWidth=".7" opacity=".4" />
-
           <line x1="-13" y1="13" x2="-10" y2="10" stroke={C} strokeWidth=".7" opacity=".4" />
-
           <line x1="13" y1="13" x2="10" y2="10" stroke={C} strokeWidth=".7" opacity=".4" />
-
           {mode === "hover" && (
-
             <>
-
               <path d="M-17,-17 L-10,-17 M-17,-17 L-17,-10" stroke={C} strokeWidth="1.5" fill="none" />
-
               <path d="M17,-17 L10,-17 M17,-17 L17,-10" stroke={C} strokeWidth="1.5" fill="none" />
-
               <path d="M-17,17 L-10,17 M-17,17 L-17,10" stroke={C} strokeWidth="1.5" fill="none" />
-
               <path d="M17,17 L10,17 M17,17 L17,10" stroke={C} strokeWidth="1.5" fill="none" />
-
             </>
-
           )}
-
         </svg>
-
-      </div>
-
+      </motion.div>
     </>
-
   );
-
 }
 
-const ECG_PATH = `
-  M-100 80 L0 80 
-  L20 76 L38 85 L56 18 L72 148 L84 6 L100 80 L250 80 
-  L270 76 L288 85 L306 18 L322 148 L334 6 L350 80 L500 80 
-  L520 76 L538 85 L556 18 L572 148 L584 6 L600 80 L750 80 
-  L770 76 L788 85 L806 18 L822 148 L834 6 L850 80 L1000 80 
-  L1020 76 L1038 85 L1056 18 L1072 148 L1084 6 L1100 80 L1250 80 
-  L1270 76 L1288 85 L1306 18 L1322 148 L1334 6 L1350 80 L1500 80 
-  L1520 76 L1538 85 L1556 18 L1572 148 L1584 6 L1600 80 L1750 80 
-  L1770 76 L1788 85 L1806 18 L1822 148 L1834 6 L1850 80 L2000 80 
-  L2020 76 L2038 85 L2056 18 L2072 148 L2084 6 L2100 80 L2250 80 
-  L2270 76 L2288 85 L2306 18 L2322 148 L2334 6 L2350 80 L2500 80 
-  L2520 76 L2538 85 L2556 18 L2572 148 L2584 6 L2600 80 L2750 80 
-  L2770 76 L2788 85 L2806 18 L2822 148 L2834 6 L2850 80 L3000 80
-`;
-
-//  PRELOADER (Procedural Neural Signal Generator)
 
 function Preloader({ onDone }: { onDone: () => void }) {
   const [pct, setPct] = useState(0);
@@ -2087,7 +1375,7 @@ function HeroSection() {
 
       <div className="scanline" />
 
-      <FloatingParticles count={16} />
+      <FloatingParticles count={12} />
 
       {/* Neural network layer */}
 
@@ -2153,12 +1441,12 @@ function HeroSection() {
           </p>
         </Reveal>
 
-        {/* CTA pill - Patient & Doctor Access */}
+        {/* CTA pill */}
         <Reveal dir="up" delay={1.5}>
           <div style={{
             display: "flex", flexDirection: "row", alignItems: "center", gap: 8, padding: 8,
             borderRadius: 32, background: "rgba(255,255,255,.03)",
-            border: "1px solid rgba(255,255,255,.07)",
+            border: "1px solid rgba(255,255,255,.09)",
             backdropFilter: "blur(24px)",
             boxShadow: "0 24px 64px rgba(0,0,0,.6), inset 0 1px 0 rgba(255,255,255,.04)",
             width: "fit-content",
@@ -2168,77 +1456,25 @@ function HeroSection() {
               style={{
                 position: "relative", overflow: "hidden",
                 display: "flex", alignItems: "center", gap: 12,
-                padding: "18px 44px", borderRadius: 24, fontSize: 15, letterSpacing: ".12em",
+                padding: "16px 36px", borderRadius: 24, fontSize: 14, letterSpacing: ".12em",
                 background: "#2DD4BF", color: "#080f1a", border: "none",
                 boxShadow: "0 0 55px rgba(45,212,191,.42)"
               }}>
-              <Play size={16} style={{ fill: "#080f1a", position: "relative", zIndex: 1 }} />
+              <Play size={15} style={{ fill: "#080f1a", position: "relative", zIndex: 1 }} />
               <span style={{ position: "relative", zIndex: 1 }}>Patient Sign In</span>
             </MagButton>
-            <div style={{ width: 1, height: 46, background: "rgba(255,255,255,.06)" }} />
+            <div style={{ width: 1, height: 42, background: "rgba(255,255,255,.07)" }} />
             <MagButton onClick={() => router.push("/auth/doctor/signin")}
               className="fB"
               style={{
-                display: "flex", alignItems: "center", gap: 12,
-                padding: "18px 44px", borderRadius: 24, fontSize: 15, letterSpacing: ".12em",
-                background: "transparent", color: "rgba(255,255,255,.78)", border: "none"
+                display: "flex", alignItems: "center", gap: 10,
+                padding: "16px 32px", borderRadius: 24, fontSize: 14, letterSpacing: ".12em",
+                background: "transparent", color: "rgba(255,255,255,.82)", border: "none"
               }}>
-              <Stethoscope size={16} />
-              Doctor Sign In
-              <ArrowRight size={13} style={{ opacity: .4 }} />
+              <Stethoscope size={15} />
+              Clinician Access
+              <ArrowRight size={12} style={{ opacity: .45 }} />
             </MagButton>
-          </div>
-        </Reveal>
-
-        {/* Signup links */}
-        <Reveal dir="up" delay={1.8}>
-          <div style={{
-            display: "flex", alignItems: "center", gap: 18,
-            marginTop: 24, justifyContent: "center"
-          }}>
-            <span className="fM" style={{
-              fontSize: 9, color: "rgba(255,255,255,.28)",
-              textTransform: "uppercase", letterSpacing: ".22em"
-            }}>
-              New user?
-            </span>
-            <a
-              href="/auth/patient/signup"
-              data-mag
-              className="fM"
-              style={{
-                fontSize: 9, textTransform: "uppercase", letterSpacing: ".20em",
-                color: "#2DD4BF", textDecoration: "none",
-                padding: "6px 14px", borderRadius: 99,
-                border: "1px solid rgba(45,212,191,.2)", transition: "all .3s"
-              }}
-              onMouseEnter={e => (e.currentTarget.style.background = "rgba(45,212,191,.08)")}
-              onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
-            >
-              Patient Signup
-            </a>
-            <span style={{ color: "rgba(255,255,255,.15)" }}>·</span>
-            <a
-              href="/auth/doctor/signup"
-              data-mag
-              className="fM"
-              style={{
-                fontSize: 9, textTransform: "uppercase", letterSpacing: ".20em",
-                color: "rgba(255,255,255,.45)", textDecoration: "none",
-                padding: "6px 14px", borderRadius: 99,
-                border: "1px solid rgba(255,255,255,.1)", transition: "all .3s"
-              }}
-              onMouseEnter={e => {
-                e.currentTarget.style.color = "rgba(255,255,255,.85)";
-                e.currentTarget.style.background = "rgba(255,255,255,.05)";
-              }}
-              onMouseLeave={e => {
-                e.currentTarget.style.color = "rgba(255,255,255,.45)";
-                e.currentTarget.style.background = "transparent";
-              }}
-            >
-              Doctor Signup
-            </a>
           </div>
         </Reveal>
 
