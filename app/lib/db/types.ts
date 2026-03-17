@@ -1,9 +1,10 @@
 // lib/db/types.ts
+
 import { Timestamp } from "firebase/firestore";
 
-// ─────────────────────────────────────────────────────────────────────────────
+// ─────────────────────────
 // USERS
-// ─────────────────────────────────────────────────────────────────────────────
+// ─────────────────────────
 
 export interface UserProfile {
   uid: string;
@@ -14,11 +15,11 @@ export interface UserProfile {
 }
 
 export interface PatientData extends UserProfile {
-  role: "patient";
+  role: "patient";               
 
   patientId: string;
   condition: "Stroke" | "Parkinson's" | "TBI" | "Post-Surgery" | "Other";
-  assignedDoctorId: string | null;
+  assignedDoctorId: string | null;          // null = not yet assigned
   connectionStatus: "none" | "pending" | "accepted" | "rejected";
   subscriptionPlan: "standard" | "ai_companion";
   profilePictureUrl?: string;
@@ -35,7 +36,7 @@ export interface PatientData extends UserProfile {
 }
 
 export interface DoctorData extends UserProfile {
-  role: "doctor";
+  role: "doctor";                           // discriminant
   doctorId: string;
   specialization: string;
   licenseNumber?: string;
@@ -46,6 +47,7 @@ export interface DoctorData extends UserProfile {
 // ─────────────────────────────────────────────────────────────────────────────
 // THERAPY PROTOCOLS
 // ─────────────────────────────────────────────────────────────────────────────
+
 
 export type GameId =
   | "synapse_racer"
@@ -74,21 +76,21 @@ export interface TherapyProtocol {
   };
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
+// ─────────────────────────
 // SESSIONS & METRICS
-// ─────────────────────────────────────────────────────────────────────────────
+// ─────────────────────────
 
 export interface SessionMetrics {
   reactionTimeMs?: number;
   peakGripForce?: number;
   muscleEnduranceDropPercent?: number;
   cognitiveAccuracyPercent?: number;
-  rawSensorData?: number[];
+  rawSensorData?: number[];               // never sent to LLM — processed only
 
-  // MPU6050 motion sensor (Stability Core)
-  tremorAmplitude?: number; // √(SDx²+SDy²+SDz²)
-  driftDistance?: number; // avg Euclidean distance from target
-  movementSmoothness?: number; // (Accel_current−Accel_previous)/Time (jerk)
+  // MPU6050 motion sensor (Stability Core — not yet assembled)
+  tremorAmplitude?: number;               // √(SDx²+SDy²+SDz²)
+  driftDistance?: number;                 // avg Euclidean distance from target
+  movementSmoothness?: number;            // jerk: (Accel_cur − Accel_prev) / Time
 }
 
 export interface GameSession {
@@ -96,7 +98,7 @@ export interface GameSession {
   userId: string;
   protocolId: string;
   gameId: GameId;
-  level: number;
+  level: number;                          
   timestamp: Timestamp;
   durationSeconds: number;
   targetHand: "left" | "right";
@@ -104,9 +106,9 @@ export interface GameSession {
   aiSummary?: string;
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
+// ─────────────────────────
 // ASSIGNMENTS
-// ─────────────────────────────────────────────────────────────────────────────
+// ─────────────────────────
 
 export type AssignmentStatus = "pending" | "active" | "completed" | "cancelled";
 
@@ -114,10 +116,10 @@ export interface Assignment {
   id?: string;
   doctorId: string;
   patientId: string;
-  gameType: string; // display name e.g. "Rhythm Reef"
+  gameType: string;                       // display name e.g. "Rhythm Reef"
   gameId: GameId;
   note: string;
-  targetDuration: number; // minutes
+  targetDuration: number;                 // minutes
   status: AssignmentStatus;
   assignedDate: Timestamp;
   completedDate?: Timestamp;
@@ -125,7 +127,7 @@ export interface Assignment {
 
 // ─────────────────────────────────────────────────────────────────────────────
 // COMMUNICATIONS
-// ─────────────────────────────────────────────────────────────────────────────
+// ─────────────────────────
 
 export interface Communication {
   id?: string;
@@ -136,18 +138,18 @@ export interface Communication {
     | "feedback"
     | "direct_message"
     | "ai_insight"
-    | "connection_request" // patient → doctor during onboarding
-    | "session_alert"; // system-generated low-adherence alerts
+    | "connection_request"  // patient → doctor during onboarding
+    | "session_alert";      // system-generated low-adherence alert (to be built)
   content: string;
   title: string;
   timestamp: Timestamp;
   isRead: boolean;
   isImportant?: boolean;
-  sessionId?: string;
+  sessionId?: string;      
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// SCHEDULED SESSIONS
+// SCHEDULED SESSIONS — 
 // ─────────────────────────────────────────────────────────────────────────────
 
 export interface ScheduledSession {

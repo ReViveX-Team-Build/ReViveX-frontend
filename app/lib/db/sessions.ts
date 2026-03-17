@@ -1,4 +1,5 @@
 // lib/db/sessions.ts
+
 import { db } from "../firebase";
 import {
   collection, addDoc, query, where,
@@ -31,13 +32,14 @@ export async function getRecentSessions(
   uid: string,
   maxResults: number = 10
 ): Promise<GameSession[]> {
-  const q = query(
-    collection(db, "game_sessions"),
-    where("userId", "==", uid),
-    orderBy("timestamp", "desc"),
-    limit(maxResults)
+  const snap = await getDocs(
+    query(
+      collection(db, "game_sessions"),
+      where("userId", "==", uid),
+      orderBy("timestamp", "desc"),
+      limit(maxResults)
+    )
   );
-  const snap = await getDocs(q);
   return snap.docs.map((d) => ({ id: d.id, ...d.data() } as GameSession));
 }
 
@@ -47,14 +49,15 @@ export async function getSessionsByDateRange(
   startDate: Date,
   endDate: Date
 ): Promise<GameSession[]> {
-  const q = query(
-    collection(db, "game_sessions"),
-    where("userId", "==", uid),
-    where("timestamp", ">=", Timestamp.fromDate(startDate)),
-    where("timestamp", "<=", Timestamp.fromDate(endDate)),
-    orderBy("timestamp", "desc")
+  const snap = await getDocs(
+    query(
+      collection(db, "game_sessions"),
+      where("userId", "==", uid),
+      where("timestamp", ">=", Timestamp.fromDate(startDate)),
+      where("timestamp", "<=", Timestamp.fromDate(endDate)),
+      orderBy("timestamp", "desc")
+    )
   );
-  const snap = await getDocs(q);
   return snap.docs.map((d) => ({ id: d.id, ...d.data() } as GameSession));
 }
 
@@ -86,12 +89,12 @@ export async function getSessionsForBothHands(
   ]);
 
   return {
-    left: leftSnap.docs.map((d) => ({ id: d.id, ...d.data() } as GameSession)),
+    left:  leftSnap.docs.map((d) => ({ id: d.id, ...d.data() } as GameSession)),
     right: rightSnap.docs.map((d) => ({ id: d.id, ...d.data() } as GameSession)),
   };
 }
 
-// Last 30 days — convenience wrapper used by My Progress page
+// Last 30 days — convenience wrapper used by the progress page
 export async function getLast30DaySessions(uid: string): Promise<GameSession[]> {
   const end = new Date();
   const start = new Date();
@@ -103,8 +106,8 @@ export async function getLast30DaySessions(uid: string): Promise<GameSession[]> 
 // READ — doctor / cohort level
 // ─────────────────────────────────────────────────────────────────────────────
 
-// Returns all sessions for a list of patient UIDs in a given date range.
-// Used by the doctor dashboard AI weekly summary and reports page.
+// All sessions for a list of patient UIDs within the last 7 days
+// Used by doctor dashboard AI weekly summary
 export async function getCohortSessionsThisWeek(
   patientUids: string[]
 ): Promise<GameSession[]> {
@@ -113,9 +116,9 @@ export async function getCohortSessionsThisWeek(
   const weekAgo = new Date();
   weekAgo.setDate(weekAgo.getDate() - 7);
 
-  // Firestore "in" operator supports max 30 items — batch if needed
+  // Firestore "in" operator supports max 30 items — batched accordingly
   const BATCH = 30;
-  const batches = [];
+  const batches: string[][] = [];
   for (let i = 0; i < patientUids.length; i += BATCH) {
     batches.push(patientUids.slice(i, i + BATCH));
   }

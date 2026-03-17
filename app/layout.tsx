@@ -3,7 +3,6 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./global.css";
 import SeedButton from "../components/DevTools/seedButton";
 
-
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
@@ -15,7 +14,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "ReViveX - Rehab Applicattion",
+  title: "ReViveX - Rehab Application",
   description: "ReViveX is a cutting-edge rehabilitation application designed to empower patients and healthcare professionals. Our platform offers personalized therapy protocols, interactive exercises, and real-time progress tracking to enhance recovery outcomes. With an intuitive interface and AI-driven insights, ReViveX revolutionizes the rehabilitation experience, making it more engaging and effective for everyone involved.",
 };
 
@@ -31,7 +30,7 @@ export default function RootLayout({
         suppressHydrationWarning={true}
       >
         {children}
-        <SeedButton />
+        {process.env.NODE_ENV === "development" && <SeedButton />}
       </body>
     </html>
   );
