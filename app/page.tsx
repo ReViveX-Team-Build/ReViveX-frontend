@@ -435,58 +435,6 @@ const CSS = `
   }
   .sweep-slate:hover { border-bottom-width: 1px; border-color: rgba(255,255,255,.40); }
 
-  /* ── CYBER CARD — CSS-only 3D tracker tilt ───────────────────────── */
-  .cyber-card-container{position:relative;transition:200ms;user-select:none;-webkit-user-select:none;}
-  .cyber-card-container:active{transform:scale(.97);}
-  .ctr{position:absolute;inset:0;z-index:200;}
-  .ctr-1:hover~.cyber-inner{transform:rotateX(14deg) rotateY(-8deg)}
-  .ctr-2:hover~.cyber-inner{transform:rotateX(14deg) rotateY(-4deg)}
-  .ctr-3:hover~.cyber-inner{transform:rotateX(14deg) rotateY(0deg)}
-  .ctr-4:hover~.cyber-inner{transform:rotateX(14deg) rotateY(4deg)}
-  .ctr-5:hover~.cyber-inner{transform:rotateX(14deg) rotateY(8deg)}
-  .ctr-6:hover~.cyber-inner{transform:rotateX(7deg) rotateY(-8deg)}
-  .ctr-7:hover~.cyber-inner{transform:rotateX(7deg) rotateY(-4deg)}
-  .ctr-8:hover~.cyber-inner{transform:rotateX(7deg) rotateY(0deg)}
-  .ctr-9:hover~.cyber-inner{transform:rotateX(7deg) rotateY(4deg)}
-  .ctr-10:hover~.cyber-inner{transform:rotateX(7deg) rotateY(8deg)}
-  .ctr-11:hover~.cyber-inner{transform:rotateX(0deg) rotateY(-8deg)}
-  .ctr-12:hover~.cyber-inner{transform:rotateX(0deg) rotateY(-4deg)}
-  .ctr-13:hover~.cyber-inner{transform:rotateX(0deg) rotateY(0deg)}
-  .ctr-14:hover~.cyber-inner{transform:rotateX(0deg) rotateY(4deg)}
-  .ctr-15:hover~.cyber-inner{transform:rotateX(0deg) rotateY(8deg)}
-  .ctr-16:hover~.cyber-inner{transform:rotateX(-7deg) rotateY(-8deg)}
-  .ctr-17:hover~.cyber-inner{transform:rotateX(-7deg) rotateY(-4deg)}
-  .ctr-18:hover~.cyber-inner{transform:rotateX(-7deg) rotateY(0deg)}
-  .ctr-19:hover~.cyber-inner{transform:rotateX(-7deg) rotateY(4deg)}
-  .ctr-20:hover~.cyber-inner{transform:rotateX(-7deg) rotateY(8deg)}
-  .ctr-21:hover~.cyber-inner{transform:rotateX(-14deg) rotateY(-8deg)}
-  .ctr-22:hover~.cyber-inner{transform:rotateX(-14deg) rotateY(-4deg)}
-  .ctr-23:hover~.cyber-inner{transform:rotateX(-14deg) rotateY(0deg)}
-  .ctr-24:hover~.cyber-inner{transform:rotateX(-14deg) rotateY(4deg)}
-  .ctr-25:hover~.cyber-inner{transform:rotateX(-14deg) rotateY(8deg)}
-  .ctr:hover~.cyber-inner{transition:125ms ease-in-out;filter:brightness(1.08);}
-  .cyber-inner{position:absolute;inset:0;border-radius:inherit;transition:700ms;transform-style:preserve-3d;overflow:hidden;}
-  .ctr:hover~.cyber-inner .cyber-glare{opacity:1;}
-  .ctr:hover~.cyber-inner .cyber-glow-el{opacity:1;}
-  .ctr:hover~.cyber-inner .cyber-particle{animation:cyberParticleFloat 2s infinite;}
-  .ctr:hover~.cyber-inner::before{opacity:.65;}
-  .cyber-inner::before{content:"";position:absolute;inset:-50%;background:radial-gradient(circle,rgba(45,212,191,.08),transparent);filter:blur(20px);opacity:0;transition:opacity .3s;}
-  .cyber-glare{position:absolute;inset:0;background:linear-gradient(125deg,rgba(255,255,255,0) 0%,rgba(255,255,255,.05) 50%,rgba(255,255,255,0) 100%);opacity:0;transition:opacity .3s;pointer-events:none;}
-  .cyber-glow-el{opacity:0;transition:opacity .3s;}
-  @keyframes cyberParticleFloat{0%{transform:translate(0,0);opacity:0;}50%{opacity:1;}100%{transform:translate(calc(var(--px)*28px),calc(var(--py)*28px));opacity:0;}}
-  @keyframes cyberLineGrow{0%,100%{transform:scaleX(0);opacity:0;}50%{transform:scaleX(1);opacity:1;}}
-  @keyframes cyberScan{0%{transform:translateY(-100%);}100%{transform:translateY(200%);}}
-  .cyber-scan{position:absolute;inset:0;transform:translateY(-100%);animation:cyberScan 2.4s linear infinite;pointer-events:none;}
-  .cyber-corner-el span{position:absolute;width:14px;height:14px;border:1.5px solid rgba(45,212,191,.28);transition:all .3s;}
-  .ctr:hover~.cyber-inner .cyber-corner-el span{border-color:rgba(45,212,191,.80);box-shadow:0 0 8px rgba(45,212,191,.45);}
-  .cyber-corner-el span:nth-child(1){top:10px;left:10px;border-right:0;border-bottom:0;}
-  .cyber-corner-el span:nth-child(2){top:10px;right:10px;border-left:0;border-bottom:0;}
-  .cyber-corner-el span:nth-child(3){bottom:10px;left:10px;border-right:0;border-top:0;}
-  .cyber-corner-el span:nth-child(4){bottom:10px;right:10px;border-left:0;border-top:0;}
-  .cyber-line{position:absolute;height:1px;width:100%;left:0;transform:scaleX(0);animation:cyberLineGrow 3s linear infinite;pointer-events:none;}
-  .cyber-particle{position:absolute;width:3px;height:3px;border-radius:50%;opacity:0;pointer-events:none;}
-
-
 `;
 
 
@@ -1072,18 +1020,31 @@ function MedicalCursor() {
 }
 
 function Preloader({ onDone }: { onDone: () => void }) {
-  const [pct, setPct] = useState(0);
-  const [phase, setPhase] = useState<"loading"|"exit">("loading");
+  const [pct,   setPct]   = useState(0);
+  const [phase, setPhase] = useState<"loading"|"ready"|"exit">("loading");
+  const [msg,   setMsg]   = useState("DETECTING NEURAL SIGNAL...");
+
+  const MSGS = [
+    "DETECTING NEURAL SIGNAL...",
+    "CALIBRATING GRIP SENSOR...",
+    "LOADING THERAPY PROTOCOL...",
+    "ESTABLISHING CLOUD LINK...",
+    "ACTIVATING AI COMPANION...",
+    "NEURAL LINK ESTABLISHED."
+  ];
 
   useEffect(() => {
-    const step = setInterval(() =>
-      setPct(p => { if (p >= 100) { clearInterval(step); return 100; } return p + 1; }), 26);
-    const t1 = setTimeout(() => setPhase("exit"), 2900);
-    const t2 = setTimeout(onDone, 3700);
-    return () => { clearInterval(step); clearTimeout(t1); clearTimeout(t2); };
+    const counter  = setInterval(() => setPct(p => { if (p >= 100) { clearInterval(counter); return 100; } return p + 1; }), 28);
+    let mi = 0;
+    const msgTimer = setInterval(() => { mi = Math.min(mi+1, MSGS.length-1); setMsg(MSGS[mi]); }, 600);
+    const t1 = setTimeout(() => setPhase("ready"), 3200);
+    const t2 = setTimeout(() => setPhase("exit"),  4200);
+    const t3 = setTimeout(onDone, 5000);
+    return () => { clearInterval(counter); clearInterval(msgTimer); [t1,t2,t3].forEach(clearTimeout); };
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [onDone]);
 
+  // Premium ECG SVG points — the heartbeat polyline
   const PTS = "0.157 23.954, 14 23.954, 21.843 48, 43 0, 50 24, 64 24";
 
   return (
@@ -1091,107 +1052,214 @@ function Preloader({ onDone }: { onDone: () => void }) {
       {phase !== "exit" && (
         <motion.div
           key="pl"
-          exit={{ opacity: 0, transition: { duration: 0.8, ease: [0.76,0,0.24,1] } }}
+          exit={{ y: "-100%", opacity: 0, filter: "blur(10px)", transition: { duration: 0.9, ease: [0.76,0,0.24,1] } }}
           style={{
-            position:"fixed", inset:0, zIndex:9900,
-            display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center",
-            background:"#030810",
+            position: "fixed", inset: 0, zIndex: 9900,
+            display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
+            overflow: "hidden",
+            background: "linear-gradient(160deg, #030810 0%, #060e1a 50%, #040c16 100%)",
           }}
         >
-          {/* Soft radial glow */}
-          <div style={{
-            position:"absolute", inset:0, pointerEvents:"none",
-            background:"radial-gradient(ellipse 60% 45% at 50% 52%, rgba(45,212,191,0.08) 0%, transparent 70%)",
-          }}/>
-
-          {/* Wordmark */}
+          {/* Radial glow behind everything */}
           <motion.div
-            initial={{ opacity:0, y:12 }}
-            animate={{ opacity:1, y:0 }}
-            transition={{ delay:0.15, duration:0.7, ease:[0.22,1,0.36,1] }}
-            className="fB"
-            style={{ fontSize:"clamp(2.8rem,8vw,6rem)", color:"#fff", letterSpacing:".10em", lineHeight:1, marginBottom:44 }}
-          >
-            REVIVE<span style={{ color:"#2DD4BF" }}>X</span>
-          </motion.div>
+            animate={{ opacity: phase === "ready" ? 0.9 : 0.5, scale: phase === "ready" ? 1.6 : 1 }}
+            transition={{ duration: 1.0, ease: "easeOut" }}
+            style={{
+              position: "absolute", inset: 0, pointerEvents: "none",
+              background: "radial-gradient(ellipse 70% 50% at 50% 50%, rgba(45,212,191,0.15) 0%, transparent 70%)"
+            }}
+          />
 
-          {/* Premium ECG — 5-layer glistening stack */}
-          <motion.div
-            initial={{ opacity:0 }}
-            animate={{ opacity:1 }}
-            transition={{ delay:0.4, duration:0.6 }}
-            style={{ marginBottom:40 }}
-          >
-            <svg viewBox="0 0 64 48" width={200} height={80} style={{ overflow:"visible" }}>
+          {/* Grid */}
+          <div className="grid-dk" style={{ position:"absolute",inset:0,pointerEvents:"none",opacity: phase==="ready"?0.7:0.25,transition:"opacity 0.8s" }} />
+
+          {/* ── PREMIUM ECG SVG ── */}
+          <div style={{ position:"absolute",inset:0,display:"flex",alignItems:"center",overflow:"hidden",pointerEvents:"none" }}>
+            <svg
+              viewBox="0 0 64 48"
+              style={{ width:"100%", height:160, overflow:"visible" }}
+              preserveAspectRatio="xMidYMid meet"
+            >
               <defs>
-                <linearGradient id="pl-glisten" x1="0%" y1="0%" x2="100%" y2="0%">
-                  <stop offset="0%"   stopColor="#2DD4BF" stopOpacity="0.8"/>
-                  <stop offset="42%"  stopColor="#7ffff4" stopOpacity="1"/>
-                  <stop offset="50%"  stopColor="#ffffff" stopOpacity="1"/>
-                  <stop offset="58%"  stopColor="#7ffff4" stopOpacity="1"/>
-                  <stop offset="100%" stopColor="#2DD4BF" stopOpacity="0.8"/>
-                  <animateTransform attributeName="gradientTransform" type="translate"
-                    from="-1 0" to="1 0" dur="1.6s" repeatCount="indefinite"/>
+                {/* Glistening gradient — teal → white → teal sweep */}
+                <linearGradient id="ecg-glisten" x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="0%"   stopColor="#2DD4BF" stopOpacity="0.9" />
+                  <stop offset="38%"  stopColor="#7ffff4" stopOpacity="1"   />
+                  <stop offset="50%"  stopColor="#ffffff" stopOpacity="1"   />
+                  <stop offset="62%"  stopColor="#7ffff4" stopOpacity="1"   />
+                  <stop offset="100%" stopColor="#2DD4BF" stopOpacity="0.9" />
+                  <animateTransform
+                    attributeName="gradientTransform" type="translate"
+                    from="-1 0" to="1 0"
+                    dur="1.8s" repeatCount="indefinite"
+                  />
                 </linearGradient>
-                <filter id="pl-glow" x="-30%" y="-300%" width="160%" height="700%">
-                  <feGaussianBlur stdDeviation="2.2" result="b1"/>
-                  <feGaussianBlur stdDeviation="5"   result="b2"/>
-                  <feMerge><feMergeNode in="b2"/><feMergeNode in="b1"/><feMergeNode in="SourceGraphic"/></feMerge>
+                {/* Outer glow filter */}
+                <filter id="ecg-glow" x="-20%" y="-200%" width="140%" height="500%">
+                  <feGaussianBlur stdDeviation="1.8" result="blur1" />
+                  <feGaussianBlur stdDeviation="4"   result="blur2" />
+                  <feMerge>
+                    <feMergeNode in="blur2" />
+                    <feMergeNode in="blur1" />
+                    <feMergeNode in="SourceGraphic" />
+                  </feMerge>
+                </filter>
+                {/* Sharp inner glow */}
+                <filter id="ecg-glow2" x="-20%" y="-200%" width="140%" height="500%">
+                  <feGaussianBlur stdDeviation="0.6" result="b" />
+                  <feMerge>
+                    <feMergeNode in="b" />
+                    <feMergeNode in="SourceGraphic" />
+                  </feMerge>
                 </filter>
               </defs>
-              {/* halo */}
-              <polyline points={PTS} fill="none" stroke="#2DD4BF" strokeWidth="5"
-                strokeLinecap="round" strokeLinejoin="round"
-                style={{ filter:"blur(7px)", opacity:0.35 }}/>
-              {/* ghost track */}
-              <polyline points={PTS} fill="none" stroke="rgba(45,212,191,0.14)" strokeWidth="5"
-                strokeLinecap="round" strokeLinejoin="round"/>
-              {/* glow */}
-              <polyline points={PTS} fill="none" stroke="#2DD4BF" strokeWidth="3.5"
-                strokeLinecap="round" strokeLinejoin="round" filter="url(#pl-glow)" opacity={0.5}/>
-              {/* glistening dash */}
-              <polyline points={PTS} fill="none" stroke="url(#pl-glisten)" strokeWidth="4.5"
-                strokeLinecap="round" strokeLinejoin="round"
-                strokeDasharray="48 144" strokeDashoffset="192"
-                style={{ animation:"ecg-dash 1.4s linear infinite" }}/>
-              {/* hair line */}
-              <polyline points={PTS} fill="none" stroke="rgba(255,255,255,0.88)" strokeWidth="1.2"
-                strokeLinecap="round" strokeLinejoin="round"
-                strokeDasharray="48 144" strokeDashoffset="192"
-                style={{ animation:"ecg-dash 1.4s linear infinite" }}/>
-            </svg>
-          </motion.div>
 
-          {/* Progress bar */}
-          <div style={{ width:180, height:1, background:"rgba(255,255,255,.07)", overflow:"hidden", borderRadius:1 }}>
-            <motion.div
-              animate={{ width:`${pct}%` }}
-              transition={{ duration:.04 }}
-              style={{
-                height:"100%",
-                background:"linear-gradient(90deg,#14b8a6,#2DD4BF,#7ffff4)",
-                boxShadow:"0 0 14px rgba(45,212,191,.8), 0 0 4px #fff",
-              }}
-            />
+              {/* Layer 1: fat teal soft glow */}
+              <polyline
+                points={PTS}
+                fill="none"
+                stroke="#2DD4BF"
+                strokeWidth="5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                style={{ filter:"blur(6px)", opacity:0.45 }}
+              />
+              {/* Layer 2: medium teal glow */}
+              <polyline
+                points={PTS}
+                fill="none"
+                stroke="#2DD4BF"
+                strokeWidth="3.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                filter="url(#ecg-glow)"
+                opacity={0.55}
+              />
+              {/* Layer 3: dim ghost track */}
+              <polyline
+                points={PTS}
+                fill="none"
+                stroke="rgba(45,212,191,0.18)"
+                strokeWidth="5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+              {/* Layer 4: main animated dash — glistening gradient stroke */}
+              <polyline
+                points={PTS}
+                fill="none"
+                stroke="url(#ecg-glisten)"
+                strokeWidth="4.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeDasharray="48 144"
+                strokeDashoffset="192"
+                filter="url(#ecg-glow2)"
+                style={{
+                  animation: "ecg-dash 1.4s linear infinite",
+                }}
+              />
+              {/* Layer 5: ultra-bright hair-thin centre line */}
+              <polyline
+                points={PTS}
+                fill="none"
+                stroke="rgba(255,255,255,0.92)"
+                strokeWidth="1.2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeDasharray="48 144"
+                strokeDashoffset="192"
+                style={{
+                  animation: "ecg-dash 1.4s linear infinite",
+                }}
+              />
+            </svg>
           </div>
 
-          {/* Percentage */}
-          <motion.div
-            initial={{ opacity:0 }}
-            animate={{ opacity:1 }}
-            transition={{ delay:0.5 }}
-            className="fM"
-            style={{ fontSize:9, color:"rgba(255,255,255,.28)", letterSpacing:".32em",
-                     textTransform:"uppercase", marginTop:14 }}
-          >
-            {String(pct).padStart(3,"0")} %
-          </motion.div>
+          {/* Inject keyframe for ecg-dash */}
+          <style dangerouslySetInnerHTML={{ __html: `
+            @keyframes ecg-dash {
+              72.5% { opacity: 0; }
+              to    { stroke-dashoffset: 0; }
+            }
+          ` }} />
+
+          {/* ── Centre content ── */}
+          <div style={{ position:"relative", zIndex:2, textAlign:"center" }}>
+            <motion.div
+              animate={phase==="ready" ? { scale:[1,1.5,1], filter:["blur(0px)","blur(6px)","blur(0px)"] } : {}}
+              transition={{ repeat: phase==="ready" ? Infinity : 0, duration: 0.4 }}
+              style={{ marginBottom:18, color:"#2DD4BF", display:"flex", justifyContent:"center" }}
+              className={phase!=="ready" ? "heartbeat" : ""}
+            >
+              <Heart size={36} style={{ fill:"#2DD4BF", filter: phase==="ready" ? "drop-shadow(0 0 25px #2DD4BF)" : "none", transition:"filter 0.5s" }} />
+            </motion.div>
+
+            <div className="fM" style={{ fontSize:9, color:"rgba(255,255,255,.28)", textTransform:"uppercase", letterSpacing:".42em", marginBottom:24 }}>
+              NEURO-REHABILITATION SYSTEM
+            </div>
+
+            <motion.div
+              initial={{ opacity:0, scale:.8 }}
+              animate={{ opacity:1, scale: phase==="ready"?1.05:1, textShadow: phase==="ready"?"0 0 60px rgba(45,212,191,0.8)":"none" }}
+              transition={{ delay:.4, duration:.7 }}
+              className="fB" style={{ fontSize:"clamp(3.5rem,11vw,9rem)", color:"#fff", letterSpacing:".08em", lineHeight:1 }}
+            >
+              REVIVE<motion.span animate={{ color: phase==="ready"?"#fff":"#2DD4BF" }} transition={{ duration:0.5 }}>X</motion.span>
+            </motion.div>
+
+            {/* Progress number */}
+            <div style={{ display:"flex", alignItems:"flex-end", justifyContent:"center", gap:4, marginTop:32, marginBottom:16 }}>
+              <motion.span
+                animate={{ color: phase==="ready"?"#2DD4BF":"rgba(255,255,255,.85)" }}
+                className="fM" style={{ fontSize:"3.2rem", lineHeight:1 }}
+              >
+                {String(pct).padStart(3,"0")}
+              </motion.span>
+              <span className="fM blink" style={{ fontSize:"1.6rem", color:"#2DD4BF", marginBottom:4 }}>%</span>
+            </div>
+
+            {/* Progress bar — glistening */}
+            <div style={{ width:240, height:2, background:"rgba(255,255,255,.08)", margin:"0 auto 16px", overflow:"hidden", borderRadius:2, position:"relative" }}>
+              <motion.div
+                animate={{ width:`${pct}%` }}
+                transition={{ duration:.05 }}
+                style={{
+                  height:"100%",
+                  background: phase==="ready"
+                    ? "linear-gradient(90deg,#2DD4BF,#fff,#2DD4BF)"
+                    : "linear-gradient(90deg,#14b8a6,#2DD4BF,#7ffff4)",
+                  boxShadow:"0 0 18px rgba(45,212,191,.9), 0 0 6px #fff",
+                  transition:"background 0.5s",
+                }}
+              />
+            </div>
+
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={phase==="ready"?"SYSTEM ONLINE.":msg}
+                initial={{ opacity:0, y:6 }}
+                animate={{ opacity:1, y:0 }}
+                exit={{ opacity:0, y:-4 }}
+                transition={{ duration:.3 }}
+                className="fM"
+                style={{
+                  fontSize: phase==="ready"?11:9,
+                  color: phase==="ready"?"#2DD4BF":"rgba(255,255,255,.3)",
+                  textTransform:"uppercase",
+                  letterSpacing:".24em",
+                  fontWeight: phase==="ready"?"bold":"normal",
+                }}
+              >
+                {phase==="ready" ? "SYSTEM ONLINE. INITIALIZING UI..." : msg}
+              </motion.div>
+            </AnimatePresence>
+          </div>
         </motion.div>
       )}
     </AnimatePresence>
   );
 }
-
 
 function SectionSep({ color = "#2DD4BF", dim = false }: { color?: string; dim?: boolean }) {
   return (
@@ -1616,198 +1684,6 @@ function ParticleTextEffect({
       }}
       onPointerLeave={() => { hasPtrRef.current = false; ptrRef.current = {}; }}
     />
-  );
-}
-
-
-// ══ EtherealShadow — animated SVG turbulence displacement for subtle bg ══════
-interface EtherealShadowProps {
-  color?: string;
-  scale?: number;
-  speed?: number;
-  className?: string;
-  style?: React.CSSProperties;
-}
-function EtherealShadow({ color="rgba(45,212,191,0.18)", scale=55, speed=60, className="", style }: EtherealShadowProps) {
-  const id = React.useId().replace(/:/g,"");
-  const filterId = `eth-${id}`;
-  const hueRef  = useRef<SVGFEColorMatrixElement>(null);
-  useEffect(() => {
-    let rafId = 0, h = 180;
-    const tick = () => {
-      rafId = requestAnimationFrame(tick);
-      h = (h + (101 - speed) * 0.002 + 0.05) % 360;
-      hueRef.current?.setAttribute("values", String(h));
-    };
-    tick();
-    return () => cancelAnimationFrame(rafId);
-  }, [speed]);
-  const disp = scale * 0.8;
-  const freq  = `${0.0004 + (100-scale)*0.000003},${0.0016 + (100-scale)*0.000012}`;
-  return (
-    <div className={className} style={{ position:"absolute",inset:0,overflow:"hidden",pointerEvents:"none",...style }}>
-      <div style={{ position:"absolute",inset:-disp,filter:`url(#${filterId}) blur(3px)` }}>
-        <svg style={{ position:"absolute",width:0,height:0 }}>
-          <defs>
-            <filter id={filterId}>
-              <feTurbulence result="und" numOctaves="2" baseFrequency={freq} seed="0" type="turbulence"/>
-              <feColorMatrix ref={hueRef} in="und" type="hueRotate" values="180"/>
-              <feColorMatrix in="dist" result="circ" type="matrix"
-                values="4 0 0 0 1  4 0 0 0 1  4 0 0 0 1  1 0 0 0 0"/>
-              <feDisplacementMap in="SourceGraphic" in2="circ" scale={disp} result="dist"/>
-              <feDisplacementMap in="dist" in2="und"  scale={disp} result="out"/>
-            </filter>
-          </defs>
-        </svg>
-        <div style={{
-          width:"100%", height:"100%",
-          backgroundColor: color,
-          maskImage:`url('https://framerusercontent.com/images/ceBGguIpUU8luwByxuQz79t7To.png')`,
-          maskSize:"cover", maskRepeat:"no-repeat", maskPosition:"center",
-        }}/>
-      </div>
-    </div>
-  );
-}
-
-// ══ GlobeSpinner — rotating Earth for Footer contact section ═════════════════
-function GlobeSpinner({ size=280, className="" }: { size?: number; className?: string }) {
-  return (
-    <>
-      <style dangerouslySetInnerHTML={{ __html:`
-        @keyframes earthSpin { 0%{background-position:0 0} 100%{background-position:${size*1.6}px 0} }
-        @keyframes globeStar1{0%,100%{opacity:.1}50%{opacity:1}}
-        @keyframes globeStar2{0%,100%{opacity:.1}60%{opacity:.8}}
-        @keyframes globeAtm { 0%,100%{opacity:.55} 50%{opacity:.9} }
-      `}}/>
-      {/* Outer atmosphere ring */}
-      <div style={{
-        position:"absolute", inset:-18, borderRadius:"50%", pointerEvents:"none",
-        background:"radial-gradient(ellipse, transparent 58%, rgba(45,212,191,.10) 72%, rgba(45,212,191,.25) 78%, rgba(20,184,166,.08) 88%, transparent 100%)",
-        animation:"globeAtm 4s ease-in-out infinite",
-      }}/>
-      {/* Secondary halo */}
-      <div style={{
-        position:"absolute", inset:-32, borderRadius:"50%", pointerEvents:"none",
-        background:"radial-gradient(ellipse, transparent 65%, rgba(45,212,191,.05) 80%, transparent 100%)",
-      }}/>
-      {/* Globe body */}
-      <div
-        className={className}
-        style={{
-          width:size, height:size, borderRadius:"50%",
-          overflow:"hidden", position:"relative",
-          backgroundImage:"url('https://pub-940ccf6255b54fa799a9b01050e6c227.r2.dev/globe.jpeg')",
-          backgroundSize:"cover",
-          backgroundPosition:"left",
-          animation:`earthSpin 30s linear infinite`,
-          boxShadow:[
-            "0 0 0 1px rgba(45,212,191,.18)",
-            "-5px 0 8px rgba(45,212,191,.35) inset",
-            "15px 2px 25px rgba(0,0,0,.8) inset",
-            "-24px -2px 34px rgba(45,212,191,.15) inset",
-            "250px 0 44px rgba(0,0,0,.55) inset",
-            "150px 0 38px rgba(0,0,0,.7) inset",
-            "0 0 60px rgba(45,212,191,.12)",
-          ].join(","),
-        }}
-      >
-        {/* Teal city-lights overlay */}
-        <div style={{
-          position:"absolute",inset:0,borderRadius:"50%",
-          background:"linear-gradient(135deg,rgba(45,212,191,.06) 0%,transparent 50%,rgba(20,184,166,.04) 100%)",
-          mixBlendMode:"screen",
-        }}/>
-        {/* Terminator shadow */}
-        <div style={{
-          position:"absolute",inset:0,borderRadius:"50%",
-          background:"linear-gradient(100deg,transparent 45%,rgba(3,8,20,.82) 100%)",
-        }}/>
-        {/* Twinkling stars around */}
-        {[
-          {l:-24,t:10,d:"1.2s"},{l:-44,t:40,d:"0s"},{l:size+8,t:55,d:"2.4s"},
-          {l:size-30,t:size+8,d:"0.8s"},{l:20,t:size+12,d:"1.8s"},{l:size+4,t:-14,d:"3s"},
-          {l:size+30,t:28,d:"0.4s"},{l:-12,t:size-20,d:"2s"},
-        ].map((s,i)=>(
-          <div key={i} style={{
-            position:"absolute",left:s.l,top:s.t,
-            width:2,height:2,borderRadius:"50%",
-            background:i%2===0?"#2DD4BF":"#fff",
-            opacity:0.6,
-            animation:`globeStar${i%2+1} ${2+i*0.4}s ${s.d} ease-in-out infinite`,
-            boxShadow:i%2===0?"0 0 4px #2DD4BF":"0 0 3px #fff",
-          }}/>
-        ))}
-      </div>
-    </>
-  );
-}
-
-
-// ══ CyberCard — CSS-only 3D tracker tilt, no styled-components ═══════════════
-interface CyberCardProps {
-  children: React.ReactNode;
-  accentColor?: string;     // hex like "#2DD4BF"
-  accentRgb?: string;       // "45,212,191"
-  style?: React.CSSProperties;
-  className?: string;
-}
-function CyberCard({ children, accentColor="#2DD4BF", accentRgb="45,212,191", style, className="" }: CyberCardProps) {
-  // 25 tracker zones for smooth CSS-only 3D tilt
-  const trackers = Array.from({ length: 25 }, (_, i) => i + 1);
-  return (
-    <div className={`cyber-card-container ${className}`} style={{ ...style }}>
-      <div className="cyber-card-canvas" style={{ display:"grid", gridTemplateColumns:"repeat(5,1fr)", gridTemplateRows:"repeat(5,1fr)", position:"absolute", inset:0, zIndex:20 }}>
-        {trackers.map(n => (
-          <div key={n} className={`ctr ctr-${n}`} />
-        ))}
-        {/* The actual card — after all trackers so CSS sibling selector works */}
-        <div className="cyber-inner" style={{
-          background:`linear-gradient(145deg, rgba(${accentRgb},.05) 0%, rgba(8,14,26,.95) 60%)`,
-          border:`1px solid rgba(${accentRgb},.18)`,
-          boxShadow:`0 0 28px rgba(${accentRgb},.07), inset 0 1px 0 rgba(${accentRgb},.08)`,
-          borderRadius:"inherit",
-        }}>
-          <div className="cyber-glare"/>
-          {/* Animated scan lines */}
-          <div aria-hidden style={{ position:"absolute",inset:0,pointerEvents:"none",overflow:"hidden" }}>
-            {[18,36,55,74].map((top,i) => (
-              <div key={i} className="cyber-line" style={{
-                top:`${top}%`,
-                background:`linear-gradient(90deg,transparent,rgba(${accentRgb},.18),transparent)`,
-                animationDelay:`${i*0.8}s`,
-                transformOrigin: i%2===0?"left":"right",
-              }}/>
-            ))}
-          </div>
-          {/* Corner bracket elements */}
-          <div className="cyber-corner-el" aria-hidden>
-            <span/><span/><span/><span/>
-          </div>
-          {/* Scan sweep */}
-          <div className="cyber-scan" style={{ background:`linear-gradient(to bottom,transparent,rgba(${accentRgb},.06),transparent)` }}/>
-          {/* Ambient glow blobs */}
-          <div className="cyber-glow-el" style={{ position:"absolute",inset:0,pointerEvents:"none" }}>
-            <div style={{ position:"absolute",top:-20,left:-20,width:100,height:100,borderRadius:"50%",background:`radial-gradient(circle,rgba(${accentRgb},.20) 0%,transparent 70%)`,filter:"blur(14px)" }}/>
-            <div style={{ position:"absolute",bottom:-20,right:10,width:90,height:90,borderRadius:"50%",background:`radial-gradient(circle,rgba(${accentRgb},.14) 0%,transparent 70%)`,filter:"blur(12px)" }}/>
-          </div>
-          {/* Floating particles */}
-          <div aria-hidden style={{ position:"absolute",inset:0,pointerEvents:"none",overflow:"hidden" }}>
-            {[{px:1,py:-1,t:40,l:20},{px:-1,py:-1,t:60,r:20},{px:.5,py:1,t:22,l:42},{px:-.5,py:1,t:78,r:38}].map((p,i)=>(
-              <div key={i} className="cyber-particle"
-                style={{ top:`${p.t}%`, left:p.l?`${p.l}%`:undefined, right:(p as any).r?`${(p as any).r}%`:undefined,
-                  background:accentColor, boxShadow:`0 0 6px ${accentColor}`,
-                  ['--px' as any]:p.px, ['--py' as any]:p.py,
-                  animationDelay:`${i*0.4}s` }}/>
-            ))}
-          </div>
-          {/* Content */}
-          <div style={{ position:"relative",zIndex:2,width:"100%",height:"100%" }}>
-            {children}
-          </div>
-        </div>
-      </div>
-    </div>
   );
 }
 
@@ -2578,13 +2454,6 @@ function ProblemSection() {
 //  DARK BRIDGE 
 
 // ══ NEURAL BRIDGE — Three.js + GSAP scroll-driven dataverse ══════════════════
-// ══ NEURAL LATTICE — 3-D Interconnected Node Graph Scroll Journey ════════════
-// Engine: Three.js + GSAP ScrollTrigger
-// Art: node cloud + LineSegments web, UnrealBloom post-process
-// Camera: flies through the lattice on scroll
-// Memory-safe: isMounted flag, forceContextLoss, full dispose chain
-// ══════════════════════════════════════════════════════════════════════════════
-// ══ NEURAL BRIDGE — GLSLHills Perlin mountains + shader grid + scroll journey ══
 function NeuralBridge() {
   const containerRef = useRef<HTMLDivElement>(null);
   const canvasRef    = useRef<HTMLCanvasElement>(null);
@@ -2598,473 +2467,450 @@ function NeuralBridge() {
     const canvas    = canvasRef.current;
     if (!container || !canvas || typeof window === "undefined") return;
 
-    let rafId = 0, renderer: any = null, isVisible = false;
-    let stInstances: any[] = [];
+    let rafId = 0;
+    let renderer: any = null;
+    let starMat: any  = null;
+    let nebMat: any   = null;
+    let isVisible = false; // start false — only render when in viewport
+    const targetCam = { x: 0, y: 20, z: 100 };
+    const smoothCam = { x: 0, y: 20, z: 100 };
+    const stInstances: any[] = [];
 
-    // ── Lazy boot ──────────────────────────────────────────────────────────
-    let didInit = false;
-    const bootObs = new IntersectionObserver(entries => {
-      if (entries[0].isIntersecting && !didInit) {
-        didInit = true; isVisible = true;
-        bootObs.disconnect();
-        initScene();
-      }
-    }, { rootMargin: "300px" });
-    if (container) bootObs.observe(container);
-
-    async function initScene() {
-      const THREE     = await import("three");
-      const { gsap }  = await import("gsap");
+    const init = async () => {
+      const THREE = await import("three");
+      const { gsap } = await import("gsap");
       const { ScrollTrigger } = await import("gsap/ScrollTrigger");
       gsap.registerPlugin(ScrollTrigger);
+      // Expose for Lenis sync
       (window as any).__gsap__ = { gsap, ScrollTrigger };
 
-      // ── Scene + camera ────────────────────────────────────────────────────
-      const scene: any  = new THREE.Scene();
-      const bgColor0    = new THREE.Color(0x040c18); // navy   — stage 0
-      const bgColor1    = new THREE.Color(0x060414); // purple — stage 1
-      const bgColor2    = new THREE.Color(0x030d12); // teal   — stage 2
-      scene.background  = bgColor0.clone();
-      scene.fog         = new THREE.FogExp2(0x040c18, 0.0014);
+      // ── Scene ─────────────────────────────────────────────
+      const scene: any = new THREE.Scene();
+      scene.fog = new THREE.FogExp2(0x030810, 0.0018);
 
       const W = window.innerWidth, H = window.innerHeight;
-      const camera: any = new THREE.PerspectiveCamera(55, W/H, 0.1, 2000);
-      camera.position.set(0, 22, 120);
+      const camera: any = new THREE.PerspectiveCamera(68, W / H, 0.1, 2000);
+      camera.position.set(0, 20, 100);
 
-      // Target look-at per stage (interpolated by scroll)
-      const lookTargets = [
-        new THREE.Vector3(0,  12, -260),   // stage 0 — wide horizon
-        new THREE.Vector3(-18, 8, -480),   // stage 1 — drift left, deeper
-        new THREE.Vector3(14, 18, -680),   // stage 2 — right, higher, far
-      ];
-      const smoothLook = lookTargets[0].clone();
-      const targetLook = lookTargets[0].clone();
-
-      const _ce = console.error; console.error = () => {};
+      const _ce2 = console.error;
+      console.error = () => {};
       try {
-        renderer = new THREE.WebGLRenderer({
-          canvas: canvas as HTMLCanvasElement, antialias: true,
-          alpha: false, powerPreference: "high-performance",
-          failIfMajorPerformanceCaveat: false,
-        });
-      } catch(e) { console.error = _ce; setWebglOk(false); return; }
-      console.error = _ce;
+        renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true, powerPreference: "high-performance", failIfMajorPerformanceCaveat: false });
+      } catch(e) {
+        console.error = _ce2;
+        console.warn("NeuralBridge: WebGL unavailable.");
+        setWebglOk(false);
+        return;
+      }
+      console.error = _ce2;
       if (!renderer) return;
       renderer.setSize(W, H);
-      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.3));
-      renderer.setClearColor(0x040c18, 1);
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.0));
+      renderer.setClearColor(0x000000, 0);
       (renderer as any).outputColorSpace = "srgb";
 
-      // ── Perlin noise GLSL (from GLSLHills) ───────────────────────────────
-      const PERLIN_GLSL = `
-        vec3 mod289v3(vec3 x){return x-floor(x*(1./289.))*289.;}
-        vec4 mod289v4(vec4 x){return x-floor(x*(1./289.))*289.;}
-        vec4 permute(vec4 x){return mod289v4(((x*34.)+1.)*x);}
-        vec4 taylorInvSqrt(vec4 r){return 1.79284291400159-0.85373472095314*r;}
-        vec3 fade(vec3 t){return t*t*t*(t*(t*6.-15.)+10.);}
-        float cnoise(vec3 P){
-          vec3 Pi0=floor(P),Pi1=Pi0+1.;
-          Pi0=mod289v3(Pi0);Pi1=mod289v3(Pi1);
-          vec3 Pf0=fract(P),Pf1=Pf0-1.;
-          vec4 ix=vec4(Pi0.x,Pi1.x,Pi0.x,Pi1.x);
-          vec4 iy=vec4(Pi0.yy,Pi1.yy);
-          vec4 iz0=Pi0.zzzz,iz1=Pi1.zzzz;
-          vec4 ixy=permute(permute(ix)+iy);
-          vec4 ixy0=permute(ixy+iz0),ixy1=permute(ixy+iz1);
-          vec4 gx0=ixy0*(1./7.),gy0=fract(floor(gx0)*(1./7.))-.5;
-          gx0=fract(gx0);
-          vec4 gz0=vec4(.5)-abs(gx0)-abs(gy0);
-          vec4 sz0=step(gz0,vec4(0.));
-          gx0-=sz0*(step(0.,gx0)-.5);gy0-=sz0*(step(0.,gy0)-.5);
-          vec4 gx1=ixy1*(1./7.),gy1=fract(floor(gx1)*(1./7.))-.5;
-          gx1=fract(gx1);
-          vec4 gz1=vec4(.5)-abs(gx1)-abs(gy1);
-          vec4 sz1=step(gz1,vec4(0.));
-          gx1-=sz1*(step(0.,gx1)-.5);gy1-=sz1*(step(0.,gy1)-.5);
-          vec3 g000=vec3(gx0.x,gy0.x,gz0.x),g100=vec3(gx0.y,gy0.y,gz0.y);
-          vec3 g010=vec3(gx0.z,gy0.z,gz0.z),g110=vec3(gx0.w,gy0.w,gz0.w);
-          vec3 g001=vec3(gx1.x,gy1.x,gz1.x),g101=vec3(gx1.y,gy1.y,gz1.y);
-          vec3 g011=vec3(gx1.z,gy1.z,gz1.z),g111=vec3(gx1.w,gy1.w,gz1.w);
-          vec4 norm0=taylorInvSqrt(vec4(dot(g000,g000),dot(g010,g010),dot(g100,g100),dot(g110,g110)));
-          g000*=norm0.x;g010*=norm0.y;g100*=norm0.z;g110*=norm0.w;
-          vec4 norm1=taylorInvSqrt(vec4(dot(g001,g001),dot(g011,g011),dot(g101,g101),dot(g111,g111)));
-          g001*=norm1.x;g011*=norm1.y;g101*=norm1.z;g111*=norm1.w;
-          float n000=dot(g000,Pf0),n100=dot(g100,vec3(Pf1.x,Pf0.yz));
-          float n010=dot(g010,vec3(Pf0.x,Pf1.y,Pf0.z)),n110=dot(g110,vec3(Pf1.xy,Pf0.z));
-          float n001=dot(g001,vec3(Pf0.xy,Pf1.z)),n101=dot(g101,vec3(Pf1.x,Pf0.y,Pf1.z));
-          float n011=dot(g011,vec3(Pf0.x,Pf1.yz)),n111=dot(g111,Pf1);
-          vec3 fade_xyz=fade(Pf0);
-          vec4 n_z=mix(vec4(n000,n100,n010,n110),vec4(n001,n101,n011,n111),fade_xyz.z);
-          vec2 n_yz=mix(n_z.xy,n_z.zw,fade_xyz.y);
-          return 2.2*mix(n_yz.x,n_yz.y,fade_xyz.x);
-        }`;
+      // ── Neural data-node particle cloud ───────────────────
+      const N = 900;
+      const pPos = new Float32Array(N * 3);
+      const pCol = new Float32Array(N * 3);
+      const pSz  = new Float32Array(N);
 
-      // ── Build one Perlin mountain mesh ────────────────────────────────────
-      // planeSize=256, 256 segments — same as GLSLHills
-      const PLANE = 256;
-      const mountainMats: any[] = [];
+      const CT = new THREE.Color("#1a6a60");
+      const CP = new THREE.Color("#4a3268");
+      const CW = new THREE.Color("#8899aa");
 
-      interface LayerDef {
-        z: number; speed: number; amplitude: number;
-        r: number; g: number; b: number;   // ridge colour
-        opacity: number; timeOffset: number;
+      for (let i = 0; i < N; i++) {
+        const r     = 180 + Math.random() * 950;
+        const theta = Math.random() * Math.PI * 2;
+        const phi   = Math.acos(Math.random() * 2 - 1);
+        pPos[i*3]   = r * Math.sin(phi) * Math.cos(theta);
+        pPos[i*3+1] = r * Math.sin(phi) * Math.sin(theta);
+        pPos[i*3+2] = r * Math.cos(phi);
+        const rr = Math.random();
+        const c  = rr < 0.32 ? CT : rr < 0.58 ? CP : CW;
+        pCol[i*3] = c.r; pCol[i*3+1] = c.g; pCol[i*3+2] = c.b;
+        pSz[i] = Math.random() * 3.0 + 0.4;
       }
-      const layers: LayerDef[] = [
-        { z:  -20, speed:0.28, amplitude:0.85, r:0.11,g:0.20,b:0.30, opacity:0.92, timeOffset:0.0   }, // front — deep navy
-        { z:  -80, speed:0.22, amplitude:1.10, r:0.10,g:0.35,b:0.38, opacity:0.82, timeOffset:1.3   }, // navy→teal
-        { z: -160, speed:0.18, amplitude:1.35, r:0.05,g:0.45,b:0.42, opacity:0.68, timeOffset:2.8   }, // teal
-        { z: -260, speed:0.14, amplitude:1.60, r:0.22,g:0.18,b:0.50, opacity:0.52, timeOffset:4.1   }, // teal→purple
-        { z: -370, speed:0.10, amplitude:1.80, r:0.35,g:0.12,b:0.60, opacity:0.35, timeOffset:5.7   }, // deep purple bg
-      ];
 
-      const mountainMeshes: any[] = [];
+      const pGeo = new THREE.BufferGeometry();
+      pGeo.setAttribute("position", new THREE.BufferAttribute(pPos, 3));
+      pGeo.setAttribute("aColor",   new THREE.BufferAttribute(pCol, 3));
+      pGeo.setAttribute("aSize",    new THREE.BufferAttribute(pSz,  1));
 
-      layers.forEach((layer) => {
-        const mat: any = new THREE.RawShaderMaterial({
-          uniforms: {
-            time:      { value: layer.timeOffset },
-            speed:     { value: layer.speed },
-            amplitude: { value: layer.amplitude },
-            ridgeR:    { value: layer.r },
-            ridgeG:    { value: layer.g },
-            ridgeB:    { value: layer.b },
-            opacity:   { value: layer.opacity },
-          },
-          vertexShader: `
-            precision highp float;
-            attribute vec3 position;
-            uniform mat4 projectionMatrix;
-            uniform mat4 modelViewMatrix;
-            uniform float time;
-            uniform float speed;
-            uniform float amplitude;
-            varying vec3 vPos;
-            varying float vHeight;
-            varying float vDist;
-
-            ${PERLIN_GLSL}
-
-            mat4 rotX(float r){
-              return mat4(1,0,0,0, 0,cos(r),-sin(r),0, 0,sin(r),cos(r),0, 0,0,0,1);
-            }
-            void main(){
-              vec3 p=(rotX(radians(90.))*vec4(position,1.)).xyz;
-              float edge=sin(radians(p.x/128.*90.));  // GLSLHills edge fade
-              vec3 np=p+vec3(0.,0.,time*-30.*speed);
-              float n1=cnoise(np*0.08);
-              float n2=cnoise(np*0.055);
-              float n3=cnoise(np*0.38);
-              float disp=(n1*edge*9.+n2*edge*9.+n3*(abs(edge)*2.2+0.4)+pow(edge,2.)*44.)*amplitude;
-              vec3 fp=p+vec3(0.,disp,0.);
-              vPos=fp;
-              vHeight=disp;
-              vDist=length((modelViewMatrix*vec4(fp,1.)).xyz);
-              gl_Position=projectionMatrix*modelViewMatrix*vec4(fp,1.);
-            }`,
-          fragmentShader: `
-            precision highp float;
-            uniform float ridgeR,ridgeG,ridgeB,opacity;
-            varying vec3 vPos;
-            varying float vHeight;
-            varying float vDist;
-            void main(){
-              // Distance fade — same GLSLHills formula
-              float distFade=(110.-vDist)/280.*opacity;
-              distFade=clamp(distFade,0.,1.);
-              // Height tint — ridges glow brighter
-              float heightFactor=clamp((vHeight+8.)/32.,0.,1.);
-              // Base dark colour that brightens toward ridge
-              vec3 base=vec3(ridgeR,ridgeG,ridgeB);
-              vec3 dark=base*0.18;
-              vec3 col=mix(dark,base,heightFactor*heightFactor);
-              // Specular ridge sparkle
-              float sparkle=pow(heightFactor,4.)*0.55;
-              col+=vec3(sparkle*0.5,sparkle*0.9,sparkle)*vec3(ridgeR+0.2,ridgeG+0.3,ridgeB+0.4);
-              gl_FragColor=vec4(col,distFade*distFade);
-            }`,
-          transparent: true,
-          blending: THREE.NormalBlending,
-          depthWrite: false,
-          side: THREE.DoubleSide,
-        });
-        mountainMats.push(mat);
-        const geo: any = new THREE.PlaneGeometry(PLANE, PLANE, PLANE, PLANE);
-        const mesh: any = new THREE.Mesh(geo, mat);
-        mesh.position.set(0, -22, layer.z);
-        mesh.userData.baseZ = layer.z;
-        scene.add(mesh);
-        mountainMeshes.push(mesh);
-      });
-
-      // ── Shader grid floor — distance-fade lines ────────────────────────────
-      const gridMat: any = new THREE.ShaderMaterial({
-        uniforms: {
-          time:   { value: 0 },
-          colR:   { value: 0.18 },
-          colG:   { value: 0.83 },
-          colB:   { value: 0.75 },
-        },
+      starMat = new THREE.ShaderMaterial({
+        uniforms: { time: { value: 0 } },
         vertexShader: `
-          varying vec2 vUv;
-          varying float vDist;
-          void main(){
-            vUv=uv;
-            vec4 mv=modelViewMatrix*vec4(position,1.);
-            vDist=-mv.z;
-            gl_Position=projectionMatrix*mv;
+          attribute float aSize; attribute vec3 aColor;
+          varying vec3 vCol; varying float vDepth;
+          uniform float time;
+          void main() {
+            vCol = aColor;
+            vec3 p = position;
+            float ang = time * 0.032;
+            mat2 rot = mat2(cos(ang), -sin(ang), sin(ang), cos(ang));
+            p.xy = rot * p.xy;
+            p.x += sin(time * 0.22 + p.z * 0.005) * 1.8;
+            p.y += cos(time * 0.18 + p.z * 0.004) * 1.2;
+            vec4 mv = modelViewMatrix * vec4(p, 1.0);
+            vDepth = -mv.z;
+            gl_PointSize = aSize * (320.0 / -mv.z);
+            gl_Position = projectionMatrix * mv;
           }`,
         fragmentShader: `
-          precision highp float;
-          uniform float time,colR,colG,colB;
-          varying vec2 vUv;
-          varying float vDist;
-          void main(){
-            // Two-scale grid: coarse + fine
-            vec2 g1=abs(fract(vUv*24.-0.5)-0.5)/fwidth(vUv*24.);
-            vec2 g2=abs(fract(vUv*96.-0.5)-0.5)/fwidth(vUv*96.);
-            float line1=1.-min(min(g1.x,g1.y),1.);
-            float line2=(1.-min(min(g2.x,g2.y),1.))*0.35;
-            float grid=max(line1,line2);
-            // Distance fade — strong falloff
-            float fade=clamp(1.-vDist/520.,0.,1.);
-            fade=fade*fade*fade;
-            // Subtle pulse
-            float pulse=0.78+0.22*sin(time*0.6+vUv.y*12.);
-            float alpha=grid*fade*pulse*0.55;
-            gl_FragColor=vec4(colR,colG,colB,alpha);
+          varying vec3 vCol; varying float vDepth;
+          void main() {
+            float d = length(gl_PointCoord - 0.5);
+            if (d > 0.5) discard;
+            float glow = 1.0 - smoothstep(0.0, 0.5, d);
+            float a = glow * min(1.0, 280.0 / vDepth) * 0.95;
+            float sq = step(0.35, max(abs(gl_PointCoord.x - 0.5), abs(gl_PointCoord.y - 0.5)));
+            vec3 col = mix(vCol, vCol * 1.6, (1.0 - sq) * step(vDepth, 400.0));
+            gl_FragColor = vec4(col, a);
           }`,
         transparent: true,
         blending: THREE.AdditiveBlending,
         depthWrite: false,
-        side: THREE.DoubleSide,
-        extensions: { derivatives: true } as any,
       });
-      const gridGeo: any = new THREE.PlaneGeometry(600, 600, 1, 1);
-      const gridMesh: any = new THREE.Mesh(gridGeo, gridMat);
-      gridMesh.rotation.x = -Math.PI / 2;
-      gridMesh.position.set(0, -28, -200);
-      scene.add(gridMesh);
 
-      // ── Sparse background particles (neural haze) ─────────────────────────
-      const N = 600;
-      const pPos = new Float32Array(N*3), pCol = new Float32Array(N*3);
-      const CT = new THREE.Color(0x1a6a60), CP = new THREE.Color(0x4a3268), CW = new THREE.Color(0x6688aa);
-      for (let i = 0; i < N; i++) {
-        const r=180+Math.random()*900, th=Math.random()*Math.PI*2, ph=Math.acos(Math.random()*2-1);
-        pPos[i*3]=r*Math.sin(ph)*Math.cos(th); pPos[i*3+1]=r*Math.sin(ph)*Math.sin(th); pPos[i*3+2]=r*Math.cos(ph);
-        const rr=Math.random(), col=rr<0.35?CT:rr<0.65?CP:CW;
-        pCol[i*3]=col.r; pCol[i*3+1]=col.g; pCol[i*3+2]=col.b;
-      }
-      const pGeo: any = new THREE.BufferGeometry();
-      pGeo.setAttribute("position",new THREE.BufferAttribute(pPos,3));
-      pGeo.setAttribute("aColor",  new THREE.BufferAttribute(pCol,3));
-      const starMat: any = new THREE.ShaderMaterial({
-        uniforms:{ time:{value:0} },
-        vertexShader:`
-          attribute vec3 aColor; varying vec3 vCol; uniform float time;
-          void main(){
-            vCol=aColor; vec3 p=position;
-            float a=time*0.028;
-            mat2 rot=mat2(cos(a),-sin(a),sin(a),cos(a));
-            p.xy=rot*p.xy;
-            p.x+=sin(time*0.18+p.z*0.005)*2.2;
-            p.y+=cos(time*0.14+p.z*0.004)*1.4;
-            vec4 mv=modelViewMatrix*vec4(p,1.);
-            gl_PointSize=2.4*(280./-mv.z);
-            gl_Position=projectionMatrix*mv;
-          }`,
-        fragmentShader:`
-          varying vec3 vCol;
-          void main(){
-            float d=length(gl_PointCoord-vec2(0.5));
-            if(d>0.5)discard;
-            float a=(1.-smoothstep(0.,0.5,d))*0.75;
-            gl_FragColor=vec4(vCol,a);
-          }`,
-        transparent:true, blending:THREE.AdditiveBlending, depthWrite:false,
-      });
       scene.add(new THREE.Points(pGeo, starMat));
 
-      // ── Synapse connection lines ───────────────────────────────────────────
-      const synapseGroup: any = new THREE.Group();
-      for (let i = 0; i < 14; i++) {
-        const pts2: any[] = [];
-        let sx=(Math.random()-.5)*700, sy=(Math.random()-.5)*380, sz=-80-Math.random()*600;
-        const segs=3+Math.floor(Math.random()*4);
-        for(let j=0;j<=segs;j++){
-          pts2.push(new THREE.Vector3(sx,sy,sz));
-          sx+=(Math.random()-.5)*160; sy+=(Math.random()-.5)*100;
+      // ── Neural synapse connection lines ────────────────────
+      const synapseGroup = new THREE.Group();
+      for (let i = 0; i < 16; i++) {
+        const pts: any[] = [];
+        let x = (Math.random() - 0.5) * 900;
+        let y = (Math.random() - 0.5) * 500;
+        const z = -80 - Math.random() * 750;
+        const segs2 = 3 + Math.floor(Math.random() * 4);
+        for (let j = 0; j <= segs2; j++) {
+          pts.push(new THREE.Vector3(x, y, z));
+          x += (Math.random() - 0.5) * 180;
+          y += (Math.random() - 0.5) * 110;
         }
-        const lGeo: any = new THREE.BufferGeometry().setFromPoints(pts2);
-        const rr=Math.random();
-        synapseGroup.add(new THREE.Line(lGeo, new THREE.LineBasicMaterial({
-          color: rr<0.45?0x2DD4BF:rr<0.75?0x7360a9:0xffffff,
-          transparent:true, opacity:0.10+Math.random()*0.18,
-          blending:THREE.AdditiveBlending,
-        })));
+        const lGeo = new THREE.BufferGeometry().setFromPoints(pts);
+        const rr = Math.random();
+        const lMat = new THREE.LineBasicMaterial({
+          color: rr < 0.45 ? "#2DD4BF" : rr < 0.75 ? "#7360a9ff" : "#ffffff",
+          transparent: true,
+          opacity: 0.12 + Math.random() * 0.22,
+          blending: THREE.AdditiveBlending,
+        });
+        synapseGroup.add(new THREE.Line(lGeo, lMat));
+      }
+
+      const nodeGeo = new THREE.SphereGeometry(2.2, 6, 6);
+      for (let i = 0; i < 10; i++) {
+        const nodeMat = new THREE.MeshBasicMaterial({
+          color: Math.random() < 0.5 ? "#2DD4BF" : "#a78bfa",
+          transparent: true, opacity: 0.55 + Math.random() * 0.35,
+        });
+        const node = new THREE.Mesh(nodeGeo, nodeMat);
+        node.position.set(
+          (Math.random() - 0.5) * 700,
+          (Math.random() - 0.5) * 400,
+          -100 - Math.random() * 600
+        );
+        synapseGroup.add(node);
       }
       scene.add(synapseGroup);
 
-      // ── GSAP scroll ────────────────────────────────────────────────────────
-      const camPositions = [
-        { x:0,  y:22, z:120 },
-        { x:-8, y:16, z:-80 },
-        { x:8,  y:28, z:-520},
+      // ── 6-layer mountain canyon: dark navy → teal → purple ──────────────
+      // Each layer has its own parallax speed for deep 3D canyon effect
+      const mountainMeshes: any[] = [];
+      const layerDefs = [
+        { z: -30,  h: 52,  col: 0x060c1a, op: 1.00, px: 0.18, ridgeCol: 0x2DD4BF },  // 1 near-black front
+        { z: -80,  h: 70,  col: 0x0a1628, op: 0.95, px: 0.32, ridgeCol: 0x2DD4BF },  // 2 deep navy
+        { z: -145, h: 90,  col: 0x0c2438, op: 0.88, px: 0.48, ridgeCol: 0x14b8a6 },  // 3 navy→teal
+        { z: -210, h: 115, col: 0x0d4a3a, op: 0.76, px: 0.64, ridgeCol: 0x14b8a6 },  // 4 deep teal
+        { z: -280, h: 145, col: 0x1a2e5c, op: 0.62, px: 0.82, ridgeCol: 0xa78bfa },  // 5 teal→blue
+        { z: -360, h: 178, col: 0x2d1f5e, op: 0.45, px: 1.00, ridgeCol: 0xa78bfa },  // 6 purple far bg
       ];
-      const targetCam = { ...camPositions[0] };
-      const smoothCam = { ...camPositions[0] };
-      const bgWork = { r:bgColor0.r, g:bgColor0.g, b:bgColor0.b };
+
+      layerDefs.forEach((layer, li) => {
+        const segs = 110;
+        const pts: any[] = [];
+        const seed = li * 113.7;
+        for (let i = 0; i <= segs; i++) {
+          const x = (i / segs - 0.5) * 2200;
+          const primary  = Math.sin(i * 0.055 + seed) * layer.h * 0.55
+                         + Math.sin(i * 0.031 + seed * 0.4) * layer.h * 0.30;
+          const harmonic = Math.sin(i * 0.12 + seed * 0.6) * layer.h * 0.20
+                         + Math.cos(i * 0.08 + seed * 0.5) * layer.h * 0.14;
+          const noise    = Math.sin(i * 0.24 + seed) * layer.h * 0.08;
+          pts.push(new THREE.Vector2(x, primary + harmonic + noise - 68));
+        }
+        pts.push(new THREE.Vector2(9000, -700));
+        pts.push(new THREE.Vector2(-9000, -700));
+        const fillMesh = new THREE.Mesh(
+          new THREE.ShapeGeometry(new THREE.Shape(pts)),
+          new THREE.MeshBasicMaterial({ color: layer.col, transparent: true, opacity: layer.op, side: THREE.DoubleSide })
+        );
+        fillMesh.position.set(0, -55, layer.z);
+        fillMesh.userData.baseZ = layer.z;
+        fillMesh.userData.px = layer.px;
+        scene.add(fillMesh);
+        mountainMeshes.push(fillMesh);
+
+        // Glowing ridge line on the mountain silhouette top
+        const ridgePts: any[] = [];
+        for (let i = 0; i <= segs; i++) {
+          const x = (i / segs - 0.5) * 2200;
+          const primary  = Math.sin(i * 0.055 + seed) * layer.h * 0.55
+                         + Math.sin(i * 0.031 + seed * 0.4) * layer.h * 0.30;
+          const harmonic = Math.sin(i * 0.12 + seed * 0.6) * layer.h * 0.20
+                         + Math.cos(i * 0.08 + seed * 0.5) * layer.h * 0.14;
+          const noise    = Math.sin(i * 0.24 + seed) * layer.h * 0.08;
+          ridgePts.push(new THREE.Vector3(x, primary + harmonic + noise - 68 + 1, 0.5));
+        }
+        const ridge = new THREE.Line(
+          new THREE.BufferGeometry().setFromPoints(ridgePts),
+          new THREE.LineBasicMaterial({
+            color: layer.ridgeCol, transparent: true,
+            opacity: 0.15 + li * 0.05,
+            blending: THREE.AdditiveBlending,
+          })
+        );
+        ridge.position.set(0, -55, layer.z);
+        ridge.userData.baseZ = layer.z;
+        ridge.userData.px = layer.px;
+        ridge.userData.isRidge = true;
+        scene.add(ridge);
+        mountainMeshes.push(ridge);
+      });
+
+      // ── Animated infinite grid floor: 2 overlays for depth ───────────────
+      const makeGrid = (size: number, div: number, c1: number, c2: number, op: number) => {
+        const g = new THREE.GridHelper(size, div, c1, c2);
+        (g.material as any).transparent = true;
+        (g.material as any).opacity = op;
+        (g.material as any).depthWrite = false;
+        (g.material as any).blending = THREE.AdditiveBlending;
+        return g;
+      };
+      const gridCoarse = makeGrid(2400, 24, 0x2DD4BF, 0x061420, 0.10);
+      const gridFine   = makeGrid(2400, 96, 0x14b8a6, 0x030c18, 0.04);
+      gridCoarse.position.set(0, -90, 0);
+      gridFine.position.set(0, -90, 0);
+      scene.add(gridCoarse);
+      scene.add(gridFine);
+      let gridOffset = 0;
+      const GRID_CELL = 2400 / 24;
+
+      // ── Teal neural energy nebula ─────────────────────────
+      const nGeo = new THREE.PlaneGeometry(8000, 4000, 28, 28);
+      nebMat = new THREE.ShaderMaterial({
+        uniforms: {
+          time:    { value: 0 },
+          col1:    { value: new THREE.Color(0x020a18) },
+          col2:    { value: new THREE.Color(0x061a2e) },
+          col3:    { value: new THREE.Color(0x0a0820) },
+          opacity: { value: 0.35 },
+        },
+        vertexShader: `
+          varying vec2 vUv; uniform float time;
+          void main() {
+            vUv = uv; vec3 p = position;
+            float e = sin(p.x * 0.007 + time * 0.6) * cos(p.y * 0.007 + time * 0.5) * 28.0;
+            p.z += e;
+            gl_Position = projectionMatrix * modelViewMatrix * vec4(p, 1.0);
+          }`,
+        fragmentShader: `
+          varying vec2 vUv; uniform vec3 col1, col2, col3;
+          uniform float opacity, time;
+          void main() {
+            float m1 = sin(vUv.x * 9.0 + time * 0.5) * cos(vUv.y * 9.0 + time * 0.4);
+            float m2 = cos(vUv.x * 5.0 - time * 0.3) * sin(vUv.y * 6.0 + time * 0.6);
+            vec3 c = mix(mix(col1, col2, m1 * 0.5 + 0.5), col3, abs(m2) * 0.35);
+            float dist = length(vUv - 0.5);
+            float a = opacity * (1.0 - dist * 1.9);
+            gl_FragColor = vec4(c, max(0.0, a));
+          }`,
+        transparent: true, blending: THREE.AdditiveBlending,
+        side: THREE.DoubleSide, depthWrite: false,
+      });
+      const nebula = new THREE.Mesh(nGeo, nebMat);
+      nebula.position.z = -850;
+      scene.add(nebula);
+
+      // ── GSAP ScrollTrigger camera journey ─────────────────
+      const camPositions = [
+        { x: 0, y: 20,  z:  100 },
+        { x: 0, y: 35,  z: -120 },
+        { x: 0, y: 55,  z: -680 },
+      ];
 
       const st0 = ScrollTrigger.create({
-        trigger: container, start:"top top", end:"bottom bottom", scrub:1.6,
-        onUpdate:(self:any)=>{
-          const p=self.progress;
-          const seg=Math.min(Math.floor(p*2),1), sp=(p*2)%1;
-          const from=camPositions[seg], to=camPositions[seg+1]||camPositions[2];
-          targetCam.x=from.x+(to.x-from.x)*sp;
-          targetCam.y=from.y+(to.y-from.y)*sp;
-          targetCam.z=from.z+(to.z-from.z)*sp;
-
-          // lerp look-at target
-          const li=Math.min(Math.floor(p*3),2);
-          const lp=(p*3)%1;
-          const lA=lookTargets[li], lB=lookTargets[Math.min(li+1,2)];
-          targetLook.set(lA.x+(lB.x-lA.x)*lp, lA.y+(lB.y-lA.y)*lp, lA.z+(lB.z-lA.z)*lp);
-
-          // background colour cross-fade: navy→purple(stage1)→teal-dark(stage2)
-          const c0=bgColor0, c1=bgColor1, c2=bgColor2;
-          let bg:any;
-          if(p<0.45){ bg=c0.clone().lerp(c1, p/0.45); }
-          else if(p<0.72){ bg=c1.clone().lerp(c2,(p-0.45)/0.27); }
-          else{ bg=c2; }
-          bgWork.r=bg.r; bgWork.g=bg.g; bgWork.b=bg.b;
-
-          // parallax scroll mountains
-          mountainMeshes.forEach((m)=>{
-            const spd=0.5+Math.abs(m.userData.baseZ)*0.0012;
-            m.position.z=m.userData.baseZ+p*spd*320;
+        trigger: container,
+        start: "top top",
+        end: "bottom bottom",
+        scrub: 1.5,
+        onUpdate: (self: any) => {
+          const p = self.progress;
+          const s  = Math.min(Math.floor(p * 2), 1);
+          const sp = (p * 2) % 1;
+          const from = camPositions[s];
+          const to   = camPositions[s + 1] || from;
+          targetCam.x = from.x + (to.x - from.x) * sp;
+          targetCam.y = from.y + (to.y - from.y) * sp;
+          targetCam.z = from.z + (to.z - from.z) * sp;
+          mountainMeshes.forEach(m => {
+            const spd = m.userData.px ?? 0.5;
+            m.position.z = m.userData.baseZ + p * spd * 280;
           });
-          gridMesh.position.z = -200 + p * 280;
-          synapseGroup.rotation.y = p * 0.7;
+          // Grids scroll at medium speed for forward-travel feel
+          const gBase = p * 200;
+          gridCoarse.position.z = gBase;
+          gridFine.position.z   = gBase;
+          nebula.position.z = -850 + p * 520;
+          synapseGroup.rotation.y = p * 0.8;
+          // Color: dark(0) → vivid teal-blue peak at 50% → dark again
+          // Background stays deep dark throughout — no color bleeding
         },
       });
       stInstances.push(st0);
 
-      // Stage text fades
+      // Stage text scroll triggers
       const textStages = [
-        { ref:stage0Ref, start:"top top",  end:"20% top",  mode:0 },
-        { ref:stage1Ref, start:"24% top",  end:"56% top",  mode:1 },
-        { ref:stage2Ref, start:"60% top",  end:"96% top",  mode:2 },
+        { ref: stage0Ref, start: "top top",  end: "18% top",  fadeIn: false },
+        { ref: stage1Ref, start: "22% top",  end: "52% top",  fadeIn: true  },
+        { ref: stage2Ref, start: "62% top",  end: "96% top",  fadeIn: true  },
       ];
-      textStages.forEach(({ref:stRef,start,end,mode})=>{
-        if(!stRef.current) return;
-        const el=stRef.current;
-        const st=ScrollTrigger.create({
-          trigger:container, start, end, scrub:true,
-          onUpdate:(self:any)=>{
-            const p2=self.progress;
-            let op=1, ty=0;
-            if(mode===0){ op=Math.pow(Math.max(0,1-p2*1.5),1.4); ty=-p2*45; }
-            else if(mode===1){
-              const inP=Math.min(p2/0.3,1), outP=Math.max(0,(p2-0.72)/0.28);
-              op=inP*(1-outP); ty=(1-Math.pow(inP,0.5))*40-outP*35;
+
+      textStages.forEach(({ ref: stRef, start, end, fadeIn }, idx) => {
+        if (!stRef.current) return;
+        const el = stRef.current;
+        const st = ScrollTrigger.create({
+          trigger: container, start, end, scrub: true,
+          onUpdate: (self: any) => {
+            const p2 = self.progress;
+            let op = 1;
+            let ty = 0;
+            if (!fadeIn) {
+              // stage0: gentle fade out
+              op = Math.pow(1 - p2, 1.6);
+              ty = -p2 * 40;
+            } else if (idx === 1) {
+              // stage1: smooth fade in, hold, smooth fade out
+              const inP  = Math.min(p2 / 0.28, 1);
+              const outP = Math.max(0, (p2 - 0.75) / 0.25);
+              op = inP * (1 - outP);
+              ty = (1 - Math.pow(inP, 0.5)) * 40 - outP * 35;
             } else {
-              const inP=Math.min(p2/0.25,1); op=inP; ty=(1-Math.pow(inP,0.5))*35;
+              // stage2: fade in fast, hold very long, barely exits
+              const inP  = Math.min(p2 / 0.22, 1);
+              const outP = Math.max(0, (p2 - 0.90) / 0.10);
+              op = inP * (1 - outP);
+              ty = (1 - Math.pow(inP, 0.5)) * 35 - outP * 20;
             }
-            el.style.opacity=String(Math.max(0,op));
-            el.style.transform=`translateY(${ty}px)`;
+            el.style.opacity   = String(Math.max(0, op));
+            el.style.transform = `translateY(${ty}px)`;
           },
         });
         stInstances.push(st);
       });
 
-      // ── Resize ─────────────────────────────────────────────────────────────
-      const onResize=()=>{
-        const w=window.innerWidth,h=window.innerHeight;
-        camera.aspect=w/h; camera.updateProjectionMatrix();
-        renderer.setSize(w,h);
+      const onResize = () => {
+        const w = window.innerWidth, h = window.innerHeight;
+        camera.aspect = w / h;
+        camera.updateProjectionMatrix();
+        renderer.setSize(w, h);
       };
-      window.addEventListener("resize",onResize);
+      window.addEventListener("resize", onResize);
 
-      // ── Visibility observer ─────────────────────────────────────────────────
-      const visObs=new IntersectionObserver(e=>{isVisible=e[0].isIntersecting;},{rootMargin:"80px"});
-      if(container) visObs.observe(container);
-
-      // ── RAF ─────────────────────────────────────────────────────────────────
-      let firstFrame=true;
-      const draw=()=>{
-        rafId=requestAnimationFrame(draw);
-        if(!isVisible||document.hidden) return;
-        const t=Date.now()*0.001;
-
-        // Update mountain time uniforms — each layer drifts at own speed
-        mountainMats.forEach((mat,i)=>{
-          mat.uniforms.time.value=t*layers[i].speed+layers[i].timeOffset;
-        });
-        gridMat.uniforms.time.value=t;
-        starMat.uniforms.time.value=t;
-
-        // Smooth camera
-        smoothCam.x+=(targetCam.x-smoothCam.x)*0.038;
-        smoothCam.y+=(targetCam.y-smoothCam.y)*0.038;
-        smoothCam.z+=(targetCam.z-smoothCam.z)*0.038;
+      const draw = () => {
+        rafId = requestAnimationFrame(draw);
+        if (!isVisible || document.hidden) return; // ← zero GPU cost when off-screen
+        const t = Date.now() * 0.001;
+        if (starMat?.uniforms) starMat.uniforms.time.value = t;
+        if (nebMat?.uniforms)  nebMat.uniforms.time.value  = t * 0.38;
+        // Animate grid toward camera — seamless modulo loop
+        gridOffset = (gridOffset + 0.14) % GRID_CELL;
+        gridCoarse.position.z += 0.06;
+        gridFine.position.z    = gridCoarse.position.z;
+        smoothCam.x += (targetCam.x - smoothCam.x) * 0.042;
+        smoothCam.y += (targetCam.y - smoothCam.y) * 0.042;
+        smoothCam.z += (targetCam.z - smoothCam.z) * 0.042;
         camera.position.set(
-          smoothCam.x+Math.sin(t*0.07)*2.5,
-          smoothCam.y+Math.cos(t*0.09)*1.2,
-          smoothCam.z,
+          smoothCam.x + Math.sin(t * 0.09) * 2.2,
+          smoothCam.y + Math.cos(t * 0.11) * 1.1,
+          smoothCam.z
         );
-
-        // Smooth look-at
-        smoothLook.lerp(targetLook, 0.035);
-        camera.lookAt(smoothLook);
-
-        // Background lerp
-        scene.background.r+=(bgWork.r-scene.background.r)*0.03;
-        scene.background.g+=(bgWork.g-scene.background.g)*0.03;
-        scene.background.b+=(bgWork.b-scene.background.b)*0.03;
-        scene.fog.color.copy(scene.background);
-
-        // Slow synapse rotation
-        synapseGroup.rotation.x=Math.sin(t*0.055)*0.035;
-
-        if(firstFrame){ firstFrame=false; setWebglOk(true); }
-        renderer.render(scene,camera);
+        camera.lookAt(0, 8, -600);
+        synapseGroup.rotation.x = Math.sin(t * 0.06) * 0.04;
+        renderer.render(scene, camera);
       };
+      // Visibility observer — pause GPU rendering when scrolled out of view
+      const visObs = new IntersectionObserver(
+        (entries) => { isVisible = entries[0].isIntersecting; },
+        { rootMargin: "100px" }
+      );
+      visObs.observe(container);
       draw();
 
-      return ()=>{
+      return () => {
         visObs.disconnect();
-        window.removeEventListener("resize",onResize);
-        stInstances.forEach(st=>st.kill());
-        cancelAnimationFrame(rafId);
-        mountainMeshes.forEach(m=>{ m.geometry.dispose(); m.material.dispose(); });
-        mountainMats.forEach(m=>m.dispose());
-        gridGeo.dispose(); gridMat.dispose();
-        pGeo.dispose(); starMat.dispose();
-        if(renderer){ renderer.forceContextLoss?.(); renderer.dispose(); (renderer as any).domElement=null; renderer=null; }
+        window.removeEventListener("resize", onResize);
+        stInstances.forEach((st: any) => st.kill());
       };
-    }
+    };
 
-    return ()=>{
+    let cleanupFn: (() => void) | undefined;
+    let didInit = false;
+
+    // ── Lazy boot: only start Three.js when section is 300px from viewport ──
+    const bootObs = new IntersectionObserver((entries) => {
+      if (entries[0].isIntersecting && !didInit) {
+        didInit = true;
+        isVisible = true;
+        bootObs.disconnect();
+        init().then(fn => { cleanupFn = fn; });
+      }
+    }, { rootMargin: "300px" });
+    bootObs.observe(container);
+
+    return () => {
       bootObs.disconnect();
       cancelAnimationFrame(rafId);
-      if(renderer){ try{renderer.forceContextLoss?.();renderer.dispose();}catch(_){} (renderer as any).domElement=null; renderer=null; }
+      cleanupFn?.();
+      if (renderer) renderer.dispose();
     };
   }, []);
 
   const absC: React.CSSProperties = {
-    position:"absolute",inset:0,
-    display:"flex",flexDirection:"column",
-    alignItems:"center",justifyContent:"center",
-    pointerEvents:"none",
+    position: "absolute", inset: 0,
+    display: "flex", flexDirection: "column",
+    alignItems: "center", justifyContent: "center",
+    pointerEvents: "none",
   };
 
+  // CSS-only fallback when WebGL is unavailable
   if (!webglOk) {
     return (
-      <section style={{ background:"#040c18",padding:"120px 40px",position:"relative",overflow:"hidden" }}>
-        <div style={{ maxWidth:900,margin:"0 auto",textAlign:"center",position:"relative",zIndex:2 }}>
-          <div className="fB" style={{ fontSize:"clamp(3rem,8vw,7rem)",color:"#fff",letterSpacing:"-.01em" }}>
-            THE<br/><span style={{ color:"#2DD4BF" }}>SOLUTION</span>
+      <section style={{ background: "linear-gradient(160deg, #07101e 0%, #0d1e3d 35%, #102548 55%, #07101e 100%)", padding: "120px 40px", position: "relative", overflow: "hidden" }}>
+        <div className="grid-dk" style={{ position: "absolute", inset: 0, opacity: 0.5, pointerEvents: "none" }} />
+        <div style={{ position: "absolute", top: "10%", left: "50%", transform: "translateX(-50%)", width: 800, height: 500, pointerEvents: "none", background: "radial-gradient(ellipse, rgba(45,212,191,.14), transparent 65%)" }} />
+        <div style={{ position: "absolute", bottom: "10%", right: "5%", width: 500, height: 500, borderRadius: "50%", pointerEvents: "none", background: "radial-gradient(circle, rgba(167,139,250,.10), transparent 65%)" }} />
+        <div className="scanline" />
+        <div style={{ maxWidth: 900, margin: "0 auto", position: "relative", zIndex: 2, textAlign: "center" }}>
+          <div className="cap" style={{ color: "rgba(45,212,191,.55)", marginBottom: 32, display: "flex", alignItems: "center", justifyContent: "center", gap: 10 }}>
+            <span style={{ width: 18, height: 1, background: "rgba(45,212,191,.3)", display: "inline-block" }} />
+            NEURO-REHABILITATION PLATFORM
+            <span style={{ width: 18, height: 1, background: "rgba(45,212,191,.3)", display: "inline-block" }} />
+          </div>
+          <div style={{ fontFamily: "'Syne',sans-serif", fontWeight: 800, fontSize: "clamp(3.5rem,10vw,9rem)", color: "#fff", letterSpacing: "-.01em", lineHeight: 0.88, marginBottom: 40 }}>
+            THE<br /><span style={{ color: "#2DD4BF" }}>SOLUTION</span>
+          </div>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 16, marginTop: 56 }}>
+            {[
+              { label: "IMMERSIVE", sub: "Gamified therapy environments that command attention and build real neural pathways.", c: "#a78bfa" },
+              { label: "INTELLIGENT", sub: "Real-time AI adapts to every micro-movement, tremor, and grip pattern.", c: "#2DD4BF" },
+              { label: "CONNECTED", sub: "Every session streams live to your clinical dashboard. No clinic visits needed.", c: "#fbbf24" },
+            ].map(s => (
+              <div key={s.label} style={{ padding: "28px 24px", borderRadius: 20, background: `linear-gradient(145deg, ${s.c}08, rgba(8,14,26,.96))`, border: `1px solid ${s.c}20` }}>
+                <div style={{ fontFamily: "'Syne',sans-serif", fontWeight: 800, fontSize: "1.6rem", color: s.c, marginBottom: 12, letterSpacing: "-.01em" }}>{s.label}</div>
+                <p className="fS" style={{ fontSize: 13, color: "rgba(255,255,255,.50)", lineHeight: 1.7, fontWeight: 300 }}>{s.sub}</p>
+              </div>
+            ))}
           </div>
         </div>
       </section>
@@ -3072,126 +2918,75 @@ function NeuralBridge() {
   }
 
   return (
-    <div ref={containerRef} style={{ height:"240vh",position:"relative" }}>
-      <div style={{ position:"sticky",top:0,height:"100vh",overflow:"hidden" }}>
-        {/* WebGL canvas — background is THREE.Scene.background (transitions per stage) */}
-        <canvas ref={canvasRef} style={{ position:"absolute",inset:0,width:"100%",height:"100%",zIndex:0 }}/>
+    <div ref={containerRef} style={{ height: "240vh", position: "relative" }}>
+      <div style={{ position: "sticky", top: 0, height: "100vh", overflow: "hidden" }}>
+        {/* Scroll-driven background brightness — dark→mid-blue→dark */}
+        <div style={{ position: "absolute", inset: 0, zIndex: 0, pointerEvents: "none",
+          background: "linear-gradient(160deg, #07101e 0%, #0d1e3d 30%, #102548 52%, #0b1830 75%, #07101e 100%)" }} />
+        <canvas ref={canvasRef} style={{ position: "absolute", inset: 0, width: "100%", height: "100%", display: "block" }} />
+        <div className="scanline" />
 
-        {/* Cinematic vignette — depth darkening at edges */}
-        <div style={{
-          position:"absolute",inset:0,zIndex:2,pointerEvents:"none",
-          background:"radial-gradient(ellipse 90% 75% at 50% 50%, transparent 38%, rgba(2,6,14,.80) 100%)",
-        }}/>
-        {/* Bottom fog gradient — mountains disappear into darkness */}
-        <div style={{
-          position:"absolute",bottom:0,left:0,right:0,height:"38%",zIndex:2,pointerEvents:"none",
-          background:"linear-gradient(to top, rgba(3,8,14,.95) 0%, transparent 100%)",
-        }}/>
-        <div className="scanline"/>
-
-        {/* ── STAGE 0 — THE SOLUTION ─────────────────────────────────────── */}
-        <div ref={stage0Ref} style={{ ...absC,zIndex:10 }}>
-          {/* Pulsing rings */}
-          <div style={{ position:"absolute",top:"50%",left:"50%",transform:"translate(-50%,-50%)",pointerEvents:"none" }}>
-            <div className="ring-pop" style={{ width:280,height:280,borderRadius:"50%",border:"1px solid rgba(45,212,191,.12)" }}/>
-            <div className="ring-pop" style={{ width:280,height:280,borderRadius:"50%",border:"1px solid rgba(167,139,250,.07)",animationDelay:"1.5s" }}/>
+        {/* STAGE 0 — THE SOLUTION */}
+        <div ref={stage0Ref} style={{ ...absC, zIndex: 10 }}>
+          <div style={{ position: "absolute", top: "50%", left: "50%", transform: "translate(-50%,-50%)", pointerEvents: "none" }}>
+            <div className="ring-pop" style={{ width: 320, height: 320, borderRadius: "50%", border: "1px solid rgba(45,212,191,.14)" }} />
+            <div className="ring-pop" style={{ width: 320, height: 320, borderRadius: "50%", border: "1px solid rgba(167,139,250,.08)", animationDelay: "1.4s" }} />
           </div>
-          {/* CRT corner brackets */}
-          {([{top:20,left:20,bT:"#2DD4BF",bL:"#2DD4BF"},{top:20,right:20,bT:"#2DD4BF",bR:"#2DD4BF"},
-             {bottom:20,left:20,bB:"#a78bfa",bL:"#a78bfa"},{bottom:20,right:20,bB:"#a78bfa",bR:"#a78bfa"}] as any[]).map((s,i)=>(
-            <div key={i} style={{
-              position:"absolute",width:24,height:24,pointerEvents:"none",
-              top:s.top,left:s.left,right:s.right,bottom:s.bottom,
-              borderTop:s.bT?`1px solid ${s.bT}45`:"none",
-              borderLeft:s.bL?`1px solid ${s.bL}45`:"none",
-              borderBottom:s.bB?`1px solid ${s.bB}45`:"none",
-              borderRight:s.bR?`1px solid ${s.bR}45`:"none",
-            }}/>
-          ))}
-          <div className="fM" style={{ fontSize:9,fontWeight:600,color:"rgba(45,212,191,.50)",textTransform:"uppercase",letterSpacing:".22em",marginBottom:20,textAlign:"center",display:"flex",alignItems:"center",gap:10,justifyContent:"center" }}>
-            <span style={{ width:16,height:1,background:"rgba(45,212,191,.3)",display:"inline-block" }}/>
+          <div className="fM" style={{ fontFamily: "Plus Jakarta Sans,sans-serif", fontSize: 10, fontWeight: 600, color: "rgba(45,212,191,.55)", textTransform: "uppercase", letterSpacing: ".20em", marginBottom: 24, textAlign: "center", display: "flex", alignItems: "center", gap: 10, justifyContent: "center" }}>
+            <span style={{ width: 18, height: 1, background: "rgba(45,212,191,.30)", display: "inline-block" }} />
             NEURO-REHABILITATION PLATFORM
-            <span style={{ width:16,height:1,background:"rgba(45,212,191,.3)",display:"inline-block" }}/>
+            <span style={{ width: 18, height: 1, background: "rgba(45,212,191,.30)", display: "inline-block" }} />
           </div>
-          {/* Title — reduced font, Bebas Neue */}
-          <div className="fB" style={{
-            fontSize:"clamp(2.8rem,7vw,6.5rem)",
-            color:"#fff",letterSpacing:".02em",lineHeight:.88,textAlign:"center",
-            textShadow:"0 0 60px rgba(45,212,191,.20)",
-          }}>
-            THE<br/><span style={{ color:"#2DD4BF",textShadow:"0 0 80px rgba(45,212,191,.50)" }}>SOLUTION</span>
+          <div style={{ fontFamily: "'Syne',sans-serif", fontWeight: 800, fontSize: "clamp(3.5rem,10vw,10rem)", color: "#fff", letterSpacing: "-.01em", lineHeight: 0.88, textAlign: "center" }}>
+            THE<br /><span style={{ color: "#2DD4BF" }}>SOLUTION</span>
           </div>
-          <div className="fM" style={{ fontSize:"clamp(.38rem,.65vw,.58rem)",color:"rgba(255,255,255,.16)",textTransform:"uppercase",letterSpacing:".42em",marginTop:24,textAlign:"center" }}>
+          <div className="fM" style={{ fontSize: "clamp(0.45rem,0.85vw,0.72rem)", color: "rgba(255,255,255,.18)", textTransform: "uppercase", letterSpacing: ".44em", marginTop: 32, textAlign: "center" }}>
             A new paradigm in neuro-rehabilitation
           </div>
-          {/* Floating tags */}
-          {[{t:"MOTOR RECOVERY",x:"-30vw",y:"-13vh",c:"#2DD4BF",d:"-7deg"},{t:"COGNITIVE AI",x:"28vw",y:"-15vh",c:"#a78bfa",d:"6deg"},{t:"GRIP SENSOR",x:"-26vw",y:"16vh",c:"#34d399",d:"4deg"},{t:"LIVE DASHBOARD",x:"26vw",y:"18vh",c:"#fbbf24",d:"-5deg"}].map(tag=>(
-            <div key={tag.t} style={{ position:"absolute",left:`calc(50% + ${tag.x})`,top:`calc(50% + ${tag.y})`,transform:`translate(-50%,-50%) rotate(${tag.d})`,padding:"4px 11px",borderRadius:7,border:`1px solid ${tag.c}28`,background:"rgba(6,12,22,.88)",backdropFilter:"blur(12px)" }}>
-              <div className="fM" style={{ fontSize:7,color:tag.c,textTransform:"uppercase",letterSpacing:".20em",opacity:.68,whiteSpace:"nowrap" }}>· {tag.t} ·</div>
+          {[
+            { t: "MOTOR RECOVERY",  x: "-32vw", y: "-14vh", c: "#2DD4BF", d: "-8deg" },
+            { t: "COGNITIVE AI",    x:  "30vw", y: "-16vh", c: "#a78bfa", d:  "7deg" },
+            { t: "GRIP SENSOR",     x: "-28vw", y:  "18vh", c: "#34d399", d:  "5deg" },
+            { t: "LIVE DASHBOARD",  x:  "28vw", y:  "20vh", c: "#fbbf24", d: "-6deg" },
+          ].map(tag => (
+            <div key={tag.t} style={{ position: "absolute", left: `calc(50% + ${tag.x})`, top: `calc(50% + ${tag.y})`, transform: `translate(-50%,-50%) rotate(${tag.d})`, padding: "5px 13px", borderRadius: 8, border: `1px solid ${tag.c}28`, background: `rgba(8,15,26,.88)`, backdropFilter: "blur(10px)", boxShadow: `inset 0 1px 0 ${tag.c}0d` }}>
+              <div className="fM" style={{ fontSize: 7, color: tag.c, textTransform: "uppercase", letterSpacing: ".24em", opacity: .70, whiteSpace: "nowrap" }}>· {tag.t} ·</div>
             </div>
           ))}
-          <motion.div animate={{ y:[0,8,0] }} transition={{ repeat:Infinity,duration:2.2,ease:"easeInOut" }} style={{ position:"absolute",bottom:34,color:"rgba(255,255,255,.12)" }}>
-            <ChevronDown size={20}/>
+          <motion.div animate={{ y: [0, 9, 0] }} transition={{ repeat: Infinity, duration: 2.2, ease: "easeInOut" }} style={{ position: "absolute", bottom: 38, color: "rgba(255,255,255,.13)" }}>
+            <ChevronDown size={22} />
           </motion.div>
         </div>
 
-        {/* ── STAGE 1 — IMMERSIVE ─────────────────────────────────────────── */}
-        <div ref={stage1Ref} style={{ ...absC,zIndex:10,opacity:0 }}>
-          {/* Horizontal scan lines */}
-          <div style={{ position:"absolute",inset:0,pointerEvents:"none",overflow:"hidden" }}>
-            {[12,30,52,68,86].map(pct=>(
-              <div key={pct} style={{ position:"absolute",left:0,right:0,top:`${pct}%`,height:1,
-                background:`linear-gradient(90deg,transparent,rgba(167,139,250,.055),transparent)` }}/>
-            ))}
+        {/* STAGE 1 — IMMERSIVE */}
+        <div ref={stage1Ref} style={{ ...absC, zIndex: 10, opacity: 0 }}>
+          <div className="cap" style={{ color: "rgba(167,139,250,.65)", marginBottom: 18, textAlign: "center" }}>GAMIFIED ENVIRONMENTS</div>
+          <div style={{ fontFamily: "'Syne',sans-serif", fontWeight: 800, fontSize: "clamp(4rem,13vw,13rem)", letterSpacing: "-.01em", lineHeight: 0.88, textAlign: "center", color: "#fff" }}>
+            <span style={{ color: "#a78bfa" }}>IMMERSIVE</span>
           </div>
-          <div className="fM" style={{ fontSize:9,color:"rgba(167,139,250,.60)",textTransform:"uppercase",letterSpacing:".28em",marginBottom:16,textAlign:"center" }}>GAMIFIED ENVIRONMENTS</div>
-          {/* Font: Bebas Neue, reduced from 13vw → 8vw */}
-          <div className="fB" style={{
-            fontSize:"clamp(2.8rem,8vw,7.5rem)",
-            letterSpacing:".01em",lineHeight:.88,textAlign:"center",
-            color:"#a78bfa",textShadow:"0 0 60px rgba(167,139,250,.45), 0 0 160px rgba(167,139,250,.18)",
-          }}>
-            IMMERSIVE
-          </div>
-          <div style={{ width:"clamp(200px,32vw,400px)",height:1,background:"linear-gradient(90deg,transparent,rgba(167,139,250,.50),transparent)",margin:"20px auto" }}/>
-          <div className="fS" style={{ fontSize:"clamp(.75rem,1.1vw,.92rem)",textAlign:"center",maxWidth:380,color:"rgba(255,255,255,.68)",lineHeight:1.65 }}>
-            Gamified environments that command attention<br/>and build real neural pathways.
-          </div>
-          <div style={{ display:"flex",gap:16,marginTop:22 }}>
-            {["SQUEEZE TO PLAY","COGNITIVE GATES","ADAPTIVE LEVELS"].map(l=>(
-              <div key={l} className="fM" style={{ color:"rgba(167,139,250,.58)",padding:"3px 10px",border:"1px solid rgba(167,139,250,.15)",borderRadius:5,fontSize:7,textTransform:"uppercase",letterSpacing:".18em" }}>{l}</div>
+          <div style={{ width: "clamp(260px,38vw,460px)", height: 1, background: "linear-gradient(90deg,transparent,rgba(167,139,250,.5),transparent)", margin: "24px auto" }} />
+          <div className="sub" style={{ fontSize: "clamp(0.8rem,1.2vw,1rem)", textAlign: "center", maxWidth: 420 }}>Gamified environments that command attention</div>
+          <div style={{ display: "flex", gap: 20, marginTop: 28 }}>
+            {["SQUEEZE TO PLAY", "COGNITIVE GATES", "ADAPTIVE LEVELS"].map(l => (
+              <div key={l} className="cap" style={{ color: "rgba(167,139,250,.60)", padding: "4px 12px", border: "1px solid rgba(167,139,250,.16)", borderRadius: 6, fontSize: 8 }}>{l}</div>
             ))}
           </div>
         </div>
 
-        {/* ── STAGE 2 — INTELLIGENT ───────────────────────────────────────── */}
-        <div ref={stage2Ref} style={{ ...absC,zIndex:10,opacity:0 }}>
-          {/* Vertical circuit traces */}
-          <div style={{ position:"absolute",inset:0,pointerEvents:"none",overflow:"hidden" }}>
-            {[7,22,50,78,93].map(pct=>(
-              <div key={pct} style={{ position:"absolute",top:0,bottom:0,left:`${pct}%`,width:1,
-                background:`linear-gradient(180deg,transparent,rgba(45,212,191,.055),transparent)` }}/>
+        {/* STAGE 2 — INTELLIGENT */}
+        <div ref={stage2Ref} style={{ ...absC, zIndex: 10, opacity: 0 }}>
+          <div className="cap" style={{ color: "rgba(45,212,191,.65)", marginBottom: 18, textAlign: "center" }}>REAL-TIME ADAPTATION</div>
+          <div style={{ fontFamily: "'Syne',sans-serif", fontWeight: 800, fontSize: "clamp(4rem,12vw,12rem)", letterSpacing: "-.01em", lineHeight: 0.88, textAlign: "center", color: "#fff" }}>
+            <span style={{ color: "#2DD4BF" }}>INTELLIGENT</span>
+          </div>
+          <div style={{ width: "clamp(260px,38vw,460px)", height: 1, background: "linear-gradient(90deg,transparent,rgba(45,212,191,.5),transparent)", margin: "24px auto" }} />
+          <div className="sub" style={{ fontSize: "clamp(0.8rem,1.2vw,1rem)", textAlign: "center", maxWidth: 420 }}>Real-time AI adapting to every micro-movement</div>
+          <div style={{ display: "flex", gap: 20, marginTop: 28 }}>
+            {["GRIP ANALYTICS", "TREMOR FILTER", "AI COMPANION"].map(l => (
+              <div key={l} className="cap" style={{ color: "rgba(45,212,191,.60)", padding: "4px 12px", border: "1px solid rgba(45,212,191,.16)", borderRadius: 6, fontSize: 8 }}>{l}</div>
             ))}
           </div>
-          <div className="fM" style={{ fontSize:9,color:"rgba(45,212,191,.60)",textTransform:"uppercase",letterSpacing:".28em",marginBottom:16,textAlign:"center" }}>REAL-TIME ADAPTATION</div>
-          {/* Font: Bebas Neue, reduced from 12vw → 8vw */}
-          <div className="fB" style={{
-            fontSize:"clamp(2.8rem,8vw,7.5rem)",
-            letterSpacing:".01em",lineHeight:.88,textAlign:"center",
-            color:"#2DD4BF",textShadow:"0 0 60px rgba(45,212,191,.50), 0 0 180px rgba(45,212,191,.20)",
-          }}>
-            INTELLIGENT
-          </div>
-          <div style={{ width:"clamp(200px,32vw,400px)",height:1,background:"linear-gradient(90deg,transparent,rgba(45,212,191,.50),transparent)",margin:"20px auto" }}/>
-          <div className="fS" style={{ fontSize:"clamp(.75rem,1.1vw,.92rem)",textAlign:"center",maxWidth:380,color:"rgba(255,255,255,.68)",lineHeight:1.65 }}>
-            Real-time AI adapting to every micro-movement,<br/>tremor, and grip pattern.
-          </div>
-          <div style={{ display:"flex",gap:16,marginTop:22 }}>
-            {["GRIP ANALYTICS","TREMOR FILTER","AI COMPANION"].map(l=>(
-              <div key={l} className="fM" style={{ color:"rgba(45,212,191,.58)",padding:"3px 10px",border:"1px solid rgba(45,212,191,.15)",borderRadius:5,fontSize:7,textTransform:"uppercase",letterSpacing:".18em" }}>{l}</div>
-            ))}
-          </div>
-          <div className="fM" style={{ fontSize:"clamp(.38rem,.62vw,.55rem)",color:"rgba(45,212,191,.32)",textTransform:"uppercase",letterSpacing:".34em",marginTop:32,textAlign:"center" }}>↓ DISCOVER THE INTERFACE</div>
+          <div className="fM" style={{ fontSize: "clamp(0.45rem,0.8vw,0.68rem)", color: "rgba(45,212,191,.35)", textTransform: "uppercase", letterSpacing: ".35em", marginTop: 38, textAlign: "center" }}>↓ DISCOVER THE INTERFACE</div>
         </div>
       </div>
     </div>
@@ -3199,6 +2994,7 @@ function NeuralBridge() {
 }
 
 
+// ── GLSL HILLS — Teal wireframe biometric datascape ──────────────────────────
 function SolutionSection() {
   return (
     <section id="solution" data-theme="dark" style={{ background: "linear-gradient(180deg, #04101a 0%, #061421 60%, #060e1a 100%)", padding: "120px 40px", position: "relative", overflow: "hidden" }}>
@@ -3307,44 +3103,93 @@ function OfferSection() {
         <div style={{ display: "grid", gridTemplateColumns: "7fr 5fr", gap: 16, marginBottom: 16 }}>
 
           <Reveal dir="zoom">
-            <CyberCard accentColor="#2DD4BF" accentRgb="45,212,191"
-              style={{ borderRadius:34, minHeight:300, padding:"42px 38px" }}>
-              <div style={{ display:"flex",flexDirection:"column",height:"100%" }}>
-                <div style={{ width:54,height:54,borderRadius:18,marginBottom:20,display:"flex",alignItems:"center",justifyContent:"center",background:"rgba(45,212,191,.12)",border:"1px solid rgba(45,212,191,.24)",color:"#2DD4BF" }}>
-                  <Sparkles size={22}/>
+
+            <TiltCard style={{ padding: "42px 38px", borderRadius: 34, background: "linear-gradient(145deg,#0e1d36,#0a1428)", minHeight: 300, position: "relative", overflow: "hidden", border: "1px solid rgba(45,212,191,.16)", boxShadow: "0 20px 80px rgba(45,212,191,.07), inset 0 1px 0 rgba(45,212,191,.08)" }}>
+
+              <div className="scanline" />
+
+              <div style={{
+                position: "absolute", bottom: -40, right: -40, width: 200, height: 200, borderRadius: "50%", pointerEvents: "none",
+
+                background: "radial-gradient(circle,rgba(45,212,191,.14),transparent 70%)"
+              }} />
+
+              <div style={{ position: "relative", zIndex: 1 }}>
+
+                <div style={{
+                  width: 54, height: 54, borderRadius: 18, marginBottom: 20,
+
+                  display: "flex", alignItems: "center", justifyContent: "center",
+
+                  background: "rgba(45,212,191,.12)", border: "1px solid rgba(45,212,191,.24)", color: "#2DD4BF"
+                }}>
+
+                  <Sparkles size={22} />
+
                 </div>
-                <div className="fM" style={{ fontSize:8,color:"rgba(45,212,191,.55)",textTransform:"uppercase",letterSpacing:".22em",marginBottom:10 }}>AI-Powered</div>
-                <h3 className="fB" style={{ fontSize:28,color:"#fff",letterSpacing:".04em",marginBottom:14,lineHeight:1.05 }}>
+
+                <div className="fM" style={{ fontSize: 8, color: "rgba(45,212,191,.55)", textTransform: "uppercase", letterSpacing: ".22em", marginBottom: 10 }}>AI-Powered</div>
+
+                <h3 className="fB" style={{ fontSize: 30, color: "#fff", letterSpacing: ".04em", marginBottom: 14, lineHeight: 1.05 }}>
+
                   Therapy that grows with the patient.
+
                 </h3>
-                <p className="fS" style={{ fontSize:14,color:"rgba(255,255,255,.50)",lineHeight:1.78,fontWeight:300,maxWidth:400 }}>
+
+                <p className="fS" style={{ fontSize: 14, color: "rgba(255,255,255,.52)", lineHeight: 1.78, fontWeight: 300, maxWidth: 400 }}>
+
                   Reinforcement learning monitors every squeeze and adjusts difficulty live.
+
                   An AI companion provides vocal encouragement. Always meeting you exactly where you are.
+
                 </p>
+
               </div>
-            </CyberCard>
+
+            </TiltCard>
+
           </Reveal>
 
           <Reveal dir="right" delay={.1}>
-            <CyberCard accentColor="#a78bfa" accentRgb="167,139,250"
-              style={{ borderRadius:34, minHeight:300, padding:"36px 32px" }}>
-              <div style={{ display:"flex",flexDirection:"column",height:"100%" }}>
-                <div style={{ width:54,height:54,borderRadius:18,marginBottom:20,display:"flex",alignItems:"center",justifyContent:"center",background:"rgba(167,139,250,.12)",border:"1px solid rgba(167,139,250,.20)",color:"#a78bfa" }}>
-                  <Brain size={22}/>
-                </div>
-                <div className="fM" style={{ fontSize:8,color:"rgba(167,139,250,.65)",textTransform:"uppercase",letterSpacing:".22em",marginBottom:10 }}>Dual-Task</div>
-                <h3 className="fB" style={{ fontSize:24,color:"#fff",letterSpacing:".04em",marginBottom:14,lineHeight:1.05 }}>
-                  Motor + Cognitive. Simultaneously.
-                </h3>
-                <p className="fS" style={{ fontSize:14,color:"rgba(255,255,255,.76)",lineHeight:1.75,fontWeight:300 }}>
-                  The only therapy system training both physical grip and working memory at once. Because neuroplasticity requires both.
-                </p>
-                <div style={{ marginTop:20,display:"flex",alignItems:"center",gap:8,color:"#a78bfa" }}>
-                  <CheckCircle2 size={13}/>
-                  <span className="fM" style={{ fontSize:8,textTransform:"uppercase",letterSpacing:".18em" }}>Clinically validated</span>
-                </div>
+
+            <TiltCard className="offer-card-purple" style={{ padding: "36px 32px", borderRadius: 34, minHeight: 300, transition: "transform .35s, box-shadow .35s" }}>
+
+              <div style={{
+                width: 54, height: 54, borderRadius: 18, marginBottom: 20,
+
+                display: "flex", alignItems: "center", justifyContent: "center",
+
+                background: "rgba(139,92,246,.12)", border: "1px solid rgba(139,92,246,.2)", color: "#8b5cf6"
+              }}>
+
+                <Brain size={22} />
+
               </div>
-            </CyberCard>
+
+              <div className="fM" style={{ fontSize: 8, color: "rgba(139,92,246,.65)", textTransform: "uppercase", letterSpacing: ".22em", marginBottom: 10 }}>Dual-Task</div>
+
+              <h3 className="fB" style={{ fontSize: 24, color: "#fff", letterSpacing: ".04em", marginBottom: 14, lineHeight: 1.05 }}>
+
+                Motor + Cognitive. Simultaneously.
+
+              </h3>
+
+              <p className="fS" style={{ fontSize: 14, color: "rgba(255,255,255,.78)", lineHeight: 1.75, fontWeight: 300 }}>
+
+                The only therapy system training both physical grip and working memory at once. Because neuroplasticity requires both.
+
+              </p>
+
+              <div style={{ marginTop: 20, display: "flex", alignItems: "center", gap: 8, color: "#8b5cf6" }}>
+
+                <CheckCircle2 size={13} />
+
+                <span className="fM" style={{ fontSize: 8, textTransform: "uppercase", letterSpacing: ".18em" }}>Clinically validated</span>
+
+              </div>
+
+            </TiltCard>
+
           </Reveal>
 
         </div>
@@ -3356,39 +3201,72 @@ function OfferSection() {
         <div style={{ display: "grid", gridTemplateColumns: "5fr 7fr", gap: 16 }}>
 
           <Reveal dir="left" delay={.15}>
-            <CyberCard accentColor="#34d399" accentRgb="52,211,153"
-              style={{ borderRadius:34, minHeight:260, padding:"36px 32px" }}>
-              <div style={{ display:"flex",flexDirection:"column",height:"100%" }}>
-                <div style={{ width:54,height:54,borderRadius:18,marginBottom:20,display:"flex",alignItems:"center",justifyContent:"center",background:"rgba(52,211,153,.12)",border:"1px solid rgba(52,211,153,.22)",color:"#34d399" }}>
-                  <Waves size={22}/>
-                </div>
-                <div className="fM" style={{ fontSize:8,color:"rgba(52,211,153,.68)",textTransform:"uppercase",letterSpacing:".22em",marginBottom:10 }}>Tremor Intelligence</div>
-                <h3 className="fB" style={{ fontSize:22,color:"#fff",letterSpacing:".04em",marginBottom:12,lineHeight:1.05 }}>
-                  Filters involuntary tremors in real-time.
-                </h3>
-                <p className="fS" style={{ fontSize:14,color:"rgba(255,255,255,.76)",lineHeight:1.75,fontWeight:300 }}>
-                  6-axis IMU continuously separates Parkinson's tremors from intentional grip for clinical accuracy even in severe cases.
-                </p>
+
+            <TiltCard className="offer-card-green" style={{ padding: "36px 32px", borderRadius: 34, minHeight: 260, transition: "transform .35s, box-shadow .35s" }}>
+
+              <div style={{
+                width: 54, height: 54, borderRadius: 18, marginBottom: 20,
+
+                display: "flex", alignItems: "center", justifyContent: "center",
+
+                background: "rgba(52,211,153,.12)", border: "1px solid rgba(52,211,153,.22)", color: "#34d399"
+              }}>
+
+                <Waves size={22} />
+
               </div>
-            </CyberCard>
+
+              <div className="fM" style={{ fontSize: 8, color: "rgba(52,211,153,.68)", textTransform: "uppercase", letterSpacing: ".22em", marginBottom: 10 }}>Tremor Intelligence</div>
+
+              <h3 className="fB" style={{ fontSize: 22, color: "#fff", letterSpacing: ".04em", marginBottom: 12, lineHeight: 1.05 }}>
+
+                Filters involuntary tremors in real-time.
+
+              </h3>
+
+              <p className="fS" style={{ fontSize: 14, color: "rgba(255,255,255,.78)", lineHeight: 1.75, fontWeight: 300 }}>
+
+                6-axis IMU continuously separates Parkinson's tremors from intentional grip for clinical accuracy even in severe cases.
+
+              </p>
+
+            </TiltCard>
+
           </Reveal>
 
           <Reveal dir="right" delay={.2}>
-            <CyberCard accentColor="#fbbf24" accentRgb="251,191,36"
-              style={{ borderRadius:34, minHeight:260, padding:"36px 32px" }}>
-              <div style={{ display:"flex",flexDirection:"column",height:"100%" }}>
-                <div style={{ width:54,height:54,borderRadius:18,marginBottom:20,display:"flex",alignItems:"center",justifyContent:"center",background:"rgba(251,191,36,.10)",border:"1px solid rgba(251,191,36,.24)",color:"#fbbf24" }}>
-                  <BarChart3 size={22}/>
-                </div>
-                <div className="fM" style={{ fontSize:8,color:"rgba(251,191,36,.72)",textTransform:"uppercase",letterSpacing:".22em",marginBottom:10 }}>Tele-Rehab</div>
-                <h3 className="fB" style={{ fontSize:22,color:"#fff",letterSpacing:".04em",marginBottom:12,lineHeight:1.05 }}>
-                  Your doctor sees every session, from anywhere.
-                </h3>
-                <p className="fS" style={{ fontSize:14,color:"rgba(255,255,255,.76)",lineHeight:1.75,fontWeight:300 }}>
-                  Firebase streams grip force, tremor amplitude, and reaction data live. Therapy adjustments happen remotely — no clinic visits needed.
-                </p>
+
+            <TiltCard className="offer-card-gold" style={{ padding: "36px 32px", borderRadius: 34, minHeight: 260, transition: "transform .35s, box-shadow .35s" }}>
+
+
+              <div style={{
+                width: 54, height: 54, borderRadius: 18, marginBottom: 20,
+
+                display: "flex", alignItems: "center", justifyContent: "center",
+
+                background: "rgba(251,191,36,.10)", border: "1px solid rgba(251,191,36,.24)", color: "#fbbf24"
+              }}>
+
+                <BarChart3 size={22} />
+
               </div>
-            </CyberCard>
+
+              <div className="fM" style={{ fontSize: 8, color: "rgba(251,191,36,.72)", textTransform: "uppercase", letterSpacing: ".22em", marginBottom: 10 }}>Tele-Rehab</div>
+
+              <h3 className="fB" style={{ fontSize: 22, color: "#fff", letterSpacing: ".04em", marginBottom: 12, lineHeight: 1.05 }}>
+
+                Your doctor sees every session, from anywhere.
+
+              </h3>
+
+              <p className="fS" style={{ fontSize: 14, color: "rgba(255,255,255,.78)", lineHeight: 1.75, fontWeight: 300 }}>
+
+                Firebase streams grip force, tremor amplitude, and reaction data live. Therapy adjustments happen remotely — no clinic visits needed.
+
+              </p>
+
+            </TiltCard>
+
           </Reveal>
 
         </div>
@@ -3407,6 +3285,7 @@ function OfferSection() {
 
 
 function WhySection() {
+
   const POINTS = [
 
     {
@@ -3770,24 +3649,10 @@ function Footer() {
 
           <Reveal dir="right" delay={.15} style={{ paddingTop: 8 }}>
 
-            {/* Globe — partially visible top-right, clipped for cinematic look */}
-            <div style={{
-              position:"absolute", top:-60, right:-80,
-              width:280, height:280,
-              pointerEvents:"none", zIndex:0,
-              // Clip bottom half so only top hemisphere peeks above
-              clipPath:"ellipse(140px 100px at 140px 80px)",
-              opacity:0.70,
-            }}>
-              <div style={{ position:"relative", width:280, height:280 }}>
-                <GlobeSpinner size={240} />
-              </div>
-            </div>
-
             <h3 className="fB" style={{
               fontSize: "clamp(1.8rem,3vw,2.8rem)", color: "#fff",
-              letterSpacing: ".04em", lineHeight: 1.1, marginBottom: 22,
-              position:"relative", zIndex:1,
+
+              letterSpacing: ".04em", lineHeight: 1.1, marginBottom: 22
             }}>
 
               DESIGNED FOR PATIENTS.<br /><span style={{ color: "#2DD4BF" }}>BUILT FOR IMPACT.</span>
@@ -3796,8 +3661,8 @@ function Footer() {
 
             <p className="fS" style={{
               fontSize: 15, color: "rgba(255,255,255,.78)",
-              lineHeight: 1.75, fontWeight: 300, marginBottom: 42,
-              position:"relative", zIndex:1,
+
+              lineHeight: 1.75, fontWeight: 300, marginBottom: 42
             }}>
 
               Whether you're a clinician, a hospital administrator, or a patient wanting
