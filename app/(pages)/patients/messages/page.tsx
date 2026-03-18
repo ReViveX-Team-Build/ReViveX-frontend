@@ -7,6 +7,8 @@ import { auth } from "@/app/lib/firebase";
 import {
   sendDirectMessage,
   subscribeToDirect,
+  getInboxMessages,
+  markAsRead,
 } from "@/app/lib/db/communications";
 import { getPatientData } from "@/app/lib/db/users";
 import { Communication } from "@/app/lib/db/types";
@@ -67,6 +69,26 @@ function commToBubble(c: Communication, patientId: string): ChatBubble {
     time: ts
       .toDate()
       .toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+  };
+}
+
+function commToInboxMessage(c: Communication): PatientMessage {
+  const ts = c.timestamp as Timestamp;
+  return {
+    id: c.id ?? `${c.senderId}-${ts.seconds}`,
+    type: (c.type as PatientMessage["type"]) ?? "feedback",
+    title: c.title || "Message",
+    content: c.content,
+    date: ts.toDate().toLocaleString([], {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    }),
+    isRead: c.isRead,
+    isImportant: c.isImportant ?? false,
+    sentByAI: c.type === "ai_insight",
   };
 }
 
@@ -394,7 +416,7 @@ export default function PatientMessagesPage() {
     process.env.NODE_ENV === "development"
       ? "patient_mock_001"
       : (user?.uid ?? "");
-  const [messages, setMessages] = useState<PatientMessage[]>(INITIAL_MESSAGES);
+  const [inbox, setInbox] = useState<PatientMessage[]>([]);
   const [filter, setFilter] = useState<MsgCategory>("all");
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
   const [chatOpen, setChatOpen] = useState(false);
@@ -429,6 +451,23 @@ export default function PatientMessagesPage() {
   }, [patientId]);
 
   useEffect(() => {
+    if (!patientId) return;
+
+    async function loadInbox() {
+      try {
+        const msgs = await getInboxMessages(patientId);
+        const mapped = msgs.map((m) => commToInboxMessage(m as Communication));
+        setInbox(mapped);
+        console.log("Inbox:", msgs);
+      } catch (err) {
+        console.error("Failed to load inbox:", err);
+      }
+    }
+
+    loadInbox();
+  }, [patientId]);
+
+  useEffect(() => {
     if (!patientId || !doctorId) return;
 
     const unsubscribe = subscribeToDirect(patientId, doctorId, (msgs) => {
@@ -440,29 +479,38 @@ export default function PatientMessagesPage() {
   }, [patientId, doctorId]);
 
   /* ── Derived ──────────────────────────────────────────── */
-  const unreadCount = messages.filter((m) => !m.isRead).length;
+  const unreadCount = inbox.filter((m) => !m.isRead).length;
 
-  const filtered = messages.filter((m) => {
+  const filtered = inbox.filter((m) => {
     if (filter === "all") return true;
-    if (filter === "direct_message")
-      return m.type === "direct_message" || m.type === "ai_insight";
+    if (filter === "direct_message") return m.type === "ai_insight";
     return m.type === filter;
   });
 
   /* ── Handlers ─────────────────────────────────────────── */
-  const toggleRead = (id: string) => {
-    setMessages((prev) =>
-      prev.map((m) => (m.id === id ? { ...m, isRead: !m.isRead } : m)),
+  const toggleRead = async (id: string) => {
+    setInbox((prev) =>
+      prev.map((m) => (m.id === id ? { ...m, isRead: true } : m)),
     );
-    // Production: await markAsRead(id) from lib/db/communications.ts
+    try {
+      await markAsRead(id);
+    } catch (err) {
+      console.error("Failed to mark inbox message as read:", err);
+    }
   };
 
-  const toggleExpand = (id: string) => {
+  const toggleExpand = async (id: string) => {
+    const target = inbox.find((m) => m.id === id);
     setExpanded((prev) => {
       const next = new Set(prev);
       next.has(id) ? next.delete(id) : next.add(id);
       return next;
     });
+
+    // Auto-mark as read when opening a care update.
+    if (target && !target.isRead) {
+      await toggleRead(id);
+    }
   };
 
   const sendChat = async () => {
@@ -788,7 +836,7 @@ export default function PatientMessagesPage() {
                 color: "#0B1E33",
                 margin: 0,
               }}>
-              Messages &amp; Feedback
+              Care Updates
             </h2>
             <p
               className="mono"
@@ -820,7 +868,7 @@ export default function PatientMessagesPage() {
                 { id: "all", label: "ALL" },
                 { id: "feedback", label: "FEEDBACK" },
                 { id: "instruction", label: "INSTRUCTIONS" },
-                { id: "direct_message", label: "MESSAGES" },
+                { id: "direct_message", label: "AI INSIGHTS" },
               ] as { id: MsgCategory; label: string }[]
             ).map((tab) => (
               <button
@@ -864,7 +912,9 @@ export default function PatientMessagesPage() {
                 fontSize: 14,
                 fontWeight: 500,
               }}>
-              No messages in this category.
+              {inbox.length === 0
+                ? "No care updates yet"
+                : "No care updates in this category."}
             </div>
           )}
 
