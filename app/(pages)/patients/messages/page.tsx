@@ -387,6 +387,9 @@ const CSS = `
 ══════════════════════════════════════════════════════════ */
 export default function PatientMessagesPage() {
   const [user, loading] = useAuthState(auth);
+  // TEMP DEV OVERRIDE: uses a fixed patient UID in development when auth is not ready.
+  // Remove this once login is fully functional by replacing this block with:
+  // const patientId = user?.uid ?? "";
   const patientId =
     process.env.NODE_ENV === "development"
       ? "patient_mock_001"
