@@ -8,7 +8,7 @@ import { calculateCognitiveAccuracy, calculateEnduranceDrop, getPeakGripForce } 
 import { Timestamp } from "firebase/firestore";
 import { SkyBird } from "../../util/game-core/SynapseSkyBird";
 import { SkyBackground } from "../../util/game-core/SynapseSky";
-import { SkyGate, generateSkySequence, MemoryColor } from "../../util/game-core/SynapseSkyGate";
+import { SkyGate } from "../../util/game-core/SynapseSkyGate";
 import { Particle } from "../../util/game-core/SynapseParticles";
 
 // ── WEB SERIAL TYPES ──────────────────────────────────────────────────────────
@@ -48,7 +48,7 @@ interface GameMetrics {
     isSqueezing: boolean;
 }
 
-type GameState = 'MENU' | 'COUNTDOWN' | 'SHOWING_SEQUENCE' | 'PLAYING' | 'GATE_RESULT' | 'GAME_OVER';
+type GameState = 'MENU' | 'COUNTDOWN' | 'PLAYING' | 'GAME_OVER';
 type CountdownValue = number | 'GO!' | null;
 
 // ── GLOBAL CSS ────────────────────────────────────────────────────────────────
@@ -121,6 +121,7 @@ const SkyMemoryGame: React.FC = () => {
     const gameStateRef = useRef<GameState>('MENU');
     const countdownRef = useRef<CountdownValue>(null);
     const jumpPressedRef = useRef(false);
+    const ceilingIdleTimerRef = useRef(0);
 
     // Game objects
     const birdRef = useRef<SkyBird | null>(null);
@@ -165,10 +166,8 @@ const SkyMemoryGame: React.FC = () => {
     const [level, setLevel] = useState(gameLevel);
     const [showExit, setShowExit] = useState(false);
     const [feedback, setFeedback] = useState<{ text: string; color: string } | null>(null);
-    const [pressDisp, setPressDisp] = useState(0);
-    const [currentSequence, setCurrentSequence] = useState<MemoryColor[]>([]);
-
-    const cdTimerRef = useRef<NodeJS.Timeout | null>(null);
+        const [pressDisp, setPressDisp] = useState(0);
+        const cdTimerRef = useRef<NodeJS.Timeout | null>(null);
 
     // ── HELPERS ───────────────────────────────────────────────────────────────
     const setGameState = useCallback((s: GameState) => {
@@ -375,7 +374,7 @@ const SkyMemoryGame: React.FC = () => {
         
         setScore(0);
         setStreak(0);
-        setCurrentSequence([]);
+        ceilingIdleTimerRef.current = 0;
         
         setGameState('COUNTDOWN');
         setCountdown(3);
@@ -399,44 +398,20 @@ const SkyMemoryGame: React.FC = () => {
     };
 
     // ── SPAWN GATE ───────────────────────────────────────────────────────────
-    const spawnNewGate = (showSequence: boolean = true) => {
+    const spawnNewGate = () => {
         const c = canvasRef.current; if (!c) return;
         
-        const sequence = generateSkySequence(settings.sequenceLength, settings.colors);
-        
-        sequenceRef.current = sequence;
-        setCurrentSequence(sequence);
-        
-
-        
         const numGates = 3;
-        const gateSpacing = 650; // Increased from 500 for more space between gates
+        const gateSpacing = 650;
         for (let i = 0; i < numGates; i++) {
             const gate = new SkyGate(
-                c.width + (i * gateSpacing), // Stagger X positions
+                c.width + (i * gateSpacing),
                 c.height,
-                sequence,
-                settings.checkpointCount,
+                [], // no sequence
+                0, // no checkpoints
                 gameLevel
             );
-            gate.showDuration = settings.showTime;
-            gate.holdDuration = settings.holdTime;
-            
             gatesRef.current.push(gate);
-        }
-        
-        // Only show sequence if requested (during initial gameplay)
-        // After countdown, we go straight to PLAYING
-        if (showSequence) {
-            setGameState('SHOWING_SEQUENCE');
-            
-            // Auto-transition to PLAYING after the show duration
-            setTimeout(() => {
-                if (gameStateRef.current === 'SHOWING_SEQUENCE') {
-                    setGameState('PLAYING');
-                    console.log('Transitioned to PLAYING state');
-                }
-            }, settings.showTime + 500);
         }
     };
 
@@ -604,16 +579,24 @@ const SkyMemoryGame: React.FC = () => {
                     bird.status = 'flying';
                 }
             }
-            // Check if bird hit the ceiling - stay there until user releases
+            // Check if bird hit the ceiling - stay there until user releases, fail after 5s idle
             else if (isAtCeiling) {
+                ceilingIdleTimerRef.current += delta / 1000; // accumulate seconds
                 if (Math.random() < 0.02) {
-                    triggerFeedback('Too High!', '#F97316');
+                    triggerFeedback('Too High! Move down!', '#F97316');
                 }
                 bird.y = bird.radius;
                 bird.velocity = 0;
+                if (ceilingIdleTimerRef.current > 5) {
+                    triggerFeedback('IDLE TOO LONG!', '#EF4444');
+                    setGameState('GAME_OVER');
+                    ceilingIdleTimerRef.current = 0;
+                }
+            } else {
+                ceilingIdleTimerRef.current = 0; // reset when not at ceiling
             }
             // Normal flying - update physics
-            else if (physics || state === 'SHOWING_SEQUENCE') {
+            if (physics) {
                 bird.update(delta, groundH);
                 
                 if (state === 'PLAYING' && shouldJump()) {
@@ -630,7 +613,7 @@ const SkyMemoryGame: React.FC = () => {
         // Particles
         for (let i = particlesRef.current.length - 1; i >= 0; i--) {
             const p = particlesRef.current[i];
-            if (physics || state === 'SHOWING_SEQUENCE' || state === 'GATE_RESULT') p.update();
+            if (physics) p.update();
             p.draw(ctx);
             if (p.markedForDeletion) particlesRef.current.splice(i, 1);
         }
