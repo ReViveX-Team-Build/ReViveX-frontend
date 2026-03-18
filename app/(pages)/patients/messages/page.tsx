@@ -2,7 +2,15 @@
 
 import React, { useState, useEffect, useRef } from "react";
 import Link from "next/link";
-import { sendDirectMessage, getDirectChat } from "@/app/lib/db/communications";
+import { useAuthState } from "react-firebase-hooks/auth";
+import { auth } from "@/app/lib/firebase";
+import {
+  sendDirectMessage,
+  subscribeToDirect,
+} from "@/app/lib/db/communications";
+import { getPatientData } from "@/app/lib/db/users";
+import { Communication } from "@/app/lib/db/types";
+import { Timestamp } from "firebase/firestore";
 import {
   ArrowLeft,
   MessageCircle,
@@ -48,6 +56,18 @@ interface ChatBubble {
   sender: "doctor" | "patient";
   text: string;
   time: string;
+}
+
+function commToBubble(c: Communication, patientId: string): ChatBubble {
+  const ts = c.timestamp as Timestamp;
+  return {
+    id: c.id ?? `${c.senderId}-${ts.seconds}`,
+    sender: c.senderId === patientId ? "patient" : "doctor",
+    text: c.content,
+    time: ts
+      .toDate()
+      .toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+  };
 }
 
 /* ══════════════════════════════════════════════════════════
@@ -366,18 +386,19 @@ const CSS = `
    MAIN PAGE
 ══════════════════════════════════════════════════════════ */
 export default function PatientMessagesPage() {
+  const [user, loading] = useAuthState(auth);
+  const patientId =
+    process.env.NODE_ENV === "development"
+      ? "patient_mock_001"
+      : (user?.uid ?? "");
   const [messages, setMessages] = useState<PatientMessage[]>(INITIAL_MESSAGES);
   const [filter, setFilter] = useState<MsgCategory>("all");
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
   const [chatOpen, setChatOpen] = useState(false);
   const [chatMsgs, setChatMsgs] = useState<ChatBubble[]>(INITIAL_CHAT);
   const [chatInput, setChatInput] = useState("");
+  const [doctorId, setDoctorId] = useState<string | null>(null);
   const [mounted, setMounted] = useState(false);
-  const [testDoctorUid, setTestDoctorUid] = useState("");
-  const [testPatientUid, setTestPatientUid] = useState("");
-  const [testMessage, setTestMessage] = useState("Hello test message");
-  const [testStatus, setTestStatus] = useState("");
-  const [testReadCount, setTestReadCount] = useState<number | null>(null);
   const chatEndRef = useRef<HTMLDivElement>(null);
   const chatInputRef = useRef<HTMLInputElement>(null);
 
@@ -390,6 +411,30 @@ export default function PatientMessagesPage() {
       setTimeout(() => chatInputRef.current?.focus(), 100);
     }
   }, [chatOpen, chatMsgs]);
+
+  useEffect(() => {
+    async function loadDoctor() {
+      if (!patientId) return;
+      const patient = await getPatientData(patientId);
+      setDoctorId(patient?.assignedDoctorId ?? null);
+    }
+
+    loadDoctor().catch((err) => {
+      console.error("Failed to load assigned doctor:", err);
+      setDoctorId(null);
+    });
+  }, [patientId]);
+
+  useEffect(() => {
+    if (!patientId || !doctorId) return;
+
+    const unsubscribe = subscribeToDirect(patientId, doctorId, (msgs) => {
+      console.log("Patient realtime:", msgs);
+      setChatMsgs(msgs.map((m) => commToBubble(m, patientId)));
+    });
+
+    return () => unsubscribe();
+  }, [patientId, doctorId]);
 
   /* ── Derived ──────────────────────────────────────────── */
   const unreadCount = messages.filter((m) => !m.isRead).length;
@@ -417,22 +462,16 @@ export default function PatientMessagesPage() {
     });
   };
 
-  const sendChat = () => {
+  const sendChat = async () => {
+    if (!patientId || !doctorId) return;
     if (!chatInput.trim()) return;
-    const now = new Date();
-    const time = now.toLocaleTimeString([], {
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-    const newMsg: ChatBubble = {
-      id: `c${Date.now()}`,
-      sender: "patient",
-      text: chatInput.trim(),
-      time,
-    };
-    setChatMsgs((prev) => [...prev, newMsg]);
+    const text = chatInput.trim();
     setChatInput("");
-    // Production: await sendCommunication(patientId, doctorId, chatInput, 'direct_message', 'Direct Message')
+    try {
+      await sendDirectMessage(patientId, doctorId, text);
+    } catch (error) {
+      console.error("Patient send failed:", error);
+    }
   };
 
   const handleChatKey = (e: React.KeyboardEvent) => {
@@ -442,56 +481,9 @@ export default function PatientMessagesPage() {
     }
   };
 
-  const runSendTest = async () => {
-    const doctorUid = testDoctorUid.trim();
-    const patientUid = testPatientUid.trim();
-    const content = testMessage.trim();
-    if (!doctorUid || !patientUid || !content) {
-      setTestStatus("Please fill doctor UID, patient UID, and message.");
-      return;
-    }
-
-    try {
-      setTestStatus("Sending message...");
-      const docId = await sendDirectMessage(patientUid, doctorUid, content);
-      setTestStatus(`Sent successfully. Firestore doc ID: ${docId}`);
-      console.log("Firestore send test successful:", {
-        docId,
-        doctorUid,
-        patientUid,
-        content,
-      });
-    } catch (error) {
-      console.error("Firestore send test failed:", error);
-      setTestStatus(
-        "Send failed. Check Firestore rules/import/env and browser console.",
-      );
-    }
-  };
-
-  const runReadTest = async () => {
-    const doctorUid = testDoctorUid.trim();
-    const patientUid = testPatientUid.trim();
-    if (!doctorUid || !patientUid) {
-      setTestStatus("Please fill doctor UID and patient UID.");
-      return;
-    }
-
-    try {
-      setTestStatus("Reading messages...");
-      const msgs = await getDirectChat(patientUid, doctorUid);
-      setTestReadCount(msgs.length);
-      setTestStatus(`Read successful. Found ${msgs.length} direct messages.`);
-      console.log("Firestore read test successful:", msgs);
-    } catch (error) {
-      console.error("Firestore read test failed:", error);
-      setTestStatus(
-        "Read failed. Check Firestore indexes/rules and browser console.",
-      );
-    }
-  };
-
   if (!mounted) return null;
+  if (loading) return <div>Loading...</div>;
+  if (!patientId) return <div>Please sign in</div>;
 
   return (
     <div
@@ -559,94 +551,22 @@ export default function PatientMessagesPage() {
           </Link>
         </div>
 
-        <div
-          style={{
-            marginBottom: 18,
-            background: "#fff",
-            border: "1.5px solid rgba(226,232,240,0.9)",
-            borderRadius: 16,
-            padding: 16,
-            boxShadow: "0 2px 12px rgba(11,30,51,0.06)",
-          }}>
-          <div style={{ marginBottom: 10 }}>
-            <h3
-              style={{
-                fontSize: 14,
-                margin: 0,
-                color: "#0B1E33",
-                fontWeight: 800,
-              }}>
-              Temporary Firestore Messaging Test
-            </h3>
-            <p style={{ fontSize: 12, color: "#64748b", margin: "4px 0 0 0" }}>
-              Step 1 backend check only. Paste real UIDs, send once, then read
-              back.
-            </p>
-          </div>
-
-          <div style={{ display: "grid", gap: 8, marginBottom: 10 }}>
-            <input
-              value={testPatientUid}
-              onChange={(e) => setTestPatientUid(e.target.value)}
-              placeholder="Patient UID"
-              className="pm-chat-input"
-            />
-            <input
-              value={testDoctorUid}
-              onChange={(e) => setTestDoctorUid(e.target.value)}
-              placeholder="Doctor UID"
-              className="pm-chat-input"
-            />
-            <input
-              value={testMessage}
-              onChange={(e) => setTestMessage(e.target.value)}
-              placeholder="Test message"
-              className="pm-chat-input"
-            />
-          </div>
-
+        {!doctorId && (
           <div
             style={{
-              display: "flex",
-              gap: 8,
-              flexWrap: "wrap",
-              marginBottom: 8,
+              marginBottom: 18,
+              background: "#fff",
+              border: "1.5px solid rgba(239,68,68,0.20)",
+              borderRadius: 16,
+              padding: 16,
+              color: "#b91c1c",
+              fontSize: 13,
+              fontWeight: 600,
             }}>
-            <button
-              onClick={runSendTest}
-              style={{
-                border: "none",
-                borderRadius: 10,
-                padding: "9px 12px",
-                cursor: "pointer",
-                background: "linear-gradient(135deg,#2DD4BF,#0891b2)",
-                color: "#0B1E33",
-                fontWeight: 800,
-                fontSize: 12,
-              }}>
-              Test Send Message
-            </button>
-            <button
-              onClick={runReadTest}
-              style={{
-                border: "1px solid rgba(11,30,51,0.16)",
-                borderRadius: 10,
-                padding: "9px 12px",
-                cursor: "pointer",
-                background: "#fff",
-                color: "#0B1E33",
-                fontWeight: 700,
-                fontSize: 12,
-              }}>
-              Test Read Messages
-            </button>
+            No assigned doctor found for this patient. Messaging is disabled
+            until assignedDoctorId is set.
           </div>
-
-          <div style={{ fontSize: 12, color: "#475569" }}>
-            <div>Status: {testStatus || "Not started"}</div>
-            {testReadCount !== null && <div>Read Count: {testReadCount}</div>}
-          </div>
-        </div>
+        )}
 
         {/* ════════════════════════════════════════════════════
             DOCTOR CARD  (dark hero card matching levels page)
@@ -1580,9 +1500,11 @@ export default function PatientMessagesPage() {
                 onChange={(e) => setChatInput(e.target.value)}
                 onKeyDown={handleChatKey}
                 placeholder={`Message ${DOCTOR.name.split(" ")[0]}...`}
+                disabled={!doctorId}
               />
               <button
                 onClick={sendChat}
+                disabled={!chatInput.trim() || !doctorId}
                 style={{
                   width: 42,
                   height: 42,

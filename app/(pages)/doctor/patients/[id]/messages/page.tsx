@@ -2376,38 +2376,36 @@ export default function DoctorMessagingHub() {
                 ))}
               </div>
 
-              {panel === "chat" && <ChatPanel />}
-              {panel === "instruction" && (
-                <ComposeForm
-                  typeLabel="Instruction"
-                  typeColor="#f59e0b"
-                  title={instrTitle}
-                  setTitle={setInstrTitle}
-                  content={instrContent}
-                  setContent={setInstrContent}
-                  important={instrImportant}
-                  setImportant={setInstrImportant}
-                  onSend={sendInstruction}
-                  sentItems={instrSent[selectedId] ?? []}
-                  hint={`Write a clinical instruction for ${patient.name.split(" ")[0]}. Instructions are highlighted and require acknowledgment.`}
-                />
-              )}
-              {panel === "feedback" && (
-                <ComposeForm
-                  typeLabel="Feedback"
-                  typeColor="#2DD4BF"
-                  title={fbTitle}
-                  setTitle={setFbTitle}
-                  content={fbContent}
-                  setContent={setFbContent}
-                  important={fbImportant}
-                  setImportant={setFbImportant}
-                  onSend={sendFeedback}
-                  sentItems={fbSent[selectedId] ?? []}
-                  hint={`Send clinical feedback to ${patient.name.split(" ")[0]} based on their recent session performance.`}
-                />
-              )}
-              {panel === "ai_generate" && <AiPanel />}
+              {panel === "chat" && ChatPanel()}
+              {panel === "instruction" &&
+                ComposeForm({
+                  typeLabel: "Instruction",
+                  typeColor: "#f59e0b",
+                  title: instrTitle,
+                  setTitle: setInstrTitle,
+                  content: instrContent,
+                  setContent: setInstrContent,
+                  important: instrImportant,
+                  setImportant: setInstrImportant,
+                  onSend: sendInstruction,
+                  sentItems: instrSent[selectedId] ?? [],
+                  hint: `Write a clinical instruction for ${patient.name.split(" ")[0]}. Instructions are highlighted and require acknowledgment.`,
+                })}
+              {panel === "feedback" &&
+                ComposeForm({
+                  typeLabel: "Feedback",
+                  typeColor: "#2DD4BF",
+                  title: fbTitle,
+                  setTitle: setFbTitle,
+                  content: fbContent,
+                  setContent: setFbContent,
+                  important: fbImportant,
+                  setImportant: setFbImportant,
+                  onSend: sendFeedback,
+                  sentItems: fbSent[selectedId] ?? [],
+                  hint: `Send clinical feedback to ${patient.name.split(" ")[0]} based on their recent session performance.`,
+                })}
+              {panel === "ai_generate" && AiPanel()}
             </>
           ) : (
             <div
