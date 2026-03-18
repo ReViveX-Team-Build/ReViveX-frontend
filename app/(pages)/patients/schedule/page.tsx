@@ -1,15 +1,31 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuthState } from "react-firebase-hooks/auth";
-import { auth } from "@/app/lib/firebase";
+import { auth, db } from "@/app/lib/firebase";
 import {
   checkUpcomingRemindersForPatient,
-  getPatientSchedule,
   markMissedSessionsForPatient,
 } from "@/app/lib/db/schedule";
 import { GameId, ScheduledSession } from "@/app/lib/db/types";
+import { 
+  collection, 
+  query, 
+  where, 
+  orderBy, 
+  onSnapshot,
+  Unsubscribe 
+} from "firebase/firestore";
+import { 
+  Calendar, 
+  Clock, 
+  Loader2, 
+  Play, 
+  Gamepad2,
+  TrendingUp,
+  AlertCircle
+} from "lucide-react";
 
 const gameLabels: Record<GameId, string> = {
   synapse_racer: "Synapse Racer",
@@ -19,60 +35,132 @@ const gameLabels: Record<GameId, string> = {
   stability_core: "Stability Core",
 };
 
-export default function SchedulePage() {
+const gameIcons: Record<GameId, string> = {
+  synapse_racer: "🌊",
+  rhythm_reef: "🐠",
+  grip_surge: "💪",
+  precision_hold: "🎯",
+  stability_core: "⚖️",
+};
+
+export default function PatientSchedulePage() {
   const router = useRouter();
   const [user, authLoading] = useAuthState(auth);
+
   const [sessions, setSessions] = useState<ScheduledSession[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // Real-time Firestore listener
   useEffect(() => {
-    const load = async () => {
-      if (authLoading) return;
-      if (!user) {
-        setLoading(false);
-        setError("Please sign in to view your schedule.");
-        return;
-      }
+    if (authLoading) return;
+    
+    if (!user) {
+      setLoading(false);
+      router.push("/auth/patient/signin");
+      return;
+    }
 
+    let unsubscribe: Unsubscribe;
+
+    const setupRealtimeListener = async () => {
       try {
         setError(null);
+        
+        // Auto-mark missed sessions on load
         await markMissedSessionsForPatient(user.uid);
-        await checkUpcomingRemindersForPatient(user.uid).catch((e) => {
+        
+        // Check for upcoming reminders (fire-and-forget)
+        checkUpcomingRemindersForPatient(user.uid).catch((e: unknown) => {
           console.warn("Reminder check skipped:", e);
         });
-        const data = await getPatientSchedule(user.uid);
-        setSessions(data);
+
+        // Set up real-time listener
+        const q = query(
+          collection(db, "scheduled_sessions"),
+          where("patientId", "==", user.uid),
+          orderBy("scheduledDate", "asc")
+        );
+
+        unsubscribe = onSnapshot(
+          q,
+          (snapshot) => {
+            const sessionData = snapshot.docs.map((doc) => ({
+              id: doc.id,
+              ...doc.data(),
+            })) as ScheduledSession[];
+
+            setSessions(sessionData);
+            setLoading(false);
+          },
+          (err) => {
+            console.error("Firestore listener error:", err);
+            setError("Failed to load sessions in real-time.");
+            setLoading(false);
+          }
+        );
       } catch (e) {
-        console.error("Failed to load patient schedule:", e);
+        console.error("Failed to set up schedule listener:", e);
         setError("Could not load sessions. Please retry.");
-      } finally {
         setLoading(false);
       }
     };
 
-    void load();
-  }, [user, authLoading]);
+    setupRealtimeListener();
 
-  const upcomingSessions = useMemo(
-    () => sessions.filter((s) => s.status === "scheduled"),
-    [sessions],
-  );
+    // Cleanup listener on unmount
+    return () => {
+      if (unsubscribe) unsubscribe();
+    };
+  }, [user, authLoading, router]);
 
-  const completedSessions = useMemo(
-    () => sessions.filter((s) => s.status === "completed"),
-    [sessions],
-  );
+  // Filter sessions
+  const now = new Date();
+  const upcomingSessions = sessions
+    .filter((s) => {
+      if (s.status !== "scheduled") return false;
+      const sessionDate = new Date(`${s.scheduledDate}T${s.scheduledTime}`);
+      return sessionDate >= now;
+    })
+    .sort((a, b) => {
+      const dateA = new Date(`${a.scheduledDate}T${a.scheduledTime}`);
+      const dateB = new Date(`${b.scheduledDate}T${b.scheduledTime}`);
+      return dateA.getTime() - dateB.getTime();
+    });
 
-  const missedSessions = useMemo(
-    () => sessions.filter((s) => s.status === "missed"),
-    [sessions],
-  );
+  const completedSessions = sessions
+    .filter((s) => s.status === "completed")
+    .sort((a, b) => {
+      const dateA = new Date(`${a.scheduledDate}T${a.scheduledTime}`);
+      const dateB = new Date(`${b.scheduledDate}T${b.scheduledTime}`);
+      return dateB.getTime() - dateA.getTime();
+    });
 
+  const missedSessions = sessions
+    .filter((s) => s.status === "missed")
+    .sort((a, b) => {
+      const dateA = new Date(`${a.scheduledDate}T${a.scheduledTime}`);
+      const dateB = new Date(`${b.scheduledDate}T${b.scheduledTime}`);
+      return dateB.getTime() - dateA.getTime();
+    });
+
+  // Format date helper
   const formatDate = (isoDate: string) => {
     const d = new Date(`${isoDate}T00:00:00`);
     if (Number.isNaN(d.getTime())) return isoDate;
-    return d.toLocaleDateString(undefined, {
+    
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const sessionDate = new Date(d);
+    sessionDate.setHours(0, 0, 0, 0);
+    
+    const diffDays = Math.floor((sessionDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+    
+    if (diffDays === 0) return "Today";
+    if (diffDays === 1) return "Tomorrow";
+    if (diffDays === -1) return "Yesterday";
+    
+    return d.toLocaleDateString("en-US", {
       weekday: "long",
       year: "numeric",
       month: "short",
@@ -80,14 +168,47 @@ export default function SchedulePage() {
     });
   };
 
+  const formatTime = (time: string) => {
+    const [hours, minutes] = time.split(":");
+    const hour = parseInt(hours);
+    const ampm = hour >= 12 ? "PM" : "AM";
+    const displayHour = hour % 12 || 12;
+    return `${displayHour}:${minutes} ${ampm}`;
+  };
+
+  // Loading state
+  if (authLoading || loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <div className="flex flex-col items-center gap-4">
+          <Loader2 size={40} className="text-teal-500 animate-spin" />
+          <p className="text-slate-500">Loading your schedule...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="p-10 max-w-5xl mx-auto space-y-8 animate-fade-in">
       {/* Header */}
-      <div>
-        <h1 className="text-2xl font-semibold text-slate-800">My Schedule</h1>
-        <p className="text-slate-500 mt-1">
-          View your upcoming and past therapy sessions
-        </p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold text-[#0B1E33]">
+            My Schedule
+          </h1>
+          <p className="text-slate-500 mt-2 flex items-center gap-2">
+            <Calendar size={16} />
+            View your upcoming and past therapy sessions
+          </p>
+        </div>
+        
+        {upcomingSessions.length > 0 && (
+          <div className="bg-gradient-to-r from-teal-50 to-teal-100 px-4 py-2 rounded-xl border border-teal-200">
+            <p className="text-sm text-teal-700 font-semibold">
+              {upcomingSessions.length} upcoming session{upcomingSessions.length !== 1 ? 's' : ''}
+            </p>
+          </div>
+        )}
       </div>
 
       {/* Error Display */}
@@ -102,46 +223,14 @@ export default function SchedulePage() {
       )}
 
       {/* Upcoming Sessions */}
-      <div className="bg-white rounded-xl shadow p-6">
-        <h2 className="font-semibold text-slate-700 mb-4">Upcoming Sessions</h2>
-
-        <div className="space-y-4">
-          {loading ? (
-            <p className="text-sm text-slate-500">Loading sessions...</p>
-          ) : upcomingSessions.length === 0 ? (
-            <p className="text-sm text-slate-500">No upcoming sessions.</p>
-          ) : (
-            upcomingSessions.map((session) => (
-              <div
-                key={session.id}
-                className="flex justify-between items-center border rounded-lg p-4 bg-teal-50">
-                <div>
-                  <p className="font-medium text-slate-800">
-                    {formatDate(session.scheduledDate)}
-                  </p>
-                  <p className="text-sm text-slate-500">
-                    ⏰ {session.scheduledTime} • 🎮 {gameLabels[session.gameId]}{" "}
-                    • L{session.level}
-                  </p>
-                </div>
-
-                <div className="flex items-center gap-2">
-                  <span className="text-sm bg-teal-400 text-white px-3 py-1 rounded-full">
-                    Scheduled
-                  </span>
-                  <button
-                    onClick={() =>
-                      router.push(
-                        `/games/${session.gameId}?sessionId=${session.id}&gameId=${session.gameId}`,
-                      )
-                    }
-                    className="text-sm bg-[#0B1E33] hover:bg-[#0d2640] text-white px-3 py-1 rounded-full transition">
-                    Start Session
-                  </button>
-                </div>
-              </div>
-            ))
-          )}
+      <section className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+        <div className="bg-gradient-to-r from-teal-500 to-teal-600 px-6 py-4">
+          <div className="flex items-center gap-3">
+            <TrendingUp size={24} className="text-white" />
+            <h2 className="text-xl font-bold text-white">
+              Upcoming Sessions
+            </h2>
+          </div>
         </div>
 
         <div className="p-6">
@@ -213,47 +302,76 @@ export default function SchedulePage() {
       </section>
 
       {/* Past Sessions */}
-      <div className="bg-white rounded-xl shadow p-6">
-        <h2 className="font-semibold text-slate-700 mb-4">Past Sessions</h2>
+      {(completedSessions.length > 0 || missedSessions.length > 0) && (
+        <section className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+          <div className="bg-gradient-to-r from-slate-500 to-slate-600 px-6 py-4">
+            <div className="flex items-center gap-3">
+              <Gamepad2 size={24} className="text-white" />
+              <h2 className="text-xl font-bold text-white">
+                Past Sessions
+              </h2>
+            </div>
+          </div>
 
-        <div className="space-y-4">
-          {loading
-            ? null
-            : [...completedSessions, ...missedSessions].map((session) => (
-                <div
-                  key={session.id}
-                  className="flex justify-between items-center border rounded-lg p-4 bg-slate-50">
-                  <div className="flex items-start gap-3">
-                    <span>{session.status === "completed" ? "✅" : "⭕"}</span>
-                    <div>
-                      <p className="font-medium text-slate-800">
-                        {formatDate(session.scheduledDate)}
-                      </p>
-                      <p className="text-sm text-slate-500">
-                        ⏰ {session.scheduledTime} • 🎮{" "}
-                        {gameLabels[session.gameId]} • L{session.level}
-                      </p>
+          <div className="p-6 space-y-3">
+            {[...completedSessions, ...missedSessions].map((session) => (
+              <div
+                key={session.id}
+                className="bg-slate-50 border border-slate-200 rounded-xl p-4 hover:bg-slate-100 transition-colors"
+              >
+                <div className="flex justify-between items-center">
+                  <div className="flex items-start gap-3 flex-1">
+                    <span className="text-2xl mt-1">
+                      {session.status === "completed" ? "✅" : "⭕"}
+                    </span>
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-1">
+                        <h3 className="font-bold text-slate-800">
+                          {gameLabels[session.gameId]}
+                        </h3>
+                        <span className="text-xs bg-slate-200 text-slate-600 px-2 py-1 rounded-full">
+                          Level {session.level}
+                        </span>
+                      </div>
+                      <div className="flex flex-wrap gap-4 text-sm text-slate-500">
+                        <span className="flex items-center gap-1">
+                          <Calendar size={14} />
+                          {formatDate(session.scheduledDate)}
+                        </span>
+                        <span className="flex items-center gap-1">
+                          <Clock size={14} />
+                          {formatTime(session.scheduledTime)}
+                        </span>
+                      </div>
                     </div>
                   </div>
 
                   <span
-                    className={`text-xs px-3 py-1 rounded-full ${
+                    className={`text-xs font-semibold px-4 py-2 rounded-full ${
                       session.status === "completed"
-                        ? "bg-green-500 text-white"
-                        : "bg-gray-300 text-gray-700"
-                    }`}>
+                        ? "bg-green-100 text-green-700"
+                        : "bg-gray-200 text-gray-700"
+                    }`}
+                  >
                     {session.status === "completed" ? "Completed" : "Missed"}
                   </span>
                 </div>
-              ))}
-          {!loading &&
-            completedSessions.length === 0 &&
-            missedSessions.length === 0 && (
-              <p className="text-sm text-slate-500">
-                No completed or missed sessions yet.
-              </p>
-            )}
-          {error && <p className="text-sm text-red-500">{error}</p>}
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* Empty state */}
+      {sessions.length === 0 && !loading && (
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-12 text-center">
+          <Calendar size={64} className="mx-auto mb-4 text-slate-300" />
+          <h3 className="text-xl font-bold text-slate-700 mb-2">
+            No Sessions Yet
+          </h3>
+          <p className="text-slate-500 max-w-md mx-auto">
+            Your therapy schedule is empty. Your doctor will create scheduled sessions for you to complete.
+          </p>
         </div>
       )}
     </div>
