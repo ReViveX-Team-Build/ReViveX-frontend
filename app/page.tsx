@@ -1846,7 +1846,7 @@ function AnimatedHeroTitle() {
   const ease: [number,number,number,number] = [0.16, 1, 0.3, 1];
   const text1Ref = useRef<HTMLSpanElement>(null);
   const text2Ref = useRef<HTMLSpanElement>(null);
-  const words = ["RECOVERY.", "MOTIVATION.", "THE BRAIN.", "PHYSIOTHERAPY.", "NEUROPLASTICITY."];
+  const words = ["RECOVERY.", "COGNITION.", "THE BRAIN.", "REHABILITATION.", "NEUROPLASTICITY."];
   const MORPH_TIME = 1.0, COOLDOWN_TIME = 2.2;
 
   useEffect(() => {
@@ -1900,6 +1900,77 @@ function AnimatedHeroTitle() {
   );
 }
 
+// ══ BlurTextAnimation — cinematic per-word blur-in reveal ═══════════════════
+interface BlurWordData {
+  text: string;
+  duration: number;
+  delay: number;
+  blur: number;
+  scale: number;
+}
+
+function BlurTextAnimation({ text = "REDEFINING RECOVERY.", animationDelay = 4200 }: { text?: string; animationDelay?: number }) {
+  const [isAnimating, setIsAnimating] = React.useState(false);
+  const animRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const resetRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const words = React.useMemo<BlurWordData[]>(() => {
+    const split = text.split(" ");
+    return split.map((w, i) => {
+      const progress = i / split.length;
+      return {
+        text: w,
+        duration: 2.2 + Math.cos(i * 0.3) * 0.3,
+        delay: i * 0.06 + Math.pow(progress, 0.8) * 0.5 + (Math.random() - 0.5) * 0.04,
+        blur: 12 + Math.floor(Math.random() * 8),
+        scale: 0.9 + Math.sin(i * 0.2) * 0.05,
+      };
+    });
+  }, [text]);
+
+  useEffect(() => {
+    const start = () => {
+      setTimeout(() => setIsAnimating(true), 200);
+      const maxT = words.reduce((m, w) => Math.max(m, w.delay + w.duration), 0);
+      animRef.current = setTimeout(() => {
+        setIsAnimating(false);
+        resetRef.current = setTimeout(start, animationDelay);
+      }, (maxT + 1) * 1000);
+    };
+    start();
+    return () => {
+      if (animRef.current) clearTimeout(animRef.current);
+      if (resetRef.current) clearTimeout(resetRef.current);
+    };
+  }, [words, animationDelay]);
+
+  return (
+    <div style={{ display:"flex", alignItems:"center", justifyContent:"center", pointerEvents:"none" }}>
+      <p className="fB" style={{ fontSize:"clamp(3rem,8vw,7rem)", letterSpacing:".06em", lineHeight:1.0, textAlign:"center", color:"#fff", margin:0 }}>
+        {words.map((word, i) => (
+          <span
+            key={i}
+            style={{
+              display:"inline-block",
+              marginRight:"0.25em",
+              opacity: isAnimating ? 1 : 0,
+              filter: isAnimating ? "blur(0px) brightness(1)" : `blur(${word.blur}px) brightness(0.6)`,
+              transform: isAnimating ? "translateY(0) scale(1) rotateX(0deg)" : `translateY(20px) scale(${word.scale}) rotateX(-15deg)`,
+              transition: `opacity ${word.duration}s cubic-bezier(.25,.46,.45,.94) ${word.delay}s, filter ${word.duration}s cubic-bezier(.25,.46,.45,.94) ${word.delay}s, transform ${word.duration}s cubic-bezier(.25,.46,.45,.94) ${word.delay}s`,
+              willChange:"filter,transform,opacity",
+              transformStyle:"preserve-3d",
+              backfaceVisibility:"hidden",
+              textShadow: isAnimating ? "0 0 40px rgba(45,212,191,.4)" : "0 0 40px rgba(255,255,255,.2)",
+            }}
+          >
+            {word.text}
+          </span>
+        ))}
+      </p>
+    </div>
+  );
+}
+
 // ══ CINEMATIC HERO ════════════════════════════════════════════════════════════
 function CinematicHero() {
   const sectionRef = useRef<HTMLDivElement>(null);
@@ -1941,7 +2012,7 @@ function CinematicHero() {
 
       scene = new THREE.Scene();
       scene.background = new THREE.Color(0x080f1a);
-      scene.fog = new THREE.FogExp2(0x080f1a, 0.018);
+      scene.fog = new THREE.FogExp2(0x080f1a, 0.006);
       const W = window.innerWidth, H = window.innerHeight;
       camera = new THREE.PerspectiveCamera(40, W/H, 0.1, 500);
       camera.position.set(0, 0, 100);
@@ -1995,7 +2066,7 @@ function CinematicHero() {
 
       // Drag
       const onPD = (e: PointerEvent) => { isDragging=true; lastDragX=e.clientX; lastDragY=e.clientY; velY=0; cv.setPointerCapture(e.pointerId); cv.style.cursor="grabbing"; e.stopPropagation(); };
-      const onPM = (e: PointerEvent) => { if(!isDragging)return; const dx=e.clientX-lastDragX,dy=e.clientY-lastDragY; rotY-=dx*.012; velY=-dx*.012; rotX+=dy*.012; lastDragX=e.clientX; lastDragY=e.clientY; if(model){model.rotation.y=rotY;model.rotation.x=rotX;} };
+      const onPM = (e: PointerEvent) => { if(!isDragging)return; const dx=e.clientX-lastDragX,dy=e.clientY-lastDragY; const dr=dx*.009,dp=dy*.007; rotY-=dr; velY=velY*.6-dr*.4; rotX=Math.max(-0.55,Math.min(0.55,rotX+dp)); lastDragX=e.clientX; lastDragY=e.clientY; if(model){model.rotation.y=rotY;model.rotation.x=rotX;} };
       const onPU = () => { isDragging=false; cv.style.cursor="grab"; };
       cv.addEventListener("pointerdown",onPD); cv.addEventListener("pointermove",onPM); cv.addEventListener("pointerup",onPU); cv.addEventListener("pointerleave",onPU);
 
@@ -2039,12 +2110,41 @@ function CinematicHero() {
         if(tealL) tealL.intensity=5.0+Math.sin(t*1.3)*.9;
         if(purpL) purpL.intensity=3.2+Math.sin(t*.9+1)*.6;
         if(model){
-          modelPosX=lp(0,1.65,slideP); model.position.x=model.position.x+(modelPosX-model.position.x)*.08;
-          const faceP=cl(p,.48,.66);
-          if(faceP>0&&!isDragging){rotY=lp(rotY,0,faceP*.10);rotX=lp(rotX,0,faceP*.09);}
-          if(faceP>=.97&&!lockedFace){lockedFace=true;cv.style.cursor="grab";}
-          if(!isDragging){velY*=.90;rotY+=velY;if(!lockedFace)rotY+=.004*(1-faceP);}
-          model.rotation.y=rotY; model.rotation.x=rotX;
+          // ── X position: slide right during reveal, smooth in both directions ──
+          const targetX = lp(0, 0.9, slideP);
+          const lerpRate = targetX < modelPosX ? 0.028 : 0.032;
+          modelPosX += (targetX - modelPosX) * lerpRate;
+          model.position.x = modelPosX;
+
+          const faceP   = cl(p, .48, .66);
+          const exitP   = eo(cl(p, .82, 1.0));  // exit ramp: 0 → 1 as model plunges
+
+          if (!isDragging) {
+            // Auto-spin only before face-lock, scales to zero before plunge
+            const autoSpin = 0.003 * Math.max(0, 1 - faceP * 2) * (1 - exitP);
+            rotY += autoSpin;
+
+            // Gentle face-forward pull
+            if (faceP > 0) {
+              rotY += (0 - rotY) * Math.min(faceP * 0.008, 0.04);
+              rotX += (0 - rotX) * Math.min(faceP * 0.006, 0.03);
+            }
+
+            // During exit: kill inertia so no wild spinning on the way out
+            const inertiaDamp = 1 - exitP * 0.85;
+            velY *= 0.965 * inertiaDamp;
+            rotY += velY;
+
+            // Exit: lock rotation to current pose — no drift
+            if (exitP > 0) {
+              rotY += (0 - rotY) * exitP * 0.06;
+              rotX += (0 - rotX) * exitP * 0.06;
+            }
+          }
+
+          if(faceP >= .97 && !lockedFace){ lockedFace=true; cv.style.cursor="grab"; }
+          model.rotation.y = rotY;
+          model.rotation.x = rotX;
         }
         try { renderer.render(scene,camera); if(firstFrame){firstFrame=false;setWebglOk(true);} }
         catch(e) { setWebglOk(false); cancelAnimationFrame(rafId); }
@@ -2081,8 +2181,7 @@ function CinematicHero() {
             </div>
             <div style={{ overflow:"hidden",maxWidth:"100%" }}><AnimatedHeroTitle /></div>
             <p className="fS" style={{ fontSize:15,color:"rgba(255,255,255,.62)",maxWidth:400,lineHeight:1.76,fontWeight:300,marginBottom:36 }}>
-              IoT-powered therapy that turns repetitive exercises into <span style={{ color:"rgba(255,255,255,.90)",fontWeight:500 }}>immersive games</span>.
-              <br />Patients recover because they <span style={{ color:"#2DD4BF",fontWeight:600 }}>want</span> to.
+              Clinical rehabilitation powered by immersive computing. We transform static routines into <span style={{ color:"rgba(255,255,255,.90)",fontWeight:500 }}>engaging digital experiences</span>.
             </p>
             <div style={{ display:"flex",gap:12 }}>
               <button onClick={()=>router.push("/auth/patient/signin")} className="fB sweep-btn sweep-teal">
@@ -2114,7 +2213,7 @@ function CinematicHero() {
     <div ref={sectionRef} style={{ height:"260vh",position:"relative" }}>
       <div style={{ position:"sticky",top:0,height:"100vh",overflow:"hidden" }}>
         <canvas ref={canvasRef} style={{ position:"absolute",inset:0,width:"100%",height:"100%",display:"block",zIndex:0 }} />
-        <div style={{ position:"absolute",inset:0,zIndex:1,pointerEvents:"none",background:"linear-gradient(90deg,rgba(8,15,26,.90) 0%,rgba(8,15,26,.60) 48%,transparent 100%)" }} />
+        <div style={{ position:"absolute",inset:0,zIndex:1,pointerEvents:"none",background:"linear-gradient(90deg,rgba(8,15,26,.92) 0%,rgba(8,15,26,.80) 36%,rgba(8,15,26,.22) 50%,transparent 58%)" }} />
 
         {/* VOID — opacity driven by MotionValue, no React re-render */}
         <motion.div style={{ ...absC, zIndex:10, opacity:voidOp }}>
@@ -2124,11 +2223,9 @@ function CinematicHero() {
           <div className="fM" style={{ fontSize:"clamp(.44rem,.82vw,.70rem)",color:"rgba(45,212,191,.45)",textTransform:"uppercase",letterSpacing:".55em",marginBottom:28,textAlign:"center",display:"flex",alignItems:"center",gap:12,justifyContent:"center" }}>
             <span style={{ width:22,height:1,background:"rgba(45,212,191,.35)",display:"inline-block" }} /> REVIVEX PLATFORM v1.2 <span style={{ width:22,height:1,background:"rgba(45,212,191,.35)",display:"inline-block" }} />
           </div>
-          <div className="fB" style={{ fontSize:"clamp(3rem,7.5vw,7rem)",color:"#fff",letterSpacing:".06em",lineHeight:0.92,textAlign:"center" }}>
-            NEURAL LINK<br /><span style={{ color:"#2DD4BF",textShadow:"0 0 60px rgba(45,212,191,.45)" }}>ESTABLISHED.</span>
-          </div>
-          <div style={{ width:"clamp(120px,18vw,200px)",height:1,background:"linear-gradient(90deg,transparent,rgba(45,212,191,.45),transparent)",margin:"28px auto" }} />
-          <div className="fM" style={{ fontSize:"clamp(.38rem,.72vw,.60rem)",color:"rgba(255,255,255,.16)",textTransform:"uppercase",letterSpacing:".48em",textAlign:"center" }}>Scroll to initiate sequence</div>
+          <BlurTextAnimation text="REDEFINING RECOVERY." />
+          <div style={{ width:"clamp(120px,18vw,200px)",height:1,background:"linear-gradient(90deg,transparent,rgba(45,212,191,.45),transparent)",margin:"22px auto" }} />
+          <div className="fM" style={{ fontSize:"clamp(.38rem,.72vw,.60rem)",color:"rgba(45,212,191,.40)",textTransform:"uppercase",letterSpacing:".52em",textAlign:"center" }}>Scroll to explore</div>
           <div style={{ position:"absolute",top:"50%",left:"50%",transform:"translate(-50%,-50%)",pointerEvents:"none" }}>
             <div className="ring-pop" style={{ width:260,height:260,borderRadius:"50%",border:"1px solid rgba(45,212,191,.14)" }} />
             <div className="ring-pop" style={{ width:260,height:260,borderRadius:"50%",border:"1px solid rgba(167,139,250,.09)",animationDelay:"1.4s" }} />
@@ -2152,9 +2249,8 @@ function CinematicHero() {
             </div>
             <div style={{ overflow:"hidden",maxWidth:"100%" }}><AnimatedHeroTitle /></div>
             <p className="fS" style={{ fontSize:15,color:"rgba(255,255,255,.62)",maxWidth:400,marginBottom:40,lineHeight:1.76,fontWeight:300 }}>
-              IoT-powered therapy that turns repetitive exercises into{" "}
-              <span style={{ color:"rgba(255,255,255,.85)",fontWeight:500 }}>immersive games</span>.
-              <br />Patients recover because they <span style={{ color:"#2DD4BF",fontWeight:600 }}>want</span> to.
+              Clinical rehabilitation powered by immersive computing. We transform static routines into{" "}
+              <span style={{ color:"rgba(255,255,255,.85)",fontWeight:500 }}>engaging digital experiences</span>.
             </p>
             <div style={{ display:"flex",gap:12,flexWrap:"wrap" }}>
               <button onClick={()=>router.push("/auth/patient/signin")} className="fB sweep-btn sweep-teal">
@@ -2276,7 +2372,7 @@ const RoadBridge = React.memo(function RoadBridge() {
         <motion.div style={{ position:"absolute",inset:0,opacity:cardsOp,pointerEvents:"none",zIndex:4 }}>
           {[{v:"80%",l:"Drop-out rate",x:-38,y:-24},{v:"$50K+",l:"Robotic cost",x:38,y:-22},{v:"6–12m",l:"Recovery time",x:-38,y:30},{v:"3 wks",l:"Before they quit",x:38,y:28}].map(s=>(
             <div key={s.v} style={{ position:"absolute",left:`calc(50% + ${s.x}vw)`,top:`calc(50% + ${s.y}vh)`,transform:"translate(-50%,-50%)" }}>
-              <div style={{ textAlign:"center",padding:"14px 22px",borderRadius:16,background:"linear-gradient(145deg,rgba(18,4,4,.96),rgba(12,2,2,.98))",border:"1px solid rgba(239,68,68,.22)",backdropFilter:"blur(20px)" }}>
+              <div style={{ textAlign:"center",padding:"14px 22px",borderRadius:16,background:"linear-gradient(145deg,rgba(18,4,4,.96),rgba(12,2,2,.98))",border:"1px solid rgba(239,68,68,.22)" }}>
                 <div className="fB" style={{ fontSize:"2.2rem",color:"#ef4444" }}>{s.v}</div>
                 <div className="fS" style={{ fontSize:11,color:"rgba(255,255,255,.45)",textTransform:"uppercase",letterSpacing:".12em",marginTop:5 }}>{s.l}</div>
               </div>
@@ -2414,7 +2510,7 @@ function ProblemSection() {
 
           {[
 
-            { t: "No Motivation", c: "#ef4444", b: "Squeezing a rubber ball 100 times with zero feedback isn't therapy — it's punishment. The brain doesn't rewire under boredom." },
+            { t: "No Motivation", c: "#ef4444", b: "Repetitive motions without feedback limit progress. We replace passive routines with active cognitive engagement." },
 
             { t: "No Access", c: "#f97316", b: "Robotic exoskeletons cost more than a car. Hospital visits 3× a week for 6 months is unsustainable for almost any family." },
 
@@ -2453,540 +2549,427 @@ function ProblemSection() {
 
 //  DARK BRIDGE 
 
-// ══ NEURAL BRIDGE — Three.js + GSAP scroll-driven dataverse ══════════════════
+// ══ NEURAL BRIDGE — GLSLHills Pure Shader ══════════════════════════════════
 function NeuralBridge() {
   const containerRef = useRef<HTMLDivElement>(null);
   const canvasRef    = useRef<HTMLCanvasElement>(null);
-  const stage0Ref    = useRef<HTMLDivElement>(null);
-  const stage1Ref    = useRef<HTMLDivElement>(null);
-  const stage2Ref    = useRef<HTMLDivElement>(null);
-  const [webglOk, setWebglOk] = useState(true);
+  const progRef      = useRef(0);
+  const [prog, setProg] = useState(0);
 
   useEffect(() => {
+    let isMounted = true;
     const container = containerRef.current;
     const canvas    = canvasRef.current;
     if (!container || !canvas || typeof window === "undefined") return;
 
-    let rafId = 0;
-    let renderer: any = null;
-    let starMat: any  = null;
-    let nebMat: any   = null;
-    let isVisible = false; // start false — only render when in viewport
-    const targetCam = { x: 0, y: 20, z: 100 };
-    const smoothCam = { x: 0, y: 20, z: 100 };
+    let rafId = 0, renderer: any = null;
     const stInstances: any[] = [];
+    const smoothPos = { x: 0, y: 8, z: 60 };
 
     const init = async () => {
       const THREE = await import("three");
       const { gsap } = await import("gsap");
       const { ScrollTrigger } = await import("gsap/ScrollTrigger");
+      if (!isMounted || !canvasRef.current) return;
       gsap.registerPlugin(ScrollTrigger);
-      // Expose for Lenis sync
-      (window as any).__gsap__ = { gsap, ScrollTrigger };
 
-      // ── Scene ─────────────────────────────────────────────
       const scene: any = new THREE.Scene();
-      scene.fog = new THREE.FogExp2(0x030810, 0.0018);
+      scene.background = new THREE.Color(0x080f1a);
+      scene.fog = new THREE.FogExp2(0x080f1a, 0.0095);
 
       const W = window.innerWidth, H = window.innerHeight;
-      const camera: any = new THREE.PerspectiveCamera(68, W / H, 0.1, 2000);
-      camera.position.set(0, 20, 100);
+      const camera: any = new THREE.PerspectiveCamera(65, W / H, 0.1, 800);
+      camera.position.set(0, 8, 60);
+      camera.lookAt(0, 2, 0);
 
-      const _ce2 = console.error;
-      console.error = () => {};
+      const _ce = console.error; console.error = () => {};
       try {
-        renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true, powerPreference: "high-performance", failIfMajorPerformanceCaveat: false });
-      } catch(e) {
-        console.error = _ce2;
-        console.warn("NeuralBridge: WebGL unavailable.");
-        setWebglOk(false);
-        return;
-      }
-      console.error = _ce2;
-      if (!renderer) return;
-      renderer.setSize(W, H);
-      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.0));
-      renderer.setClearColor(0x000000, 0);
-      (renderer as any).outputColorSpace = "srgb";
+        renderer = new THREE.WebGLRenderer({
+          canvas: canvasRef.current as HTMLCanvasElement,
+          antialias: true, alpha: false,
+          powerPreference: "high-performance",
+          failIfMajorPerformanceCaveat: false,
+        });
+        renderer.setSize(W, H);
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.2));
+        renderer.setClearColor(0x080f1a, 1);
+        renderer.toneMapping = (THREE as any).ACESFilmicToneMapping;
+        renderer.toneMappingExposure = 0.70;
+      } catch (e) { console.error = _ce; return; }
+      console.error = _ce;
+      if (!renderer || !isMounted) return;
 
-      // ── Neural data-node particle cloud ───────────────────
-      const N = 900;
-      const pPos = new Float32Array(N * 3);
-      const pCol = new Float32Array(N * 3);
-      const pSz  = new Float32Array(N);
+      // ── GLSL HILLS — Perlin-displaced wireframe terrain ──────────────────
+      // Single PlaneGeometry + RawShaderMaterial with noise vertex displacement.
+      // Teal (#2DD4BF) lines on deep navy — glowing wireframe ocean of data.
+      const hillsVS = `
+        precision mediump float;
+        attribute vec3 position;
+        attribute vec2 uv;
+        uniform mat4 projectionMatrix;
+        uniform mat4 modelViewMatrix;
+        uniform float uTime;
+        uniform float uAmp;
+        varying float vElev;
+        varying vec2  vUv;
 
-      const CT = new THREE.Color("#1a6a60");
-      const CP = new THREE.Color("#4a3268");
-      const CW = new THREE.Color("#8899aa");
+        // Classic 2D Perlin noise
+        vec2 fade(vec2 t){ return t*t*t*(t*(t*6.0-15.0)+10.0); }
+        vec4 permute(vec4 x){ return mod(((x*34.0)+1.0)*x, 289.0); }
+        float cnoise(vec2 P){
+          vec4 Pi = floor(P.xyxy)+vec4(0.0,0.0,1.0,1.0);
+          vec4 Pf = fract(P.xyxy)-vec4(0.0,0.0,1.0,1.0);
+          Pi = mod(Pi,289.0);
+          vec4 ix=Pi.xzxz, iy=Pi.yyww;
+          vec4 fx=Pf.xzxz, fy=Pf.yyww;
+          vec4 i=permute(permute(ix)+iy);
+          vec4 gx=2.0*fract(i*0.0243902439)-1.0;
+          vec4 gy=abs(gx)-0.5;
+          vec4 tx=floor(gx+0.5);
+          gx=gx-tx;
+          vec2 g00=vec2(gx.x,gy.x), g10=vec2(gx.y,gy.y);
+          vec2 g01=vec2(gx.z,gy.z), g11=vec2(gx.w,gy.w);
+          vec4 norm=1.79284291400159-0.85373472095314*
+            vec4(dot(g00,g00),dot(g01,g01),dot(g10,g10),dot(g11,g11));
+          g00*=norm.x; g01*=norm.y; g10*=norm.z; g11*=norm.w;
+          float n00=dot(g00,vec2(fx.x,fy.x));
+          float n10=dot(g10,vec2(fx.y,fy.y));
+          float n01=dot(g01,vec2(fx.z,fy.z));
+          float n11=dot(g11,vec2(fx.w,fy.w));
+          vec2 fade_xy=fade(Pf.xy);
+          vec2 n_x=mix(vec2(n00,n01),vec2(n10,n11),fade_xy.x);
+          return 2.3*mix(n_x.x,n_x.y,fade_xy.y);
+        }
 
-      for (let i = 0; i < N; i++) {
-        const r     = 180 + Math.random() * 950;
-        const theta = Math.random() * Math.PI * 2;
-        const phi   = Math.acos(Math.random() * 2 - 1);
-        pPos[i*3]   = r * Math.sin(phi) * Math.cos(theta);
-        pPos[i*3+1] = r * Math.sin(phi) * Math.sin(theta);
-        pPos[i*3+2] = r * Math.cos(phi);
-        const rr = Math.random();
-        const c  = rr < 0.32 ? CT : rr < 0.58 ? CP : CW;
-        pCol[i*3] = c.r; pCol[i*3+1] = c.g; pCol[i*3+2] = c.b;
-        pSz[i] = Math.random() * 3.0 + 0.4;
-      }
+        void main(){
+          vUv = uv;
+          vec3 p = position;
+          float n  = cnoise(p.xz * 0.18 + uTime * 0.12);
+          float n2 = cnoise(p.xz * 0.38 + uTime * 0.08 + 3.7);
+          float elev = n * uAmp + n2 * uAmp * 0.40;
+          p.y += elev;
+          vElev = elev;
+          gl_Position = projectionMatrix * modelViewMatrix * vec4(p, 1.0);
+        }`;
 
-      const pGeo = new THREE.BufferGeometry();
-      pGeo.setAttribute("position", new THREE.BufferAttribute(pPos, 3));
-      pGeo.setAttribute("aColor",   new THREE.BufferAttribute(pCol, 3));
-      pGeo.setAttribute("aSize",    new THREE.BufferAttribute(pSz,  1));
+      const hillsFS = `
+        precision mediump float;
+        uniform float uTime;
+        uniform float uAmp;
+        varying float vElev;
+        varying vec2  vUv;
+        void main(){
+          // Normalise elevation to 0–1
+          float t = clamp((vElev / uAmp) * 0.5 + 0.5, 0.0, 1.0);
+          // Teal core → brighter ice-teal at peaks
+          vec3 low  = vec3(0.01, 0.07, 0.10);   // near-black shadow
+          vec3 mid  = vec3(0.05, 0.28, 0.28);   // dark teal
+          vec3 high = vec3(0.12, 0.55, 0.52);   // muted teal peak
+          vec3 col  = t < 0.5 ? mix(low, mid, t*2.0) : mix(mid, high, (t-0.5)*2.0);
+          // Fog via vUv distance from centre (perspective fog approximation)
+          float dist = length(vUv - 0.5) * 2.0;
+          float fog  = clamp(1.0 - dist * dist * 0.9, 0.0, 1.0);
+          float a    = (0.08 + t * 0.14) * fog;
+          gl_FragColor = vec4(col, a);
+        }`;
 
-      starMat = new THREE.ShaderMaterial({
-        uniforms: { time: { value: 0 } },
-        vertexShader: `
-          attribute float aSize; attribute vec3 aColor;
-          varying vec3 vCol; varying float vDepth;
-          uniform float time;
-          void main() {
-            vCol = aColor;
-            vec3 p = position;
-            float ang = time * 0.032;
-            mat2 rot = mat2(cos(ang), -sin(ang), sin(ang), cos(ang));
-            p.xy = rot * p.xy;
-            p.x += sin(time * 0.22 + p.z * 0.005) * 1.8;
-            p.y += cos(time * 0.18 + p.z * 0.004) * 1.2;
-            vec4 mv = modelViewMatrix * vec4(p, 1.0);
-            vDepth = -mv.z;
-            gl_PointSize = aSize * (320.0 / -mv.z);
-            gl_Position = projectionMatrix * mv;
-          }`,
-        fragmentShader: `
-          varying vec3 vCol; varying float vDepth;
-          void main() {
-            float d = length(gl_PointCoord - 0.5);
-            if (d > 0.5) discard;
-            float glow = 1.0 - smoothstep(0.0, 0.5, d);
-            float a = glow * min(1.0, 280.0 / vDepth) * 0.95;
-            float sq = step(0.35, max(abs(gl_PointCoord.x - 0.5), abs(gl_PointCoord.y - 0.5)));
-            vec3 col = mix(vCol, vCol * 1.6, (1.0 - sq) * step(vDepth, 400.0));
-            gl_FragColor = vec4(col, a);
-          }`,
+      const hillsMat: any = new THREE.RawShaderMaterial({
+        uniforms: { uTime:{value:0}, uAmp:{value:4.2} },
+        vertexShader:   hillsVS,
+        fragmentShader: hillsFS,
+        wireframe: true,
         transparent: true,
         blending: THREE.AdditiveBlending,
         depthWrite: false,
       });
 
-      scene.add(new THREE.Points(pGeo, starMat));
+      // 256×256 plane — enough resolution for smooth hills without being heavy
+      const hillsGeo: any = new THREE.PlaneGeometry(220, 220, 160, 160);
+      hillsGeo.rotateX(-Math.PI / 2);
+      const hills: any = new THREE.Mesh(hillsGeo, hillsMat);
+      hills.position.set(0, -4, -20);
+      scene.add(hills);
 
-      // ── Neural synapse connection lines ────────────────────
-      const synapseGroup = new THREE.Group();
-      for (let i = 0; i < 16; i++) {
-        const pts: any[] = [];
-        let x = (Math.random() - 0.5) * 900;
-        let y = (Math.random() - 0.5) * 500;
-        const z = -80 - Math.random() * 750;
-        const segs2 = 3 + Math.floor(Math.random() * 4);
-        for (let j = 0; j <= segs2; j++) {
-          pts.push(new THREE.Vector3(x, y, z));
-          x += (Math.random() - 0.5) * 180;
-          y += (Math.random() - 0.5) * 110;
-        }
-        const lGeo = new THREE.BufferGeometry().setFromPoints(pts);
-        const rr = Math.random();
-        const lMat = new THREE.LineBasicMaterial({
-          color: rr < 0.45 ? "#2DD4BF" : rr < 0.75 ? "#7360a9ff" : "#ffffff",
-          transparent: true,
-          opacity: 0.12 + Math.random() * 0.22,
-          blending: THREE.AdditiveBlending,
-        });
-        synapseGroup.add(new THREE.Line(lGeo, lMat));
+      // Second, slightly larger plane further back for infinite-horizon illusion
+      const hillsGeo2: any = new THREE.PlaneGeometry(380, 380, 100, 100);
+      hillsGeo2.rotateX(-Math.PI / 2);
+      const hills2: any = new THREE.Mesh(hillsGeo2, hillsMat);
+      hills2.position.set(0, -6, -130);
+      scene.add(hills2);
+
+      // ── DATA DUST — sparse teal floating points above terrain ─────────────
+      const dustN = 600;
+      const dustPos = new Float32Array(dustN * 3);
+      for (let i = 0; i < dustN; i++) {
+        dustPos[i*3]   = (Math.random() - 0.5) * 180;
+        dustPos[i*3+1] = Math.random() * 18 + 1;
+        dustPos[i*3+2] = (Math.random() - 0.5) * 180 - 20;
       }
-
-      const nodeGeo = new THREE.SphereGeometry(2.2, 6, 6);
-      for (let i = 0; i < 10; i++) {
-        const nodeMat = new THREE.MeshBasicMaterial({
-          color: Math.random() < 0.5 ? "#2DD4BF" : "#a78bfa",
-          transparent: true, opacity: 0.55 + Math.random() * 0.35,
-        });
-        const node = new THREE.Mesh(nodeGeo, nodeMat);
-        node.position.set(
-          (Math.random() - 0.5) * 700,
-          (Math.random() - 0.5) * 400,
-          -100 - Math.random() * 600
-        );
-        synapseGroup.add(node);
-      }
-      scene.add(synapseGroup);
-
-      // ── 6-layer mountain canyon: dark navy → teal → purple ──────────────
-      // Each layer has its own parallax speed for deep 3D canyon effect
-      const mountainMeshes: any[] = [];
-      const layerDefs = [
-        { z: -30,  h: 52,  col: 0x060c1a, op: 1.00, px: 0.18, ridgeCol: 0x2DD4BF },  // 1 near-black front
-        { z: -80,  h: 70,  col: 0x0a1628, op: 0.95, px: 0.32, ridgeCol: 0x2DD4BF },  // 2 deep navy
-        { z: -145, h: 90,  col: 0x0c2438, op: 0.88, px: 0.48, ridgeCol: 0x14b8a6 },  // 3 navy→teal
-        { z: -210, h: 115, col: 0x0d4a3a, op: 0.76, px: 0.64, ridgeCol: 0x14b8a6 },  // 4 deep teal
-        { z: -280, h: 145, col: 0x1a2e5c, op: 0.62, px: 0.82, ridgeCol: 0xa78bfa },  // 5 teal→blue
-        { z: -360, h: 178, col: 0x2d1f5e, op: 0.45, px: 1.00, ridgeCol: 0xa78bfa },  // 6 purple far bg
-      ];
-
-      layerDefs.forEach((layer, li) => {
-        const segs = 110;
-        const pts: any[] = [];
-        const seed = li * 113.7;
-        for (let i = 0; i <= segs; i++) {
-          const x = (i / segs - 0.5) * 2200;
-          const primary  = Math.sin(i * 0.055 + seed) * layer.h * 0.55
-                         + Math.sin(i * 0.031 + seed * 0.4) * layer.h * 0.30;
-          const harmonic = Math.sin(i * 0.12 + seed * 0.6) * layer.h * 0.20
-                         + Math.cos(i * 0.08 + seed * 0.5) * layer.h * 0.14;
-          const noise    = Math.sin(i * 0.24 + seed) * layer.h * 0.08;
-          pts.push(new THREE.Vector2(x, primary + harmonic + noise - 68));
-        }
-        pts.push(new THREE.Vector2(9000, -700));
-        pts.push(new THREE.Vector2(-9000, -700));
-        const fillMesh = new THREE.Mesh(
-          new THREE.ShapeGeometry(new THREE.Shape(pts)),
-          new THREE.MeshBasicMaterial({ color: layer.col, transparent: true, opacity: layer.op, side: THREE.DoubleSide })
-        );
-        fillMesh.position.set(0, -55, layer.z);
-        fillMesh.userData.baseZ = layer.z;
-        fillMesh.userData.px = layer.px;
-        scene.add(fillMesh);
-        mountainMeshes.push(fillMesh);
-
-        // Glowing ridge line on the mountain silhouette top
-        const ridgePts: any[] = [];
-        for (let i = 0; i <= segs; i++) {
-          const x = (i / segs - 0.5) * 2200;
-          const primary  = Math.sin(i * 0.055 + seed) * layer.h * 0.55
-                         + Math.sin(i * 0.031 + seed * 0.4) * layer.h * 0.30;
-          const harmonic = Math.sin(i * 0.12 + seed * 0.6) * layer.h * 0.20
-                         + Math.cos(i * 0.08 + seed * 0.5) * layer.h * 0.14;
-          const noise    = Math.sin(i * 0.24 + seed) * layer.h * 0.08;
-          ridgePts.push(new THREE.Vector3(x, primary + harmonic + noise - 68 + 1, 0.5));
-        }
-        const ridge = new THREE.Line(
-          new THREE.BufferGeometry().setFromPoints(ridgePts),
-          new THREE.LineBasicMaterial({
-            color: layer.ridgeCol, transparent: true,
-            opacity: 0.15 + li * 0.05,
-            blending: THREE.AdditiveBlending,
-          })
-        );
-        ridge.position.set(0, -55, layer.z);
-        ridge.userData.baseZ = layer.z;
-        ridge.userData.px = layer.px;
-        ridge.userData.isRidge = true;
-        scene.add(ridge);
-        mountainMeshes.push(ridge);
+      const dustGeo: any = new THREE.BufferGeometry();
+      dustGeo.setAttribute("position", new THREE.BufferAttribute(dustPos, 3));
+      const dustMat: any = new THREE.PointsMaterial({
+        color: 0x2dd4bf, size: 0.40, transparent: true, opacity: 0.22,
+        blending: THREE.AdditiveBlending, depthWrite: false, sizeAttenuation: true,
       });
+      scene.add(new THREE.Points(dustGeo, dustMat));
 
-      // ── Animated infinite grid floor: 2 overlays for depth ───────────────
-      const makeGrid = (size: number, div: number, c1: number, c2: number, op: number) => {
-        const g = new THREE.GridHelper(size, div, c1, c2);
-        (g.material as any).transparent = true;
-        (g.material as any).opacity = op;
-        (g.material as any).depthWrite = false;
-        (g.material as any).blending = THREE.AdditiveBlending;
-        return g;
-      };
-      const gridCoarse = makeGrid(2400, 24, 0x2DD4BF, 0x061420, 0.10);
-      const gridFine   = makeGrid(2400, 96, 0x14b8a6, 0x030c18, 0.04);
-      gridCoarse.position.set(0, -90, 0);
-      gridFine.position.set(0, -90, 0);
-      scene.add(gridCoarse);
-      scene.add(gridFine);
-      let gridOffset = 0;
-      const GRID_CELL = 2400 / 24;
-
-      // ── Teal neural energy nebula ─────────────────────────
-      const nGeo = new THREE.PlaneGeometry(8000, 4000, 28, 28);
-      nebMat = new THREE.ShaderMaterial({
-        uniforms: {
-          time:    { value: 0 },
-          col1:    { value: new THREE.Color(0x020a18) },
-          col2:    { value: new THREE.Color(0x061a2e) },
-          col3:    { value: new THREE.Color(0x0a0820) },
-          opacity: { value: 0.35 },
-        },
-        vertexShader: `
-          varying vec2 vUv; uniform float time;
-          void main() {
-            vUv = uv; vec3 p = position;
-            float e = sin(p.x * 0.007 + time * 0.6) * cos(p.y * 0.007 + time * 0.5) * 28.0;
-            p.z += e;
-            gl_Position = projectionMatrix * modelViewMatrix * vec4(p, 1.0);
-          }`,
-        fragmentShader: `
-          varying vec2 vUv; uniform vec3 col1, col2, col3;
-          uniform float opacity, time;
-          void main() {
-            float m1 = sin(vUv.x * 9.0 + time * 0.5) * cos(vUv.y * 9.0 + time * 0.4);
-            float m2 = cos(vUv.x * 5.0 - time * 0.3) * sin(vUv.y * 6.0 + time * 0.6);
-            vec3 c = mix(mix(col1, col2, m1 * 0.5 + 0.5), col3, abs(m2) * 0.35);
-            float dist = length(vUv - 0.5);
-            float a = opacity * (1.0 - dist * 1.9);
-            gl_FragColor = vec4(c, max(0.0, a));
-          }`,
-        transparent: true, blending: THREE.AdditiveBlending,
-        side: THREE.DoubleSide, depthWrite: false,
-      });
-      const nebula = new THREE.Mesh(nGeo, nebMat);
-      nebula.position.z = -850;
-      scene.add(nebula);
-
-      // ── GSAP ScrollTrigger camera journey ─────────────────
-      const camPositions = [
-        { x: 0, y: 20,  z:  100 },
-        { x: 0, y: 35,  z: -120 },
-        { x: 0, y: 55,  z: -680 },
+      // ── CAMERA KEYFRAMES ──────────────────────────────────────────────────
+      // Phase 0 (p=0):     horizon-level, looking out over hills
+      // Phase 1 (p=0.5):   flying forward + slight rise, skimming peaks
+      // Phase 2 (p=1.0):   final resting — slightly elevated, looking down
+      //                     at infinite grid — frames the right HUD perfectly
+      const camKeys = [
+        { x:  0, y:  8, z: 60,  lx:  0, ly: 2, lz: -60 },
+        { x: -6, y: 14, z: 10,  lx:  2, ly: 5, lz: -80 },
+        { x:  4, y: 20, z:-40,  lx:  0, ly: 4, lz:-160 },
       ];
+      let tgtX=0, tgtY=8, tgtZ=60, tgtLX=0, tgtLY=2, tgtLZ=-60;
+      const lookSmooth = { x:0, y:2, z:-60 };
+      let scrollVel = 0;
 
-      const st0 = ScrollTrigger.create({
-        trigger: container,
-        start: "top top",
-        end: "bottom bottom",
-        scrub: 1.5,
-        onUpdate: (self: any) => {
+      // ── SCROLL TRIGGER ────────────────────────────────────────────────────
+      const st = ScrollTrigger.create({
+        trigger: container, start:"top top", end:"bottom bottom", scrub:0,
+        onUpdate:(self: any) => {
+          if (!isMounted) return;
           const p = self.progress;
-          const s  = Math.min(Math.floor(p * 2), 1);
-          const sp = (p * 2) % 1;
-          const from = camPositions[s];
-          const to   = camPositions[s + 1] || from;
-          targetCam.x = from.x + (to.x - from.x) * sp;
-          targetCam.y = from.y + (to.y - from.y) * sp;
-          targetCam.z = from.z + (to.z - from.z) * sp;
-          mountainMeshes.forEach(m => {
-            const spd = m.userData.px ?? 0.5;
-            m.position.z = m.userData.baseZ + p * spd * 280;
-          });
-          // Grids scroll at medium speed for forward-travel feel
-          const gBase = p * 200;
-          gridCoarse.position.z = gBase;
-          gridFine.position.z   = gBase;
-          nebula.position.z = -850 + p * 520;
-          synapseGroup.rotation.y = p * 0.8;
-          // Color: dark(0) → vivid teal-blue peak at 50% → dark again
-          // Background stays deep dark throughout — no color bleeding
+          progRef.current = p;
+          scrollVel = self.getVelocity() * 0.0015;
+          // Blend across 3 keyframes
+          const seg = Math.min(Math.floor(p * 2), 1);
+          const sp  = (p * 2) % 1;
+          const kA = camKeys[seg], kB = camKeys[Math.min(seg+1,2)];
+          const bl = (a: number, b: number) => a + (b-a)*sp;
+          tgtX=bl(kA.x,kB.x); tgtY=bl(kA.y,kB.y); tgtZ=bl(kA.z,kB.z);
+          tgtLX=bl(kA.lx,kB.lx); tgtLY=bl(kA.ly,kB.ly); tgtLZ=bl(kA.lz,kB.lz);
+          if (isMounted) setProg(Math.round(p*100)/100);
         },
       });
-      stInstances.push(st0);
-
-      // Stage text scroll triggers
-      const textStages = [
-        { ref: stage0Ref, start: "top top",  end: "18% top",  fadeIn: false },
-        { ref: stage1Ref, start: "22% top",  end: "52% top",  fadeIn: true  },
-        { ref: stage2Ref, start: "62% top",  end: "96% top",  fadeIn: true  },
-      ];
-
-      textStages.forEach(({ ref: stRef, start, end, fadeIn }, idx) => {
-        if (!stRef.current) return;
-        const el = stRef.current;
-        const st = ScrollTrigger.create({
-          trigger: container, start, end, scrub: true,
-          onUpdate: (self: any) => {
-            const p2 = self.progress;
-            let op = 1;
-            let ty = 0;
-            if (!fadeIn) {
-              // stage0: gentle fade out
-              op = Math.pow(1 - p2, 1.6);
-              ty = -p2 * 40;
-            } else if (idx === 1) {
-              // stage1: smooth fade in, hold, smooth fade out
-              const inP  = Math.min(p2 / 0.28, 1);
-              const outP = Math.max(0, (p2 - 0.75) / 0.25);
-              op = inP * (1 - outP);
-              ty = (1 - Math.pow(inP, 0.5)) * 40 - outP * 35;
-            } else {
-              // stage2: fade in fast, hold very long, barely exits
-              const inP  = Math.min(p2 / 0.22, 1);
-              const outP = Math.max(0, (p2 - 0.90) / 0.10);
-              op = inP * (1 - outP);
-              ty = (1 - Math.pow(inP, 0.5)) * 35 - outP * 20;
-            }
-            el.style.opacity   = String(Math.max(0, op));
-            el.style.transform = `translateY(${ty}px)`;
-          },
-        });
-        stInstances.push(st);
-      });
+      stInstances.push(st);
 
       const onResize = () => {
-        const w = window.innerWidth, h = window.innerHeight;
-        camera.aspect = w / h;
-        camera.updateProjectionMatrix();
-        renderer.setSize(w, h);
+        if (!renderer) return;
+        const w=window.innerWidth,h=window.innerHeight;
+        camera.aspect=w/h; camera.updateProjectionMatrix(); renderer.setSize(w,h);
       };
       window.addEventListener("resize", onResize);
 
+      // Pause GPU when section is off-screen
+      let nbVisible = true;
+      const visObs = new IntersectionObserver(([e]) => { nbVisible = e.isIntersecting; },{ rootMargin:"120px" });
+      visObs.observe(container);
+
+      const lp = (a: number, b: number, t: number) => a + (b-a)*t;
+      const SMOOTH = 0.052;
+
+      // ── RAF ───────────────────────────────────────────────────────────────
       const draw = () => {
+        if (!isMounted) return;
         rafId = requestAnimationFrame(draw);
-        if (!isVisible || document.hidden) return; // ← zero GPU cost when off-screen
+        if (document.hidden || !nbVisible) return;
+
         const t = Date.now() * 0.001;
-        if (starMat?.uniforms) starMat.uniforms.time.value = t;
-        if (nebMat?.uniforms)  nebMat.uniforms.time.value  = t * 0.38;
-        // Animate grid toward camera — seamless modulo loop
-        gridOffset = (gridOffset + 0.14) % GRID_CELL;
-        gridCoarse.position.z += 0.06;
-        gridFine.position.z    = gridCoarse.position.z;
-        smoothCam.x += (targetCam.x - smoothCam.x) * 0.042;
-        smoothCam.y += (targetCam.y - smoothCam.y) * 0.042;
-        smoothCam.z += (targetCam.z - smoothCam.z) * 0.042;
+        hillsMat.uniforms.uTime.value = t;
+
+        // Smooth camera
+        smoothPos.x = lp(smoothPos.x, tgtX, SMOOTH);
+        smoothPos.y = lp(smoothPos.y, tgtY, SMOOTH);
+        smoothPos.z = lp(smoothPos.z, tgtZ, SMOOTH);
+        lookSmooth.x = lp(lookSmooth.x, tgtLX, SMOOTH);
+        lookSmooth.y = lp(lookSmooth.y, tgtLY, SMOOTH);
+        lookSmooth.z = lp(lookSmooth.z, tgtLZ, SMOOTH);
+
         camera.position.set(
-          smoothCam.x + Math.sin(t * 0.09) * 2.2,
-          smoothCam.y + Math.cos(t * 0.11) * 1.1,
-          smoothCam.z
+          smoothPos.x + Math.sin(t*0.09)*1.2,
+          smoothPos.y + Math.cos(t*0.12)*0.5,
+          smoothPos.z
         );
-        camera.lookAt(0, 8, -600);
-        synapseGroup.rotation.x = Math.sin(t * 0.06) * 0.04;
+        camera.lookAt(lookSmooth.x, lookSmooth.y, lookSmooth.z);
+
+        // Dust drift
+        dustGeo.attributes.position.array.forEach((_: any, i: number) => {
+          if (i % 3 === 1) {
+            const base = (dustGeo.attributes.position.array as Float32Array);
+            base[i] += Math.sin(t * 0.4 + i) * 0.003;
+          }
+        });
+        dustGeo.attributes.position.needsUpdate = true;
+
+        scrollVel *= 0.84;
         renderer.render(scene, camera);
       };
-      // Visibility observer — pause GPU rendering when scrolled out of view
-      const visObs = new IntersectionObserver(
-        (entries) => { isVisible = entries[0].isIntersecting; },
-        { rootMargin: "100px" }
-      );
-      visObs.observe(container);
       draw();
 
       return () => {
-        visObs.disconnect();
         window.removeEventListener("resize", onResize);
-        stInstances.forEach((st: any) => st.kill());
+        stInstances.forEach((s: any) => s.kill());
+        cancelAnimationFrame(rafId);
+        visObs.disconnect();
+        hillsGeo.dispose(); hillsGeo2.dispose(); hillsMat.dispose();
+        dustGeo.dispose(); dustMat.dispose();
+        if (renderer) { renderer.forceContextLoss?.(); renderer.dispose(); (renderer as any).domElement = null; }
       };
     };
 
     let cleanupFn: (() => void) | undefined;
-    let didInit = false;
-
-    // ── Lazy boot: only start Three.js when section is 300px from viewport ──
-    const bootObs = new IntersectionObserver((entries) => {
-      if (entries[0].isIntersecting && !didInit) {
-        didInit = true;
-        isVisible = true;
-        bootObs.disconnect();
-        init().then(fn => { cleanupFn = fn; });
-      }
-    }, { rootMargin: "300px" });
-    bootObs.observe(container);
-
+    init().then((fn: any) => { cleanupFn = fn; });
     return () => {
-      bootObs.disconnect();
+      isMounted = false;
       cancelAnimationFrame(rafId);
       cleanupFn?.();
-      if (renderer) renderer.dispose();
+      if (renderer) {
+        try { renderer.forceContextLoss(); } catch (_) {}
+        renderer.dispose();
+        (renderer as any).domElement = null;
+        renderer = null;
+      }
     };
   }, []);
 
-  const absC: React.CSSProperties = {
-    position: "absolute", inset: 0,
-    display: "flex", flexDirection: "column",
-    alignItems: "center", justifyContent: "center",
-    pointerEvents: "none",
-  };
+  // ── HUD ───────────────────────────────────────────────────────────────────
+  const p = prog;
+  const s0Op = Math.max(0, 1 - p / 0.18);
+  const s1Op = Math.max(0, Math.min(1,(p-0.10)/0.12)) * Math.max(0,1-(p-0.52)/0.12);
+  const s2Op = Math.max(0, Math.min(1,(p-0.50)/0.12)) * Math.max(0,1-(p-0.88)/0.10);
+  const w0Op = Math.max(0, 1 - Math.max(0,(p-0.20)/0.10));
+  const w1Op = Math.max(0, Math.min(1,(p-0.28)/0.10)) * Math.max(0,1-Math.max(0,(p-0.52)/0.10));
+  const w2Op = Math.max(0, Math.min(1,(p-0.60)/0.10)) * Math.max(0,1-Math.max(0,(p-0.86)/0.08));
+  const c1X = s1Op > 0.01 ? 0 : -52;
+  const c2X = s2Op > 0.01 ? 0 :  52;
 
-  // CSS-only fallback when WebGL is unavailable
-  if (!webglOk) {
-    return (
-      <section style={{ background: "linear-gradient(160deg, #07101e 0%, #0d1e3d 35%, #102548 55%, #07101e 100%)", padding: "120px 40px", position: "relative", overflow: "hidden" }}>
-        <div className="grid-dk" style={{ position: "absolute", inset: 0, opacity: 0.5, pointerEvents: "none" }} />
-        <div style={{ position: "absolute", top: "10%", left: "50%", transform: "translateX(-50%)", width: 800, height: 500, pointerEvents: "none", background: "radial-gradient(ellipse, rgba(45,212,191,.14), transparent 65%)" }} />
-        <div style={{ position: "absolute", bottom: "10%", right: "5%", width: 500, height: 500, borderRadius: "50%", pointerEvents: "none", background: "radial-gradient(circle, rgba(167,139,250,.10), transparent 65%)" }} />
+  return (
+    <div ref={containerRef} style={{ height:"300vh", position:"relative" }}>
+      <div style={{ position:"sticky", top:0, height:"100vh", overflow:"hidden" }}>
+        <canvas ref={canvasRef} style={{ position:"absolute",inset:0,width:"100%",height:"100%",display:"block",zIndex:0 }} />
+
+        {/* Consistent dark border on all 4 edges */}
+        <div style={{ position:"absolute",inset:0,zIndex:1,pointerEvents:"none",
+          background:"radial-gradient(ellipse 100% 90% at 50% 50%, transparent 32%, rgba(8,15,26,.82) 100%)" }} />
+        <div style={{ position:"absolute",top:0,left:0,right:0,height:"16%",zIndex:2,pointerEvents:"none",
+          background:"linear-gradient(to bottom,rgba(8,15,26,.92),transparent)" }} />
+        <div style={{ position:"absolute",bottom:0,left:0,right:0,height:"18%",zIndex:2,pointerEvents:"none",
+          background:"linear-gradient(to top,rgba(8,15,26,.95),transparent)" }} />
+        <div style={{ position:"absolute",top:0,bottom:0,left:0,width:"9%",zIndex:2,pointerEvents:"none",
+          background:"linear-gradient(to right,rgba(8,15,26,.88),transparent)" }} />
+        <div style={{ position:"absolute",top:0,bottom:0,right:0,width:"9%",zIndex:2,pointerEvents:"none",
+          background:"linear-gradient(to left,rgba(8,15,26,.88),transparent)" }} />
         <div className="scanline" />
-        <div style={{ maxWidth: 900, margin: "0 auto", position: "relative", zIndex: 2, textAlign: "center" }}>
-          <div className="cap" style={{ color: "rgba(45,212,191,.55)", marginBottom: 32, display: "flex", alignItems: "center", justifyContent: "center", gap: 10 }}>
-            <span style={{ width: 18, height: 1, background: "rgba(45,212,191,.3)", display: "inline-block" }} />
-            NEURO-REHABILITATION PLATFORM
-            <span style={{ width: 18, height: 1, background: "rgba(45,212,191,.3)", display: "inline-block" }} />
-          </div>
-          <div style={{ fontFamily: "'Syne',sans-serif", fontWeight: 800, fontSize: "clamp(3.5rem,10vw,9rem)", color: "#fff", letterSpacing: "-.01em", lineHeight: 0.88, marginBottom: 40 }}>
-            THE<br /><span style={{ color: "#2DD4BF" }}>SOLUTION</span>
-          </div>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 16, marginTop: 56 }}>
+
+        {/* ── CENTER WORDS ─────────────────────────────────────────────────── */}
+        <div style={{ position:"absolute",inset:0,zIndex:10,pointerEvents:"none",
+          display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center" }}>
+          <div style={{ position:"relative",height:"clamp(3.2rem,9.5vw,9rem)",display:"flex",
+            alignItems:"center",justifyContent:"center",minWidth:"clamp(300px,60vw,900px)" }}>
             {[
-              { label: "IMMERSIVE", sub: "Gamified therapy environments that command attention and build real neural pathways.", c: "#a78bfa" },
-              { label: "INTELLIGENT", sub: "Real-time AI adapts to every micro-movement, tremor, and grip pattern.", c: "#2DD4BF" },
-              { label: "CONNECTED", sub: "Every session streams live to your clinical dashboard. No clinic visits needed.", c: "#fbbf24" },
-            ].map(s => (
-              <div key={s.label} style={{ padding: "28px 24px", borderRadius: 20, background: `linear-gradient(145deg, ${s.c}08, rgba(8,14,26,.96))`, border: `1px solid ${s.c}20` }}>
-                <div style={{ fontFamily: "'Syne',sans-serif", fontWeight: 800, fontSize: "1.6rem", color: s.c, marginBottom: 12, letterSpacing: "-.01em" }}>{s.label}</div>
-                <p className="fS" style={{ fontSize: 13, color: "rgba(255,255,255,.50)", lineHeight: 1.7, fontWeight: 300 }}>{s.sub}</p>
+              { word:"THE SOLUTION", op:w0Op, color:"#2DD4BF", glow:"0 0 40px rgba(45,212,191,.25)" },
+              { word:"IMMERSIVE",    op:w1Op, color:"#7ef8f0", glow:"0 0 40px rgba(126,248,240,.22)" },
+              { word:"INTELLIGENT",  op:w2Op, color:"#38bdf8", glow:"0 0 40px rgba(56,189,248,.22)" },
+            ].map(({ word, op, color, glow }) => (
+              <div key={word} className="fB" style={{
+                position:"absolute", fontSize:"clamp(3.2rem,9.5vw,9rem)",
+                color, letterSpacing:".05em", lineHeight:1, textAlign:"center",
+                textShadow:glow, opacity:op,
+                transform:`translateY(${(1-op)*16}px)`,
+                transition:"opacity .70s cubic-bezier(.22,1,.36,1), transform .70s cubic-bezier(.22,1,.36,1)",
+                pointerEvents:"none", whiteSpace:"nowrap",
+              }}>{word}</div>
+            ))}
+          </div>
+
+          <div style={{ opacity:s0Op, transition:"opacity .5s ease", pointerEvents:"none", textAlign:"center" }}>
+            <div style={{ width:1,height:36,background:"linear-gradient(to bottom,rgba(45,212,191,.40),transparent)",margin:"18px auto 0" }} />
+            <div className="fM" style={{ fontSize:8,color:"rgba(45,212,191,.32)",letterSpacing:".48em",marginTop:12,textTransform:"uppercase" }}>
+              Neural Corridor · Active
+            </div>
+          </div>
+
+          {s0Op > 0.05 && (
+            <div style={{ position:"absolute",top:"50%",left:"50%",transform:"translate(-50%,-50%)",pointerEvents:"none" }}>
+              <div className="ring-pop" style={{ width:270,height:270,borderRadius:"50%",border:"1px solid rgba(45,212,191,.10)" }} />
+              <div className="ring-pop" style={{ width:270,height:270,borderRadius:"50%",border:"1px solid rgba(45,212,191,.05)",animationDelay:"1.6s" }} />
+            </div>
+          )}
+          {s1Op > 0.05 && p > 0.22 && p < 0.60 && (
+            <div className="fM" style={{ marginTop:18,fontSize:8,color:"rgba(45,212,191,.48)",letterSpacing:".32em",textTransform:"uppercase" }}>
+              PROTOCOL 01 · GAMIFIED THERAPY
+            </div>
+          )}
+          {s2Op > 0.05 && p > 0.60 && (
+            <div className="fM" style={{ marginTop:18,fontSize:8,color:"rgba(56,189,248,.48)",letterSpacing:".32em",textTransform:"uppercase" }}>
+              PROTOCOL 02 · ADAPTIVE AI
+            </div>
+          )}
+        </div>
+
+        {/* ── HUD LEFT ─────────────────────────────────────────────────────── */}
+        <div style={{
+          position:"absolute",top:"50%",left:"6%",zIndex:12,pointerEvents:"none",
+          transform:`translate(${c1X}px,-50%)`,
+          opacity:s1Op, transition:"transform .70s cubic-bezier(.22,1,.36,1),opacity .55s ease",
+          background:"rgba(8,15,26,.78)", backdropFilter:"blur(16px)",
+          border:"1px solid rgba(45,212,191,.22)", borderRadius:20,
+          padding:"28px 26px", maxWidth:278,
+          boxShadow:"0 0 48px rgba(45,212,191,.07),inset 0 1px 0 rgba(45,212,191,.07)",
+        }}>
+          <div style={{ position:"absolute",top:0,left:0,width:44,height:2,background:"rgba(45,212,191,.55)",borderRadius:"0 0 2px 0" }} />
+          <div className="fM" style={{ fontSize:7,color:"rgba(45,212,191,.55)",letterSpacing:".28em",marginBottom:10,textTransform:"uppercase" }}>Protocol · 01</div>
+          <h3 className="fB" style={{ fontSize:"clamp(1.35rem,2.2vw,1.75rem)",color:"#fff",letterSpacing:".04em",lineHeight:1.1,marginBottom:10 }}>
+            IMMERSIVE<br/><span style={{ color:"#2DD4BF" }}>ENVIRONMENT</span>
+          </h3>
+          <div style={{ width:30,height:1,background:"rgba(45,212,191,.30)",marginBottom:10 }} />
+          <p className="fS" style={{ fontSize:12,color:"rgba(255,255,255,.52)",lineHeight:1.7 }}>
+            Gamified therapy that commands attention and builds real neural pathways.
+          </p>
+          <div style={{ marginTop:16,display:"flex",flexDirection:"column",gap:7 }}>
+            {[["SQUEEZE TO PLAY","Motor engagement"],["COGNITIVE GATES","Dual-task training"],["ADAPTIVE LEVELS","AI progression"]].map(([k,v])=>(
+              <div key={k} style={{ display:"flex",justifyContent:"space-between",alignItems:"center",borderBottom:"1px solid rgba(45,212,191,.06)",paddingBottom:5 }}>
+                <div className="fM" style={{ fontSize:7,color:"rgba(45,212,191,.62)",textTransform:"uppercase",letterSpacing:".12em" }}>{k}</div>
+                <div className="fS" style={{ fontSize:10,color:"rgba(255,255,255,.28)" }}>{v}</div>
               </div>
             ))}
           </div>
         </div>
-      </section>
-    );
-  }
 
-  return (
-    <div ref={containerRef} style={{ height: "240vh", position: "relative" }}>
-      <div style={{ position: "sticky", top: 0, height: "100vh", overflow: "hidden" }}>
-        {/* Scroll-driven background brightness — dark→mid-blue→dark */}
-        <div style={{ position: "absolute", inset: 0, zIndex: 0, pointerEvents: "none",
-          background: "linear-gradient(160deg, #07101e 0%, #0d1e3d 30%, #102548 52%, #0b1830 75%, #07101e 100%)" }} />
-        <canvas ref={canvasRef} style={{ position: "absolute", inset: 0, width: "100%", height: "100%", display: "block" }} />
-        <div className="scanline" />
-
-        {/* STAGE 0 — THE SOLUTION */}
-        <div ref={stage0Ref} style={{ ...absC, zIndex: 10 }}>
-          <div style={{ position: "absolute", top: "50%", left: "50%", transform: "translate(-50%,-50%)", pointerEvents: "none" }}>
-            <div className="ring-pop" style={{ width: 320, height: 320, borderRadius: "50%", border: "1px solid rgba(45,212,191,.14)" }} />
-            <div className="ring-pop" style={{ width: 320, height: 320, borderRadius: "50%", border: "1px solid rgba(167,139,250,.08)", animationDelay: "1.4s" }} />
-          </div>
-          <div className="fM" style={{ fontFamily: "Plus Jakarta Sans,sans-serif", fontSize: 10, fontWeight: 600, color: "rgba(45,212,191,.55)", textTransform: "uppercase", letterSpacing: ".20em", marginBottom: 24, textAlign: "center", display: "flex", alignItems: "center", gap: 10, justifyContent: "center" }}>
-            <span style={{ width: 18, height: 1, background: "rgba(45,212,191,.30)", display: "inline-block" }} />
-            NEURO-REHABILITATION PLATFORM
-            <span style={{ width: 18, height: 1, background: "rgba(45,212,191,.30)", display: "inline-block" }} />
-          </div>
-          <div style={{ fontFamily: "'Syne',sans-serif", fontWeight: 800, fontSize: "clamp(3.5rem,10vw,10rem)", color: "#fff", letterSpacing: "-.01em", lineHeight: 0.88, textAlign: "center" }}>
-            THE<br /><span style={{ color: "#2DD4BF" }}>SOLUTION</span>
-          </div>
-          <div className="fM" style={{ fontSize: "clamp(0.45rem,0.85vw,0.72rem)", color: "rgba(255,255,255,.18)", textTransform: "uppercase", letterSpacing: ".44em", marginTop: 32, textAlign: "center" }}>
-            A new paradigm in neuro-rehabilitation
-          </div>
-          {[
-            { t: "MOTOR RECOVERY",  x: "-32vw", y: "-14vh", c: "#2DD4BF", d: "-8deg" },
-            { t: "COGNITIVE AI",    x:  "30vw", y: "-16vh", c: "#a78bfa", d:  "7deg" },
-            { t: "GRIP SENSOR",     x: "-28vw", y:  "18vh", c: "#34d399", d:  "5deg" },
-            { t: "LIVE DASHBOARD",  x:  "28vw", y:  "20vh", c: "#fbbf24", d: "-6deg" },
-          ].map(tag => (
-            <div key={tag.t} style={{ position: "absolute", left: `calc(50% + ${tag.x})`, top: `calc(50% + ${tag.y})`, transform: `translate(-50%,-50%) rotate(${tag.d})`, padding: "5px 13px", borderRadius: 8, border: `1px solid ${tag.c}28`, background: `rgba(8,15,26,.88)`, backdropFilter: "blur(10px)", boxShadow: `inset 0 1px 0 ${tag.c}0d` }}>
-              <div className="fM" style={{ fontSize: 7, color: tag.c, textTransform: "uppercase", letterSpacing: ".24em", opacity: .70, whiteSpace: "nowrap" }}>· {tag.t} ·</div>
-            </div>
-          ))}
-          <motion.div animate={{ y: [0, 9, 0] }} transition={{ repeat: Infinity, duration: 2.2, ease: "easeInOut" }} style={{ position: "absolute", bottom: 38, color: "rgba(255,255,255,.13)" }}>
-            <ChevronDown size={22} />
-          </motion.div>
-        </div>
-
-        {/* STAGE 1 — IMMERSIVE */}
-        <div ref={stage1Ref} style={{ ...absC, zIndex: 10, opacity: 0 }}>
-          <div className="cap" style={{ color: "rgba(167,139,250,.65)", marginBottom: 18, textAlign: "center" }}>GAMIFIED ENVIRONMENTS</div>
-          <div style={{ fontFamily: "'Syne',sans-serif", fontWeight: 800, fontSize: "clamp(4rem,13vw,13rem)", letterSpacing: "-.01em", lineHeight: 0.88, textAlign: "center", color: "#fff" }}>
-            <span style={{ color: "#a78bfa" }}>IMMERSIVE</span>
-          </div>
-          <div style={{ width: "clamp(260px,38vw,460px)", height: 1, background: "linear-gradient(90deg,transparent,rgba(167,139,250,.5),transparent)", margin: "24px auto" }} />
-          <div className="sub" style={{ fontSize: "clamp(0.8rem,1.2vw,1rem)", textAlign: "center", maxWidth: 420 }}>Gamified environments that command attention</div>
-          <div style={{ display: "flex", gap: 20, marginTop: 28 }}>
-            {["SQUEEZE TO PLAY", "COGNITIVE GATES", "ADAPTIVE LEVELS"].map(l => (
-              <div key={l} className="cap" style={{ color: "rgba(167,139,250,.60)", padding: "4px 12px", border: "1px solid rgba(167,139,250,.16)", borderRadius: 6, fontSize: 8 }}>{l}</div>
+        {/* ── HUD RIGHT ────────────────────────────────────────────────────── */}
+        <div style={{
+          position:"absolute",top:"50%",right:"6%",zIndex:12,pointerEvents:"none",
+          transform:`translate(${c2X}px,-50%)`,
+          opacity:s2Op, transition:"transform .70s cubic-bezier(.22,1,.36,1),opacity .55s ease",
+          background:"rgba(8,15,26,.78)", backdropFilter:"blur(16px)",
+          border:"1px solid rgba(56,189,248,.22)", borderRadius:20,
+          padding:"28px 26px", maxWidth:278,
+          boxShadow:"0 0 48px rgba(56,189,248,.07),inset 0 1px 0 rgba(56,189,248,.07)",
+        }}>
+          <div style={{ position:"absolute",top:0,right:0,width:44,height:2,background:"rgba(56,189,248,.55)",borderRadius:"0 0 0 2px" }} />
+          <div className="fM" style={{ fontSize:7,color:"rgba(56,189,248,.55)",letterSpacing:".28em",marginBottom:10,textTransform:"uppercase",textAlign:"right" }}>Protocol · 02</div>
+          <h3 className="fB" style={{ fontSize:"clamp(1.35rem,2.2vw,1.75rem)",color:"#fff",letterSpacing:".04em",lineHeight:1.1,marginBottom:10,textAlign:"right" }}>
+            REAL-TIME<br/><span style={{ color:"#38bdf8" }}>ADAPTATION</span>
+          </h3>
+          <div style={{ width:30,height:1,background:"rgba(56,189,248,.30)",marginBottom:10,marginLeft:"auto" }} />
+          <p className="fS" style={{ fontSize:12,color:"rgba(255,255,255,.52)",lineHeight:1.7,textAlign:"right" }}>
+            AI adapts to every micro-movement, filtering tremors for clinical accuracy.
+          </p>
+          <div style={{ marginTop:16,display:"flex",flexDirection:"column",gap:7 }}>
+            {[["GRIP ANALYTICS","Force measurement"],["TREMOR FILTER","6-axis IMU"],["AI COMPANION","Live adjustment"]].map(([k,v])=>(
+              <div key={k} style={{ display:"flex",justifyContent:"space-between",alignItems:"center",borderBottom:"1px solid rgba(56,189,248,.06)",paddingBottom:5 }}>
+                <div className="fS" style={{ fontSize:10,color:"rgba(255,255,255,.28)" }}>{v}</div>
+                <div className="fM" style={{ fontSize:7,color:"rgba(56,189,248,.62)",textTransform:"uppercase",letterSpacing:".12em" }}>{k}</div>
+              </div>
             ))}
           </div>
         </div>
 
-        {/* STAGE 2 — INTELLIGENT */}
-        <div ref={stage2Ref} style={{ ...absC, zIndex: 10, opacity: 0 }}>
-          <div className="cap" style={{ color: "rgba(45,212,191,.65)", marginBottom: 18, textAlign: "center" }}>REAL-TIME ADAPTATION</div>
-          <div style={{ fontFamily: "'Syne',sans-serif", fontWeight: 800, fontSize: "clamp(4rem,12vw,12rem)", letterSpacing: "-.01em", lineHeight: 0.88, textAlign: "center", color: "#fff" }}>
-            <span style={{ color: "#2DD4BF" }}>INTELLIGENT</span>
+        {/* Scroll progress */}
+        <div style={{ position:"absolute",bottom:28,left:"50%",transform:"translateX(-50%)",zIndex:12,
+          display:"flex",flexDirection:"column",alignItems:"center",gap:8,pointerEvents:"none",
+          opacity:Math.min(1,p*8) }}>
+          <div className="fM" style={{ fontSize:7,color:"rgba(45,212,191,.35)",letterSpacing:".45em",textTransform:"uppercase" }}>SCROLL</div>
+          <div style={{ width:80,height:1,background:"rgba(45,212,191,.12)",position:"relative",overflow:"hidden" }}>
+            <div style={{ position:"absolute",left:0,top:0,height:"100%",background:"rgba(45,212,191,.55)",width:`${p*100}%`,transition:"width .1s" }} />
           </div>
-          <div style={{ width: "clamp(260px,38vw,460px)", height: 1, background: "linear-gradient(90deg,transparent,rgba(45,212,191,.5),transparent)", margin: "24px auto" }} />
-          <div className="sub" style={{ fontSize: "clamp(0.8rem,1.2vw,1rem)", textAlign: "center", maxWidth: 420 }}>Real-time AI adapting to every micro-movement</div>
-          <div style={{ display: "flex", gap: 20, marginTop: 28 }}>
-            {["GRIP ANALYTICS", "TREMOR FILTER", "AI COMPANION"].map(l => (
-              <div key={l} className="cap" style={{ color: "rgba(45,212,191,.60)", padding: "4px 12px", border: "1px solid rgba(45,212,191,.16)", borderRadius: 6, fontSize: 8 }}>{l}</div>
-            ))}
+          <div className="fM" style={{ fontSize:7,color:"rgba(45,212,191,.25)",letterSpacing:".20em" }}>
+            {String(Math.min(Math.floor(p*3)+1,3)).padStart(2,"0")} / 03
           </div>
-          <div className="fM" style={{ fontSize: "clamp(0.45rem,0.8vw,0.68rem)", color: "rgba(45,212,191,.35)", textTransform: "uppercase", letterSpacing: ".35em", marginTop: 38, textAlign: "center" }}>↓ DISCOVER THE INTERFACE</div>
         </div>
       </div>
     </div>
@@ -2994,7 +2977,8 @@ function NeuralBridge() {
 }
 
 
-// ── GLSL HILLS — Teal wireframe biometric datascape ──────────────────────────
+
+
 function SolutionSection() {
   return (
     <section id="solution" data-theme="dark" style={{ background: "linear-gradient(180deg, #04101a 0%, #061421 60%, #060e1a 100%)", padding: "120px 40px", position: "relative", overflow: "hidden" }}>
@@ -3291,7 +3275,7 @@ function WhySection() {
     {
       n: "01", c: "#2DD4BF", dir: "left" as const, t: "Dual-task is the only way.",
 
-      b: "Every other device trains motor OR cognitive. Science requires both simultaneously. ReViveX is the only system built around this clinical truth."
+      b: "Neuroplasticity requires simultaneous motor and cognitive training. Our dual-task protocol delivers both in real-time."
     },
 
     {
