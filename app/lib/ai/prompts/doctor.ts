@@ -39,7 +39,7 @@ High adherence patients (>80%): ${ctx.weeklySnapshot.highAdherenceCount}
 Low adherence patients (<50%): ${ctx.weeklySnapshot.lowAdherenceCount}
 `;
 
-  // ✅ Fixed: dataPointsAnalyzed pre-computed — Gemini was outputting literal placeholder text
+  
   const dataPoints = ctx.doctor.totalPatients * 5 * 5;
 
   const modes: Record<typeof mode, string> = {
@@ -53,7 +53,7 @@ You are a clinical decision support tool for rehabilitation medicine.
 - You CAN identify at-risk patients and suggest interventions
 - You CAN analyze cohort-wide trends across all patients
 `,
-    // ✅ Fixed: hardcoded dataPointsAnalyzed value instead of angle-bracket placeholder
+   
     weekly_summary: `
 Generate a weekly cohort summary for the doctor dashboard.
 Return EXACTLY this JSON (no markdown fences, no preamble):
@@ -70,7 +70,7 @@ Return EXACTLY this JSON (no markdown fences, no preamble):
 }
 Respond ONLY with valid JSON.
 `,
-    // ✅ Fixed: added "name" field so dashboard can display patient names
+   
     triage: `
 From the patients requiring attention listed above, identify the top 3 most at-risk.
 For each, explain WHY they are at risk in one sentence and suggest ONE specific intervention.
