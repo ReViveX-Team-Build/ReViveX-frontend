@@ -534,8 +534,8 @@ export default function DoctorPatientsPage() {
           p.status.toLowerCase() === adherenceFilter;
         const matchC =
           conditionFilter === "all" ||
-          p.condition.toLowerCase().replace(/[\s-]/g, "") ===
-            conditionFilter.toLowerCase().replace(/[\s-]/g, "");
+          (p.condition || "").toLowerCase().replace(/[\s-]/g, "") ===
+            (conditionFilter || "").toLowerCase().replace(/[\s-]/g, "");
         return matchQ && matchA && matchC;
       }),
     [displayPatients, search, adherenceFilter, conditionFilter],

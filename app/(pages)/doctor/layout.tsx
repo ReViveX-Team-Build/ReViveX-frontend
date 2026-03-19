@@ -4,10 +4,9 @@ import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuthState } from "react-firebase-hooks/auth";
 import { doc, getDoc } from "firebase/firestore";
-// Ensure these paths match where you saved your components
 import DoctorSidebar from "@/components/DoctorPortal/Sidebar";
 import DoctorTopbar from "@/components/DoctorPortal/Topbar";
-import { auth, db } from "@/app/lib/firebase";
+import { auth, db } from "@/app/lib/firebase"; // Adjust path if needed
 
 export default function DoctorLayout({
   children,
@@ -25,8 +24,15 @@ export default function DoctorLayout({
     async function checkAccess() {
       if (authLoading) return;
 
+      // 1. Check if logged in
       if (!user) {
         router.replace("/auth/doctor/signin");
+        return;
+      }
+
+      // 2. Force Email Verification
+      if (!user.emailVerified) {
+        router.replace("/auth/doctor/verify-email");
         return;
       }
 
@@ -36,6 +42,7 @@ export default function DoctorLayout({
 
         const role = profile.data()?.role;
         if (role === "doctor") {
+          // Doctors don't have a waiting room, so they go right in!
           setIsAuthorized(true);
         } else if (role === "patient") {
           router.replace("/patients/home");
@@ -60,7 +67,7 @@ export default function DoctorLayout({
   if (authLoading || isCheckingRole) {
     return (
       <div className="min-h-screen grid place-items-center bg-[#F3F4F6] dark:bg-slate-900">
-        <p className="text-sm text-slate-500">Checking authentication...</p>
+        <p className="text-sm text-slate-500">Verifying credentials...</p>
       </div>
     );
   }
@@ -69,17 +76,15 @@ export default function DoctorLayout({
 
   return (
     <div className="flex min-h-screen bg-[#F3F4F6] dark:bg-slate-900">
-      {/* 1. Fixed Sidebar */}
+    
       <DoctorSidebar />
 
       {/* 2. Main Wrapper */}
-      {/* ml-72 creates the empty space for the sidebar to sit in */}
       <main className="flex-1 ml-72 relative flex flex-col min-w-0">
         {/* 3. Sticky Topbar */}
         <DoctorTopbar />
 
         {/* 4. Page Content Injection */}
-        {/* This is where your Dashboard page gets put */}
         <div className="p-8 animate-fade-in">
           <div className="max-w-7xl mx-auto">{children}</div>
         </div>
