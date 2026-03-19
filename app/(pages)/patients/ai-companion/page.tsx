@@ -5,6 +5,7 @@ import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuthState } from "react-firebase-hooks/auth";
 import { auth } from "@/app/lib/firebase";
+import { useSubscription } from "@/app/lib/hooks/useSubscription";
 import {
   Bot,
   Crown,
@@ -35,6 +36,7 @@ const QUICK_ACTIONS = [
 export default function PatientAICompanion() {
   const router = useRouter();
   const [user, authLoading] = useAuthState(auth);
+  const { plan } = useSubscription(user?.uid);
 
   const { messages, sendMessage, isLoading } = useAiCompanion(
       user?.uid ?? "",
@@ -151,9 +153,10 @@ export default function PatientAICompanion() {
 
                 <button
                     onClick={() => handleUpgrade("voice_companion")}
-                    className="w-full bg-amber-500 text-white py-2 rounded-lg text-xs font-semibold flex items-center justify-center gap-1"
+                    disabled={plan === "voice_companion"}
+                    className="w-full bg-amber-500 hover:bg-amber-600 text-white py-2 rounded-lg text-xs font-semibold transition flex items-center justify-center gap-1 disabled:opacity-50"
                 >
-                  Upgrade Now <ChevronRight className="h-3 w-3" />
+                  {plan === "voice_companion" ? "Current Plan ✓" : <>Upgrade Now <ChevronRight className="h-3 w-3" /></>}
                 </button>
               </div>
 
@@ -164,9 +167,14 @@ export default function PatientAICompanion() {
 
                 <button
                     onClick={() => handleUpgrade("advanced_analytics")}
-                    className="w-full border border-[#2DD4BF] text-[#2DD4BF] py-2 rounded-lg text-xs font-semibold hover:bg-[#2DD4BF]/10"
+                    disabled={plan === "advanced_analytics" || plan === "voice_companion"}
+                    className="w-full border border-[#2DD4BF] text-[#2DD4BF] py-2 rounded-lg text-xs font-semibold hover:bg-[#2DD4BF]/10 transition disabled:opacity-50"
                 >
-                  Upgrade
+                  {plan === "advanced_analytics"
+                      ? "Current Plan ✓"
+                      : plan === "voice_companion"
+                          ? "Included in Voice ✓"
+                          : "Upgrade"}
                 </button>
               </div>
 
