@@ -649,3 +649,144 @@ function CategorySection({ cat, openMap, onToggle }: {
     </div>
   );
 }
+
+/* ══════════════════════════════════════════════════════════
+   MAIN PAGE
+══════════════════════════════════════════════════════════ */
+export default function DoctorHelpPage() {
+  const [mounted,   setMounted]   = useState(false);
+  const [search,    setSearch]    = useState('');
+  const [openMap,   setOpenMap]   = useState<Record<string, boolean>>({});
+  const [activeFilter, setFilter] = useState<string>('all');
+  
+  // State for the mock support ticket form
+  const [ticketSent, setTicketSent] = useState(false);
+  const [ticketMsg,  setTicketMsg]  = useState('');
+
+  useEffect(() => { setMounted(true); }, []);
+
+  const toggleAccordion = (key: string) => {
+    setOpenMap(prev => ({ ...prev, [key]: !prev[key] }));
+  };
+
+  // Dynamically filters the FAQ list based on the active tab and the user's search query
+  const visibleCategories = FAQ_CATEGORIES.filter(cat => {
+    const matchesFilter = activeFilter === 'all' || cat.id === activeFilter;
+    if (!matchesFilter) return false;
+    if (!search.trim()) return true;
+    const q = search.toLowerCase();
+    return cat.items.some(item =>
+      item.q.toLowerCase().includes(q)
+    );
+  }).map(cat => ({
+    ...cat,
+    items: !search.trim()
+      ? cat.items
+      : cat.items.filter(item => item.q.toLowerCase().includes(search.toLowerCase())),
+  }));
+
+  const handleTicket = () => {
+    if (!ticketMsg.trim()) return;
+    setTicketSent(true);
+    // Auto-reset the success state after 3.5 seconds
+    setTimeout(() => { setTicketSent(false); setTicketMsg(''); }, 3500);
+  };
+
+  if (!mounted) return null;
+
+  return (
+    <div className="hc" style={{ minHeight: '100vh', background: '#F0F4F8', paddingBottom: 72 }}>
+      <style>{CSS}</style>
+
+      {/* ── Ambient background ───────────────────────────── */}
+      <div style={{ position: 'fixed', inset: 0, pointerEvents: 'none', zIndex: 0, overflow: 'hidden' }}>
+        <div style={{ position: 'absolute', top: '-12%', right: '3%', width: 700, height: 700, background: 'radial-gradient(circle,rgba(45,212,191,0.050),transparent 65%)', borderRadius: '50%' }} />
+        <div style={{ position: 'absolute', bottom: '-10%', left: '2%', width: 600, height: 600, background: 'radial-gradient(circle,rgba(99,102,241,0.040),transparent 65%)', borderRadius: '50%' }} />
+        <div style={{ position: 'absolute', inset: 0, backgroundImage: 'linear-gradient(rgba(11,30,51,0.018) 1px,transparent 1px),linear-gradient(90deg,rgba(11,30,51,0.018) 1px,transparent 1px)', backgroundSize: '54px 54px' }} />
+      </div>
+
+      <div className="hc-pad" style={{ maxWidth: 1120, margin: '0 auto', padding: '28px 24px', position: 'relative', zIndex: 1 }}>
+
+        {/* ── Back nav ─────────────────────────────────────── */}
+        <div style={{ marginBottom: 24, animation: 'hcFadeUp 0.40s ease both' }}>
+          <Link href="/doctor/home" style={{
+            display: 'inline-flex', alignItems: 'center', gap: 7,
+            padding: '8px 16px', borderRadius: 12,
+            background: '#fff', border: '1.5px solid rgba(226,232,240,0.9)',
+            fontSize: 13, fontWeight: 700, color: '#64748b', textDecoration: 'none',
+            transition: 'all 0.2s ease', boxShadow: '0 1px 8px rgba(11,30,51,0.05)',
+          }}>
+            <ArrowLeft size={14} /> Back to Dashboard
+          </Link >
+        </div>
+
+        {/* ══════════════════════════════════════════════════
+            HERO — dark header card
+        ══════════════════════════════════════════════════ */}
+        <div style={{
+          background: '#0B1E33', borderRadius: 22, marginBottom: 28,
+          overflow: 'hidden', position: 'relative',
+          animation: 'hcFadeUp 0.45s ease 0.04s both',
+        }}>
+          {/* Grid overlay */}
+          <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', backgroundImage: 'linear-gradient(rgba(45,212,191,0.038) 1px,transparent 1px),linear-gradient(90deg,rgba(45,212,191,0.038) 1px,transparent 1px)', backgroundSize: '34px 34px' }} />
+          {/* Scan line */}
+          <div style={{ position: 'absolute', inset: 0, overflow: 'hidden', pointerEvents: 'none' }}>
+            <div style={{ position: 'absolute', left: 0, right: 0, height: '22%', background: 'linear-gradient(to bottom,transparent,rgba(45,212,191,0.055),transparent)', animation: 'hcScanLine 6s linear infinite' }} />
+          </div>
+
+          <div style={{ position: 'relative', zIndex: 2, padding: '36px 40px' }}>
+            {/* Label */}
+            <p className="mono" style={{ fontSize: 9, color: 'rgba(45,212,191,0.65)', textTransform: 'uppercase', letterSpacing: '0.24em', marginBottom: 10, fontWeight: 600 }}>
+              ReViveX Clinical Platform
+            </p>
+
+            <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 32, flexWrap: 'wrap', marginBottom: 28 }}>
+              <div>
+                <h1 style={{ fontSize: 'clamp(1.6rem,3vw,2.25rem)', fontWeight: 800, color: '#fff', margin: 0, lineHeight: 1.12 }}>
+                  Help &amp; Clinical <span style={{ color: '#2DD4BF' }}>Support</span>
+                </h1>
+                <p style={{ fontSize: 14, color: 'rgba(255,255,255,0.45)', marginTop: 8, fontWeight: 500, maxWidth: 480, lineHeight: 1.65 }}>
+                  Documentation, clinical protocols, hardware troubleshooting, and AI feature guidance for the ReViveX Doctor Dashboard.
+                </p>
+              </div>
+
+              {/* Status pills */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8, flexShrink: 0 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 7, padding: '7px 14px', borderRadius: 11, background: 'rgba(45,212,191,0.10)', border: '1px solid rgba(45,212,191,0.20)' }}>
+                  <div style={{ width: 7, height: 7, borderRadius: '50%', background: '#22c55e', boxShadow: '0 0 6px rgba(34,197,94,0.7)', animation: 'hcDot 2s ease-in-out infinite' }} />
+                  <span className="mono" style={{ fontSize: 9.5, color: '#2DD4BF', fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase' }}>All Systems Operational</span>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 7, padding: '7px 14px', borderRadius: 11, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)' }}>
+                  <Server size={11} color="rgba(255,255,255,0.35)" />
+                  <span className="mono" style={{ fontSize: 9.5, color: 'rgba(255,255,255,0.40)', fontWeight: 600, letterSpacing: '0.10em', textTransform: 'uppercase' }}>v2.4.1 — Platform Build</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Search bar */}
+            <div style={{ position: 'relative', maxWidth: 620 }}>
+              <Search size={17} color="#94a3b8" style={{ position: 'absolute', left: 16, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none', zIndex: 1 }} />
+              <input
+                className="hc-search"
+                placeholder="Search protocols, hardware setups, or AI features..."
+                value={search}
+                onChange={e => setSearch(e.target.value)}
+              />
+              {search && (
+                <button
+                  onClick={() => setSearch('')}
+                  style={{ position: 'absolute', right: 14, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: '#94a3b8', fontSize: 18, lineHeight: 1 }}
+                >
+                  ×
+                </button>
+              )}
+            </div>
+            {search && (
+              <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.35)', marginTop: 10 }}>
+                Showing results for <span style={{ color: '#2DD4BF', fontWeight: 700 }}>"{search}"</span>
+                {' '}— {visibleCategories.reduce((n, c) => n + c.items.length, 0)} topics found
+              </p>
+            )}
+          </div>
+        </div>
