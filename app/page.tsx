@@ -2311,12 +2311,14 @@ const RoadBridge = React.memo(function RoadBridge() {
   const probY     = useTransform(p,[0,t1],[800,0]);
   const probScale = useTransform(p,[t1,t2],[1,11]);
   const probOp    = useTransform(p,[0,t1,t2],[0,1,0]);
-  const realX     = useTransform(p,[t1,t2],[800,0]);
-  const realScale = useTransform(p,[t2,t3],[1,11]);
-  const realOp    = useTransform(p,[t1,t2,t3],[0,1,0]);
-  const statY     = useTransform(p,[t2,t3],[800,0]);
-  const statScale = useTransform(p,[t3,t4],[1,9]);
-  const statOp    = useTransform(p,[t2,t3,t4],[0,1,0]);
+  // IS REAL: slides in from right → zoom-in peak → settle → slides out to left
+  const realX     = useTransform(p,[t1,    t2,    t2+0.08, t2+0.14, t3   ],[800,  0,     0,      0,      -800]);
+  const realScale = useTransform(p,[t1,    t2,    t2+0.08, t2+0.14, t3   ],[0.8,  0.8,   1.12,   1,      1   ]);
+  const realOp    = useTransform(p,[t1,    t1+0.04,        t2+0.14, t3-0.04, t3],[0, 1,  1,      1,      0   ]);
+  // 28%: rises from bottom → zoom-in peak → settle → exits back up
+  const statY     = useTransform(p,[t2,    t3,    t3+0.06, t3+0.12, t4   ],[800,  0,     0,      0,      -800]);
+  const statScale = useTransform(p,[t2,    t3,    t3+0.06, t3+0.12, t4   ],[0.8,  0.8,   1.10,   1,      1   ]);
+  const statOp    = useTransform(p,[t2,    t2+0.04,        t3+0.12, t4-0.04, t4],[0, 1,  1,      1,      0   ]);
   const subOp     = useTransform(p,[t3+.08,t3+.18,t4],[0,1,1]);
   const glowOp    = useTransform(p,[t1,t3],[0,0.55]);
   const cardsOp   = useTransform(p,[t3+.05,t3+.14],[0,1]);
@@ -3038,7 +3040,7 @@ function SolutionSection() {
         </Reveal>
         <Reveal dir="zoom" style={{ marginBottom: 48 }}>
           <VaporizeTextCycle
-            texts={["YOU DON'T DO EXERCISES.", "YOU PLAY GAMES.", "YOU HEAL FASTER.", "THERAPY REIMAGINED."]}
+            texts={["PLAY GAMES.", "HEAL FASTER.", "REWIRE IT."]}
             fontSize={96}
             color="#2DD4BF"
             fontFamily="'Syne',sans-serif"
@@ -3131,7 +3133,7 @@ function OfferSection() {
         </Reveal>
         <Reveal dir="zoom" style={{ marginBottom: 48 }}>
           <VaporizeTextCycle
-            texts={["EVERYTHING YOUR RECOVERY NEEDS.", "ALL IN ONE DEVICE.", "MOTOR. COGNITIVE. CONNECTED.", "NOTHING LIKE THIS EXISTS."]}
+            texts={["ALL YOU NEED.", "ONE DEVICE.", "NOTHING LIKE IT."]}
             fontSize={96}
             color="#a78bfa"
             fontFamily="'Syne',sans-serif"
@@ -3375,7 +3377,7 @@ function WhySection() {
         </Reveal>
         <Reveal dir="zoom" style={{ marginBottom: 48, textAlign: "center" }}>
           <VaporizeTextCycle
-            texts={["NOT ANOTHER REHAB GADGET.", "THIS CHANGES EVERYTHING.", "BUILT FOR REAL PATIENTS.", "SCIENCE. GAMES. RESULTS."]}
+            texts={["NOT A GADGET.", "A REVOLUTION.", "BUILT FOR YOU."]}
             fontSize={96}
             color="#fbbf24"
             fontFamily="'Syne',sans-serif"
