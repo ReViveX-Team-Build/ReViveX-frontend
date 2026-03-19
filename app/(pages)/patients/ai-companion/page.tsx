@@ -2,7 +2,7 @@
 // app/(pages)/patients/ai-companion/page.tsx
 
 import { useState, useRef, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useAuthState } from "react-firebase-hooks/auth";
 import { auth } from "@/app/lib/firebase";
 import {
@@ -74,6 +74,18 @@ const PLAN_META = {
 // ─────────────────────────────────────────────────────────────────────────────
 export default function PatientAICompanion() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const [showUpgradeToast, setShowUpgradeToast] = useState(false);
+
+  // Show toast if redirected back from Stripe with ?upgraded=true
+  useEffect(() => {
+    if (searchParams.get("upgraded") === "true") {
+      setShowUpgradeToast(true);
+      // Clean the URL without reloading
+      window.history.replaceState({}, "", "/patients/ai-companion");
+      setTimeout(() => setShowUpgradeToast(false), 5000);
+    }
+  }, [searchParams]);
 
   // ── Auth ─────────────────────────────────────────────────────────────────
   const [user, authLoading] = useAuthState(auth);
@@ -167,6 +179,15 @@ export default function PatientAICompanion() {
   // ─────────────────────────────────────────────────────────────────────────
   return (
       <div className="h-full p-4 sm:p-6 lg:p-8 bg-gradient-to-br from-slate-50 via-white to-teal-50/30">
+
+        {/* ── Upgrade success toast ──────────────────────────────── */}
+        {showUpgradeToast && (
+            <div className="fixed top-5 left-1/2 -translate-x-1/2 z-50 flex items-center gap-3 bg-[#0A2E4C] text-white px-5 py-3 rounded-2xl shadow-xl animate-fade-in">
+              <span className="text-lg">🎉</span>
+              <p className="text-sm font-semibold">Plan upgraded! Your new features are now active.</p>
+              <button onClick={() => setShowUpgradeToast(false)} className="ml-2 text-teal-300 hover:text-white text-xs">✕</button>
+            </div>
+        )}
         <div className="max-w-7xl mx-auto h-full flex flex-col">
           {/* ── Header ──────────────────────────────────────────────── */}
           <div className="mb-6 shrink-0">
