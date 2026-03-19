@@ -2289,6 +2289,115 @@ function CinematicHero() {
   );
 }
 
+// ══ STAT PARTICLE SCATTER — 28% explodes all at once ════════════════════════
+function StatParticleScatter({ scatterP }: { scatterP: any }) {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const particlesRef = useRef<any[]>([]);
+  const rafRef = useRef(0);
+  const lastP = useRef(0);
+
+  useEffect(() => {
+    const canvas = canvasRef.current; if (!canvas) return;
+    const parent = canvas.parentElement!;
+    const W = parent.offsetWidth || window.innerWidth;
+    const H = parent.offsetHeight || window.innerHeight;
+    canvas.width = W; canvas.height = H;
+    canvas.style.width = W + "px"; canvas.style.height = H + "px";
+
+    // Render "28%" off-screen and sample pixels
+    const off = document.createElement("canvas");
+    off.width = W; off.height = H;
+    const ctx2 = off.getContext("2d")!;
+    const fs = Math.min(H * 0.75, W * 0.35);
+    ctx2.font = `900 ${fs}px 'Bebas Neue','Arial Black',sans-serif`;
+    ctx2.fillStyle = "#ef4444";
+    ctx2.textAlign = "center";
+    ctx2.textBaseline = "middle";
+    ctx2.fillText("28%", W / 2, H / 2);
+    const img = ctx2.getImageData(0, 0, W, H).data;
+
+    const pts: {x:number;y:number}[] = [];
+    const step = 4; // denser sampling
+    for (let y = 0; y < H; y += step)
+      for (let x = 0; x < W; x += step)
+        if (img[(y * W + x) * 4 + 3] > 60) pts.push({ x, y });
+
+    // Each particle: starts at its pixel position, explodes outward all at once
+    particlesRef.current = pts.map(p => {
+      const angle = Math.random() * Math.PI * 2;
+      const speed = Math.random() * 280 + 120; // px/s at full scatter
+      return {
+        ox: p.x, oy: p.y,
+        vx: Math.cos(angle) * speed,
+        vy: Math.sin(angle) * speed - Math.random() * 60, // slight upward bias
+        decay: Math.random() * 0.4 + 0.6,
+        r: Math.random() * 2 + 1,
+      };
+    });
+
+    const ctx = canvas.getContext("2d")!;
+    const draw = () => {
+      rafRef.current = requestAnimationFrame(draw);
+      const sp = lastP.current; // 0 → 1
+      ctx.clearRect(0, 0, W, H);
+      if (sp <= 0) return;
+
+      const t = sp; // scatter time 0→1 over ~0.4s of scroll
+      particlesRef.current.forEach(p => {
+        const x = p.ox + p.vx * t * 0.45;
+        const y = p.oy + p.vy * t * 0.45 + 200 * t * t; // gravity
+        const alpha = Math.max(0, (1 - t * p.decay * 1.6));
+        if (alpha <= 0) return;
+        ctx.globalAlpha = alpha;
+        // colour shifts from red → orange as it flies
+        const hue = 4 + t * 20;
+        const size = p.r * (1 + t * 1.2);
+        ctx.fillStyle = `hsl(${hue},92%,58%)`;
+        ctx.beginPath();
+        ctx.arc(x, y, size, 0, Math.PI * 2);
+        ctx.fill();
+      });
+      ctx.globalAlpha = 1;
+    };
+    draw();
+    return () => cancelAnimationFrame(rafRef.current);
+  }, []);
+
+  useEffect(() => {
+    return scatterP.on("change", (v: number) => { lastP.current = v; });
+  }, [scatterP]);
+
+  return (
+    <canvas ref={canvasRef} style={{
+      position: "absolute", inset: 0, width: "100%", height: "100%",
+      pointerEvents: "none", zIndex: 5,
+    }} />
+  );
+}
+
+
+// ══ PULSING SUBTITLE — rhythmic dim animation ═════════════════════════════
+function PulsingSubtitle() {
+  const [bright, setBright] = useState(true);
+  useEffect(() => {
+    const id = setInterval(() => setBright(b => !b), 900);
+    return () => clearInterval(id);
+  }, []);
+  return (
+    <div className="fB" style={{
+      color: bright ? "rgba(255,255,255,.95)" : "rgba(239,68,68,.55)",
+      fontSize: "clamp(1.8rem,3.2vw,3rem)",
+      textTransform: "uppercase", letterSpacing: ".14em", lineHeight: 1.2,
+      textShadow: bright
+        ? "0 0 60px rgba(255,255,255,.35), 0 0 120px rgba(239,68,68,.25)"
+        : "0 0 40px rgba(239,68,68,.60)",
+      transition: "color 0.7s ease, text-shadow 0.7s ease",
+    }}>
+      Of patients quit<br />physiotherapy at home
+    </div>
+  );
+}
+
 const RoadBridge = React.memo(function RoadBridge() {
   const ref = useRef<HTMLDivElement>(null);
   const p = useMotionValue(0);
@@ -2315,11 +2424,14 @@ const RoadBridge = React.memo(function RoadBridge() {
   const realX     = useTransform(p,[t1,    t2,    t2+0.08, t2+0.14, t3   ],[800,  0,     0,      0,      -800]);
   const realScale = useTransform(p,[t1,    t2,    t2+0.08, t2+0.14, t3   ],[0.8,  0.8,   1.12,   1,      1   ]);
   const realOp    = useTransform(p,[t1,    t1+0.04,        t2+0.14, t3-0.04, t3],[0, 1,  1,      1,      0   ]);
-  // 28%: rises from bottom → zoom-in peak → settle → exits back up
-  const statY     = useTransform(p,[t2,    t3,    t3+0.06, t3+0.12, t4   ],[800,  0,     0,      0,      -800]);
-  const statScale = useTransform(p,[t2,    t3,    t3+0.06, t3+0.12, t4   ],[0.8,  0.8,   1.10,   1,      1   ]);
-  const statOp    = useTransform(p,[t2,    t2+0.04,        t3+0.12, t4-0.04, t4],[0, 1,  1,      1,      0   ]);
-  const subOp     = useTransform(p,[t3+.08,t3+.18,t4],[0,1,1]);
+  // 28%: rises → zoom peak → scatter/fade out at t3+0.06
+  const statY     = useTransform(p,[t2,    t3,    t3+0.04],[800,  0,     0   ]);
+  const statScale = useTransform(p,[t2,    t3,    t3+0.04, t3+0.10],[0.8, 0.8, 1.10, 2.2]);
+  const statOp    = useTransform(p,[t2,    t2+0.04, t3+0.04, t3+0.12],[0,  1,   1,    0   ]);
+  // particle scatter progress 0→1
+  const scatterP  = useTransform(p,[t3+0.04, t3+0.14],[0, 1]);
+  // subtitle fades in after scatter
+  const subOp     = useTransform(p,[t3+.12, t3+.22, t4],[0,1,1]);
   const glowOp    = useTransform(p,[t1,t3],[0,0.55]);
   const cardsOp   = useTransform(p,[t3+.05,t3+.14],[0,1]);
   const C: React.CSSProperties = { position:"absolute",inset:0,display:"grid",placeItems:"center",pointerEvents:"none" };
@@ -2349,26 +2461,20 @@ const RoadBridge = React.memo(function RoadBridge() {
             <span className="fB" style={{ fontSize:"clamp(4rem,10vw,10rem)",color:"#ef4444",letterSpacing:"-.02em",display:"block",textShadow:"0 0 80px rgba(239,68,68,.45)" }}>IS REAL.</span>
           </motion.div>
         </div>
+        {/* 28% — rises, zoom-pulses, then scatters into particles */}
         <div style={{ ...C,zIndex:3 }}>
           <motion.div style={{ opacity:statOp,scale:statScale,y:statY,willChange:"transform,opacity",textAlign:"center" }}>
             <span className="fB" style={{ fontSize:"clamp(6rem,16vw,16rem)",color:"#ef4444",letterSpacing:"-.03em",display:"block",textShadow:"0 0 120px rgba(239,68,68,.55)" }}>28%</span>
           </motion.div>
         </div>
-        {/* Subtitle — dead center between stat cards, cinematic scale */}
+        {/* Particle scatter canvas — fires when scatterP > 0 */}
+        <StatParticleScatter scatterP={scatterP} />
+        {/* Subtitle — pulses in and out rhythmically */}
         <motion.div style={{ position:"absolute",inset:0,zIndex:6,display:"flex",alignItems:"center",justifyContent:"center",textAlign:"center",opacity:subOp,pointerEvents:"none" }}>
-          <div style={{ display:"flex",flexDirection:"column",alignItems:"center",gap:12 }}>
-            <div style={{ width:64,height:1,background:"linear-gradient(90deg,transparent,rgba(239,68,68,.65),transparent)" }} />
-            <div className="fB" style={{
-              color:"rgba(255,255,255,.82)",
-              fontSize:"clamp(1.2rem,2.2vw,2rem)",
-              textTransform:"uppercase",
-              letterSpacing:".14em",
-              lineHeight:1.25,
-              textShadow:"0 0 40px rgba(239,68,68,.40), 0 2px 20px rgba(0,0,0,.6)",
-            }}>
-              Of patients quit<br />physiotherapy at home
-            </div>
-            <div style={{ width:64,height:1,background:"linear-gradient(90deg,transparent,rgba(239,68,68,.65),transparent)" }} />
+          <div style={{ display:"flex",flexDirection:"column",alignItems:"center",gap:16 }}>
+            <div style={{ width:80,height:1,background:"linear-gradient(90deg,transparent,rgba(239,68,68,.65),transparent)" }} />
+            <PulsingSubtitle />
+            <div style={{ width:80,height:1,background:"linear-gradient(90deg,transparent,rgba(239,68,68,.65),transparent)" }} />
           </div>
         </motion.div>
         <motion.div style={{ position:"absolute",inset:0,opacity:cardsOp,pointerEvents:"none",zIndex:4 }}>
