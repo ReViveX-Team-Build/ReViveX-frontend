@@ -4,7 +4,7 @@ import { seedDatabase } from "../../app/lib/seedDatabase";
 import { Database } from "lucide-react";
 
 export default function SeedButton() {
-  // Only show in development mode (localhost)
+  
   if (process.env.NODE_ENV !== "development") return null;
 
   return (
