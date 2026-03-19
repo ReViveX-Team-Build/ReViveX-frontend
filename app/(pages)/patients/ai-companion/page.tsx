@@ -22,7 +22,8 @@ import {
 } from "lucide-react";
 import { useAiCompanion } from "@/app/lib/ai/useAiCompanion";
 import AIMessageRenderer from "@/components/ai/AIMessageRenderer";
-import { useSubscription } from "@/app/lib/hooks/useSubscription"; // ← NEW
+import { useSubscription } from "@/app/lib/hooks/useSubscription";
+import AnalyticsSidebar from "@/components/ai/AnalyticsSidebar"; // ← NEW
 
 // ─────────────────────────────────────────────────────────────────────────────
 // QUICK ACTIONS
@@ -392,101 +393,77 @@ export default function PatientAICompanion() {
                 </div>
               </div>
 
-              {/* ── Premium Plans ────────────────────────────────── */}
-              <div className="bg-white border border-gray-100 shadow-sm rounded-2xl p-5">
-                <div className="flex items-center gap-2 mb-4">
-                  <Crown className="h-4 w-4 text-amber-500" />
-                  <h3 className="text-[#0A2E4C] font-semibold text-sm">
-                    Premium Plans
-                  </h3>
-                </div>
-
-                {/* Voice Companion */}
-                <div className="border border-amber-200 bg-amber-50/50 rounded-xl p-4 mb-3">
-                  <div className="flex items-start justify-between mb-2">
-                    <div>
-                      <p className="text-[#0A2E4C] font-semibold text-sm">
-                        Voice Companion
-                      </p>
-                      <p className="text-2xl font-bold text-amber-600 mt-0.5">
-                        $29
-                        <span className="text-xs font-normal text-gray-500">/mo</span>
-                      </p>
+              {/* ── Premium Plans OR Analytics (based on plan) ── */}
+              {currentPlan === "advanced_analytics" || currentPlan === "voice_companion" ? (
+                  // ── PRO: Show analytics widgets ──────────────────
+                  <AnalyticsSidebar uid={user.uid} />
+              ) : (
+                  // ── FREE: Show upgrade cards ──────────────────────
+                  <div className="bg-white border border-gray-100 shadow-sm rounded-2xl p-5">
+                    <div className="flex items-center gap-2 mb-4">
+                      <Crown className="h-4 w-4 text-amber-500" />
+                      <h3 className="text-[#0A2E4C] font-semibold text-sm">
+                        Premium Plans
+                      </h3>
                     </div>
-                    <Crown className="h-5 w-5 text-amber-400" />
-                  </div>
-                  <ul className="space-y-1.5 text-xs text-gray-600 mb-3">
-                    {["Real-time voice guidance", "Hands-free interaction", "Personalised encouragement"].map((f) => (
-                        <li key={f} className="flex items-center gap-1.5">
-                          <Check className="h-3 w-3 text-amber-500 flex-shrink-0" />
-                          {f}
-                        </li>
-                    ))}
-                  </ul>
-                  {/* ── Voice button: shows state based on current plan ── */}
-                  {currentPlan === "voice_companion" ? (
-                      <div className="w-full bg-amber-100 text-amber-700 py-2 rounded-lg text-xs font-semibold flex items-center justify-center gap-1">
-                        <Check className="h-3 w-3" /> Current Plan
+
+                    {/* Voice Companion */}
+                    <div className="border border-amber-200 bg-amber-50/50 rounded-xl p-4 mb-3">
+                      <div className="flex items-start justify-between mb-2">
+                        <div>
+                          <p className="text-[#0A2E4C] font-semibold text-sm">Voice Companion</p>
+                          <p className="text-2xl font-bold text-amber-600 mt-0.5">
+                            $29<span className="text-xs font-normal text-gray-500">/mo</span>
+                          </p>
+                        </div>
+                        <Crown className="h-5 w-5 text-amber-400" />
                       </div>
-                  ) : (
+                      <ul className="space-y-1.5 text-xs text-gray-600 mb-3">
+                        {["Real-time voice guidance", "Hands-free interaction", "Personalised encouragement"].map((f) => (
+                            <li key={f} className="flex items-center gap-1.5">
+                              <Check className="h-3 w-3 text-amber-500 flex-shrink-0" />{f}
+                            </li>
+                        ))}
+                      </ul>
                       <button
                           onClick={() => handleUpgrade("voice_companion")}
                           disabled={upgradingPlan === "voice_companion"}
                           className="w-full bg-amber-500 hover:bg-amber-600 disabled:opacity-60 disabled:cursor-not-allowed text-white py-2 rounded-lg text-xs font-semibold transition flex items-center justify-center gap-1">
-                        {upgradingPlan === "voice_companion" ? (
-                            <><Loader2 className="h-3 w-3 animate-spin" /> Redirecting…</>
-                        ) : (
-                            <>Upgrade Now <ChevronRight className="h-3 w-3" /></>
-                        )}
+                        {upgradingPlan === "voice_companion"
+                            ? <><Loader2 className="h-3 w-3 animate-spin" /> Redirecting…</>
+                            : <>Upgrade Now <ChevronRight className="h-3 w-3" /></>}
                       </button>
-                  )}
-                </div>
-
-                {/* Advanced Analytics */}
-                <div className="border border-[#2DD4BF]/30 bg-teal-50/40 rounded-xl p-4">
-                  <div className="flex items-start justify-between mb-2">
-                    <div>
-                      <p className="text-[#0A2E4C] font-semibold text-sm">
-                        Advanced Analytics
-                      </p>
-                      <p className="text-2xl font-bold text-[#0A2E4C] mt-0.5">
-                        $19
-                        <span className="text-xs font-normal text-gray-500">/mo</span>
-                      </p>
                     </div>
-                    <Sparkles className="h-5 w-5 text-[#2DD4BF]" />
-                  </div>
-                  <ul className="space-y-1.5 text-xs text-gray-600 mb-3">
-                    {["Detailed progress insights", "Weekly AI reports", "Recovery trend predictions"].map((f) => (
-                        <li key={f} className="flex items-center gap-1.5">
-                          <Check className="h-3 w-3 text-[#2DD4BF] flex-shrink-0" />
-                          {f}
-                        </li>
-                    ))}
-                  </ul>
-                  {/* ── Analytics button: shows state based on current plan ── */}
-                  {currentPlan === "advanced_analytics" ? (
-                      <div className="w-full bg-teal-100 text-teal-700 py-2 rounded-lg text-xs font-semibold flex items-center justify-center gap-1">
-                        <Check className="h-3 w-3" /> Current Plan
+
+                    {/* Advanced Analytics */}
+                    <div className="border border-[#2DD4BF]/30 bg-teal-50/40 rounded-xl p-4">
+                      <div className="flex items-start justify-between mb-2">
+                        <div>
+                          <p className="text-[#0A2E4C] font-semibold text-sm">Advanced Analytics</p>
+                          <p className="text-2xl font-bold text-[#0A2E4C] mt-0.5">
+                            $19<span className="text-xs font-normal text-gray-500">/mo</span>
+                          </p>
+                        </div>
+                        <Sparkles className="h-5 w-5 text-[#2DD4BF]" />
                       </div>
-                  ) : currentPlan === "voice_companion" ? (
-                      <div className="w-full border border-[#2DD4BF]/40 text-[#2DD4BF]/60 py-2 rounded-lg text-xs font-semibold flex items-center justify-center gap-1">
-                        <Check className="h-3 w-3" /> Included in Voice
-                      </div>
-                  ) : (
+                      <ul className="space-y-1.5 text-xs text-gray-600 mb-3">
+                        {["Detailed progress insights", "Weekly AI reports", "Recovery trend predictions"].map((f) => (
+                            <li key={f} className="flex items-center gap-1.5">
+                              <Check className="h-3 w-3 text-[#2DD4BF] flex-shrink-0" />{f}
+                            </li>
+                        ))}
+                      </ul>
                       <button
                           onClick={() => handleUpgrade("advanced_analytics")}
                           disabled={upgradingPlan === "advanced_analytics"}
                           className="w-full border border-[#2DD4BF] text-[#2DD4BF] py-2 rounded-lg text-xs font-semibold hover:bg-[#2DD4BF]/10 disabled:opacity-60 disabled:cursor-not-allowed transition flex items-center justify-center gap-1">
-                        {upgradingPlan === "advanced_analytics" ? (
-                            <><Loader2 className="h-3 w-3 animate-spin" /> Redirecting…</>
-                        ) : (
-                            "Upgrade"
-                        )}
+                        {upgradingPlan === "advanced_analytics"
+                            ? <><Loader2 className="h-3 w-3 animate-spin" /> Redirecting…</>
+                            : "Upgrade"}
                       </button>
-                  )}
-                </div>
-              </div>
+                    </div>
+                  </div>
+              )}
 
               {/* Disclaimer */}
               <div className="bg-blue-50 border border-blue-100 rounded-xl p-4">
