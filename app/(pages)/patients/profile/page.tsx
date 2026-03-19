@@ -263,3 +263,86 @@ export default function PatientProfilePage() {
       </div>
     </div>
   );
+
+  return (
+    <div className="pf" style={{minHeight:"100vh",background:"#F0F4F8",paddingBottom:52}}>
+      <style>{CSS}</style>
+
+      {/* Ambient */}
+      <div style={{position:"fixed",inset:0,pointerEvents:"none",zIndex:0,overflow:"hidden"}}>
+        <div style={{position:"absolute",top:"-8%",right:"8%",width:700,height:700,background:"radial-gradient(circle,rgba(45,212,191,0.055) 0%,transparent 65%)",borderRadius:"50%"}}/>
+        <div style={{position:"absolute",bottom:"-5%",left:"4%",width:500,height:500,background:"radial-gradient(circle,rgba(139,92,246,0.04) 0%,transparent 65%)",borderRadius:"50%"}}/>
+        <div style={{position:"absolute",inset:0,backgroundImage:"linear-gradient(rgba(11,30,51,0.022) 1px,transparent 1px),linear-gradient(90deg,rgba(11,30,51,0.022) 1px,transparent 1px)",backgroundSize:"52px 52px"}}/>
+      </div>
+
+      <main style={{maxWidth:1200,margin:"0 auto",padding:"28px 24px",position:"relative",zIndex:1}}>
+
+        {/* ── PAGE HEADER ── */}
+        <div style={{animation:"fadeUp 0.6s cubic-bezier(0.22,1,0.36,1) both",background:"#fff",borderRadius:22,padding:"20px 28px",marginBottom:24,border:"1.5px solid rgba(45,212,191,0.22)",boxShadow:"0 4px 32px rgba(11,30,51,0.07)",display:"flex",alignItems:"center",justifyContent:"space-between",flexWrap:"wrap",gap:16,position:"relative",overflow:"hidden"}}>
+          <div style={{position:"absolute",top:-30,left:-30,width:180,height:180,background:"radial-gradient(circle,rgba(45,212,191,0.08),transparent 70%)"}}/>
+          <div style={{position:"absolute",inset:0,overflow:"hidden",pointerEvents:"none"}}>
+            <div style={{position:"absolute",inset:0,background:"linear-gradient(90deg,transparent,rgba(45,212,191,0.06),transparent)",animation:"headerShine 4s ease-in-out infinite"}}/>
+          </div>
+          <div style={{position:"relative",zIndex:2}}>
+            <p className="mono" style={{fontSize:9.5,color:"rgba(45,212,191,0.7)",textTransform:"uppercase",letterSpacing:"0.20em",marginBottom:4,fontWeight:600}}>Patient Dashboard</p>
+            <h1 style={{fontSize:"clamp(1.5rem,2.6vw,2rem)",fontWeight:800,color:"#0B1E33",margin:0,lineHeight:1.15}}>
+              My <span style={{color:"#2DD4BF"}}>Profile</span>
+            </h1>
+            <p style={{fontSize:13,color:"#94a3b8",marginTop:5,fontWeight:500}}>
+              <span style={{color:"#2DD4BF",fontWeight:700}}>{draft.unlockedLevels.length} levels</span> unlocked ·{" "}
+              <span style={{color:"#8b5cf6",fontWeight:700}}>{draft.totalXp} XP</span> earned
+            </p>
+          </div>
+          <button onClick={() => auth.signOut().then(() => router.replace("/"))}
+            style={{display:"flex",alignItems:"center",gap:8,padding:"10px 18px",borderRadius:12,background:"rgba(11,30,51,0.06)",border:"1px solid rgba(11,30,51,0.12)",color:"#64748b",fontSize:12,cursor:"pointer",fontFamily:"inherit",fontWeight:600,transition:"all .2s",zIndex:2}}
+            onMouseEnter={e=>(e.currentTarget.style.borderColor="rgba(239,68,68,0.35)")}
+            onMouseLeave={e=>(e.currentTarget.style.borderColor="rgba(11,30,51,0.12)")}>
+            <LogOut size={13}/> Sign Out
+          </button>
+        </div>
+
+        {/* ── AVATAR HERO STRIP ── */}
+        <div className="pf-card" style={{padding:"24px 28px",marginBottom:22,display:"flex",alignItems:"center",gap:24,flexWrap:"wrap",animation:"cardPop 0.55s cubic-bezier(0.22,1,0.36,1) 0.05s both",position:"relative",overflow:"hidden"}}>
+          <div style={{position:"absolute",top:0,left:0,right:0,height:4,background:"#2DD4BF",boxShadow:"0 0 12px rgba(45,212,191,0.5)"}}/>
+          {/* Avatar */}
+          <div style={{position:"relative",flexShrink:0}}>
+            <div className="avatar-ring" style={{width:96,height:96,borderRadius:20,border:"2px solid #2DD4BF",background:"rgba(45,212,191,0.08)",overflow:"hidden",display:"flex",alignItems:"center",justifyContent:"center"}}>
+              {avatarPreview
+                ? <img src={avatarPreview} alt="avatar" style={{width:"100%",height:"100%",objectFit:"cover"}}/>
+                : <UserIcon size={36} color="rgba(45,212,191,0.55)"/>}
+              {isUploading && (
+                <div style={{position:"absolute",inset:0,background:"rgba(255,255,255,0.8)",display:"flex",alignItems:"center",justifyContent:"center"}}>
+                  <Loader2 size={20} color="#2DD4BF" style={{animation:"spin 1s linear infinite"}}/>
+                </div>
+              )}
+            </div>
+            <button onClick={() => fileRef.current?.click()}
+              style={{position:"absolute",bottom:-8,right:-8,width:30,height:30,borderRadius:"50%",background:"#0B1E33",border:"2px solid #2DD4BF",display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer",transition:"background .2s"}}
+              onMouseEnter={e=>(e.currentTarget.style.background="#2DD4BF")}
+              onMouseLeave={e=>(e.currentTarget.style.background="#0B1E33")}>
+              <Camera size={12} color="#2DD4BF"/>
+            </button>
+            <input ref={fileRef} type="file" accept="image/*" style={{display:"none"}} onChange={handleAvatarChange}/>
+          </div>
+          {/* Name + stats */}
+          <div style={{flex:1,minWidth:220}}>
+            <h2 style={{fontSize:"clamp(1.3rem,2.8vw,1.9rem)",fontWeight:800,color:"#0B1E33",margin:"0 0 3px",letterSpacing:"-0.01em"}}>{draft.name||"Patient"}</h2>
+            <div className="mono" style={{fontSize:9,color:"#94a3b8",letterSpacing:".16em",textTransform:"uppercase",marginBottom:12}}>
+              {draft.condition||"Condition not set"} · {draft.email}
+            </div>
+            <div style={{display:"flex",gap:10,flexWrap:"wrap"}}>
+              {[
+                {icon:<Flame size={12}/>,  val:draft.streak,                 label:"Streak",   c:"#f59e0b"},
+                {icon:<Zap size={12}/>,    val:draft.totalXp,                 label:"Total XP", c:"#2DD4BF"},
+                {icon:<Brain size={12}/>,  val:draft.unlockedLevels.length,   label:"Levels",   c:"#8b5cf6"},
+                {icon:<Activity size={12}/>,val:draft.completedSessions,      label:"Sessions", c:"#22c55e"},
+              ].map(s => (
+                <div key={s.label} className="stat-chip">
+                  <span style={{color:s.c}}>{s.icon}</span>
+                  <span style={{fontSize:13,fontWeight:800,color:"#0B1E33"}}>{s.val}</span>
+                  <span className="mono" style={{fontSize:8,color:"#94a3b8",textTransform:"uppercase",letterSpacing:".10em"}}>{s.label}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
