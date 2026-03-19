@@ -1779,7 +1779,7 @@ function NavShinyButton({ children, href, onClick }: { children: React.ReactNode
   );
 }
 
-function Navbar() {
+function Navbar({ onGetStarted }: { onGetStarted: () => void }) {
   const [scrolled, setScrolled] = useState(false);
   useEffect(() => {
     const h = () => setScrolled(window.scrollY > 40);
@@ -1800,10 +1800,6 @@ function Navbar() {
         pointerEvents: "none",
       }}
     >
-      {/* ─── Glass pill ─────────────────────────────────────────────────
-          Uses backgroundColor (not background shorthand) to prevent the
-          React "conflicting property" warning.
-          Gradient border done as a separate absolutely-positioned element. */}
       <nav style={{
         display: "flex", alignItems: "center", justifyContent: "space-between",
         width: "100%", maxWidth: 1020,
@@ -1820,7 +1816,6 @@ function Navbar() {
           : "0 4px 24px rgba(0,0,0,.3), inset 0 1px 0 rgba(255,255,255,.04)",
         transition: "background-color .5s, box-shadow .5s",
       }}>
-        {/* Gradient bottom border — separate div, no shorthand conflict */}
         <div style={{
           position: "absolute", bottom: 0, left: "8%", right: "8%", height: 1,
           background: "linear-gradient(90deg, transparent, rgba(45,212,191,.22), transparent)",
@@ -1829,12 +1824,10 @@ function Navbar() {
           pointerEvents: "none",
         }} />
 
-        {/* Logo */}
         <div className="fB" style={{ fontSize: 20, letterSpacing: ".1em", color: "#fff", flexShrink: 0 }}>
           REVIVE<span style={{ color: "#2DD4BF" }}>X</span>
         </div>
 
-        {/* Nav links — text-shadow glow on hover */}
         <div style={{ display: "flex", gap: 4, alignItems: "center" }}>
           {[["Problem","#problem"],["Solution","#solution"],["Offer","#offer"],["Why Us","#why"],["Contact","#contact"]].map(([l, h]) => (
             <a key={l} href={h} data-mag className="fM" style={{
@@ -1857,8 +1850,7 @@ function Navbar() {
           ))}
         </div>
 
-        {/* ShinyButton CTA */}
-        <NavShinyButton href="#contact">Get Started</NavShinyButton>
+        <NavShinyButton onClick={onGetStarted}>Get Started</NavShinyButton>
       </nav>
     </motion.header>
   );
@@ -4160,7 +4152,7 @@ export default function LandingPage() {
 
 
 
-            <Navbar />
+            <Navbar onGetStarted={() => setShowRoleModal(true)} />
 
             <CinematicHero />
             <SectionSep color="#ef4444" dim />
