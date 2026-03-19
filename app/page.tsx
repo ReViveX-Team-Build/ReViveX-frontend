@@ -734,40 +734,65 @@ function MagButton({ children, onClick, style = {}, className = "", type = "butt
 
 }
 function FloatingParticles({ count = 35 }: { count?: number }) {
-  const P = useMemo(() => Array.from({ length: count }, (_, i) => ({
-    id: i,
-    x: Math.random() * 100,
-    size: Math.random() * 2.5 + 0.5,
-    dur: Math.random() * 12 + 8,
-    delay: Math.random() * 15,
-    opacity: Math.random() * 0.3 + 0.05,
-    drift: (Math.random() - 0.5) * 60, // Horizontal sway distance
-  })), [count]);
+  // Replaced with AtmosphericLayer — this component no longer renders dots
+  return null;
+}
 
-  const vh = typeof window !== "undefined" ? window.innerHeight : 900;
-
+// Premium atmospheric depth layer — replaces cheap floating dots
+function AtmosphericLayer() {
   return (
-    <div style={{ position: "absolute", inset: 0, overflow: "hidden", pointerEvents: "none" }}>
-      {P.map(p => (
-        <motion.div key={p.id}
-          style={{
-            position: "absolute", left: `${p.x}%`, bottom: -20,
-            width: p.size, height: p.size, borderRadius: "50%",
-            background: "#2DD4BF",
-            boxShadow: `0 0 ${p.size * 3}px rgba(45,212,191,0.8)`
-          }}
-          animate={{
-            y: [0, -(vh * 1.2)],
-            x: [0, p.drift, -p.drift, 0],
-            opacity: [0, p.opacity, p.opacity, 0]
-          }}
-          transition={{
-            duration: p.dur,
-            delay: p.delay,
-            repeat: Infinity,
-            ease: "easeInOut"
-          }}
-        />
+    <div style={{ position:"absolute", inset:0, pointerEvents:"none", overflow:"hidden" }}>
+      {/* Deep space gradient base */}
+      <div style={{ position:"absolute", inset:0,
+        background:"radial-gradient(ellipse 80% 60% at 50% 40%, rgba(8,20,40,0.0) 0%, rgba(4,8,18,0.95) 100%)" }} />
+      {/* Left atmospheric glow — cool blue */}
+      <div style={{ position:"absolute", left:"-15%", top:"20%", width:"55%", height:"70%",
+        background:"radial-gradient(ellipse, rgba(14,40,80,0.55) 0%, transparent 70%)",
+        filter:"blur(60px)" }} />
+      {/* Right atmospheric glow — teal */}
+      <div style={{ position:"absolute", right:"-10%", top:"10%", width:"45%", height:"65%",
+        background:"radial-gradient(ellipse, rgba(10,60,65,0.40) 0%, transparent 70%)",
+        filter:"blur(70px)" }} />
+      {/* Bottom warm glow — subtle depth */}
+      <div style={{ position:"absolute", bottom:"-10%", left:"20%", right:"20%", height:"50%",
+        background:"radial-gradient(ellipse, rgba(25,10,55,0.35) 0%, transparent 65%)",
+        filter:"blur(80px)" }} />
+      {/* Top rim light */}
+      <div style={{ position:"absolute", top:0, left:"30%", right:"30%", height:"1px",
+        background:"linear-gradient(90deg,transparent,rgba(45,212,191,0.12),transparent)" }} />
+      {/* Vignette */}
+      <div style={{ position:"absolute", inset:0,
+        background:"radial-gradient(ellipse 100% 100% at 50% 50%, transparent 40%, rgba(2,5,12,0.75) 100%)" }} />
+      {/* Fine star field — CSS only, no JS */}
+      <style>{`
+        @keyframes atm-twinkle { 0%,100%{opacity:.18} 50%{opacity:.85} }
+        @keyframes atm-drift { 0%{transform:translateY(0)} 100%{transform:translateY(-6px)} }
+        .atm-star { position:absolute; border-radius:50%; animation:atm-twinkle var(--dur,4s) var(--del,0s) ease-in-out infinite, atm-drift calc(var(--dur,4s)*1.8) var(--del,0s) ease-in-out infinite alternate; }
+      `}</style>
+      {/* 60 CSS stars — varied sizes, colors, positions, no JS animation loop */}
+      {[
+        [12,18,1.5,3.2,0.0],[28,42,1.0,5.1,0.8],[45,15,1.8,3.8,1.4],[67,33,1.2,4.5,0.3],
+        [83,22,1.0,6.0,1.9],[92,55,1.5,3.5,0.7],[5,70,1.2,4.8,1.2],[18,85,0.8,5.5,0.4],
+        [38,62,1.6,3.9,1.7],[55,78,1.0,4.2,0.9],[72,48,1.4,5.8,1.5],[88,72,0.9,3.6,0.2],
+        [23,30,2.0,4.0,0.6],[50,50,1.5,6.2,1.1],[77,25,1.1,3.3,1.8],[8,40,1.3,5.0,0.5],
+        [35,90,1.0,4.7,1.3],[62,12,1.8,3.7,0.1],[90,38,1.2,5.3,1.6],[15,60,0.9,4.4,0.8],
+        [42,80,1.6,3.1,1.0],[68,58,1.1,5.6,0.3],[85,85,1.4,4.9,1.9],[30,10,0.8,3.4,0.6],
+        [57,35,1.7,5.2,1.4],[75,70,1.0,4.1,0.2],[95,20,1.3,6.1,1.7],[20,50,1.5,3.8,0.9],
+        [48,25,0.9,4.6,1.2],[73,88,1.2,5.4,0.4],[10,75,1.6,3.0,1.5],[37,45,1.1,4.3,0.7],
+        [63,68,1.4,5.7,1.1],[87,32,0.8,4.0,1.8],[25,92,1.3,3.6,0.3],[52,18,1.7,5.9,0.6],
+        [78,55,1.0,4.8,1.3],[3,30,1.5,3.3,0.0],[40,72,1.2,5.1,1.6],[65,40,0.9,4.5,0.8],
+        [82,78,1.6,6.0,1.4],[17,20,1.1,3.9,0.2],[44,58,1.4,4.7,1.9],[70,28,0.8,5.3,0.5],
+        [93,65,1.3,4.2,1.1],[28,82,1.7,3.5,0.7],[55,95,1.0,5.8,1.2],[80,15,1.5,4.4,1.7],
+        [6,52,1.2,3.7,0.4],[33,38,0.9,5.0,1.5],[60,75,1.6,4.6,0.1],[86,48,1.1,3.2,1.0],
+        [22,65,1.4,5.5,1.6],[49,88,0.8,4.9,0.3],[76,42,1.3,3.8,1.9],[98,75,1.0,5.2,0.6],
+      ].map(([x,y,sz,dur,del],i) => (
+        <div key={i} className="atm-star" style={{
+          left:`${x}%`, top:`${y}%`,
+          width:sz, height:sz,
+          background: i%5===0?"rgba(45,212,191,0.9)": i%5===1?"rgba(167,139,250,0.8)": i%5===2?"rgba(186,230,253,0.9)":"rgba(255,255,255,0.85)",
+          boxShadow: i%7===0?`0 0 ${sz*3}px rgba(45,212,191,0.6)`: i%7===1?`0 0 ${sz*2}px rgba(167,139,250,0.5)`:"none",
+          "--dur":`${dur}s`, "--del":`${del}s`,
+        } as any} />
       ))}
     </div>
   );
@@ -1995,7 +2020,7 @@ function CinematicHero() {
     let rafId = 0, renderer: any = null, model: any = null;
     let modelBaseScale = 1, scene: any = null, camera: any = null;
     let tealL: any = null, purpL: any = null;
-    let particleMat: any = null;
+    let particleMat: any = null, dustMat: any = null;
     let isDragging = false, lockedFace = false;
     let rotY = 0, rotX = 0, velY = 0, modelPosX = 0;
     let lastDragX = 0, lastDragY = 0;
@@ -2011,8 +2036,8 @@ function CinematicHero() {
       const { GLTFLoader } = await import("three/examples/jsm/loaders/GLTFLoader.js" as any);
 
       scene = new THREE.Scene();
-      scene.background = new THREE.Color(0x080f1a);
-      scene.fog = new THREE.FogExp2(0x080f1a, 0.006);
+      scene.background = new THREE.Color(0x03060f);
+      scene.fog = new THREE.FogExp2(0x050a18, 0.004);
       const W = window.innerWidth, H = window.innerHeight;
       camera = new THREE.PerspectiveCamera(40, W/H, 0.1, 500);
       camera.position.set(0, 0, 100);
@@ -2024,26 +2049,53 @@ function CinematicHero() {
       if (!renderer) { setWebglOk(false); return; }
       renderer.setSize(W, H); renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.0));
       (renderer as any).outputColorSpace = "srgb";
-      renderer.toneMapping = (THREE as any).ACESFilmicToneMapping; renderer.toneMappingExposure = 1.6;
+      renderer.toneMapping = (THREE as any).ACESFilmicToneMapping; renderer.toneMappingExposure = 1.4;
 
-      // Particles — sparse halo, never overlapping model
-      const N = 300;
-      const pPos = new Float32Array(N*3), pCol = new Float32Array(N*3), pSz = new Float32Array(N);
-      const CT = new THREE.Color("#2DD4BF"), CP = new THREE.Color("#a78bfa"), CW = new THREE.Color("#ddeeff");
-      for (let i = 0; i < N; i++) {
-        const angle = Math.random()*Math.PI*2, radius = 8+Math.random()*22, depth = -8-Math.random()*35;
-        pPos[i*3]=Math.cos(angle)*radius; pPos[i*3+1]=Math.sin(angle)*radius*.55; pPos[i*3+2]=depth;
-        const r=Math.random(), col=r<.4?CT:r<.7?CP:CW; pCol[i*3]=col.r;pCol[i*3+1]=col.g;pCol[i*3+2]=col.b; pSz[i]=Math.random()*1.2+.25;
+      // Premium star field — two layers: deep background + mid-ground dust
+      // Layer 1: distant stars — tiny, dense, spread wide
+      const N1 = 600;
+      const p1Pos = new Float32Array(N1*3), p1Col = new Float32Array(N1*3), p1Sz = new Float32Array(N1);
+      for (let i = 0; i < N1; i++) {
+        const th=Math.random()*Math.PI*2, ph=Math.acos(2*Math.random()-1);
+        const r = 40 + Math.random()*80;
+        p1Pos[i*3]=r*Math.sin(ph)*Math.cos(th); p1Pos[i*3+1]=r*Math.sin(ph)*Math.sin(th)*.5; p1Pos[i*3+2]=-10-Math.random()*60;
+        const t=Math.random();
+        if(t<.6){p1Col[i*3]=0.82;p1Col[i*3+1]=0.90;p1Col[i*3+2]=1.0;}       // cool white-blue
+        else if(t<.8){p1Col[i*3]=0.62;p1Col[i*3+1]=0.95;p1Col[i*3+2]=0.95;} // teal hint
+        else{p1Col[i*3]=0.75;p1Col[i*3+1]=0.72;p1Col[i*3+2]=0.98;}           // lavender
+        p1Sz[i] = Math.random()*0.5+0.15;
       }
-      const pGeo = new THREE.BufferGeometry();
-      pGeo.setAttribute("position",new THREE.BufferAttribute(pPos,3));
-      pGeo.setAttribute("aColor",new THREE.BufferAttribute(pCol,3));
-      pGeo.setAttribute("aSize",new THREE.BufferAttribute(pSz,1));
+      const g1 = new THREE.BufferGeometry();
+      g1.setAttribute("position",new THREE.BufferAttribute(p1Pos,3));
+      g1.setAttribute("aColor",new THREE.BufferAttribute(p1Col,3));
+      g1.setAttribute("aSize",new THREE.BufferAttribute(p1Sz,1));
       particleMat = new THREE.ShaderMaterial({ uniforms:{time:{value:0}},
-        vertexShader:`attribute float aSize;attribute vec3 aColor;varying vec3 vCol;uniform float time;void main(){vCol=aColor;vec3 p=position;p.x+=sin(time*.25+p.z*.08)*.3;p.y+=cos(time*.20+p.z*.06)*.22;vec4 mv=modelViewMatrix*vec4(p,1.);gl_PointSize=aSize*(280./-mv.z);gl_Position=projectionMatrix*mv;}`,
-        fragmentShader:`varying vec3 vCol;void main(){float d=length(gl_PointCoord-.5);if(d>.5)discard;float a=(1.-smoothstep(0.,.5,d))*.70;gl_FragColor=vec4(vCol,a);}`,
+        vertexShader:`attribute float aSize;attribute vec3 aColor;varying vec3 vCol;varying float vBright;uniform float time;void main(){vCol=aColor;float twinkle=0.72+0.28*sin(time*0.8+position.x*0.3+position.z*0.2);vBright=twinkle;vec4 mv=modelViewMatrix*vec4(position,1.);gl_PointSize=aSize*(220./-mv.z)*twinkle;gl_Position=projectionMatrix*mv;}`,
+        fragmentShader:`varying vec3 vCol;varying float vBright;void main(){vec2 uv=gl_PointCoord-0.5;float d=length(uv);if(d>0.5)discard;float core=1.-smoothstep(0.,0.18,d);float glow=1.-smoothstep(0.18,0.5,d);float a=(core*0.9+glow*0.3)*vBright;gl_FragColor=vec4(vCol*mix(0.8,1.2,core),a);}`,
         transparent:true, blending:THREE.AdditiveBlending, depthWrite:false });
-      scene.add(new THREE.Points(pGeo, particleMat));
+      scene.add(new THREE.Points(g1, particleMat));
+
+      // Layer 2: mid-ground nebula dust — soft, large, few, atmospheric
+      const N2 = 80;
+      const p2Pos = new Float32Array(N2*3), p2Col = new Float32Array(N2*3), p2Sz = new Float32Array(N2);
+      for(let i=0;i<N2;i++){
+        const angle=Math.random()*Math.PI*2, r=15+Math.random()*30, d=-5-Math.random()*25;
+        p2Pos[i*3]=Math.cos(angle)*r; p2Pos[i*3+1]=(Math.random()-.5)*r*.4; p2Pos[i*3+2]=d;
+        const t=Math.random();
+        if(t<.45){p2Col[i*3]=0.17;p2Col[i*3+1]=0.83;p2Col[i*3+2]=0.75;}  // teal
+        else if(t<.75){p2Col[i*3]=0.65;p2Col[i*3+1]=0.54;p2Col[i*3+2]=0.98;} // purple
+        else{p2Col[i*3]=0.4;p2Col[i*3+1]=0.7;p2Col[i*3+2]=1.0;}  // blue
+        p2Sz[i]=1.5+Math.random()*2.5;
+      }
+      const g2=new THREE.BufferGeometry();
+      g2.setAttribute("position",new THREE.BufferAttribute(p2Pos,3));
+      g2.setAttribute("aColor",new THREE.BufferAttribute(p2Col,3));
+      g2.setAttribute("aSize",new THREE.BufferAttribute(p2Sz,1));
+      dustMat=new THREE.ShaderMaterial({ uniforms:{time:{value:0}},
+        vertexShader:`attribute float aSize;attribute vec3 aColor;varying vec3 vCol;uniform float time;void main(){vCol=aColor;vec3 p=position;p.x+=sin(time*0.15+position.z*0.05)*0.8;p.y+=cos(time*0.12+position.x*0.04)*0.5;vec4 mv=modelViewMatrix*vec4(p,1.);gl_PointSize=aSize*(340./-mv.z);gl_Position=projectionMatrix*mv;}`,
+        fragmentShader:`varying vec3 vCol;void main(){float d=length(gl_PointCoord-.5);if(d>0.5)discard;float a=(1.-smoothstep(0.0,0.5,d))*0.22;gl_FragColor=vec4(vCol,a);}`,
+        transparent:true, blending:THREE.AdditiveBlending, depthWrite:false });
+      scene.add(new THREE.Points(g2, dustMat));
 
       // Lights
       scene.add(new THREE.AmbientLight(0xd4eeff, 3.5));
@@ -2103,25 +2155,30 @@ function CinematicHero() {
         if (!isVisible || document.hidden) return;   // ← pauses GPU when off-screen
         const t = Date.now()*.001, p = progRef.current;
         if(particleMat?.uniforms) particleMat.uniforms.time.value = t;
+        if(dustMat?.uniforms) dustMat.uniforms.time.value = t;
         const zoomP=eo(cl(p,0,.55)), cameraZ=lp(100,4.0,zoomP), slideP=eio(cl(p,.52,.74));
-        const cameraX=lp(0,-2.6,slideP), cameraY=lp(0,.2,zoomP), plungeP=eo(cl(p,.88,1.0));
-        camera.position.set(cameraX, lp(cameraY,-8,plungeP), lp(cameraZ,-20,plungeP));
+        const exitSlide=eo(cl(p,.82,1.0));  // 0→1 as device exits
+        const cameraX=lp(0,-2.6,slideP), cameraY=lp(0,.2,zoomP);
+        // No plunge dive — camera holds position, model slides right off screen
+        camera.position.set(cameraX, cameraY, cameraZ);
         camera.lookAt(cameraX*.3,.2,0);
         if(tealL) tealL.intensity=5.0+Math.sin(t*1.3)*.9;
         if(purpL) purpL.intensity=3.2+Math.sin(t*.9+1)*.6;
         if(model){
-          // ── X position: slide right during reveal, smooth in both directions ──
-          const targetX = lp(0, 0.9, slideP);
-          const lerpRate = targetX < modelPosX ? 0.028 : 0.032;
-          modelPosX += (targetX - modelPosX) * lerpRate;
+          // ── X position: slide right during reveal, then SHOOT RIGHT on exit ──
+          const revealX  = lp(0, 0.9, slideP);          // gentle right offset during reveal
+          const lerpRate = revealX < modelPosX ? 0.028 : 0.032;
+          modelPosX += (revealX - modelPosX) * lerpRate;
           model.position.x = modelPosX;
+          // Fade out smoothly instead of shooting off screen
+          model.traverse((ch: any)=>{ if(ch.isMesh&&ch.material){ ch.material.opacity = Math.max(0, 1 - exitSlide * 3.5); ch.material.transparent = true; } });
 
           const faceP   = cl(p, .48, .66);
-          const exitP   = eo(cl(p, .82, 1.0));  // exit ramp: 0 → 1 as model plunges
+          const exitP   = exitSlide;             // alias for rotation damping
 
           if (!isDragging) {
             // Auto-spin only before face-lock, scales to zero before plunge
-            const autoSpin = 0.003 * Math.max(0, 1 - faceP * 2) * (1 - exitP);
+            const autoSpin = 0.002 * Math.max(0, 1 - faceP * 2) * (1 - exitP);
             rotY += autoSpin;
 
             // Gentle face-forward pull
@@ -2130,15 +2187,21 @@ function CinematicHero() {
               rotX += (0 - rotX) * Math.min(faceP * 0.006, 0.03);
             }
 
+            // Hard-clamp velocity — prevents crazy spin
+            velY = Math.max(-0.04, Math.min(0.04, velY));
+
             // During exit: kill inertia so no wild spinning on the way out
-            const inertiaDamp = 1 - exitP * 0.85;
-            velY *= 0.965 * inertiaDamp;
+            const inertiaDamp = 1 - exitP * 0.95;
+            velY *= 0.94 * inertiaDamp;
             rotY += velY;
 
-            // Exit: lock rotation to current pose — no drift
+            // Hard-clamp total rotation so it can never go crazy
+            rotY = Math.max(-Math.PI * 0.9, Math.min(Math.PI * 0.9, rotY));
+
+            // Exit: snap rotation forward quickly
             if (exitP > 0) {
-              rotY += (0 - rotY) * exitP * 0.06;
-              rotX += (0 - rotX) * exitP * 0.06;
+              rotY += (0 - rotY) * exitP * 0.10;
+              rotX += (0 - rotX) * exitP * 0.10;
             }
           }
 
@@ -2213,7 +2276,8 @@ function CinematicHero() {
     <div ref={sectionRef} style={{ height:"260vh",position:"relative" }}>
       <div style={{ position:"sticky",top:0,height:"100vh",overflow:"hidden" }}>
         <canvas ref={canvasRef} style={{ position:"absolute",inset:0,width:"100%",height:"100%",display:"block",zIndex:0 }} />
-        <div style={{ position:"absolute",inset:0,zIndex:1,pointerEvents:"none",background:"linear-gradient(90deg,rgba(8,15,26,.92) 0%,rgba(8,15,26,.80) 36%,rgba(8,15,26,.22) 50%,transparent 58%)" }} />
+        <AtmosphericLayer />
+        <div style={{ position:"absolute",inset:0,zIndex:1,pointerEvents:"none",background:"linear-gradient(90deg,rgba(4,6,15,.94) 0%,rgba(4,6,15,.82) 36%,rgba(4,6,15,.18) 50%,transparent 58%)" }} />
 
         {/* VOID — opacity driven by MotionValue, no React re-render */}
         <motion.div style={{ ...absC, zIndex:10, opacity:voidOp }}>
@@ -2304,7 +2368,6 @@ function StatParticleScatter({ scatterP }: { scatterP: any }) {
     canvas.width = W; canvas.height = H;
     canvas.style.width = W + "px"; canvas.style.height = H + "px";
 
-    // Render "28%" off-screen and sample pixels
     const off = document.createElement("canvas");
     off.width = W; off.height = H;
     const ctx2 = off.getContext("2d")!;
@@ -2315,46 +2378,37 @@ function StatParticleScatter({ scatterP }: { scatterP: any }) {
     ctx2.textBaseline = "middle";
     ctx2.fillText("28%", W / 2, H / 2);
     const img = ctx2.getImageData(0, 0, W, H).data;
-
     const pts: {x:number;y:number}[] = [];
-    const step = 4; // denser sampling
+    const step = 4;
     for (let y = 0; y < H; y += step)
       for (let x = 0; x < W; x += step)
         if (img[(y * W + x) * 4 + 3] > 60) pts.push({ x, y });
 
-    // Each particle: starts at its pixel position, explodes outward all at once
     particlesRef.current = pts.map(p => {
       const angle = Math.random() * Math.PI * 2;
-      const speed = Math.random() * 280 + 120; // px/s at full scatter
-      return {
-        ox: p.x, oy: p.y,
-        vx: Math.cos(angle) * speed,
-        vy: Math.sin(angle) * speed - Math.random() * 60, // slight upward bias
-        decay: Math.random() * 0.4 + 0.6,
-        r: Math.random() * 2 + 1,
-      };
+      const speed = Math.random() * 280 + 120;
+      return { ox: p.x, oy: p.y, vx: Math.cos(angle)*speed, vy: Math.sin(angle)*speed - Math.random()*60, decay: Math.random()*0.4+0.6, r: Math.random()*2+1 };
     });
 
     const ctx = canvas.getContext("2d")!;
     const draw = () => {
       rafRef.current = requestAnimationFrame(draw);
-      const sp = lastP.current; // 0 → 1
+      const sp = lastP.current;
       ctx.clearRect(0, 0, W, H);
       if (sp <= 0) return;
-
-      const t = sp; // scatter time 0→1 over ~0.4s of scroll
+      const t = sp;
+      // Extra global fade after t>0.65 so no residue bleeds into next section
+      const globalFade = t > 0.65 ? Math.max(0, 1 - (t - 0.65) / 0.35) : 1;
+      if (globalFade <= 0.01) { ctx.clearRect(0,0,W,H); return; }
       particlesRef.current.forEach(p => {
         const x = p.ox + p.vx * t * 0.45;
-        const y = p.oy + p.vy * t * 0.45 + 200 * t * t; // gravity
-        const alpha = Math.max(0, (1 - t * p.decay * 1.6));
+        const y = p.oy + p.vy * t * 0.45 + 300 * t * t; // more gravity = fall faster
+        const alpha = Math.max(0, 1 - t * p.decay * 1.4) * globalFade;
         if (alpha <= 0) return;
         ctx.globalAlpha = alpha;
-        // colour shifts from red → orange as it flies
-        const hue = 4 + t * 20;
-        const size = p.r * (1 + t * 1.2);
-        ctx.fillStyle = `hsl(${hue},92%,58%)`;
+        ctx.fillStyle = `hsl(${4 + t*20},92%,58%)`;
         ctx.beginPath();
-        ctx.arc(x, y, size, 0, Math.PI * 2);
+        ctx.arc(x, y, p.r * (1 + t * 1.2), 0, Math.PI * 2);
         ctx.fill();
       });
       ctx.globalAlpha = 1;
@@ -2369,8 +2423,8 @@ function StatParticleScatter({ scatterP }: { scatterP: any }) {
 
   return (
     <canvas ref={canvasRef} style={{
-      position: "absolute", inset: 0, width: "100%", height: "100%",
-      pointerEvents: "none", zIndex: 5,
+      position:"absolute", inset:0, width:"100%", height:"100%",
+      pointerEvents:"none", zIndex:5,
     }} />
   );
 }
@@ -2420,10 +2474,10 @@ const RoadBridge = React.memo(function RoadBridge() {
   const probY     = useTransform(p,[0,t1],[800,0]);
   const probScale = useTransform(p,[t1,t2],[1,11]);
   const probOp    = useTransform(p,[0,t1,t2],[0,1,0]);
-  // IS REAL: slides in from right → zoom-in peak → settle → slides out to left
-  const realX     = useTransform(p,[t1,    t2,    t2+0.08, t2+0.14, t3   ],[800,  0,     0,      0,      -800]);
-  const realScale = useTransform(p,[t1,    t2,    t2+0.08, t2+0.14, t3   ],[0.8,  0.8,   1.12,   1,      1   ]);
-  const realOp    = useTransform(p,[t1,    t1+0.04,        t2+0.14, t3-0.04, t3],[0, 1,  1,      1,      0   ]);
+  // IS REAL: zooms in from normal → scale up → vanishes (same as THE)
+  const realX     = useTransform(p,[t1,t2],[0,0]); // no horizontal movement
+  const realScale = useTransform(p,[t1,t2,t3],[0.8,1,11]);
+  const realOp    = useTransform(p,[t1,t1+0.04,t2+0.10,t3],[0,1,1,0]);
   // 28%: rises → zoom peak → scatter/fade out at t3+0.06
   const statY     = useTransform(p,[t2,    t3,    t3+0.04],[800,  0,     0   ]);
   const statScale = useTransform(p,[t2,    t3,    t3+0.04, t3+0.10],[0.8, 0.8, 1.10, 2.2]);
@@ -2457,17 +2511,17 @@ const RoadBridge = React.memo(function RoadBridge() {
           </motion.div>
         </div>
         <div style={{ ...C,zIndex:4 }}>
-          <motion.div style={{ x:realX,scale:realScale,opacity:realOp,willChange:"transform,opacity" }}>
+          <motion.div style={{ scale:realScale,opacity:realOp,willChange:"transform,opacity" }}>
             <span className="fB" style={{ fontSize:"clamp(4rem,10vw,10rem)",color:"#ef4444",letterSpacing:"-.02em",display:"block",textShadow:"0 0 80px rgba(239,68,68,.45)" }}>IS REAL.</span>
           </motion.div>
         </div>
-        {/* 28% — rises, zoom-pulses, then scatters into particles */}
+        {/* 28% solid text */}
         <div style={{ ...C,zIndex:3 }}>
           <motion.div style={{ opacity:statOp,scale:statScale,y:statY,willChange:"transform,opacity",textAlign:"center" }}>
             <span className="fB" style={{ fontSize:"clamp(6rem,16vw,16rem)",color:"#ef4444",letterSpacing:"-.03em",display:"block",textShadow:"0 0 120px rgba(239,68,68,.55)" }}>28%</span>
           </motion.div>
         </div>
-        {/* Particle scatter canvas — fires when scatterP > 0 */}
+        {/* Particle scatter canvas */}
         <StatParticleScatter scatterP={scatterP} />
         {/* Subtitle — pulses in and out rhythmically */}
         <motion.div style={{ position:"absolute",inset:0,zIndex:6,display:"flex",alignItems:"center",justifyContent:"center",textAlign:"center",opacity:subOp,pointerEvents:"none" }}>
