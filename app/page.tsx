@@ -1712,7 +1712,7 @@ function ParticleTextEffect({
   );
 }
 
-function NavShinyButton({ children, href }: { children: React.ReactNode; href?: string }) {
+function NavShinyButton({ children, href, onClick }: { children: React.ReactNode; href?: string; onClick?: () => void }) {
   const CSS = `
     @property --nb-ga { syntax:"<angle>"; initial-value:0deg; inherits:false }
     @property --nb-go { syntax:"<angle>"; initial-value:0deg; inherits:false }
@@ -1773,7 +1773,7 @@ function NavShinyButton({ children, href }: { children: React.ReactNode; href?: 
       <style dangerouslySetInnerHTML={{ __html: CSS }} />
       {href
         ? <a href={href} className="nav-shiny"><span>{children}</span></a>
-        : <button className="nav-shiny"><span>{children}</span></button>
+        : <button className="nav-shiny" onClick={onClick}><span>{children}</span></button>
       }
     </>
   );
