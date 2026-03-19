@@ -98,9 +98,19 @@ export default function VerifyEmailPage() {
   }
 
   // If somehow they get here and are already verified, push them out
-  if (user.emailVerified) {
-    router.replace("/patients/onboarding");
-    return null;
+  useEffect(() => {
+    if (!loading && user?.emailVerified) {
+      router.replace("/patients/onboarding");
+    }
+  }, [user, loading, router]);
+
+  // While checking/loading, show a placeholder so we don't return null too early
+  if (loading || (user && user.emailVerified)) {
+    return (
+      <div className="min-h-screen bg-[#080f1a] flex items-center justify-center">
+        <div className="w-10 h-10 border-4 border-teal-500/20 border-t-teal-400 rounded-full animate-spin" />
+      </div>
+    );
   }
 
   return (
