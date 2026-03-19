@@ -4,9 +4,11 @@ import React, { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useAuthState } from "react-firebase-hooks/auth";
-import { auth } from "@/app/lib/firebase";
+import { auth, db } from "@/app/lib/firebase";
 import { getDoctorSchedule } from "@/app/lib/db/schedule";
+import { doc, getDoc } from "firebase/firestore";
 import { ScheduledSession } from "@/app/lib/db/types";
+import { signOut } from "firebase/auth";
 import {
   LayoutDashboard,
   Users,
@@ -69,8 +71,6 @@ const bottomItems = [
   { icon: Settings, label: "Settings", href: "/doctor/settings" },
   { icon: HelpCircle, label: "FAQ & Support", href: "/doctor/faq" },
 ];
-
-const doctor = { name: "Dr. Suresh", role: "Neurologist", initials: "DS" };
 
 // ─── CSS ──────────────────────────────────────────────────────────────────────
 const STYLES = `
@@ -226,11 +226,13 @@ function SidebarContent({
   onClose,
   pathname,
   navItems,
+  initials, 
 }: {
   collapsed: boolean;
   onClose?: () => void;
   pathname: string;
   navItems: NavItem[];
+  initials: string;
 }) {
   return (
     <div
@@ -337,7 +339,7 @@ function SidebarContent({
               fontWeight: 800,
               color: "#0B1E33",
             }}>
-            {doctor.initials}
+            {initials}
           </div>
         </div>
       )}
@@ -487,29 +489,30 @@ function SidebarContent({
           </div>
         )}
 
-        {/* Sign out */}
-        <Link href="/" style={{ textDecoration: "none", display: "block" }}>
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: collapsed ? 0 : 10,
-              justifyContent: collapsed ? "center" : "flex-start",
-              padding: collapsed ? "10px" : "10px 14px",
-              borderRadius: 12,
-              background: "rgba(239,68,68,0.07)",
-              border: "1px solid rgba(239,68,68,0.15)",
-              color: "#f87171",
-              fontSize: 13,
-              fontWeight: 700,
-              cursor: "pointer",
-              transition: "all 0.2s ease",
-            }}>
-            <LogOut size={16} />
-            {!collapsed && <span>Sign Out</span>}
-            {collapsed && <div className="sb-tooltip">Sign Out</div>}
-          </div>
-        </Link>
+       
+        <button
+          onClick={() => signOut(auth)}
+          style={{
+            border: "none",
+            width: "100%",
+            display: "flex",
+            alignItems: "center",
+            gap: collapsed ? 0 : 10,
+            justifyContent: collapsed ? "center" : "flex-start",
+            padding: collapsed ? "10px" : "10px 14px",
+            borderRadius: 12,
+            background: "rgba(239,68,68,0.07)",
+            borderTop: "1px solid rgba(239,68,68,0.15)",
+            color: "#f87171",
+            fontSize: 13,
+            fontWeight: 700,
+            cursor: "pointer",
+            transition: "all 0.2s ease",
+          }}>
+          <LogOut size={16} />
+          {!collapsed && <span>Sign Out</span>}
+          {collapsed && <div className="sb-tooltip">Sign Out</div>}
+        </button>
       </div>
     </div>
   );
@@ -522,6 +525,24 @@ export default function DoctorSidebar() {
   const [bp, setBp] = useState<BreakPoint>("desktop");
   const [mobileOpen, setMobileOpen] = useState(false);
   const [upcomingCount, setUpcomingCount] = useState(0);
+  
+ 
+  const [initials, setInitials] = useState("DR");
+
+  
+  useEffect(() => {
+    if (!user) return;
+    getDoc(doc(db, "users", user.uid)).then((d) => {
+      if (d.exists() && d.data().name) {
+        const parts = d.data().name.trim().split(" ");
+        setInitials(
+          parts.length >= 2
+            ? `${parts[0][0]}${parts[parts.length - 1][0]}`.toUpperCase()
+            : d.data().name.slice(0, 2).toUpperCase()
+        );
+      }
+    });
+  }, [user]);
 
   useEffect(() => {
     const loadUpcomingCount = async () => {
@@ -554,7 +575,7 @@ export default function DoctorSidebar() {
     () =>
       navItems.map((item) =>
         item.href === "/doctor/schedule"
-          ? { ...item, badge: String(upcomingCount) }
+          ? { ...item, badge: upcomingCount > 0 ? String(upcomingCount) : null }
           : item,
       ),
     [upcomingCount],
@@ -636,6 +657,7 @@ export default function DoctorSidebar() {
           onClose={bp === "mobile" ? () => setMobileOpen(false) : undefined}
           pathname={pathname}
           navItems={navItemsWithCounts}
+          initials={initials} 
         />
       </aside>
 
