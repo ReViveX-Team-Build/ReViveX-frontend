@@ -207,3 +207,59 @@ export default function PatientProfilePage() {
       finally { setIsLoading(false); }
     })();
   }, [user]);
+
+  const set = useCallback((k: keyof PatientProfile) =>
+    (e: React.ChangeEvent<HTMLInputElement|HTMLTextAreaElement|HTMLSelectElement>) =>
+      setDraft(p => ({...p, [k]: e.target.value})), []);
+
+  const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]; if (!file || !user) return;
+    setIsUploading(true);
+    try {
+      setAvatarPreview(URL.createObjectURL(file));
+      const ref = storageRef(storage, `avatars/${user.uid}`);
+      await uploadBytes(ref, file);
+      const url = await getDownloadURL(ref);
+      await Promise.all([
+        updateDoc(doc(db, "users", user.uid), { profilePictureUrl: url }),
+        updateProfile(user, { photoURL: url }),
+      ]);
+      setDraft(p => ({...p, profilePictureUrl: url}));
+      showToast("Profile picture updated!");
+    } catch (err) { console.error(err); showToast("Upload failed — check Storage rules."); }
+    finally { setIsUploading(false); }
+  };
+
+  const handleSave = async () => {
+    if (!user) return; setIsSaving(true);
+    try {
+      await updateDoc(doc(db, "users", user.uid), {
+        name: draft.name, phone: draft.phone,
+        goals: draft.goals, bio: draft.bio,
+        affectedSide: draft.affectedSide,
+      });
+      if (draft.name !== data.name) await updateProfile(user, { displayName: draft.name });
+      setData(draft); showToast("Changes saved!");
+    } catch (err) { console.error(err); showToast("Save failed — try again."); }
+    finally { setIsSaving(false); }
+  };
+
+  const showToast = (msg: string) => { setToast(msg); setTimeout(() => setToast(""), 3500); };
+
+  const hasChanges =
+    draft.name          !== data.name        || draft.phone       !== data.phone ||
+    draft.goals         !== data.goals       || draft.bio         !== data.bio   ||
+    draft.affectedSide  !== data.affectedSide;
+
+  const XP_CAP = 5000;
+  const xpPct  = Math.min(100, (draft.totalXp / XP_CAP) * 100);
+
+  if (isLoading) return (
+    <div className="pf" style={{minHeight:"100vh",background:"#F0F4F8",display:"flex",alignItems:"center",justifyContent:"center"}}>
+      <style>{CSS}</style>
+      <div style={{display:"flex",flexDirection:"column",alignItems:"center",gap:12}}>
+        <div style={{width:40,height:40,borderRadius:"50%",border:"3px solid rgba(45,212,191,0.2)",borderTopColor:"#2DD4BF",animation:"spin 1s linear infinite"}}/>
+        <div className="mono" style={{fontSize:9,color:"rgba(45,212,191,0.6)",letterSpacing:".38em",textTransform:"uppercase"}}>Loading Profile</div>
+      </div>
+    </div>
+  );
