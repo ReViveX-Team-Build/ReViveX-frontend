@@ -60,3 +60,44 @@ export default function PatientOnboardingPage() {
       setAvatarPreview(URL.createObjectURL(file));
     }
   };
+
+  // 3. Handle Submit
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!user) return;
+    if (!condition || !affectedSide || !selectedDoctor) {
+      setError("Please complete all fields to continue.");
+      return;
+    }
+
+    setIsSubmitting(true);
+    setError("");
+
+    try {
+      let photoURL = "";
+      
+      // Upload avatar if selected
+      if (avatarFile) {
+        const imgRef = storageRef(storage, `avatars/${user.uid}`);
+        await uploadBytes(imgRef, avatarFile);
+        photoURL = await getDownloadURL(imgRef);
+      }
+
+      // Update patient document
+      await updateDoc(doc(db, "users", user.uid), {
+        condition,
+        affectedSide,
+        assignedDoctorId: selectedDoctor,
+        connectionStatus: "pending", 
+        ...(photoURL && { photoURL })
+      });
+
+
+      router.push("/patients/waiting-room");
+      
+    } catch (err) {
+      console.error("Error saving profile:", err);
+      setError("Failed to save profile. Please try again.");
+      setIsSubmitting(false);
+    }
+  };
