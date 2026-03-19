@@ -1,5 +1,3 @@
-// lib/ai/gemini.ts
-
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
 if (!process.env.GEMINI_API_KEY) {

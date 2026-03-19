@@ -48,6 +48,8 @@ next-env.d.ts
 /.idea
 /.vscode
 
+# environment files
+.env*
 # local env files
 .env*.local
 .env
