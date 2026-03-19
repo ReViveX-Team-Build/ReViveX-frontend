@@ -87,3 +87,27 @@ export default function VerifyEmailPage() {
     await signOut(auth);
     router.push("/");
   };
+
+  if (loading || !user) {
+    return (
+      <div className="min-h-screen bg-[#080f1a] flex items-center justify-center">
+        <div className="w-12 h-12 border-4 border-teal-500/20 border-t-teal-400 rounded-full animate-spin" />
+      </div>
+    );
+  }
+
+  // If somehow they get here and are already verified, push them out
+  if (user.emailVerified) {
+    router.replace("/patients/onboarding");
+    return null;
+  }
+
+  return (
+    <div className="min-h-screen bg-[#080f1a] flex items-center justify-center p-4 relative overflow-hidden" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+      <style>{CSS}</style>
+      
+      {/* Ambient Background Glows */}
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[600px] bg-teal-500/5 rounded-full blur-[120px] pointer-events-none" />
+      <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-purple-500/5 rounded-full blur-[100px] pointer-events-none" />
+
+      <div className="max-w-md w-full relative z-10"></div>
