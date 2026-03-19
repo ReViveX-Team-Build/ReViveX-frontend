@@ -3,6 +3,12 @@ import React from "react";
 import DoctorSidebar from "@/components/DoctorPortal/Sidebar";
 import DoctorTopbar from "@/components/DoctorPortal/Topbar";
 
+import '@fontsource/plus-jakarta-sans/400.css';
+import '@fontsource/plus-jakarta-sans/700.css';
+import '@fontsource/plus-jakarta-sans/800.css';
+import '@fontsource/jetbrains-mono/400.css';
+import '@fontsource/jetbrains-mono/700.css';
+
 export default function DoctorLayout({
   children,
 }: {
