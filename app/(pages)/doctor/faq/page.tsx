@@ -514,3 +514,138 @@ const CSS = `
     .hc-accordion-content { padding:0 18px 18px !important; }
   }
 `;
+
+// AccordionItem renders a single faq with expand/collapse functionality.
+// It uses isOpen state to conditionally display the answer and applies animations.
+function AccordionItem({
+  item,
+  catColor,
+  catBg,
+  index,
+  isOpen,
+  onToggle,
+}: {
+  item:     FAQItem;
+  catColor: string;
+  catBg:    string;
+  index:    number;
+  isOpen:   boolean;
+  onToggle: () => void;
+}) {
+  return (
+    <div
+      className={`hc-accordion-item ${isOpen ? 'open' : ''}`}
+      style={{
+        borderColor: isOpen ? `${catColor}38` : 'rgba(226,232,240,0.9)',
+        animationDelay: `${index * 0.06}s`,
+        animation: `hcCardPop 0.45s cubic-bezier(0.22,1,0.36,1) ${index * 0.06}s both`,
+      }}
+    >
+      <button
+        className={`hc-accordion-trigger ${isOpen ? 'open' : ''}`}
+        onClick={onToggle}
+        aria-expanded={isOpen}
+      >
+        {/* Number + question */}
+        <div style={{ display: 'flex', alignItems: 'flex-start', gap: 14 }}>
+          <div style={{
+            width: 28, height: 28, borderRadius: 9, flexShrink: 0,
+            background: isOpen ? catBg : 'rgba(240,244,248,0.8)',
+            border: `1.5px solid ${isOpen ? catColor + '40' : 'rgba(226,232,240,0.9)'}`,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            fontFamily: "'JetBrains Mono',monospace",
+            fontSize: 10, fontWeight: 700,
+            color: isOpen ? catColor : '#94a3b8',
+            transition: 'all 0.2s ease', marginTop: 1,
+          }}>
+            {String(index + 1).padStart(2, '0')}
+          </div>
+          <span style={{
+            fontSize: 14.5, fontWeight: 700,
+            color: isOpen ? '#0B1E33' : '#334155',
+            lineHeight: 1.5, flex: 1,
+          }}>
+            {item.q}
+          </span>
+        </div>
+
+        {/* Chevron icon */}
+        <div style={{
+          width: 30, height: 30, borderRadius: 9, flexShrink: 0,
+          background: isOpen ? catBg : 'rgba(240,244,248,0.8)',
+          border: `1.5px solid ${isOpen ? catColor + '35' : 'rgba(226,232,240,0.9)'}`,
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          transition: 'all 0.28s cubic-bezier(0.22,1,0.36,1)',
+          color: isOpen ? catColor : '#94a3b8',
+        }}>
+          <ChevronDown
+            size={15}
+            style={{
+              transform: isOpen ? 'rotate(180deg)' : 'rotate(0deg)',
+              transition: 'transform 0.28s cubic-bezier(0.22,1,0.36,1)',
+            }}
+          />
+        </div>
+      </button>
+
+      {isOpen && (
+        <div className="hc-accordion-content">
+          <div style={{ paddingTop: 16 }}>
+            {item.a}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function CategorySection({ cat, openMap, onToggle }: {
+  cat:     FAQCategory;
+  openMap: Record<string, boolean>;
+  onToggle:(key: string) => void;
+}) {
+  return (
+    <div id={cat.id} style={{ scrollMarginTop: 24 }}>
+      {/* Category header */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16 }}>
+        <div style={{
+          width: 36, height: 36, borderRadius: 11,
+          background: cat.bg, border: `1.5px solid ${cat.color}30`,
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          color: cat.color, flexShrink: 0,
+        }}>
+          {cat.icon}
+        </div>
+        <div>
+          <h2 style={{ fontSize: 15, fontWeight: 800, color: '#0B1E33', margin: 0 }}>
+            {cat.label}
+          </h2>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 2 }}>
+            <span className="mono" style={{ fontSize: 9, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.14em', fontWeight: 600 }}>
+              {cat.items.length} {cat.items.length === 1 ? 'topic' : 'topics'}
+            </span>
+          </div>
+        </div>
+        <div style={{ flex: 1, height: 1, background: 'rgba(226,232,240,0.8)', marginLeft: 4 }} />
+      </div>
+
+      {/* Renders the actual FAQ items for this category */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+        {cat.items.map((item, i) => {
+          const key = `${cat.id}-${i}`;
+          return (
+            <AccordionItem
+              key={key}
+              item={item}
+              catColor={cat.color}
+              catBg={cat.bg}
+              index={i}
+              isOpen={!!openMap[key]}
+              onToggle={() => onToggle(key)}
+            />
+          );
+        })}
+      </div>
+    </div>
+  );
+}
