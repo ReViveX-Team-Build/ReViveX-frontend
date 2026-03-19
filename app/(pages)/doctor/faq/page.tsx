@@ -2,7 +2,10 @@
 
 import React, {useState, useRef, useEffect} from "react";
 import Link from 'next/link';
-import{Search, Cpu, Brain, Shield, Stethoscope, ChevronDown,
+
+// Import UI icons from lucide-react for better viusal representation
+import{
+  Search, Cpu, Brain, Shield, Stethoscope, ChevronDown,
   Wifi, Activity, Zap, MessageSquare, ArrowLeft,
   HelpCircle, LifeBuoy, Mail, Phone, ExternalLink,
   AlertCircle, CheckCircle2, BookOpen, Settings2,
@@ -10,11 +13,13 @@ import{Search, Cpu, Brain, Shield, Stethoscope, ChevronDown,
   Send,
 }from 'lucide-react';
 
+// Represents a single faq item
 interface FAQItem{
-  q: string;
-  a: React.ReactNode;
+  q: string;    // question text
+  a: React.ReactNode;   // answer content
 }
 
+// Represents a category of faqs
 interface FAQCategory{
   id: string;
   label: string;
@@ -24,6 +29,7 @@ interface FAQCategory{
   items: FAQItem[]; 
 }
 
+// Centralized faq data used to dynamically render the Help page
 const FAQ_CATEGORIES: FAQCategory[] = [
   {
     id: 'hardware',
@@ -31,13 +37,19 @@ const FAQ_CATEGORIES: FAQCategory[] = [
     icon: <Cpu size={16} />,
     color: '#0891b2',
     bg: 'rgba(8,145,178,0,0.08)',
+
+    // List of faq items under the category
     items: [
       {
+        // Question display in accordion header
         q: 'How do I calibrate the MPX5010DP pressure sensor for a new patient?',
+        // Answer content using JSX for structured formatting
         a: (
           <>
+            {/* Explanation paragraph */}
             <p>Sensor calibration is performed through the patient's initial <strong>"The Flow"</strong> calibration level, 
             which must be completed before any therapeutic sessions are assigned.</p>
+            {/* Step-by-step instructions */}
             <ol>
               <li>Navigate to <span className="hc-code">Patient Profile → Therapy Protocols → Calibration</span> and ensure the patient is in a neutral, resting seated position.</li>
               <li>Ask the patient to perform three full, maximal squeezes on the BP bulb. The MPX5010DP sensor will sample the peak kPa readings across all three attempts.</li>
@@ -130,7 +142,66 @@ const FAQ_CATEGORIES: FAQCategory[] = [
           </>
         ),
       },
+
     ],
   },
 
+  {
+    id:    'ai',
+    label: 'AI Clinical Assistant (Gemini)',
+    icon:  <Brain size={16} />,
+    color: '#6366f1',
+    bg:    'rgba(99,102,241,0.08)',
+    items: [
+      {
+        q: 'Where do the Weekly AI Summaries come from?',
+        a: (
+          <>
+            <p>Weekly AI Summaries are generated automatically every Monday at 06:00 UTC for each active patient on an <span className="hc-badge hc-badge-indigo"><Bot size={9} /> AI Companion</span> subscription tier.</p>
+            <p>The generation pipeline works as follows:</p>
+            <ol>
+              <li>A secure server-side process retrieves the <strong>last 7 days of Firebase Firestore telemetry</strong> for the patient — including per-session grip force series, endurance drop percentages, cognitive accuracy scores (for Memory Gate), and adherence timestamps.</li>
+              <li>This structured dataset is passed as context to the <strong>Gemini 1.5 Flash</strong> model via a controlled clinical system prompt, which instructs the model to produce concise, bulleted clinical observations.</li>
+              <li>The generated summary is written back to Firestore and surfaced in the patient's communications inbox as an <span className="hc-badge hc-badge-indigo">AI INSIGHT</span> message, visible to both the doctor and patient.</li>
+            </ol>
+            <div className="hc-note hc-note-indigo">
+              <Sparkles size={12} />
+              All AI-generated content is clearly flagged with an <strong>AI</strong> badge in the interface and is intended to support — not replace — clinical judgment.
+            </div>
+          </>
+        ),
+      },
+
+      {
+        q: 'What is the difference between the standard AI Summary and the AI Companion Chat?',
+        a: (
+          <>
+            <p>While both features are powered by Gemini and require the <strong>AI Companion plan</strong>, they serve distinct clinical purposes:</p>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, margin: '14px 0' }}>
+              <div className="hc-compare-box">
+                <div className="hc-compare-title"><BarChart3 size={13} /> Weekly Summary</div>
+                <ul>
+                  <li>Automated — generated every Monday</li>
+                  <li>Covers the full past 7 days of data</li>
+                  <li>Delivered as a structured bulletin to the patient's inbox</li>
+                  <li>Focuses on adherence rate, peak force trends, and overall progress direction</li>
+                </ul>
+              </div>
+              <div className="hc-compare-box hc-compare-box-indigo">
+                <div className="hc-compare-title"><MessageSquare size={13} /> AI Companion Chat</div>
+                <ul>
+                  <li>On-demand — initiated by doctor query</li>
+                  <li>Can span any custom time range</li>
+                  <li>Conversational — supports follow-up questions</li>
+                  <li>Capable of querying specific trends, e.g., <em>"Show tremor amplitude variance across the last 30 days"</em> or <em>"Compare left vs right hand endurance for October"</em></li>
+                </ul>
+              </div>
+            </div>
+            <p>Use Summaries for routine weekly monitoring. Use the Companion Chat for deep longitudinal analysis and complex clinical hypotheses.</p>
+          </>
+        ),
+      },
+
+    ],
+  }
 ]
