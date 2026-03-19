@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuthState } from "react-firebase-hooks/auth";
-import { auth } from "@/app/lib/firebase"; 
+import { auth } from "@/app/lib/firebase"; // Adjust path if needed
 import { sendEmailVerification, signOut } from "firebase/auth";
 import { Mail, CheckCircle2, RefreshCw, LogOut, AlertCircle, ArrowRight } from "lucide-react";
 
@@ -49,6 +49,7 @@ export default function VerifyEmailPage() {
     setMessage(null);
 
     try {
+     
       await user.reload(); 
       
       if (user.emailVerified) {
@@ -110,4 +111,80 @@ export default function VerifyEmailPage() {
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[600px] bg-teal-500/5 rounded-full blur-[120px] pointer-events-none" />
       <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-purple-500/5 rounded-full blur-[100px] pointer-events-none" />
 
-      <div className="max-w-md w-full relative z-10"></div>
+      <div className="max-w-md w-full relative z-10">
+        
+        {/* Main Glass Card */}
+        <div className="bg-[#0B1E33]/80 backdrop-blur-xl border border-teal-500/20 rounded-3xl p-8 md:p-10 shadow-2xl shadow-teal-900/20 text-center relative overflow-hidden">
+          
+          {/* Decorative Top Line */}
+          <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-teal-400 to-transparent opacity-50" />
+
+          {/* Glowing Mail Icon */}
+          <div className="mx-auto w-24 h-24 bg-[#080f1a] border border-teal-500/30 rounded-2xl flex items-center justify-center mb-8 mail-icon-container">
+            <Mail size={40} className="text-teal-400" strokeWidth={1.5} />
+          </div>
+
+          <h1 className="text-3xl font-bold text-white mb-3" style={{ fontFamily: "'Bebas Neue', sans-serif", letterSpacing: "0.04em" }}>
+            VERIFY YOUR <span className="text-teal-400">EMAIL</span>
+          </h1>
+          
+          <p className="text-slate-400 text-sm leading-relaxed mb-8">
+            We've sent a secure verification link to <br/>
+            <strong className="text-white font-medium">{user.email}</strong>. <br/>
+            Please click the link in that email to activate your account.
+          </p>
+
+          {/* Status Message Toast */}
+          {message && (
+            <div className={`mb-6 p-3 rounded-xl flex items-center gap-3 text-sm font-medium ${
+              message.type === 'success' ? 'bg-teal-500/10 text-teal-400 border border-teal-500/20' : 'bg-red-500/10 text-red-400 border border-red-500/20'
+            }`}>
+              {message.type === 'success' ? <CheckCircle2 size={18} /> : <AlertCircle size={18} />}
+              <span className="text-left">{message.text}</span>
+            </div>
+          )}
+
+          <div className="flex flex-col gap-4">
+            {/* Primary Action Button */}
+            <button 
+              onClick={handleCheckVerification}
+              disabled={isChecking}
+              className="w-full relative group overflow-hidden bg-gradient-to-r from-teal-500 to-cyan-600 text-[#080f1a] font-bold text-sm tracking-widest uppercase py-4 rounded-xl transition-all disabled:opacity-70 disabled:cursor-not-allowed hover:shadow-[0_0_20px_rgba(45,212,191,0.4)]"
+            >
+              <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300 ease-out" />
+              <span className="relative flex items-center justify-center gap-2">
+                {isChecking ? (
+                  <><RefreshCw size={18} className="animate-spin" /> Verifying...</>
+                ) : (
+                  <><CheckCircle2 size={18} /> I've Verified My Email</>
+                )}
+              </span>
+            </button>
+
+            {/* Resend Button */}
+            <button 
+              onClick={handleResendEmail}
+              disabled={resendCooldown > 0}
+              className="w-full py-4 rounded-xl border border-white/10 bg-white/5 text-slate-300 font-bold text-sm tracking-widest uppercase transition-all hover:bg-white/10 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+            >
+              <RefreshCw size={16} className={resendCooldown > 0 ? "opacity-50" : ""} />
+              {resendCooldown > 0 ? `Resend Available in ${resendCooldown}s` : "Resend Email"}
+            </button>
+          </div>
+
+        </div>
+
+        {/* Bottom Utility Link */}
+        <div className="mt-8 flex justify-center">
+          <button 
+            onClick={handleSignOut}
+            className="flex items-center gap-2 text-xs font-bold text-slate-500 uppercase tracking-widest hover:text-red-400 transition-colors"
+          >
+            <LogOut size={14} /> Wrong Account? Sign Out
+          </button>
+        </div>
+
+      </div>
+    </div>
+  );
+}
