@@ -134,3 +134,62 @@ export default function PatientOnboardingPage() {
               {error}
             </div>
           )}
+
+          <form onSubmit={handleSubmit} className="space-y-8">
+            
+            {/* Avatar Upload */}
+            <div className="flex flex-col items-center justify-center">
+              <div className="relative group cursor-pointer" onClick={() => fileInputRef.current?.click()}>
+                <div className={`w-28 h-28 rounded-full border-2 overflow-hidden bg-[#080f1a] flex items-center justify-center transition-all ${avatarPreview ? 'border-teal-400' : 'border-teal-500/30 border-dashed'}`}>
+                  {avatarPreview ? (
+                    <img src={avatarPreview} alt="Preview" className="w-full h-full object-cover" />
+                  ) : (
+                    <Camera size={32} className="text-teal-500/50 group-hover:text-teal-400 transition-colors" />
+                  )}
+                </div>
+                <div className="absolute inset-0 bg-black/50 rounded-full opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                  <span className="text-white text-xs font-bold tracking-wider">UPLOAD</span>
+                </div>
+              </div>
+              <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleImageChange} />
+              <p className="text-slate-500 text-xs mt-3 uppercase tracking-widest">Profile Picture (Optional)</p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Condition Dropdown */}
+              <div>
+                <label className="block text-xs font-bold text-teal-400/70 uppercase tracking-widest mb-2">Primary Condition</label>
+                <div className="relative">
+                  <select 
+                    value={condition} 
+                    onChange={e => setCondition(e.target.value)}
+                    className="w-full bg-white/5 border-b-2 border-teal-500/20 text-white p-4 rounded-t-xl outline-none appearance-none focus:border-teal-400 focus:bg-teal-500/5 transition-all cursor-pointer"
+                  >
+                    <option value="" disabled className="bg-[#0B1E33]">Select your condition...</option>
+                    {CONDITIONS.map(c => <option key={c} value={c} className="bg-[#0B1E33]">{c}</option>)}
+                  </select>
+                  <Activity size={16} className="absolute right-4 top-1/2 -translate-y-1/2 text-teal-500/50 pointer-events-none" />
+                </div>
+              </div>
+
+              {/* Affected Side */}
+              <div>
+                <label className="block text-xs font-bold text-teal-400/70 uppercase tracking-widest mb-2">Affected Side</label>
+                <div className="flex gap-2">
+                  {SIDES.map(side => (
+                    <button
+                      key={side}
+                      type="button"
+                      onClick={() => setAffectedSide(side)}
+                      className={`flex-1 py-3.5 rounded-xl text-sm font-bold tracking-wider transition-all border ${
+                        affectedSide === side 
+                          ? 'bg-teal-500/20 border-teal-400 text-teal-300 shadow-[0_0_15px_rgba(45,212,191,0.2)]' 
+                          : 'bg-white/5 border-white/5 text-slate-400 hover:bg-white/10'
+                      }`}
+                    >
+                      {side}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
