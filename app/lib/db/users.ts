@@ -1,8 +1,14 @@
 // lib/db/users.ts
 import { db } from "../firebase";
 import {
-  doc, getDoc, collection, query,
-  where, getDocs, updateDoc, Timestamp,
+  doc,
+  getDoc,
+  collection,
+  query,
+  where,
+  getDocs,
+  updateDoc,
+  Timestamp,
 } from "firebase/firestore";
 import { PatientData, DoctorData, TherapyProtocol } from "./types";
 
@@ -41,32 +47,31 @@ export async function getDoctorData(uid: string): Promise<DoctorData | null> {
 // ─────────────────────────────────────────────────────────────────────────────
 
 export const getPatientsByDoctor = async (
-  doctorId: string
+  doctorId: string,
 ): Promise<PatientData[]> => {
   const snap = await getDocs(
     query(
       collection(db, "users"),
       where("role", "==", "patient"),
-      where("assignedDoctorId", "==", doctorId)
-    )
+      where("assignedDoctorId", "==", doctorId),
+    ),
   );
-  return snap.docs.map((d) => ({ uid: d.id, ...d.data() } as PatientData));
+  return snap.docs.map((d) => ({ uid: d.id, ...d.data() }) as PatientData);
 };
 
-
 export async function getActiveProtocol(
-  patientId: string
+  patientId: string,
 ): Promise<TherapyProtocol | null> {
   const snap = await getDocs(
     query(
-      collection(db, "protocols"),    // ✅ "protocols" — correct collection name
-      where("patientId", "==", patientId)
-    )
+      collection(db, "protocols"), // ✅ "protocols" — correct collection name
+      where("patientId", "==", patientId),
+    ),
   );
   if (snap.empty) return null;
 
   const sorted = snap.docs
-    .map((d) => ({ id: d.id, ...d.data() } as TherapyProtocol))
+    .map((d) => ({ id: d.id, ...d.data() }) as TherapyProtocol)
     .sort((a, b) => b.assignedDate.seconds - a.assignedDate.seconds);
 
   return sorted[0];
@@ -79,7 +84,7 @@ export async function getActiveProtocol(
 export async function updateHardwareStatus(
   uid: string,
   status: "connected" | "offline",
-  deviceId?: string
+  deviceId?: string,
 ): Promise<void> {
   if (!uid) return;
   try {
@@ -99,7 +104,7 @@ export async function updateHardwareStatus(
 
 export async function addXpToPatient(
   uid: string,
-  xpEarned: number
+  xpEarned: number,
 ): Promise<void> {
   const snap = await getDoc(doc(db, "users", uid));
   if (!snap.exists()) return;
@@ -116,10 +121,13 @@ export async function addXpToPatient(
 // ─────────────────────────────────────────────────────────────────────────────
 
 export async function getDoctorsForListing(): Promise<
-  Pick<DoctorData, "uid" | "name" | "specialization" | "profilePictureUrl" | "doctorId">[]
+  Pick<
+    DoctorData,
+    "uid" | "name" | "specialization" | "profilePictureUrl" | "doctorId"
+  >[]
 > {
   const snap = await getDocs(
-    query(collection(db, "users"), where("role", "==", "doctor"))
+    query(collection(db, "users"), where("role", "==", "doctor")),
   );
   return snap.docs.map((d) => {
     const data = d.data();
@@ -139,7 +147,7 @@ export async function getDoctorsForListing(): Promise<
 
 export async function updateProfilePicture(
   uid: string,
-  url: string
+  url: string,
 ): Promise<void> {
   await updateDoc(doc(db, "users", uid), {
     profilePictureUrl: url,
@@ -153,9 +161,34 @@ export async function updateProfilePicture(
 
 export async function updateConnectionStatus(
   patientUid: string,
-  status: "none" | "pending" | "accepted" | "rejected"
+  status: "none" | "pending" | "accepted" | "rejected",
 ): Promise<void> {
   await updateDoc(doc(db, "users", patientUid), {
     connectionStatus: status,
+  });
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Patient settings update
+// ─────────────────────────────────────────────────────────────────────────────
+
+interface PatientSettingsUpdate {
+  name: string;
+  condition: PatientData["condition"];
+  subscriptionPlan: PatientData["subscriptionPlan"];
+  assignedDoctorId: string | null;
+  connectionStatus: PatientData["connectionStatus"];
+}
+
+export async function updatePatientSettings(
+  patientUid: string,
+  data: PatientSettingsUpdate,
+): Promise<void> {
+  await updateDoc(doc(db, "users", patientUid), {
+    name: data.name,
+    condition: data.condition,
+    subscriptionPlan: data.subscriptionPlan,
+    assignedDoctorId: data.assignedDoctorId,
+    connectionStatus: data.connectionStatus,
   });
 }
