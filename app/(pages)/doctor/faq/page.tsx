@@ -80,7 +80,57 @@ const FAQ_CATEGORIES: FAQCategory[] = [
           </>
         ),
       },
-      
-    ]
-  }
+
+    ],
+  },
+
+  {
+    id: 'protocols',
+    label: 'Clinical Protocols & Dashboards',
+    icon: <Stethoscope size={16}/>,
+    color: '#2DD4BF',
+    bg: 'rgba(45,212,191,0.08)',
+    items: [
+      {
+        q: 'How is the "Muscle Endurance Drop Percentage" calculated?',
+        a: (
+          <>
+            <p>The <strong>Muscle Endurance Drop %</strong> is a key fatigue index that quantifies motor output degradation across a single session. It is computed as follows:</p>
+            <div className="hc-formula">
+              <span className="hc-formula-label">Formula</span>
+              <p>Endurance Drop % = <strong>((Avg Peak [First 3 Squeezes] − Avg Peak [Last 3 Squeezes]) / Avg Peak [First 3 Squeezes]) × 100</strong></p>
+            </div>
+            <ol>
+              <li>The system records the <strong>peak kPa value</strong> from every squeeze event during a session.</li>
+              <li>It then isolates the first three and last three peak readings of that session.</li>
+              <li>The average of each set is computed, and the percentage difference between them represents muscular endurance degradation over the session duration.</li>
+            </ol>
+            <p>A drop of <strong>0–15%</strong> is considered clinically normal for most rehabilitation profiles. A drop exceeding <strong>25%</strong> across consecutive sessions may indicate under-recovery or inappropriate protocol difficulty, and warrants a protocol review.</p>
+            <div className="hc-note">
+              <AlertCircle size={12} />
+              Sessions with fewer than 6 total squeeze events are excluded from the Endurance Drop calculation and will display as <span className="hc-code">N/A</span> in the dashboard.
+            </div>
+          </>
+        ),
+      },
+
+      {
+        q: 'How do I adjust the difficulty for a patient who is struggling?',
+        a: (
+          <>
+            <p>Protocol difficulty adjustments are made through the patient's dedicated configuration panel and take effect immediately for the patient's next session — no session restart is required.</p>
+            <ol>
+              <li>Navigate to <span className="hc-code">My Patients → [Patient Name] → View Profile → Update Therapy Protocol</span>.</li>
+              <li>Use the <strong>Speed / Difficulty</strong> slider to reduce from the current level (e.g., <em>Hard</em> → <em>Medium</em> or <em>Easy</em>).</li>
+              <li>Enable <strong>Audio Hints</strong> to provide real-time spoken prompts that coach the patient through squeeze timing and pressure targets.</li>
+              <li>Enable <strong>Visual Path Guides</strong> to overlay on-screen trajectory assistance, reducing the cognitive load of obstacle navigation.</li>
+              <li>Optionally, reduce the <strong>Grip Force Sensitivity (MVC %)</strong> if the patient's absolute force output has declined, ensuring the game remains physically accessible.</li>
+            </ol>
+            <p>After adjusting, it is recommended to send the patient a contextual <strong>Instruction</strong> message via the Messaging Hub to explain the change and set appropriate session expectations.</p>
+          </>
+        ),
+      },
+    ],
+  },
+
 ]
