@@ -1,13 +1,13 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import Lottie from "lottie-react";
 import doctorAnimation from "@/public/animations/doctor-animation.json";
 import { signInWithDoctorId, signInWithEmail } from "@/app/lib/auth/doctorAuth";
 
-export default function DoctorSignInPage() {
+function DoctorSignInContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [loginMethod, setLoginMethod] = useState<"doctorId" | "email">(
@@ -252,5 +252,13 @@ export default function DoctorSignInPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function DoctorSignInPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-slate-900" />}>
+      <DoctorSignInContent />
+    </Suspense>
   );
 }

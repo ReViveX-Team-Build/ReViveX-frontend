@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import Lottie from "lottie-react";
@@ -10,7 +10,7 @@ import {
   signInWithEmail,
 } from "@/app/lib/auth/patientAuth";
 
-export default function PatientSignInPage() {
+function PatientSignInContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [loginMethod, setLoginMethod] = useState<"patientId" | "email">(
@@ -252,5 +252,13 @@ export default function PatientSignInPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function PatientSignInPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-slate-900" />}>
+      <PatientSignInContent />
+    </Suspense>
   );
 }
