@@ -65,3 +65,25 @@ export default function VerifyEmailPage() {
       setIsChecking(false);
     }
   };
+
+  const handleResendEmail = async () => {
+    if (!user || resendCooldown > 0) return;
+    
+    try {
+      await sendEmailVerification(user);
+      setMessage({ text: "Verification email resent! Check your spam folder.", type: "success" });
+      setResendCooldown(60); // 60 second cooldown
+    } catch (error: any) {
+      console.error("Error resending email:", error);
+      if (error.code === 'auth/too-many-requests') {
+        setMessage({ text: "Too many requests. Please wait a minute.", type: "error" });
+      } else {
+        setMessage({ text: "Failed to resend email. Please try again later.", type: "error" });
+      }
+    }
+  };
+
+  const handleSignOut = async () => {
+    await signOut(auth);
+    router.push("/");
+  };
