@@ -42,3 +42,26 @@ export default function VerifyEmailPage() {
       return () => clearTimeout(timer);
     }
   }, [resendCooldown]);
+
+  const handleCheckVerification = async () => {
+    if (!user) return;
+    setIsChecking(true);
+    setMessage(null);
+
+    try {
+      await user.reload(); 
+      
+      if (user.emailVerified) {
+        setMessage({ text: "Email verified successfully! Redirecting...", type: "success" });
+        // Since it's a patient, send them to onboarding to finish profile & pick doctor!
+        setTimeout(() => router.push("/patients/onboarding"), 1500);
+      } else {
+        setMessage({ text: "Email not verified yet. Please check your inbox.", type: "error" });
+      }
+    } catch (error) {
+      console.error("Error checking verification:", error);
+      setMessage({ text: "An error occurred while checking. Please try again.", type: "error" });
+    } finally {
+      setIsChecking(false);
+    }
+  };
