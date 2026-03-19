@@ -101,3 +101,36 @@ export default function PatientOnboardingPage() {
       setIsSubmitting(false);
     }
   };
+
+  if (loading || !user) {
+    return (
+      <div className="min-h-screen bg-[#080f1a] flex items-center justify-center">
+        <Loader2 size={40} className="text-teal-400 animate-spin" />
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-[#080f1a] flex items-center justify-center p-4 relative overflow-hidden" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+      {/* Ambient Background Glows */}
+      <div className="absolute top-0 left-0 w-[600px] h-[600px] bg-teal-500/5 rounded-full blur-[120px] pointer-events-none" />
+      <div className="absolute bottom-0 right-0 w-[600px] h-[600px] bg-purple-500/5 rounded-full blur-[100px] pointer-events-none" />
+
+      <div className="max-w-2xl w-full relative z-10 my-10">
+        <div className="bg-[#0B1E33]/80 backdrop-blur-xl border border-teal-500/20 rounded-3xl p-8 shadow-2xl shadow-teal-900/20 relative overflow-hidden">
+          
+          <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-teal-400 to-transparent opacity-50" />
+
+          <div className="text-center mb-10">
+            <div className="text-teal-400 text-xs font-bold tracking-[0.3em] uppercase mb-3">Step 2 of 2</div>
+            <h1 className="text-4xl font-bold text-white mb-3" style={{ fontFamily: "'Bebas Neue', sans-serif", letterSpacing: "0.04em" }}>
+              COMPLETE YOUR <span className="text-teal-400">PROFILE</span>
+            </h1>
+            <p className="text-slate-400 text-sm">Help your doctor tailor your recovery protocol.</p>
+          </div>
+
+          {error && (
+            <div className="mb-6 p-4 rounded-xl bg-red-500/10 text-red-400 border border-red-500/20 text-sm text-center">
+              {error}
+            </div>
+          )}
