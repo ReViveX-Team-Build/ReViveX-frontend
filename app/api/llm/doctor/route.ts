@@ -1,4 +1,3 @@
-// app/api/llm/doctor/route.ts
 import { NextResponse } from "next/server";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { getUser } from "@/app/lib/db/users";
@@ -10,102 +9,95 @@ const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
 const MODEL = "gemini-2.5-flash";
 
 export async function POST(req: Request) {
-  try {
-    const { message, uid, mode = "chat" } = await req.json();
+    try {
+      const { message, uid, mode = "chat" } = await req.json();
+  
+      if (!message || !uid) {
+        return NextResponse.json(
+          { error: "message and uid required" },
+          { status: 400 }
+        );
+      }
 
-    if (!message || !uid) {
-      return NextResponse.json(
-        { error: "message and uid required" },
-        { status: 400 }
-      );
+        const [doctor, patients, history] = await Promise.all([
+            getUser(uid),
+            getPatientsByDoctor(uid),
+            getHistoryForAI(uid, 16),
+        ]);
+
+        const cohort = await getCohortStats(uid);
+
+        const doctorName = doctor ? (doctor as any).name ?? "Doctor" : "Doctor";
+
+        const systemPrompt = buildDoctorPrompt(doctorName, cohort, mode);
+
+        const model = genAI.getGenerativeModel({
+            model: MODEL,
+            systemInstruction: systemPrompt,
+        });
+
+        const firstUserIdx = history.findIndex((m) => m.role === "user");
+        const geminiHistory = (firstUserIdx > 0 ? history.slice(firstUserIdx) : history)
+        .map((m) => ({
+            role: m.role,
+            parts: [{ text: m.content }],
+        }));
+
+        const chat = model.startChat({ history: geminiHistory });
+        const result = await chat.sendMessage(message);
+        const reply = result.response.text();
+
+        await Promise.all([
+            saveMessage(uid, "user", message),
+            saveMessage(uid, "model", reply),
+        ]);
+
+        return NextResponse.json({ reply });
+
+    } catch (err: any) {
+        console.error("Doctor LLM Route Error:", err);
+        return NextResponse.json(
+        { error: err.message ?? "AI failed to respond" },
+        { status: 500 }
+        );
+    }
     }
 
-    // ── 1. Fetch doctor + cohort data in parallel ──────────────────────────
-    const [doctor, patients, history] = await Promise.all([
-      getUser(uid),
-      getPatientsByDoctor(uid),
-      getHistoryForAI(uid, 16),
-    ]);
-
-    // ── 2. Compute cohort stats for the AI prompt ──────────────────────────
-    const cohort = await getCohortStats(uid);
-
-    const doctorName = doctor ? (doctor as any).name ?? "Doctor" : "Doctor";
-
-    // ── 3. Build system prompt based on mode ──────────────────────────────
-    const systemPrompt = buildDoctorPrompt(doctorName, cohort, mode);
-
-    // ── 4. Call Gemini with full chat history ─────────────────────────────
-    const model = genAI.getGenerativeModel({
-      model: MODEL,
-      systemInstruction: systemPrompt,
-    });
-
-    // Filter history so it starts with a user turn (Gemini rule)
-    const firstUserIdx = history.findIndex((m) => m.role === "user");
-    const geminiHistory = (firstUserIdx > 0 ? history.slice(firstUserIdx) : history)
-      .map((m) => ({
-        role: m.role,
-        parts: [{ text: m.content }],
-      }));
-
-    const chat = model.startChat({ history: geminiHistory });
-    const result = await chat.sendMessage(message);
-    const reply = result.response.text();
-
-    // ── 5. Save both turns to Firestore ───────────────────────────────────
-    await Promise.all([
-      saveMessage(uid, "user", message),
-      saveMessage(uid, "model", reply),
-    ]);
-
-    return NextResponse.json({ reply });
-
-  } catch (err: any) {
-    console.error("Doctor LLM Route Error:", err);
-    return NextResponse.json(
-      { error: err.message ?? "AI failed to respond" },
-      { status: 500 }
-    );
-  }
-}
-
-// ── System prompt builder ──────────────────────────────────────────────────
 function buildDoctorPrompt(
-  doctorName: string,
-  cohort: Awaited<ReturnType<typeof getCohortStats>>,
-  mode: string
-): string {
-
-  const base = `
-You are ReViveX Clinical AI, a medical decision-support assistant for Dr. ${doctorName}.
-
-COHORT OVERVIEW:
-- Total active patients: ${cohort.totalPatients}
-- Average adherence this week: ${cohort.avgAdherencePercent}%
-- High adherence (>80%): ${cohort.highAdherence} patients
-- Medium adherence (50-80%): ${cohort.mediumAdherence} patients  
-- Low adherence (<50%): ${cohort.lowAdherence} patients
-- Missed sessions this week: ${cohort.missedSessionsTotal}
-- Devices currently offline: ${cohort.devicesOffline}
-- Average grip improvement this week: ${cohort.avgGripImprovement > 0 ? "+" : ""}${cohort.avgGripImprovement}%
-
-PATIENTS REQUIRING ATTENTION (declining adherence):
-${
-  cohort.decliningPatients.length > 0
-    ? cohort.decliningPatients
-        .map(
-          (p, i) =>
-            `${i + 1}. ${p.name} (${p.uid}) — ${p.condition}, adherence: ${p.adherencePercent}%, last session: ${
-              p.lastSessionDate
-                ? p.lastSessionDate.toLocaleDateString()
-                : "never"
-            }`
-        )
-        .join("\n")
-    : "No patients currently flagged as declining."
-}
-`;
+    doctorName: string,
+    cohort: Awaited<ReturnType<typeof getCohortStats>>,
+    mode: string
+  ): string {
+  
+    const base = `
+  You are ReViveX Clinical AI, a medical decision-support assistant for Dr. ${doctorName}.
+  
+  COHORT OVERVIEW:
+  - Total active patients: ${cohort.totalPatients}
+  - Average adherence this week: ${cohort.avgAdherencePercent}%
+  - High adherence (>80%): ${cohort.highAdherence} patients
+  - Medium adherence (50-80%): ${cohort.mediumAdherence} patients  
+  - Low adherence (<50%): ${cohort.lowAdherence} patients
+  - Missed sessions this week: ${cohort.missedSessionsTotal}
+  - Devices currently offline: ${cohort.devicesOffline}
+  - Average grip improvement this week: ${cohort.avgGripImprovement > 0 ? "+" : ""}${cohort.avgGripImprovement}%
+  
+  PATIENTS REQUIRING ATTENTION (declining adherence):
+  ${
+    cohort.decliningPatients.length > 0
+      ? cohort.decliningPatients
+          .map(
+            (p, i) =>
+              `${i + 1}. ${p.name} (${p.uid}) — ${p.condition}, adherence: ${p.adherencePercent}%, last session: ${
+                p.lastSessionDate
+                  ? p.lastSessionDate.toLocaleDateString()
+                  : "never"
+              }`
+          )
+          .join("\n")
+      : "No patients currently flagged as declining."
+  }
+  `;
 
   const modeInstructions: Record<string, string> = {
     chat: `
