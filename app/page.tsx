@@ -24,7 +24,7 @@ import {
 
   Cpu, Heart, Brain, Zap, BarChart3, Waves,
 
-  Mail, Phone, Globe, Linkedin, Instagram,
+  Mail, Phone, Globe, Linkedin, Instagram, Github, Facebook, Cloud,
 
   CheckCircle2, Sparkles, Activity, Shield, TrendingUp, Star,
 
@@ -2979,6 +2979,46 @@ function NeuralBridge() {
 
 
 
+// ══ INTERACTIVE TABLET ══════════════════════════════════════════════════════
+function InteractiveTablet() {
+  const TABLET_CSS = `
+    .tablet-wrapper{display:flex;justify-content:center;align-items:center;padding:40px 40px 160px;}
+    .tablet-card{position:relative;width:100%;max-width:900px;aspect-ratio:16/10;background:#040914;border-radius:24px;padding:16px;box-shadow:0 30px 60px rgba(0,0,0,.6),inset 0 1px 1px rgba(255,255,255,.10),0 0 0 1px rgba(45,212,191,.2);transition:all 0.8s cubic-bezier(.22,1,.36,1);z-index:10;}
+    .tablet-screen{width:100%;height:100%;border-radius:12px;overflow:hidden;position:relative;background:#000;}
+    .tablet-screen img{width:100%;height:100%;object-fit:cover;transition:transform 1s ease;display:block;}
+    .tablet-screen::after{content:"";position:absolute;inset:0;background:linear-gradient(135deg,rgba(255,255,255,.10) 0%,rgba(255,255,255,0) 40%);pointer-events:none;}
+    .tech-layer{position:absolute;padding:16px;background:rgba(8,15,26,.95);border-radius:24px;box-shadow:-10px 10px 30px rgba(0,0,0,.5);transform-origin:bottom left;transition:all 0.8s cubic-bezier(.22,1,.36,1);display:flex;align-items:flex-start;justify-content:flex-end;opacity:0;z-index:-1;}
+    .tech-layer::before{content:"";position:absolute;inset:0;border-radius:inherit;padding:2px;-webkit-mask:linear-gradient(#fff 0 0) content-box,linear-gradient(#fff 0 0);-webkit-mask-composite:xor;mask-composite:exclude;opacity:.8;}
+    .layer-1{width:70%;height:70%;bottom:0;left:0;}
+    .layer-1::before{background:linear-gradient(135deg,#2DD4BF,transparent);}
+    .layer-1 .tlicon{color:#2DD4BF;}
+    .layer-2{width:50%;height:50%;bottom:0;left:0;transition-delay:.05s;}
+    .layer-2::before{background:linear-gradient(135deg,#a78bfa,transparent);}
+    .layer-2 .tlicon{color:#a78bfa;}
+    .layer-3{width:30%;height:30%;bottom:0;left:0;transition-delay:.10s;}
+    .layer-3::before{background:linear-gradient(135deg,#fbbf24,transparent);}
+    .layer-3 .tlicon{color:#fbbf24;}
+    .tablet-wrapper:hover .tablet-card{transform:translateY(-20px) scale(1.02);box-shadow:0 50px 80px rgba(0,0,0,.8),0 0 60px rgba(45,212,191,.15);}
+    .tablet-wrapper:hover .tablet-screen img{transform:scale(1.05);}
+    .tablet-wrapper:hover .layer-1{bottom:-40px;left:-40px;opacity:1;}
+    .tablet-wrapper:hover .layer-2{bottom:-80px;left:-80px;opacity:1;}
+    .tablet-wrapper:hover .layer-3{bottom:-120px;left:-120px;opacity:1;}
+  `;
+  return (
+    <div className="tablet-wrapper">
+      <style>{TABLET_CSS}</style>
+      <div className="tablet-card">
+        <div className="tech-layer layer-1"><div className="tlicon"><Cpu size={32}/></div></div>
+        <div className="tech-layer layer-2"><div className="tlicon"><Brain size={32}/></div></div>
+        <div className="tech-layer layer-3"><div className="tlicon"><Cloud size={32}/></div></div>
+        <div className="tablet-screen">
+          <img src="/images/fishgame.jpg" alt="ReViveX Gameplay" />
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function SolutionSection() {
   return (
     <section id="solution" data-theme="dark" style={{ background: "linear-gradient(180deg, #04101a 0%, #061421 60%, #060e1a 100%)", padding: "120px 40px", position: "relative", overflow: "hidden" }}>
@@ -2993,32 +3033,50 @@ function SolutionSection() {
       <div style={{ position: "absolute", bottom: 0, left: 0, width: 400, height: 400, pointerEvents: "none", background: "radial-gradient(circle at bottom left, rgba(45,212,191,.04), transparent 70%)" }} />
 
       <div style={{ maxWidth: 1280, margin: "0 auto" }}>
-        <Reveal dir="up" style={{ textAlign: "center", marginBottom: 72 }}>
+        <Reveal dir="up" style={{ textAlign: "center", marginBottom: 24 }}>
           <div className="fM" style={{ fontSize: 9, color: "rgba(45,212,191,.55)", textTransform: "uppercase", letterSpacing: ".32em", marginBottom: 16 }}>The Innovation</div>
-          <h2 className="fB" style={{ fontSize: "clamp(3rem,8vw,7.5rem)", letterSpacing: ".03em", lineHeight: .88, color: "#fff" }}>
-            YOU DON'T DO<br /><span style={{ color: "#2DD4BF" }}>EXERCISES.</span><br />YOU <span style={{ color: "#2DD4BF" }}>PLAY GAMES.</span>
-          </h2>
+        </Reveal>
+        <Reveal dir="zoom" style={{ marginBottom: 48 }}>
+          <VaporizeTextCycle
+            texts={["YOU DON'T DO EXERCISES.", "YOU PLAY GAMES.", "YOU HEAL FASTER.", "THERAPY REIMAGINED."]}
+            fontSize={96}
+            color="#2DD4BF"
+            fontFamily="'Syne',sans-serif"
+            style={{ minHeight: "180px" }}
+          />
         </Reveal>
 {/* EXPANDED TABLET/GAMEPLAY CONTAINER */}
-        <Reveal dir="zoom" style={{ marginBottom: 60, display: "flex", justifyContent: "center" }}>
-          <div style={{ 
-            borderRadius: 36, 
-            overflow: "hidden", 
-            border: "1px solid rgba(45,212,191,.14)", 
-            boxShadow: "0 40px 100px rgba(0,0,0,.5)", 
-            width: "90vw", 
-            maxWidth: 1000 
+        <Reveal dir="up" style={{ marginBottom: 60, display:"flex", justifyContent:"center" }}>
+          <div style={{
+            position:"relative", width:"90vw", maxWidth:1000, borderRadius:32,
+            overflow:"hidden", border:"1px solid rgba(45,212,191,.22)",
+            boxShadow:"0 0 0 1px rgba(45,212,191,.08), 0 40px 100px rgba(0,0,0,.6), 0 0 60px rgba(45,212,191,.08)",
+            background:"#040914",
           }}>
-            <img 
-              src="/image/fishgame.jpeg" 
-              alt="ReViveX Gameplay" 
-              style={{ 
-                width: "100%", 
-                height: "460px", 
-                objectFit: "cover", 
-                display: "block" 
-              }} 
+            {/* Screen glare */}
+            <div style={{ position:"absolute",inset:0,zIndex:2,pointerEvents:"none",
+              background:"linear-gradient(135deg,rgba(255,255,255,.06) 0%,transparent 40%)" }} />
+            {/* Teal scan line */}
+            <div className="scanline" style={{ zIndex:3 }} />
+            <img
+              src="/images/fishgame.jpg"
+              alt="ReViveX Gameplay — Fish Game"
+              style={{ width:"100%", height:480, objectFit:"cover", display:"block" }}
             />
+            {/* Bottom HUD strip */}
+            <div style={{
+              position:"absolute", bottom:0, left:0, right:0, zIndex:4,
+              padding:"14px 24px", display:"flex", justifyContent:"space-between", alignItems:"center",
+              background:"linear-gradient(to top,rgba(4,9,20,.92),transparent)",
+            }}>
+              <div className="fM" style={{ fontSize:8, color:"rgba(45,212,191,.7)", letterSpacing:".28em", textTransform:"uppercase" }}>
+                ReViveX · Grip Therapy Game
+              </div>
+              <div style={{ display:"flex", gap:6, alignItems:"center" }}>
+                <div style={{ width:6, height:6, borderRadius:"50%", background:"#2DD4BF", boxShadow:"0 0 8px #2DD4BF", animation:"blink .85s step-end infinite" }} />
+                <div className="fM" style={{ fontSize:8, color:"rgba(45,212,191,.55)", letterSpacing:".18em" }}>LIVE SESSION</div>
+              </div>
+            </div>
           </div>
         </Reveal>
 
@@ -3068,16 +3126,17 @@ function OfferSection() {
 
       <div style={{ maxWidth: 1280, margin: "0 auto" }}>
 
-        <Reveal dir="left" style={{ marginBottom: 60 }}>
-
+        <Reveal dir="left" style={{ marginBottom: 16 }}>
           <div className="fM" style={{ fontSize: 9, color: "rgba(167,139,250,.8)", textTransform: "uppercase", letterSpacing: ".3em", marginBottom: 12 }}>What We Offer</div>
-
-          <h2 className="fB" style={{ fontSize: "clamp(3rem,7vw,6.5rem)", letterSpacing: ".03em", lineHeight: .9, color: "#fff" }}>
-
-            EVERYTHING YOUR<br /><span style={{ color: "#a78bfa" }}>RECOVERY NEEDS.</span>
-
-          </h2>
-
+        </Reveal>
+        <Reveal dir="zoom" style={{ marginBottom: 48 }}>
+          <VaporizeTextCycle
+            texts={["EVERYTHING YOUR RECOVERY NEEDS.", "ALL IN ONE DEVICE.", "MOTOR. COGNITIVE. CONNECTED.", "NOTHING LIKE THIS EXISTS."]}
+            fontSize={96}
+            color="#a78bfa"
+            fontFamily="'Syne',sans-serif"
+            style={{ minHeight: "180px" }}
+          />
         </Reveal>
 
 
@@ -3311,16 +3370,17 @@ function WhySection() {
 
       <div style={{ maxWidth: 1280, margin: "0 auto" }}>
 
-        <Reveal dir="zoom" style={{ textAlign: "center", marginBottom: 72 }}>
-
+        <Reveal dir="zoom" style={{ textAlign: "center", marginBottom: 24 }}>
           <div className="fM" style={{ fontSize: 9, color: "rgba(251,191,36,.75)", textTransform: "uppercase", letterSpacing: ".32em", marginBottom: 16 }}>Why ReViveX</div>
-
-          <h2 className="fB" style={{ fontSize: "clamp(3rem,8vw,7rem)", letterSpacing: ".03em", lineHeight: .9, color: "#fff" }}>
-
-            NOT ANOTHER<br /><span style={{ color: "#fbbf24" }}>REHAB GADGET.</span>
-
-          </h2>
-
+        </Reveal>
+        <Reveal dir="zoom" style={{ marginBottom: 48, textAlign: "center" }}>
+          <VaporizeTextCycle
+            texts={["NOT ANOTHER REHAB GADGET.", "THIS CHANGES EVERYTHING.", "BUILT FOR REAL PATIENTS.", "SCIENCE. GAMES. RESULTS."]}
+            fontSize={96}
+            color="#fbbf24"
+            fontFamily="'Syne',sans-serif"
+            style={{ minHeight: "180px" }}
+          />
         </Reveal>
 
         <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
@@ -3430,6 +3490,172 @@ function MarqueeStrip() {
 
 
 
+// ══ ISOMETRIC SOCIALS ════════════════════════════════════════════════════════
+function IsometricSocials() {
+  const ISO_CSS = `
+    .iso-card{display:flex;gap:1.5rem;list-style:none;padding:0;margin:0;flex-wrap:wrap;}
+    .iso-pro{position:relative;cursor:pointer;transition:0.5s;width:55px;height:55px;}
+    .iso-pro .iso-icon{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;border-radius:50%;border:1px solid rgba(255,255,255,0.15);background:rgba(255,255,255,0.05);backdrop-filter:blur(10px);transition:all 0.3s ease-out;z-index:4;color:rgba(255,255,255,0.6);box-shadow:inset 0 0 10px rgba(255,255,255,0.05),0 5px 10px rgba(0,0,0,0.3);}
+    .iso-pro:hover .iso-icon{transform:translate(12px,-12px);color:var(--clr);border-color:var(--clr);background:rgba(8,15,26,0.9);box-shadow:inset 0 0 20px rgba(255,255,255,0.1),0 10px 20px rgba(0,0,0,0.5);}
+    .iso-pro .iso-text{position:absolute;opacity:0;z-index:5;transition:all 0.3s ease-out;color:var(--clr);background:rgba(8,15,26,0.95);border:1px solid var(--clr);padding:4px 10px;border-radius:6px;font-size:10px;font-weight:bold;letter-spacing:0.15em;text-transform:uppercase;top:-10px;left:100%;pointer-events:none;box-shadow:0 5px 15px rgba(0,0,0,0.5);white-space:nowrap;}
+    .iso-pro:hover .iso-text{opacity:1;transform:translate(5px,-5px) skew(-5deg);}
+    .iso-pro span{position:absolute;inset:0;border-radius:50%;transition:all 0.3s ease-out;opacity:0;border:1px solid var(--clr);background:rgba(8,15,26,0.5);}
+    .iso-pro:hover span{opacity:1;}
+    .iso-pro:hover span:nth-child(1){opacity:0.2;transform:translate(0,0);}
+    .iso-pro:hover span:nth-child(2){opacity:0.4;transform:translate(4px,-4px);}
+    .iso-pro:hover span:nth-child(3){opacity:0.6;transform:translate(8px,-8px);}
+  `;
+  const socials = [
+    { name:"LinkedIn",  icon:<Linkedin  size={22}/>, color:"#0077b5", href:"#" },
+    { name:"Instagram", icon:<Instagram size={22}/>, color:"#E1306C", href:"#" },
+    { name:"GitHub",    icon:<Github    size={22}/>, color:"#2DD4BF", href:"#" },
+    { name:"Facebook",  icon:<Facebook  size={22}/>, color:"#1877f2", href:"#" },
+  ];
+  return (
+    <>
+      <style>{ISO_CSS}</style>
+      <ul className="iso-card">
+        {socials.map((s,i) => (
+          <li key={i} className="iso-pro" style={{"--clr":s.color} as any}>
+            <span/><span/><span/>
+            <a href={s.href} className="iso-icon" aria-label={s.name}>{s.icon}</a>
+            <div className="iso-text fM">{s.name}</div>
+          </li>
+        ))}
+      </ul>
+    </>
+  );
+}
+
+// ══ MAGNETIC TEXT — morphing cursor hover reveal ════════════════════════════
+function MagneticText({
+  text = "CREATIVE",
+  hoverText = "EXPLORE",
+  className = "",
+  style = {},
+}: {
+  text: string;
+  hoverText?: string;
+  className?: string;
+  style?: React.CSSProperties;
+}) {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const circleRef    = useRef<HTMLDivElement>(null);
+  const innerTextRef = useRef<HTMLDivElement>(null);
+  const [isHovered, setIsHovered] = useState(false);
+  const [containerSize, setContainerSize] = useState({ width:0, height:0 });
+  const mousePos   = useRef({ x:0, y:0 });
+  const currentPos = useRef({ x:0, y:0 });
+  const rafRef     = useRef<number>(0);
+
+  useEffect(() => {
+    const update = () => {
+      if (containerRef.current)
+        setContainerSize({ width:containerRef.current.offsetWidth, height:containerRef.current.offsetHeight });
+    };
+    update();
+    window.addEventListener("resize", update);
+    return () => window.removeEventListener("resize", update);
+  }, []);
+
+  useEffect(() => {
+    const lerp = (a:number, b:number, t:number) => a+(b-a)*t;
+    const tick = () => {
+      currentPos.current.x = lerp(currentPos.current.x, mousePos.current.x, 0.15);
+      currentPos.current.y = lerp(currentPos.current.y, mousePos.current.y, 0.15);
+      if (circleRef.current)
+        circleRef.current.style.transform = `translate(${currentPos.current.x}px,${currentPos.current.y}px) translate(-50%,-50%)`;
+      if (innerTextRef.current)
+        innerTextRef.current.style.transform = `translate(${-currentPos.current.x}px,${-currentPos.current.y}px)`;
+      rafRef.current = requestAnimationFrame(tick);
+    };
+    rafRef.current = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(rafRef.current);
+  }, []);
+
+  const onMove = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
+    if (!containerRef.current) return;
+    const r = containerRef.current.getBoundingClientRect();
+    mousePos.current = { x: e.clientX - r.left, y: e.clientY - r.top };
+  }, []);
+
+  const onEnter = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
+    if (!containerRef.current) return;
+    const r = containerRef.current.getBoundingClientRect();
+    const x = e.clientX - r.left, y = e.clientY - r.top;
+    mousePos.current = { x, y };
+    currentPos.current = { x, y };
+    setIsHovered(true);
+  }, []);
+
+  return (
+    <div ref={containerRef} onMouseMove={onMove} onMouseEnter={onEnter} onMouseLeave={() => setIsHovered(false)}
+      className={className} style={{ position:"relative", display:"inline-flex", alignItems:"center",
+        justifyContent:"center", cursor:"none", userSelect:"none", ...style }}>
+      <span>{text}</span>
+      <div ref={circleRef} style={{
+        position:"absolute", top:0, left:0, pointerEvents:"none", borderRadius:"50%",
+        overflow:"hidden", backgroundColor:"#2DD4BF",
+        width: isHovered ? 160 : 0, height: isHovered ? 160 : 0,
+        transition:"width .5s cubic-bezier(.33,1,.68,1), height .5s cubic-bezier(.33,1,.68,1)",
+        willChange:"transform, width, height",
+      }}>
+        <div ref={innerTextRef} style={{
+          position:"absolute", display:"flex", alignItems:"center", justifyContent:"center",
+          width: containerSize.width, height: containerSize.height, top:"50%", left:"50%",
+          willChange:"transform",
+        }}>
+          <span style={{ color:"#080f1a", whiteSpace:"nowrap" }}>{hoverText}</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ══ TYPEWRITER EFFECT SMOOTH ═════════════════════════════════════════════════
+function TypewriterEffectSmooth({
+  words,
+  className = "",
+  cursorClassName = "",
+}: {
+  words: { text: string; className?: string }[];
+  className?: string;
+  cursorClassName?: string;
+}) {
+  const wordsArray = words.map(w => ({ ...w, text: w.text.split("") }));
+  return (
+    <div style={{ display:"flex", alignItems:"center", gap:4, margin:"8px 0" }} className={className}>
+      <motion.div
+        style={{ overflow:"hidden", paddingBottom:8 }}
+        initial={{ width:"0%" }}
+        whileInView={{ width:"fit-content" }}
+        viewport={{ once:true }}
+        transition={{ duration:1.5, ease:"linear", delay:0.3 }}
+      >
+        <div style={{ whiteSpace:"nowrap" }}>
+          {wordsArray.map((word, wi) => (
+            <span key={wi} style={{ display:"inline-block" }}>
+              {word.text.map((char, ci) => (
+                <span key={ci} className={word.className || ""} style={!word.className ? { color:"#fff" } : {}}>
+                  {char}
+                </span>
+              ))}
+              {" "}
+            </span>
+          ))}
+        </div>
+      </motion.div>
+      <motion.span
+        initial={{ opacity:0 }}
+        animate={{ opacity:1 }}
+        transition={{ duration:0.8, repeat:Infinity, repeatType:"reverse" }}
+        style={{ display:"block", width:4, height:"1em", borderRadius:2, backgroundColor:"#2DD4BF", boxShadow:"0 0 10px #2DD4BF", flexShrink:0 }}
+        className={cursorClassName}
+      />
+    </div>
+  );
+}
+
 function Footer() {
 
   const [form, setForm] = useState({ name: "", email: "", msg: "" });
@@ -3485,16 +3711,20 @@ function Footer() {
 
         <div style={{ textAlign: "center", marginBottom: 80, lineHeight: .9, overflow: "hidden" }}>
 
-          <div className="fB" style={{ fontSize: "clamp(3rem,10vw,9rem)", letterSpacing: ".03em", overflow: "hidden" }}>
-
-            <SplitText text="LET'S REWIRE" style={{ color: "#fff" }} delay={0} stagger={.042} />
-
-          </div>
-
-          <div className="fB" style={{ fontSize: "clamp(3rem,10vw,9rem)", letterSpacing: ".03em", overflow: "hidden" }}>
-
-            <SplitText text="THE FUTURE." style={{ color: "#2DD4BF" }} delay={.34} stagger={.042} />
-
+          <div className="fB" style={{ fontSize:"clamp(3rem,10vw,9rem)", letterSpacing:".03em",
+            lineHeight:1, display:"flex", flexDirection:"column", alignItems:"center", gap:4 }}>
+            <MagneticText
+              text="LET'S REWIRE"
+              hoverText="YOUR BRAIN."
+              className="fB"
+              style={{ fontSize:"clamp(3rem,10vw,9rem)", letterSpacing:".03em", color:"#fff" }}
+            />
+            <MagneticText
+              text="THE FUTURE."
+              hoverText="START TODAY."
+              className="fB"
+              style={{ fontSize:"clamp(3rem,10vw,9rem)", letterSpacing:".03em", color:"#2DD4BF" }}
+            />
           </div>
 
         </div>
@@ -3601,22 +3831,12 @@ function Footer() {
 
                   </div>
 
-                  <MagButton type="submit"
-
-                    className="btn-shim fB"
-
-                    style={{
-                      position: "relative", overflow: "hidden", width: "100%", padding: "18px",
-
-                      borderRadius: 16, fontSize: 15, letterSpacing: ".12em",
-
-                      background: "#2DD4BF", color: "#080f1a", border: "none",
-
-                      boxShadow: "0 0 44px rgba(45,212,191,.3)"
+                  <MagButton type="submit" className="fB sweep-btn sweep-teal" style={{
+                      width:"100%", padding:"16px", borderRadius:14,
+                      fontSize:15, letterSpacing:".12em", justifyContent:"center",
                     }}>
-
-                    <span style={{ position: "relative", zIndex: 1 }}>SEND MESSAGE</span>
-
+                    <span className="sweep-bar" style={{ background:"rgba(45,212,191,.6)", boxShadow:"0 0 10px 10px rgba(45,212,191,.25)" }} />
+                    <span style={{ position:"relative", zIndex:1 }}>SEND MESSAGE</span>
                   </MagButton>
 
                 </form>
@@ -3633,20 +3853,24 @@ function Footer() {
 
           <Reveal dir="right" delay={.15} style={{ paddingTop: 8 }}>
 
-            <h3 className="fB" style={{
-              fontSize: "clamp(1.8rem,3vw,2.8rem)", color: "#fff",
-
-              letterSpacing: ".04em", lineHeight: 1.1, marginBottom: 22
-            }}>
-
-              DESIGNED FOR PATIENTS.<br /><span style={{ color: "#2DD4BF" }}>BUILT FOR IMPACT.</span>
-
-            </h3>
+            <TypewriterEffectSmooth
+              className="fB"
+              cursorClassName=""
+              words={[
+                { text: "DESIGNED" },
+                { text: "FOR" },
+                { text: "PATIENTS." },
+                { text: "BUILT",   className: "tw-teal" },
+                { text: "FOR",     className: "tw-teal" },
+                { text: "IMPACT.", className: "tw-teal" },
+              ]}
+            />
+            <style dangerouslySetInnerHTML={{ __html: `.tw-teal { color: #2DD4BF !important; }` }} />
 
             <p className="fS" style={{
               fontSize: 15, color: "rgba(255,255,255,.78)",
 
-              lineHeight: 1.75, fontWeight: 300, marginBottom: 42
+              lineHeight: 1.75, fontWeight: 300, marginBottom: 42, marginTop: -10
             }}>
 
               Whether you're a clinician, a hospital administrator, or a patient wanting
@@ -3701,36 +3925,8 @@ function Footer() {
 
             ))}
 
-            <div style={{ display: "flex", gap: 12, marginTop: 22 }}>
-
-              {[
-
-                { icon: <Linkedin size={17} />, href: "#", label: "LinkedIn" },
-
-                { icon: <Instagram size={17} />, href: "#", label: "Instagram" },
-
-              ].map(s => (
-
-                <motion.a key={s.label} href={s.href} data-mag aria-label={s.label}
-
-                  whileHover={{ y: -5, scale: 1.12 }}
-
-                  style={{
-                    width: 50, height: 50, borderRadius: 16, textDecoration: "none",
-
-                    display: "flex", alignItems: "center", justifyContent: "center",
-
-                    background: "rgba(255,255,255,.04)", border: "1px solid rgba(255,255,255,.07)",
-
-                    color: "rgba(255,255,255,.70)"
-                  }}>
-
-                  {s.icon}
-
-                </motion.a>
-
-              ))}
-
+            <div style={{ marginTop: 32 }}>
+              <IsometricSocials />
             </div>
 
           </Reveal>
