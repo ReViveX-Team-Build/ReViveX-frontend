@@ -155,3 +155,55 @@ const CSS = `
 
   .avatar-ring { animation:glow 3s ease-in-out infinite; }
 `;
+
+export default function PatientProfilePage() {
+  const router = useRouter();
+  const [user, setUser]                   = useState<User | null>(null);
+  const [data, setData]                   = useState<PatientProfile>(EMPTY);
+  const [draft, setDraft]                 = useState<PatientProfile>(EMPTY);
+  const [isLoading, setIsLoading]         = useState(true);
+  const [isSaving, setIsSaving]           = useState(false);
+  const [isUploading, setIsUploading]     = useState(false);
+  const [toast, setToast]                 = useState("");
+  const [avatarPreview, setAvatarPreview] = useState("");
+  const fileRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    const unsub = auth.onAuthStateChanged((u: User | null) => {
+      if (!u) { router.replace("/auth/patient/signin"); return; }
+      setUser(u);
+    });
+    return () => unsub();
+  }, [router]);
+
+  useEffect(() => {
+    if (!user) return;
+    (async () => {
+      setIsLoading(true);
+      try {
+        const snap = await getDoc(doc(db, "users", user.uid));
+        const raw  = snap.exists() ? snap.data() : {};
+        const g    = raw.gamification || {};
+        const profile: PatientProfile = {
+          name:              raw.name                || user.displayName || "",
+          email:             raw.email               || user.email       || "",
+          phone:             raw.phone               || "",
+          goals:             raw.goals               || "",
+          bio:               raw.bio                 || "",
+          condition:         raw.condition           || "",
+          affectedSide:      raw.affectedSide        || "",
+          streak:            g.currentStreak         || 0,
+          totalXp:           g.totalXp               || 0,
+          assignedProtocol:  raw.assignedProtocol    || "Not Assigned",
+          nextAppointment:   raw.nextAppointment     || "—",
+          profilePictureUrl: raw.profilePictureUrl   || user.photoURL    || "", 
+          unlockedLevels:    g.unlockedLevels        || [],
+          completedSessions: raw.completedSessions   || 0,
+          joinedAt:          raw.createdAt?.toDate?.()?.toISOString?.() || "",
+        };
+        setData(profile); setDraft(profile);
+        if (profile.profilePictureUrl) setAvatarPreview(profile.profilePictureUrl);
+      } catch (e) { console.error(e); }
+      finally { setIsLoading(false); }
+    })();
+  }, [user]);
