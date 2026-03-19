@@ -26,7 +26,7 @@ import {
 
   Mail, Phone, Globe, Linkedin, Instagram, Github, Facebook, Cloud,
 
-  CheckCircle2, Sparkles, Activity, Shield, TrendingUp, Star, X 
+  CheckCircle2, Sparkles, Activity, Shield, TrendingUp, Star, X
 
 } from "lucide-react";
 
