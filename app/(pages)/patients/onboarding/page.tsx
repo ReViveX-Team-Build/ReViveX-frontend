@@ -26,3 +26,37 @@ export default function PatientOnboardingPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // 1. Auth Guard & Fetch Doctors
+  useEffect(() => {
+    if (!loading && !user) {
+      router.replace("/auth/patient/signin");
+      return;
+    }
+
+    const fetchDoctors = async () => {
+      try {
+        const q = query(collection(db, "users"), where("role", "==", "doctor"));
+        const snapshot = await getDocs(q);
+        const docsList = snapshot.docs.map(d => ({
+          id: d.id,
+          name: d.data().name || "Unknown Doctor",
+          specialization: d.data().specialization || "General"
+        }));
+        setDoctors(docsList);
+      } catch (err) {
+        console.error("Failed to fetch doctors:", err);
+      }
+    };
+
+    if (user) fetchDoctors();
+  }, [user, loading, router]);
+
+  // 2. Handle Image Selection
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+      setAvatarFile(file);
+      setAvatarPreview(URL.createObjectURL(file));
+    }
+  };
