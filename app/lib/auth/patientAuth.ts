@@ -1,11 +1,20 @@
 import { auth, db } from "../firebase";
-import { 
-  createUserWithEmailAndPassword, 
+import {
+  createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
   signOut,
   sendEmailVerification 
 } from "firebase/auth";
-import { doc, setDoc, getDoc, query, collection, where, getDocs, Timestamp } from "firebase/firestore";
+import {
+  doc,
+  setDoc,
+  getDoc,
+  query,
+  collection,
+  where,
+  getDocs,
+  Timestamp,
+} from "firebase/firestore";
 
 
 interface PatientData {
@@ -33,8 +42,8 @@ interface PatientData {
 
 // --- SIGN UP PATIENT ---
 export const registerPatient = async (
-  email: string, 
-  password: string, 
+  email: string,
+  password: string,
   name: string,
   doctorId: string = "" 
 ) => {
@@ -100,6 +109,19 @@ export const registerPatient = async (
       errorMessage = "Password should be at least 6 characters";
     } else if (error.code === "auth/invalid-email") {
       errorMessage = "Invalid email address";
+    } else if (error.code === "auth/operation-not-allowed") {
+      errorMessage =
+        "Email/password sign-up is disabled in Firebase Authentication.";
+    } else if (error.code === "auth/network-request-failed") {
+      errorMessage =
+        "Network error. Check your internet connection and try again.";
+    } else if (error.code === "auth/too-many-requests") {
+      errorMessage = "Too many attempts. Please try again later.";
+    } else if (error.code === "auth/invalid-api-key") {
+      errorMessage =
+        "Firebase API key is invalid. Check your .env.local configuration.";
+    } else if (error.code) {
+      errorMessage = `Registration failed (${error.code})`;
     }
     return { success: false, status: "FAILED", error: errorMessage, code: error.code };
   }
@@ -109,9 +131,12 @@ export const registerPatient = async (
 export const signInWithPatientId = async (patientId: string, password: string) => {
   try {
     const usersRef = collection(db, "users");
-    const q = query(usersRef, where("patientId", "==", patientId.toLowerCase()));
+    const q = query(
+      usersRef,
+      where("patientId", "==", patientId.toLowerCase()),
+    );
     const querySnapshot = await getDocs(q);
-    
+
     if (querySnapshot.empty) {
       return { success: false, error: "Patient ID not found" };
     }
@@ -139,12 +164,12 @@ export const signInWithEmail = async (email: string, password: string) => {
   try {
     const userCredential = await signInWithEmailAndPassword(auth, email, password);
     const userDoc = await getDoc(doc(db, "users", userCredential.user.uid));
-    
+
     if (!userDoc.exists()) {
       await signOut(auth);
       return { success: false, error: "User profile not found" };
     }
-    
+
     const userData = userDoc.data();
     if (userData.role !== "patient") {
       await signOut(auth);

@@ -24,12 +24,19 @@ import {
   Stethoscope,
   Bell,
 } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 type BreakPoint = "mobile" | "tablet" | "desktop";
+type NavItem = {
+  icon: LucideIcon;
+  label: string;
+  href: string;
+  badge: string | null;
+};
 
 // ─── Nav data ─────────────────────────────────────────────────────────────────
-const navItems = [
+const navItems: NavItem[] = [
   {
     icon: LayoutDashboard,
     label: "Dashboard",
@@ -223,7 +230,7 @@ function SidebarContent({
   collapsed: boolean;
   onClose?: () => void;
   pathname: string;
-  navItems: typeof navItems;
+  navItems: NavItem[];
 }) {
   return (
     <div

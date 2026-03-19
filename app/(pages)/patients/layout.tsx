@@ -104,9 +104,7 @@ export default function PatientLayout({
       <main className="flex-1 ml-72 relative flex flex-col min-w-0">
         <PatientTopbar /> 
         <div className="p-8 flex-1 overflow-y-auto animate-fade-in">
-          <div className="max-w-7xl mx-auto">
-            {children}
-          </div>
+          <div className="max-w-7xl mx-auto">{children}</div>
         </div>
       </main>
     </div>

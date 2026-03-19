@@ -1,15 +1,21 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { Suspense, useEffect, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
-import Lottie from 'lottie-react';
-import doctorAnimation from '@/public/animations/patient-animation.json';
-import { signInWithPatientId, signInWithEmail } from "@/app/lib/auth/patientAuth";
+import Lottie from "lottie-react";
+import doctorAnimation from "@/public/animations/patient-animation.json";
+import {
+  signInWithPatientId,
+  signInWithEmail,
+} from "@/app/lib/auth/patientAuth";
 
-export default function PatientSignInPage() {
+function PatientSignInContent() {
   const router = useRouter();
-  const [loginMethod, setLoginMethod] = useState<"patientId" | "email">("patientId");
+  const searchParams = useSearchParams();
+  const [loginMethod, setLoginMethod] = useState<"patientId" | "email">(
+    "patientId",
+  );
   const [patientId, setPatientId] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -18,6 +24,14 @@ export default function PatientSignInPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
 
+  useEffect(() => {
+    const prefilledEmail = searchParams.get("email");
+    if (prefilledEmail) {
+      setLoginMethod("email");
+      setEmail(prefilledEmail);
+    }
+  }, [searchParams]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
@@ -25,13 +39,13 @@ export default function PatientSignInPage() {
 
     try {
       let result;
-      
+
       if (loginMethod === "patientId") {
         result = await signInWithPatientId(patientId, password);
       } else {
         result = await signInWithEmail(email, password);
       }
-      
+
       if (result.success) {
         router.push("/patients/home");
       } else {
@@ -59,10 +73,10 @@ export default function PatientSignInPage() {
               <p className="text-purple-50 text-base">
                 Sign in to continue your recovery journey
               </p>
-              
+
               <div className="mt-8 flex justify-center">
-                <Lottie 
-                  animationData={doctorAnimation} 
+                <Lottie
+                  animationData={doctorAnimation}
                   loop={true}
                   className="w-64 h-64"
                 />
@@ -90,8 +104,7 @@ export default function PatientSignInPage() {
                       loginMethod === "patientId"
                         ? "bg-purple-500 text-white"
                         : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-                    }`}
-                  >
+                    }`}>
                     Patient ID
                   </button>
                   <button
@@ -101,8 +114,7 @@ export default function PatientSignInPage() {
                       loginMethod === "email"
                         ? "bg-purple-500 text-white"
                         : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-                    }`}
-                  >
+                    }`}>
                     Email
                   </button>
                 </div>
@@ -111,8 +123,15 @@ export default function PatientSignInPage() {
                 {error && (
                   <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
                     <p className="text-sm text-red-600 flex items-center gap-2">
-                      <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                      <svg
+                        className="w-5 h-5"
+                        fill="currentColor"
+                        viewBox="0 0 20 20">
+                        <path
+                          fillRule="evenodd"
+                          d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+                          clipRule="evenodd"
+                        />
                       </svg>
                       {error}
                     </p>
@@ -183,8 +202,7 @@ export default function PatientSignInPage() {
                       <button
                         type="button"
                         onClick={() => setShowPassword(!showPassword)}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                      >
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
                         {showPassword ? "👁️" : "👁️‍🗨️"}
                       </button>
                     </div>
@@ -199,12 +217,13 @@ export default function PatientSignInPage() {
                         onChange={(e) => setRememberMe(e.target.checked)}
                         className="w-4 h-4 text-purple-500 rounded"
                       />
-                      <span className="ml-2 text-sm text-gray-600">Remember me</span>
+                      <span className="ml-2 text-sm text-gray-600">
+                        Remember me
+                      </span>
                     </label>
-                    <Link 
-                      href="/auth/patient/forgot-password" 
-                      className="text-sm text-purple-600 hover:text-purple-700 font-medium"
-                    >
+                    <Link
+                      href="/auth/patient/forgot-password"
+                      className="text-sm text-purple-600 hover:text-purple-700 font-medium">
                       Forgot password?
                     </Link>
                   </div>
@@ -213,18 +232,16 @@ export default function PatientSignInPage() {
                   <button
                     type="submit"
                     disabled={isLoading}
-                    className="w-full bg-gradient-to-r from-purple-500 to-pink-600 text-white py-2.5 rounded-lg font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
-                  >
+                    className="w-full bg-gradient-to-r from-purple-500 to-pink-600 text-white py-2.5 rounded-lg font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none">
                     {isLoading ? "Signing in..." : "Sign In"}
                   </button>
 
                   {/* Sign Up Link */}
                   <p className="text-center text-sm text-gray-600">
                     Don't have an account?{" "}
-                    <Link 
-                      href="/auth/patient/signup" 
-                      className="text-purple-600 hover:text-purple-700 font-semibold"
-                    >
+                    <Link
+                      href="/auth/patient/signup"
+                      className="text-purple-600 hover:text-purple-700 font-semibold">
                       Sign up here
                     </Link>
                   </p>
@@ -235,5 +252,13 @@ export default function PatientSignInPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function PatientSignInPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-slate-900" />}>
+      <PatientSignInContent />
+    </Suspense>
   );
 }

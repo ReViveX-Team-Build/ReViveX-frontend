@@ -5,7 +5,16 @@ import {
   signOut,
   sendEmailVerification 
 } from "firebase/auth";
-import { doc, setDoc, getDoc, query, collection, where, getDocs, Timestamp } from "firebase/firestore";
+import {
+  doc,
+  setDoc,
+  getDoc,
+  query,
+  collection,
+  where,
+  getDocs,
+  Timestamp,
+} from "firebase/firestore";
 
 
 interface DoctorData {
@@ -21,21 +30,25 @@ interface DoctorData {
 }
 
 export const registerDoctor = async (
-  email: string, 
-  password: string, 
+  email: string,
+  password: string,
   name: string,
   specialization: string = "General",
-  licenseNumber: string = ""
+  licenseNumber: string = "",
 ) => {
   try {
-    const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+    const userCredential = await createUserWithEmailAndPassword(
+      auth,
+      email,
+      password,
+    );
     const user = userCredential.user;
     
     //  SEND VERIFICATION EMAIL IMMEDIATELY
     await sendEmailVerification(user);
     
     const doctorId = "d" + user.uid.slice(-6).toLowerCase();
-    
+
     const doctorData: DoctorData = {
       uid: user.uid,
       role: "doctor",
@@ -58,6 +71,15 @@ export const registerDoctor = async (
       message: `Account created! Please check your email to verify your account.` 
     };
   } catch (error: any) {
+    if (error.code === "auth/email-already-in-use") {
+      return {
+        success: false,
+        status: "EXISTS",
+        error: "This email is already registered. Please sign in instead.",
+        code: "auth/email-already-in-use",
+      };
+    }
+
     console.error("Registration error:", error);
     
     if (error.code === "auth/email-already-in-use") {
@@ -74,22 +96,38 @@ export const registerDoctor = async (
       errorMessage = "Password should be at least 6 characters";
     } else if (error.code === "auth/invalid-email") {
       errorMessage = "Invalid email address";
+    } else if (error.code === "auth/operation-not-allowed") {
+      errorMessage =
+        "Email/password sign-up is disabled in Firebase Authentication.";
+    } else if (error.code === "auth/network-request-failed") {
+      errorMessage =
+        "Network error. Check your internet connection and try again.";
+    } else if (error.code === "auth/too-many-requests") {
+      errorMessage = "Too many attempts. Please try again later.";
+    } else if (error.code === "auth/invalid-api-key") {
+      errorMessage =
+        "Firebase API key is invalid. Check your .env.local configuration.";
+    } else if (error.code) {
+      errorMessage = `Registration failed (${error.code})`;
     }
     
     return { success: false, status: "FAILED", error: errorMessage, code: error.code };
   }
 };
 
-export const signInWithDoctorId = async (doctorId: string, password: string) => {
+export const signInWithDoctorId = async (
+  doctorId: string,
+  password: string,
+) => {
   try {
     const usersRef = collection(db, "users");
     const q = query(usersRef, where("doctorId", "==", doctorId.toLowerCase()));
     const querySnapshot = await getDocs(q);
-    
+
     if (querySnapshot.empty) {
       return { success: false, error: "Doctor ID not found" };
     }
-    
+
     const doctorDoc = querySnapshot.docs[0];
     const doctorData = doctorDoc.data();
     
@@ -121,7 +159,7 @@ export const signInWithEmail = async (email: string, password: string) => {
       await signOut(auth);
       return { success: false, error: "User profile not found" };
     }
-    
+
     const userData = userDoc.data();
     if (userData.role !== "doctor") {
       await signOut(auth);

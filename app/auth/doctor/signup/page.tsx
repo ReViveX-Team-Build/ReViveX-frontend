@@ -3,8 +3,8 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import Lottie from 'lottie-react';
-import doctorAnimation from '@/public/animations/doctor-animation.json';
+import Lottie from "lottie-react";
+import doctorAnimation from "@/public/animations/doctor-animation.json";
 import { registerDoctor } from "@/app/lib/auth/doctorAuth";
 
 export default function DoctorSignUpPage() {
@@ -15,20 +15,24 @@ export default function DoctorSignUpPage() {
     password: "",
     confirmPassword: "",
     specialization: "General Medicine",
-    licenseNumber: ""
+    licenseNumber: "",
   });
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
+  const [emailExists, setEmailExists] = useState(false);
   const [generatedDoctorId, setGeneratedDoctorId] = useState("");
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
+  ) => {
     setFormData({
       ...formData,
-      [e.target.name]: e.target.value
+      [e.target.name]: e.target.value,
     });
     setError(""); // Clear error on input change
+    setEmailExists(false);
   };
 
   const validateForm = () => {
@@ -53,10 +57,11 @@ export default function DoctorSignUpPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!validateForm()) return;
-    
+
     setError("");
+    setEmailExists(false);
     setIsLoading(true);
 
     try {
@@ -65,15 +70,19 @@ export default function DoctorSignUpPage() {
         formData.password,
         formData.name,
         formData.specialization,
-        formData.licenseNumber
+        formData.licenseNumber,
       );
-      
+
       if (result.success) {
         // Show success with Doctor ID
         setGeneratedDoctorId(result.doctorId || "");
         // We'll show a success modal instead of redirecting immediately
       } else {
         setError(result.error || "Registration failed");
+        setEmailExists(
+          result.status === "EXISTS" ||
+            result.code === "auth/email-already-in-use",
+        );
       }
     } catch (err: any) {
       setError("An unexpected error occurred");
@@ -89,18 +98,27 @@ export default function DoctorSignUpPage() {
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-teal-900 to-slate-900 p-4">
         <div className="bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full text-center">
           <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <svg className="w-10 h-10 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+            <svg
+              className="w-10 h-10 text-green-500"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24">
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M5 13l4 4L19 7"
+              />
             </svg>
           </div>
-          
+
           <h2 className="text-2xl font-bold text-gray-900 mb-2">
             Account Created Successfully! 🎉
           </h2>
           <p className="text-gray-600 mb-6">
             Welcome to ReViveX, Dr. {formData.name}!
           </p>
-          
+
           <div className="bg-teal-50 border-2 border-teal-200 rounded-lg p-4 mb-6">
             <p className="text-sm text-gray-600 mb-2">Your Doctor ID:</p>
             <p className="text-2xl font-bold text-teal-600 tracking-wider">
@@ -113,8 +131,7 @@ export default function DoctorSignUpPage() {
 
           <button
             onClick={() => router.push("/auth/doctor/signin")}
-            className="w-full bg-gradient-to-r from-teal-500 to-cyan-600 text-white py-3 rounded-lg font-semibold shadow-lg hover:shadow-xl transition-all"
-          >
+            className="w-full bg-gradient-to-r from-teal-500 to-cyan-600 text-white py-3 rounded-lg font-semibold shadow-lg hover:shadow-xl transition-all">
             Continue to Sign In
           </button>
         </div>
@@ -134,12 +151,13 @@ export default function DoctorSignUpPage() {
                 Join Our Platform 🚀
               </h2>
               <p className="text-teal-50 text-base mb-8">
-                Create your doctor account and start helping patients recover better
+                Create your doctor account and start helping patients recover
+                better
               </p>
-              
+
               <div className="flex justify-center">
-                <Lottie 
-                  animationData={doctorAnimation} 
+                <Lottie
+                  animationData={doctorAnimation}
                   loop={true}
                   className="w-56 h-56"
                 />
@@ -162,11 +180,30 @@ export default function DoctorSignUpPage() {
                 {error && (
                   <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
                     <p className="text-sm text-red-600 flex items-center gap-2">
-                      <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                      <svg
+                        className="w-5 h-5"
+                        fill="currentColor"
+                        viewBox="0 0 20 20">
+                        <path
+                          fillRule="evenodd"
+                          d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+                          clipRule="evenodd"
+                        />
                       </svg>
                       {error}
                     </p>
+                    {emailExists && (
+                      <button
+                        type="button"
+                        onClick={() =>
+                          router.push(
+                            `/auth/doctor/signin?email=${encodeURIComponent(formData.email)}`,
+                          )
+                        }
+                        className="mt-2 text-sm font-semibold text-teal-700 hover:text-teal-800">
+                        Account already exists. Sign in instead.
+                      </button>
+                    )}
                   </div>
                 )}
 
@@ -221,8 +258,7 @@ export default function DoctorSignUpPage() {
                       <button
                         type="button"
                         onClick={() => setShowPassword(!showPassword)}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                      >
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
                         {showPassword ? "👁️" : "👁️‍🗨️"}
                       </button>
                     </div>
@@ -245,9 +281,10 @@ export default function DoctorSignUpPage() {
                       />
                       <button
                         type="button"
-                        onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                      >
+                        onClick={() =>
+                          setShowConfirmPassword(!showConfirmPassword)
+                        }
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
                         {showConfirmPassword ? "👁️" : "👁️‍🗨️"}
                       </button>
                     </div>
@@ -262,8 +299,7 @@ export default function DoctorSignUpPage() {
                       name="specialization"
                       value={formData.specialization}
                       onChange={handleChange}
-                      className="w-full px-4 py-2.5 border-2 border-gray-200 rounded-lg focus:outline-none focus:border-teal-500 transition-colors text-gray-900"
-                    >
+                      className="w-full px-4 py-2.5 border-2 border-gray-200 rounded-lg focus:outline-none focus:border-teal-500 transition-colors text-gray-900">
                       <option value="General Medicine">General Medicine</option>
                       <option value="Neurology">Neurology</option>
                       <option value="Cardiology">Cardiology</option>
@@ -294,18 +330,16 @@ export default function DoctorSignUpPage() {
                   <button
                     type="submit"
                     disabled={isLoading}
-                    className="w-full bg-gradient-to-r from-teal-500 to-cyan-600 text-white py-3 rounded-lg font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none mt-6"
-                  >
+                    className="w-full bg-gradient-to-r from-teal-500 to-cyan-600 text-white py-3 rounded-lg font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none mt-6">
                     {isLoading ? "Creating Account..." : "Create Account"}
                   </button>
 
                   {/* Sign In Link */}
                   <p className="text-center text-sm text-gray-600 mt-4">
                     Already have an account?{" "}
-                    <Link 
-                      href="/auth/doctor/signin" 
-                      className="text-teal-600 hover:text-teal-700 font-semibold"
-                    >
+                    <Link
+                      href="/auth/doctor/signin"
+                      className="text-teal-600 hover:text-teal-700 font-semibold">
                       Sign in here
                     </Link>
                   </p>

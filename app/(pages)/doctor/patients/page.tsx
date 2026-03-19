@@ -429,13 +429,7 @@ function StatCard({
 
 export default function DoctorPatientsPage() {
   const [user, authLoading] = useAuthState(auth);
-  // TEMP DEV OVERRIDE: uses a fixed doctor UID in development when auth is not ready.
-  // Remove this once login is fully functional by replacing this block with:
-  // const doctorId = user?.uid ?? "";
-  const doctorId =
-    process.env.NODE_ENV === "development"
-      ? "doctor_test_001"
-      : (user?.uid ?? "");
+  const doctorId = user?.uid ?? "";
   const [displayPatients, setDisplayPatients] = useState<DisplayPatient[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -459,7 +453,7 @@ export default function DoctorPatientsPage() {
       return;
     }
 
-    // ── REAL PATH: use dev override in development, auth uid in production ──
+    // ── REAL PATH: use authenticated doctor uid ────────────────────────────
     if (authLoading && !doctorId) return;
     if (!doctorId) {
       setLoading(false);
