@@ -1,8 +1,12 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useAuthState } from "react-firebase-hooks/auth";
+import { auth } from "@/app/lib/firebase";
+import { getDoctorSchedule } from "@/app/lib/db/schedule";
+import { ScheduledSession } from "@/app/lib/db/types";
 import {
   LayoutDashboard,
   Users,
@@ -26,17 +30,37 @@ type BreakPoint = "mobile" | "tablet" | "desktop";
 
 // ─── Nav data ─────────────────────────────────────────────────────────────────
 const navItems = [
-  { icon: LayoutDashboard, label: "Dashboard",        href: "/doctor/home",        badge: null },
-  { icon: Users,           label: "My Patients",      href: "/doctor/patients",    badge: "8"  },
-  { icon: CalendarDays,    label: "Schedule",         href: "/doctor/schedule",    badge: "3"  },
-  { icon: Stethoscope,     label: "Therapy Protocols",href: "/doctor/protocols",   badge: null },
-  { icon: BarChart2,       label: "Reports",          href: "/doctor/reports",     badge: null },
-  { icon: Bot,             label: "AI Companion",     href: "/doctor/ai-companion",badge: null },
+  {
+    icon: LayoutDashboard,
+    label: "Dashboard",
+    href: "/doctor/home",
+    badge: null,
+  },
+  { icon: Users, label: "My Patients", href: "/doctor/patients", badge: "8" },
+  {
+    icon: CalendarDays,
+    label: "Schedule",
+    href: "/doctor/schedule",
+    badge: null,
+  },
+  {
+    icon: Stethoscope,
+    label: "Therapy Protocols",
+    href: "/doctor/protocols",
+    badge: null,
+  },
+  { icon: BarChart2, label: "Reports", href: "/doctor/reports", badge: null },
+  {
+    icon: Bot,
+    label: "AI Companion",
+    href: "/doctor/ai-companion",
+    badge: null,
+  },
 ];
 
 const bottomItems = [
-  { icon: Settings,    label: "Settings",    href: "/doctor/settings" },
-  { icon: HelpCircle,  label: "FAQ & Support",href: "/doctor/faq"  },
+  { icon: Settings, label: "Settings", href: "/doctor/settings" },
+  { icon: HelpCircle, label: "FAQ & Support", href: "/doctor/faq" },
 ];
 
 const doctor = { name: "Dr. Suresh", role: "Neurologist", initials: "DS" };
@@ -194,10 +218,12 @@ function SidebarContent({
   collapsed,
   onClose,
   pathname,
+  navItems,
 }: {
   collapsed: boolean;
   onClose?: () => void;
   pathname: string;
+  navItems: typeof navItems;
 }) {
   return (
     <div
@@ -206,8 +232,7 @@ function SidebarContent({
         flexDirection: "column",
         height: "100%",
         padding: "0",
-      }}
-    >
+      }}>
       {/* ── Logo ───────────────────────────────────────────────────── */}
       <div
         style={{
@@ -219,8 +244,7 @@ function SidebarContent({
           borderBottom: "1px solid rgba(255,255,255,0.06)",
           marginBottom: 8,
           position: "relative",
-        }}
-      >
+        }}>
         {/* Close button on mobile */}
         {onClose && (
           <button
@@ -239,8 +263,7 @@ function SidebarContent({
               justifyContent: "center",
               cursor: "pointer",
               color: "rgba(255,255,255,0.5)",
-            }}
-          >
+            }}>
             <X size={16} />
           </button>
         )}
@@ -256,8 +279,7 @@ function SidebarContent({
             justifyContent: "center",
             flexShrink: 0,
             animation: "glowBreath 3s ease-in-out infinite",
-          }}
-        >
+          }}>
           <Activity size={20} color="#0B1E33" strokeWidth={2.5} />
         </div>
         {!collapsed && (
@@ -269,8 +291,7 @@ function SidebarContent({
                 color: "#fff",
                 letterSpacing: "0.02em",
                 lineHeight: 1.2,
-              }}
-            >
+              }}>
               ReVive<span style={{ color: "#2DD4BF" }}>X</span>
             </div>
             <div
@@ -280,15 +301,13 @@ function SidebarContent({
                 color: "#2DD4BF",
                 textTransform: "uppercase",
                 letterSpacing: "0.22em",
-              }}
-            >
+              }}>
               Doctor Portal
             </div>
           </div>
         )}
       </div>
 
-      
       {/* Collapsed avatar */}
       {collapsed && (
         <div
@@ -297,8 +316,7 @@ function SidebarContent({
             justifyContent: "center",
             marginBottom: 12,
             padding: "0 12px",
-          }}
-        >
+          }}>
           <div
             style={{
               width: 38,
@@ -311,8 +329,7 @@ function SidebarContent({
               fontSize: 13,
               fontWeight: 800,
               color: "#0B1E33",
-            }}
-          >
+            }}>
             {doctor.initials}
           </div>
         </div>
@@ -325,28 +342,35 @@ function SidebarContent({
           flex: 1,
           overflowY: "auto",
           padding: collapsed ? "0 8px" : "0 12px",
-        }}
-      >
+        }}>
         {!collapsed && (
           <div className="sb-section-label" style={{ marginBottom: 8 }}>
             Main Menu
           </div>
         )}
 
-        <div className="sb-nav-animate" style={{ display: "flex", flexDirection: "column", gap: 3 }}>
+        <div
+          className="sb-nav-animate"
+          style={{ display: "flex", flexDirection: "column", gap: 3 }}>
           {navItems.map((item) => {
             const isActive =
               pathname === item.href || pathname?.startsWith(`${item.href}/`);
             return (
-              <Link key={item.href} href={item.href} style={{ textDecoration: "none" }}>
+              <Link
+                key={item.href}
+                href={item.href}
+                style={{ textDecoration: "none" }}>
                 <div
                   className={`sb-item ${isActive ? "active" : ""}`}
                   style={{
                     justifyContent: collapsed ? "center" : "flex-start",
                     padding: collapsed ? "12px" : "11px 14px",
-                  }}
-                >
-                  <span className="sb-icon" style={{ color: isActive ? "#0B1E33" : "rgba(255,255,255,0.45)" }}>
+                  }}>
+                  <span
+                    className="sb-icon"
+                    style={{
+                      color: isActive ? "#0B1E33" : "rgba(255,255,255,0.45)",
+                    }}>
                     <item.icon size={20} />
                   </span>
 
@@ -364,8 +388,7 @@ function SidebarContent({
                             padding: "0 6px",
                             fontSize: 10,
                             fontWeight: 800,
-                          }}
-                        >
+                          }}>
                           {item.badge}
                         </span>
                       )}
@@ -378,23 +401,27 @@ function SidebarContent({
                         style={{
                           fontSize: 13,
                           fontWeight: isActive ? 700 : 500,
-                          color: isActive ? "#0B1E33" : "rgba(255,255,255,0.65)",
+                          color: isActive
+                            ? "#0B1E33"
+                            : "rgba(255,255,255,0.65)",
                           flex: 1,
-                        }}
-                      >
+                        }}>
                         {item.label}
                       </span>
                       {item.badge && (
                         <span
-                          className={`sb-badge ${isActive ? "sb-badge-active" : "sb-badge-default"}`}
-                        >
+                          className={`sb-badge ${isActive ? "sb-badge-active" : "sb-badge-default"}`}>
                           {item.badge}
                         </span>
                       )}
                       {isActive && (
                         <ChevronRight
                           size={14}
-                          style={{ color: "#0B1E33", opacity: 0.6, flexShrink: 0 }}
+                          style={{
+                            color: "#0B1E33",
+                            opacity: 0.6,
+                            flexShrink: 0,
+                          }}
                         />
                       )}
                     </>
@@ -412,8 +439,7 @@ function SidebarContent({
           borderTop: "1px solid rgba(255,255,255,0.07)",
           padding: collapsed ? "12px 8px" : "12px",
           background: "rgba(0,0,0,0.15)",
-        }}
-      >
+        }}>
         {!collapsed && (
           <div style={{ marginBottom: 8 }}>
             {bottomItems.map((item) => (
@@ -426,7 +452,13 @@ function SidebarContent({
         )}
 
         {collapsed && (
-          <div style={{ display: "flex", flexDirection: "column", gap: 4, marginBottom: 8 }}>
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              gap: 4,
+              marginBottom: 8,
+            }}>
             {bottomItems.map((item) => (
               <Link
                 key={item.href}
@@ -440,8 +472,7 @@ function SidebarContent({
                   textDecoration: "none",
                   transition: "all 0.2s ease",
                   position: "relative",
-                }}
-              >
+                }}>
                 <item.icon size={18} />
                 <div className="sb-tooltip">{item.label}</div>
               </Link>
@@ -466,8 +497,7 @@ function SidebarContent({
               fontWeight: 700,
               cursor: "pointer",
               transition: "all 0.2s ease",
-            }}
-          >
+            }}>
             <LogOut size={16} />
             {!collapsed && <span>Sign Out</span>}
             {collapsed && <div className="sb-tooltip">Sign Out</div>}
@@ -481,8 +511,47 @@ function SidebarContent({
 // ─── Main Component ───────────────────────────────────────────────────────────
 export default function DoctorSidebar() {
   const pathname = usePathname();
+  const [user] = useAuthState(auth);
   const [bp, setBp] = useState<BreakPoint>("desktop");
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [upcomingCount, setUpcomingCount] = useState(0);
+
+  useEffect(() => {
+    const loadUpcomingCount = async () => {
+      if (!user) {
+        setUpcomingCount(0);
+        return;
+      }
+
+      try {
+        const schedule = await getDoctorSchedule(user.uid);
+        const now = new Date();
+        const upcoming = schedule.filter((session: ScheduledSession) => {
+          if (session.status !== "scheduled") return false;
+          const dt = new Date(
+            `${session.scheduledDate}T${session.scheduledTime}`,
+          );
+          return !Number.isNaN(dt.getTime()) && dt >= now;
+        }).length;
+        setUpcomingCount(upcoming);
+      } catch (e) {
+        console.error("Failed to load doctor schedule count:", e);
+        setUpcomingCount(0);
+      }
+    };
+
+    void loadUpcomingCount();
+  }, [user, pathname]);
+
+  const navItemsWithCounts = useMemo(
+    () =>
+      navItems.map((item) =>
+        item.href === "/doctor/schedule"
+          ? { ...item, badge: String(upcomingCount) }
+          : item,
+      ),
+    [upcomingCount],
+  );
 
   useEffect(() => {
     const update = () => {
@@ -500,8 +569,8 @@ export default function DoctorSidebar() {
   useEffect(() => setMobileOpen(false), [pathname]);
 
   const collapsed = bp === "tablet";
-  const hidden    = bp === "mobile" && !mobileOpen;
-  const width     = bp === "desktop" ? 272 : bp === "tablet" ? 72 : 272;
+  const hidden = bp === "mobile" && !mobileOpen;
+  const width = bp === "desktop" ? 272 : bp === "tablet" ? 72 : 272;
 
   return (
     <div className="doc-sb">
@@ -527,17 +596,20 @@ export default function DoctorSidebar() {
           top: 0,
           height: "100vh",
           width,
-          background: "linear-gradient(180deg,#0d2442 0%,#0B1E33 40%,#081626 100%)",
+          background:
+            "linear-gradient(180deg,#0d2442 0%,#0B1E33 40%,#081626 100%)",
           borderRight: "1px solid rgba(255,255,255,0.07)",
           boxShadow: "4px 0 40px rgba(0,0,0,0.35)",
           zIndex: 200,
           display: hidden ? "none" : "flex",
           flexDirection: "column",
           transition: "width 0.3s cubic-bezier(0.22,1,0.36,1)",
-          animation: bp === "mobile" && mobileOpen ? "sbSlideIn 0.3s cubic-bezier(0.22,1,0.36,1)" : "none",
+          animation:
+            bp === "mobile" && mobileOpen
+              ? "sbSlideIn 0.3s cubic-bezier(0.22,1,0.36,1)"
+              : "none",
           overflow: "hidden",
-        }}
-      >
+        }}>
         {/* Decorative teal glow top */}
         <div
           style={{
@@ -546,7 +618,8 @@ export default function DoctorSidebar() {
             left: -60,
             width: 200,
             height: 200,
-            background: "radial-gradient(circle,rgba(45,212,191,0.08),transparent 70%)",
+            background:
+              "radial-gradient(circle,rgba(45,212,191,0.08),transparent 70%)",
             pointerEvents: "none",
           }}
         />
@@ -555,6 +628,7 @@ export default function DoctorSidebar() {
           collapsed={collapsed}
           onClose={bp === "mobile" ? () => setMobileOpen(false) : undefined}
           pathname={pathname}
+          navItems={navItemsWithCounts}
         />
       </aside>
 
