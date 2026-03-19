@@ -459,13 +459,7 @@ export default function DoctorMessagingHub() {
   const { id } = useParams();
   const initId = Array.isArray(id) ? id[0] : (id ?? "");
   const [user, authLoading] = useAuthState(auth);
-  // TEMP DEV OVERRIDE: uses a fixed doctor UID in development when auth is not ready.
-  // Remove this once login is fully functional by replacing this block with:
-  // const doctorId = user?.uid ?? "";
-  const doctorId =
-    process.env.NODE_ENV === "development"
-      ? "doctor_test_001"
-      : (user?.uid ?? "");
+  const doctorId = user?.uid ?? "";
   const [mounted, setMounted] = useState(false);
   const isDark = useDarkMode();
 
