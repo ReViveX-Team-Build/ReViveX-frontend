@@ -26,7 +26,7 @@ import {
 
   Mail, Phone, Globe, Linkedin, Instagram, Github, Facebook, Cloud,
 
-  CheckCircle2, Sparkles, Activity, Shield, TrendingUp, Star,
+  CheckCircle2, Sparkles, Activity, Shield, TrendingUp, Star, X 
 
 } from "lucide-react";
 
@@ -4122,34 +4122,102 @@ function Footer() {
 }
 
 
+// ══ ROLE SELECTION MODAL ═════════════════════════════════════════════════════
+function RoleSelectionModal({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
+  const router = useRouter();
+  if (!isOpen) return null;
+
+  return (
+    <div style={{ position: "fixed", inset: 0, zIndex: 9999, display: "flex", alignItems: "center", justifyContent: "center" }}>
+      {/* Dark Blur Backdrop */}
+      <motion.div 
+        initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+        onClick={onClose}
+        style={{ position: "absolute", inset: 0, background: "rgba(4,9,20,0.85)", backdropFilter: "blur(12px)" }} 
+      />
+
+      {/* The Modal Card */}
+      <motion.div 
+        initial={{ opacity: 0, scale: 0.95, y: 20 }} 
+        animate={{ opacity: 1, scale: 1, y: 0 }} 
+        exit={{ opacity: 0, scale: 0.95, y: 20 }}
+        transition={{ type: "spring", damping: 25, stiffness: 300 }}
+        style={{
+          position: "relative", width: "90%", maxWidth: 700, 
+          background: "linear-gradient(145deg, #0B1E33, #060e1c)",
+          border: "1px solid rgba(45,212,191,0.25)", borderRadius: 32, padding: "48px 40px", 
+          boxShadow: "0 30px 80px rgba(0,0,0,0.8), 0 0 50px rgba(45,212,191,0.15)",
+          display: "flex", flexDirection: "column", alignItems: "center"
+        }}>
+        
+        {/* Close Button */}
+        <button onClick={onClose} style={{ position: "absolute", top: 24, right: 24, background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", width: 40, height: 40, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", color: "rgba(255,255,255,0.6)", cursor: "pointer", transition: "all 0.2s" }}
+          onMouseEnter={e => { e.currentTarget.style.background = "rgba(239,68,68,0.2)"; e.currentTarget.style.color = "#ef4444"; e.currentTarget.style.borderColor = "rgba(239,68,68,0.5)"; }}
+          onMouseLeave={e => { e.currentTarget.style.background = "rgba(255,255,255,0.05)"; e.currentTarget.style.color = "rgba(255,255,255,0.6)"; e.currentTarget.style.borderColor = "rgba(255,255,255,0.1)"; }}>
+          <X size={20} />
+        </button>
+
+        <div className="fM" style={{ fontSize: 10, color: "#2DD4BF", letterSpacing: ".3em", textTransform: "uppercase", marginBottom: 12 }}>Join ReViveX</div>
+        <h2 className="fB" style={{ fontSize: "clamp(2rem, 4vw, 3rem)", color: "#fff", letterSpacing: ".02em", marginBottom: 40, textAlign: "center", lineHeight: 1 }}>HOW WOULD YOU LIKE TO<br/><span style={{color: "#2DD4BF"}}>PROCEED?</span></h2>
+
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 24, width: "100%" }}>
+          {/* Patient Selection Card */}
+          <div onClick={() => router.push("/auth/patient/signup")}
+            style={{ cursor: "pointer", background: "rgba(255,255,255,0.02)", border: "1px solid rgba(45,212,191,0.15)", borderRadius: 24, padding: "32px 24px", display: "flex", flexDirection: "column", alignItems: "center", transition: "all 0.3s ease" }}
+            onMouseEnter={e => { e.currentTarget.style.background = "rgba(45,212,191,0.08)"; e.currentTarget.style.borderColor = "#2DD4BF"; e.currentTarget.style.transform = "translateY(-6px)"; e.currentTarget.style.boxShadow = "0 10px 30px rgba(45,212,191,0.2)"; }}
+            onMouseLeave={e => { e.currentTarget.style.background = "rgba(255,255,255,0.02)"; e.currentTarget.style.borderColor = "rgba(45,212,191,0.15)"; e.currentTarget.style.transform = "translateY(0)"; e.currentTarget.style.boxShadow = "none"; }}>
+            <div style={{ width: 64, height: 64, borderRadius: 20, background: "linear-gradient(135deg, rgba(45,212,191,0.2), rgba(45,212,191,0.05))", border: "1px solid rgba(45,212,191,0.3)", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 20, color: "#2DD4BF" }}>
+              <Activity size={32} />
+            </div>
+            <h3 className="fB" style={{ fontSize: 28, color: "#fff", marginBottom: 8, letterSpacing: "0.04em" }}>I AM A PATIENT</h3>
+            <p className="fS" style={{ fontSize: 13, color: "rgba(255,255,255,0.5)", textAlign: "center", lineHeight: 1.6 }}>Start your immersive recovery journey, track your progress, and heal faster.</p>
+          </div>
+
+          {/* Doctor Selection Card */}
+          <div onClick={() => router.push("/auth/doctor/signup")}
+            style={{ cursor: "pointer", background: "rgba(255,255,255,0.02)", border: "1px solid rgba(167,139,250,0.15)", borderRadius: 24, padding: "32px 24px", display: "flex", flexDirection: "column", alignItems: "center", transition: "all 0.3s ease" }}
+            onMouseEnter={e => { e.currentTarget.style.background = "rgba(167,139,250,0.08)"; e.currentTarget.style.borderColor = "#a78bfa"; e.currentTarget.style.transform = "translateY(-6px)"; e.currentTarget.style.boxShadow = "0 10px 30px rgba(167,139,250,0.2)"; }}
+            onMouseLeave={e => { e.currentTarget.style.background = "rgba(255,255,255,0.02)"; e.currentTarget.style.borderColor = "rgba(167,139,250,0.15)"; e.currentTarget.style.transform = "translateY(0)"; e.currentTarget.style.boxShadow = "none"; }}>
+            <div style={{ width: 64, height: 64, borderRadius: 20, background: "linear-gradient(135deg, rgba(167,139,250,0.2), rgba(167,139,250,0.05))", border: "1px solid rgba(167,139,250,0.3)", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 20, color: "#a78bfa" }}>
+              <Stethoscope size={32} />
+            </div>
+            <h3 className="fB" style={{ fontSize: 28, color: "#fff", marginBottom: 8, letterSpacing: "0.04em" }}>I AM A DOCTOR</h3>
+            <p className="fS" style={{ fontSize: 13, color: "rgba(255,255,255,0.5)", textAlign: "center", lineHeight: 1.6 }}>Manage your patients, monitor live data, and adjust protocols remotely.</p>
+          </div>
+        </div>
+      </motion.div>
+    </div>
+  );
+}
+
+
 //  ROOT PAGE
 
 export default function LandingPage() {
-
   const [booted, setBooted] = useState(false);
+  const [showRoleModal, setShowRoleModal] = useState(false); 
 
   useLenis();
   return (
-
     <div className="grain" style={{ background: "#080f1a" }}>
-
       <style>{CSS}</style>
 
       <MedicalCursor />
       {!booted && <Preloader onDone={() => setBooted(true)} />}
 
+      
       <AnimatePresence>
+        {showRoleModal && (
+          <RoleSelectionModal isOpen={showRoleModal} onClose={() => setShowRoleModal(false)} />
+        )}
+      </AnimatePresence>
 
+      <AnimatePresence>
         {booted && (
-
           <motion.div key="site"
-
             initial={{ opacity: 0, scale: .95 }}
-
             animate={{ opacity: 1, scale: 1 }}
-
             transition={{ duration: 1.05, ease: [0.22, 1, 0.36, 1] }}>
-
 
 
             <Navbar onGetStarted={() => setShowRoleModal(true)} />
