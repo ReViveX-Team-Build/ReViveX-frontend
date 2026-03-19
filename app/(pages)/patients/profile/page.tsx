@@ -430,3 +430,102 @@ export default function PatientProfilePage() {
               {!hasChanges && <div className="mono" style={{textAlign:"center",marginTop:8,fontSize:8,color:"#94a3b8",letterSpacing:".18em"}}>NO UNSAVED CHANGES</div>}
             </div>
           </div>
+
+          {/* RIGHT: stats sidebar */}
+          <div style={{display:"flex",flexDirection:"column",gap:18}}>
+
+            {/* XP + Streak dark card */}
+            <div style={{animation:"cardPop 0.55s cubic-bezier(0.22,1,0.36,1) 0.11s both",background:"#0B1E33",borderRadius:22,border:"1px solid rgba(45,212,191,0.10)",boxShadow:"0 8px 36px rgba(11,30,51,0.18)",padding:"24px",position:"relative",overflow:"hidden"}}>
+              <div style={{position:"absolute",inset:0,backgroundImage:"linear-gradient(rgba(45,212,191,0.04) 1px,transparent 1px),linear-gradient(90deg,rgba(45,212,191,0.04) 1px,transparent 1px)",backgroundSize:"32px 32px"}}/>
+              <div style={{position:"relative",zIndex:2}}>
+                <div className="mono" style={{fontSize:9,color:"rgba(45,212,191,0.55)",letterSpacing:".28em",textTransform:"uppercase",marginBottom:16}}>Progress</div>
+                <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12,marginBottom:20}}>
+                  {[
+                    {emoji:"🔥",label:"Streak",val:draft.streak,unit:"DAYS",   c:"#f59e0b"},
+                    {emoji:"⚡",label:"XP",     val:draft.totalXp,unit:"POINTS",c:"#2DD4BF"},
+                  ].map(s => (
+                    <div key={s.label} style={{padding:"16px",borderRadius:16,background:`${s.c}12`,border:`1px solid ${s.c}20`}}>
+                      <div className="mono" style={{fontSize:8,color:`${s.c}bb`,textTransform:"uppercase",letterSpacing:".16em",marginBottom:6}}>{s.emoji} {s.label}</div>
+                      <div style={{fontSize:"2.4rem",fontWeight:800,color:s.c,lineHeight:1,textShadow:`0 0 20px ${s.c}50`}}>{s.val}</div>
+                      <div className="mono" style={{fontSize:7,color:"rgba(255,255,255,0.25)",marginTop:3}}>{s.unit}</div>
+                    </div>
+                  ))}
+                </div>
+                <div style={{display:"flex",justifyContent:"space-between",marginBottom:7}}>
+                  <span className="mono" style={{fontSize:8,color:"rgba(255,255,255,0.28)",textTransform:"uppercase",letterSpacing:".14em"}}>XP Progress</span>
+                  <span className="mono" style={{fontSize:8,color:"#2DD4BF",fontWeight:700}}>{draft.totalXp} / {XP_CAP}</span>
+                </div>
+                <div className="xp-bar-track">
+                  <div className="xp-bar-fill" style={{width:`${xpPct}%`}}/>
+                </div>
+                <div style={{marginTop:12,display:"flex",justifyContent:"space-between"}}>
+                  <span className="mono" style={{fontSize:8,color:"rgba(139,92,246,0.7)",letterSpacing:".10em"}}>{draft.unlockedLevels.length}/5 LEVELS</span>
+                  <span className="mono" style={{fontSize:8,color:"rgba(34,197,94,0.7)",letterSpacing:".10em"}}>{draft.completedSessions} SESSIONS</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Clinical */}
+            <div className="pf-card" style={{padding:24,animation:"cardPop 0.55s cubic-bezier(0.22,1,0.36,1) 0.13s both"}}>
+              <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:18}}>
+                <div style={{width:34,height:34,borderRadius:10,background:"rgba(45,212,191,0.12)",display:"flex",alignItems:"center",justifyContent:"center",color:"#2DD4BF"}}><ClipboardList size={16}/></div>
+                <div style={{fontSize:15,fontWeight:800,color:"#0B1E33"}}>Clinical Info</div>
+              </div>
+              {[
+                {icon:<ClipboardList size={15}/>, label:"Assigned Protocol", val:draft.assignedProtocol, c:"#2DD4BF"},
+                {icon:<Calendar size={15}/>,       label:"Next Appointment",  val:draft.nextAppointment,   c:"#8b5cf6"},
+                {icon:<Heart size={15}/>,         label:"Condition",         val:draft.condition||"Not set", c:"#ef4444"},
+              ].map(item => (
+                <div key={item.label} style={{display:"flex",alignItems:"center",gap:12,padding:"12px 0",borderBottom:"1px solid rgba(226,232,240,0.7)"}}>
+                  <div style={{width:34,height:34,borderRadius:10,flexShrink:0,background:`${item.c}12`,border:`1px solid ${item.c}20`,display:"flex",alignItems:"center",justifyContent:"center",color:item.c}}>{item.icon}</div>
+                  <div>
+                    <div className="mono" style={{fontSize:8,color:"#94a3b8",textTransform:"uppercase",letterSpacing:".14em",marginBottom:2}}>{item.label}</div>
+                    <div style={{color:"#0B1E33",fontSize:13,fontWeight:600}}>{item.val}</div>
+                  </div>
+                </div>
+              ))}
+              {draft.joinedAt && (
+                <div className="mono" style={{marginTop:12,fontSize:8,color:"#cbd5e1",letterSpacing:".12em"}}>
+                  MEMBER SINCE · {new Date(draft.joinedAt).toLocaleDateString("en-US",{month:"long",year:"numeric"})}
+                </div>
+              )}
+            </div>
+
+            {/* Level map */}
+            <div className="pf-card" style={{padding:24,animation:"cardPop 0.55s cubic-bezier(0.22,1,0.36,1) 0.16s both"}}>
+              <div style={{fontSize:14,fontWeight:800,color:"#0B1E33",marginBottom:14}}>Level Map</div>
+              <div style={{display:"flex",gap:8}}>
+                {[1,2,3,4,5].map(lvl => {
+                  const done = draft.unlockedLevels.includes(lvl);
+                  return (
+                    <div key={lvl} style={{flex:1,height:54,borderRadius:12,
+                      background:done?"rgba(45,212,191,0.08)":"#f8fafc",
+                      border:`1.5px solid ${done?"rgba(45,212,191,0.35)":"rgba(226,232,240,0.9)"}`,
+                      display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:5,
+                      boxShadow:done?"0 0 12px rgba(45,212,191,0.15)":"none",transition:"all .3s"}}>
+                      <div style={{fontSize:"1rem",fontWeight:800,lineHeight:1,color:done?"#2DD4BF":"#cbd5e1"}}>{lvl}</div>
+                      <div style={{width:6,height:6,borderRadius:"50%",background:done?"#2DD4BF":"#e2e8f0",boxShadow:done?"0 0 7px #2DD4BF":"none"}}/>
+                    </div>
+                  );
+                })}
+              </div>
+              <div className="mono" style={{marginTop:12,fontSize:9,color:"#94a3b8",textTransform:"uppercase",letterSpacing:".14em",textAlign:"center"}}>
+                {draft.unlockedLevels.length} of 5 levels unlocked
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </main>
+
+      {/* Toast */}
+      {toast && (
+        <div className="toast">
+          <CheckCircle2 size={16} color="#2DD4BF"/>
+          <span style={{color:"rgba(255,255,255,0.85)",fontSize:13,fontWeight:500}}>{toast}</span>
+          <button onClick={() => setToast("")} style={{background:"none",border:"none",cursor:"pointer",color:"rgba(255,255,255,0.3)",marginLeft:6}}><X size={13}/></button>
+        </div>
+      )}
+    </div>
+  );
+}
