@@ -346,3 +346,87 @@ export default function PatientProfilePage() {
             </div>
           </div>
         </div>
+
+        {/* ── MAIN GRID ── */}
+        <div style={{display:"grid",gridTemplateColumns:"1fr 420px",gap:22,alignItems:"start"}}>
+
+          {/* LEFT: forms */}
+          <div style={{display:"flex",flexDirection:"column",gap:18}}>
+
+            {/* Personal Info */}
+            <div className="pf-card" style={{padding:28,animation:"cardPop 0.55s cubic-bezier(0.22,1,0.36,1) 0.10s both"}}>
+              <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:22}}>
+                <div style={{width:34,height:34,borderRadius:10,background:"rgba(45,212,191,0.12)",display:"flex",alignItems:"center",justifyContent:"center",color:"#2DD4BF"}}><UserIcon size={16}/></div>
+                <div>
+                  <div style={{fontSize:15,fontWeight:800,color:"#0B1E33"}}>Personal Info</div>
+                  <div className="mono" style={{fontSize:9,color:"#94a3b8",textTransform:"uppercase",letterSpacing:"0.14em",marginTop:1}}>Edit your details below</div>
+                </div>
+              </div>
+
+              <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:16}}>
+                <div style={{gridColumn:"1/-1"}}>
+                  <div className="fl">Full Name <span className="fl-edit"><PenLine size={8}/>editable</span></div>
+                  <input className="pf-input" value={draft.name} onChange={set("name")} placeholder="Your full name"/>
+                </div>
+                <div style={{gridColumn:"1/-1"}}>
+                  <div className="fl">Email Address <span style={{color:"#94a3b8",fontSize:8}}>read-only</span></div>
+                  <div style={{position:"relative"}}>
+                    <input className="pf-input" value={draft.email} disabled style={{paddingLeft:36}}/>
+                    <Mail size={13} style={{position:"absolute",left:12,top:"50%",transform:"translateY(-50%)",color:"#94a3b8"}}/>
+                  </div>
+                </div>
+                <div>
+                  <div className="fl">Phone <span className="fl-edit"><PenLine size={8}/>editable</span></div>
+                  <div style={{position:"relative"}}>
+                    <input className="pf-input" value={draft.phone} onChange={set("phone")} placeholder="+94 77 000 0000" style={{paddingLeft:36}}/>
+                    <Phone size={13} style={{position:"absolute",left:12,top:"50%",transform:"translateY(-50%)",color:"#94a3b8"}}/>
+                  </div>
+                </div>
+                <div>
+                  <div className="fl">Condition <span style={{color:"#94a3b8",fontSize:8,display:"flex",alignItems:"center",gap:3}}><Lock size={8}/>doctor sets this</span></div>
+                  <input className="pf-input" value={draft.condition||"Not set"} disabled/>
+                </div>
+              </div>
+
+              <div className="sep"/>
+
+              <div>
+                <div className="fl">Affected Side <span className="fl-edit"><PenLine size={8}/>editable</span></div>
+                <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:8}}>
+                  {["Left","Right","Both"].map(s => (
+                    <button key={s} onClick={() => setDraft(p=>({...p,affectedSide:s}))}
+                      style={{padding:"11px 0",borderRadius:11,fontSize:12,cursor:"pointer",fontWeight:700,
+                        border:`1.5px solid ${draft.affectedSide===s?"#2DD4BF":"rgba(226,232,240,0.9)"}`,
+                        background:draft.affectedSide===s?"rgba(45,212,191,0.08)":"#f8fafc",
+                        color:draft.affectedSide===s?"#2DD4BF":"#64748b",
+                        transition:"all .2s",fontFamily:"'JetBrains Mono',monospace",letterSpacing:".06em",
+                        boxShadow:draft.affectedSide===s?"0 0 10px rgba(45,212,191,0.2)":"none"}}>
+                      {s}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Goals */}
+            <div className="pf-card" style={{padding:28,animation:"cardPop 0.55s cubic-bezier(0.22,1,0.36,1) 0.13s both"}}>
+              <div className="fl" style={{marginBottom:10}}>Recovery Goals <span className="fl-edit"><PenLine size={8}/>editable</span></div>
+              <textarea className="pf-input" rows={3} value={draft.goals} onChange={set("goals")} placeholder="What do you want to achieve with ReViveX?"/>
+            </div>
+
+            {/* Bio */}
+            <div className="pf-card" style={{padding:28,animation:"cardPop 0.55s cubic-bezier(0.22,1,0.36,1) 0.16s both"}}>
+              <div className="fl" style={{marginBottom:10}}>About Me <span className="fl-edit"><PenLine size={8}/>editable</span></div>
+              <textarea className="pf-input" rows={4} value={draft.bio} onChange={set("bio")} placeholder="Tell your care team a little about yourself…"/>
+            </div>
+
+            {/* Save */}
+            <div style={{animation:"cardPop 0.55s cubic-bezier(0.22,1,0.36,1) 0.20s both"}}>
+              <button className="pf-save-btn" onClick={handleSave} disabled={!hasChanges||isSaving}>
+                {isSaving
+                  ? <><Loader2 size={16} style={{animation:"spin 1s linear infinite"}}/> Saving…</>
+                  : <><CheckCircle2 size={16}/> Save Changes</>}
+              </button>
+              {!hasChanges && <div className="mono" style={{textAlign:"center",marginTop:8,fontSize:8,color:"#94a3b8",letterSpacing:".18em"}}>NO UNSAVED CHANGES</div>}
+            </div>
+          </div>
