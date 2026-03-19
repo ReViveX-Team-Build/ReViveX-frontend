@@ -6,9 +6,7 @@ import {
 } from "firebase/firestore";
 import { Assignment, AssignmentStatus } from "./types";
 
-// ─────────────────────────────────────────────────────────────────────────────
-// CREATE
-// ─────────────────────────────────────────────────────────────────────────────
+
 
 export async function createAssignment(
   data: Omit<Assignment, "id" | "assignedDate" | "status">

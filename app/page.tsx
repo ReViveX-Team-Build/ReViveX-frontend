@@ -10,7 +10,7 @@ import { useRouter } from "next/navigation";
 
 import {
 
-  motion, AnimatePresence,
+  motion, AnimatePresence, useMotionValue,
 
   useScroll, useTransform, useSpring,
 
@@ -24,7 +24,7 @@ import {
 
   Cpu, Heart, Brain, Zap, BarChart3, Waves,
 
-  Mail, Phone, Globe, Linkedin, Instagram,
+  Mail, Phone, Globe, Linkedin, Instagram, Github, Facebook, Cloud,
 
   CheckCircle2, Sparkles, Activity, Shield, TrendingUp, Star,
 
@@ -403,28 +403,72 @@ const CSS = `
     animation-delay:1.8s;
   }
 
+  /* ── SWEEP BUTTON — cinematic border+sweep hover ───────────────────── */
+  .sweep-btn {
+    position: relative; overflow: hidden; cursor: none;
+    display: inline-flex; align-items: center; gap: 8px;
+    border-radius: 12px; font-weight: 700; outline: none;
+    letter-spacing: .06em; font-size: 13px;
+    transition: filter .3s cubic-bezier(.22,1,.36,1), border-color .3s,
+                border-top-width .15s, border-bottom-width .15s, opacity .15s;
+  }
+  .sweep-btn:active { opacity: .75; }
+  .sweep-btn .sweep-bar {
+    position: absolute; left: 0; top: -150%;
+    width: 100%; height: 5px; border-radius: 4px; opacity: .55;
+    transition: top .5s cubic-bezier(.22,1,.36,1);
+  }
+  .sweep-btn:hover .sweep-bar { top: 150%; }
+  .sweep-btn:hover { filter: brightness(1.5); border-top-width: 4px; }
+  /* Teal — Patient */
+  .sweep-teal {
+    background-color: rgba(13,42,40,.5); color: #2DD4BF;
+    border: 1px solid rgba(45,212,191,.5); border-bottom-width: 4px;
+    padding: 13px 26px;
+  }
+  .sweep-teal:hover { border-bottom-width: 1px; }
+  /* Slate — Doctor */
+  .sweep-slate {
+    background-color: rgba(30,30,46,.5); color: rgba(255,255,255,.80);
+    border: 1px solid rgba(255,255,255,.22); border-bottom-width: 4px;
+    padding: 13px 26px;
+  }
+  .sweep-slate:hover { border-bottom-width: 1px; border-color: rgba(255,255,255,.40); }
+
 `;
 
 
+// Shared Lenis instance — components subscribe directly, no window event spam
+let _lenisInstance: any = null;
+const _lenisCallbacks: Set<(scroll: number) => void> = new Set();
+
 function useLenis() {
-
   useEffect(() => {
-
     import("lenis").then(({ default: Lenis }) => {
-
-      const l = new Lenis({ lerp: 0.075, smoothWheel: true });
-
-      const raf = (t: number) => { l.raf(t); requestAnimationFrame(raf); };
-
-      requestAnimationFrame(raf);
-
-      return () => l.destroy();
-
-    }).catch(() => { });
-
+      const l = new Lenis({ lerp: 0.08, smoothWheel: true });
+      _lenisInstance = l;
+      l.on("scroll", ({ scroll }: { scroll: number }) => {
+        _lenisCallbacks.forEach(cb => { try { cb(scroll); } catch(_){} });
+      });
+      let rafId = 0;
+      const raf = (t: number) => { l.raf(t); rafId = requestAnimationFrame(raf); };
+      rafId = requestAnimationFrame(raf);
+      return () => { cancelAnimationFrame(rafId); _lenisInstance = null; l.destroy(); };
+    }).catch(() => {});
   }, []);
-
 }
+
+// Subscribe to Lenis scroll without flooding window events
+function useLenisScroll(cb: (scroll: number) => void) {
+  const ref = useRef(cb);
+  ref.current = cb;
+  useEffect(() => {
+    const h = (s: number) => ref.current(s);
+    _lenisCallbacks.add(h);
+    return () => { _lenisCallbacks.delete(h); };
+  }, []);
+}
+
 
 function useMouseParallax() {
 
@@ -729,699 +773,6 @@ function FloatingParticles({ count = 35 }: { count?: number }) {
   );
 }
 
-function DeviceHoloCanvas({ mouse }: { mouse: { x: number; y: number } }) {
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  const mouseRef  = useRef(mouse);
-  useEffect(() => { mouseRef.current = mouse; }, [mouse]);
-
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext("2d")!;
-    let cachedDpr = window.devicePixelRatio || 1;
-    const dpr = () => cachedDpr;
-
-    const resize = () => {
-      cachedDpr = window.devicePixelRatio || 1;
-      const d = cachedDpr;
-      canvas.width  = canvas.offsetWidth  * d;
-      canvas.height = canvas.offsetHeight * d;
-    };
-    resize();
-    window.addEventListener("resize", resize);
-
-    // ── COLOR PALETTE SYSTEM ───────────────────────────────────
-    const PALETTES = [
-      { r:45,  g:212, b:191 },  // teal
-      { r:168, g:85,  b:247 },  // purple
-      { r:6,   g:182, b:212 },  // cyan
-      { r:251, g:146, b:60  },  // amber
-    ];
-    let frame = 0;
-
-    const getThemeColor = (opacity = 1, shift = 0) => {
-      const t = (frame * 0.004 + shift) % PALETTES.length;
-      const ai = Math.floor(t), bi = (ai + 1) % PALETTES.length;
-      const f = t % 1;
-      const ease = f * f * (3 - 2 * f);
-      const r = PALETTES[ai].r * (1-ease) + PALETTES[bi].r * ease;
-      const g = PALETTES[ai].g * (1-ease) + PALETTES[bi].g * ease;
-      const b = PALETTES[ai].b * (1-ease) + PALETTES[bi].b * ease;
-      return `rgba(${r|0},${g|0},${b|0},${opacity})`;
-    };
-    const getRGB = (shift = 0) => {
-      const t = (frame * 0.004 + shift) % PALETTES.length;
-      const ai = Math.floor(t), bi = (ai + 1) % PALETTES.length;
-      const f = (t % 1); const ease = f*f*(3-2*f);
-      return {
-        r: PALETTES[ai].r*(1-ease)+PALETTES[bi].r*ease,
-        g: PALETTES[ai].g*(1-ease)+PALETTES[bi].g*ease,
-        b: PALETTES[ai].b*(1-ease)+PALETTES[bi].b*ease,
-      };
-    };
-
-    // ── ISO PROJECTION ─────────────────────────────────────────
-    // Device sits in world space; mouse tilts the whole scene
-    let tiltX = 0, tiltY = 0, tiltVX = 0, tiltVY = 0;
-
-    const project = (wx: number, wy: number, wz: number, cx: number, cy: number) => {
-      // Apply mouse tilt
-      const cosX = Math.cos(tiltX), sinX = Math.sin(tiltX);
-      const cosY = Math.cos(tiltY), sinY = Math.sin(tiltY);
-      // Rotate around Y
-      const x1 = wx * cosY + wz * sinY;
-      const z1 = -wx * sinY + wz * cosY;
-      // Rotate around X
-      const y2 = wy * cosX - z1 * sinX;
-      const z2 = wy * sinX + z1 * cosX;
-      // Iso-ish perspective
-      const SCALE = 0.85, FOV = 480;
-      const s = FOV / (z2 + FOV);
-      return { px: cx + x1 * s * SCALE, py: cy - y2 * s * SCALE, depth: z2 };
-    };
-
-    // ── DEVICE GEOMETRY ────────────────────────────────────────
-    // Base unit: box w=120, h=35, d=90 centered at (0,0,0) bottom
-    const BASE = { w:120, h:36, d:88 };
-    const SCREEN = { w:88, h:68, d:5 };
-
-    // 8 corners of base box (y goes up)
-    const baseVerts = (): [number,number,number][] => {
-      const [hw,hh,hd] = [BASE.w/2, BASE.h/2, BASE.d/2];
-      return [
-        [-hw, hh,-hd],[ hw, hh,-hd],[ hw, hh, hd],[-hw, hh, hd],  // top face
-        [-hw,-hh,-hd],[ hw,-hh,-hd],[ hw,-hh, hd],[-hw,-hh, hd],  // bottom face
-      ];
-    };
-
-    // Screen slab sitting on top, angled back 25°
-    const screenVerts = (): [number,number,number][] => {
-      const [hw,hh,hd] = [SCREEN.w/2, SCREEN.h/2, SCREEN.d/2];
-      const tilt = 0.40; // radians backward tilt
-      const baseY = BASE.h/2;
-      const verts: [number,number,number][] = [
-        [-hw,-hh,-hd],[ hw,-hh,-hd],[ hw, hh,-hd],[-hw, hh,-hd],
-        [-hw,-hh, hd],[ hw,-hh, hd],[ hw, hh, hd],[-hw, hh, hd],
-      ];
-      // Apply Y-axis tilt and position on top of base
-      return verts.map(([x,y,z]) => {
-        const newY = y * Math.cos(tilt) - z * Math.sin(tilt);
-        const newZ = y * Math.sin(tilt) + z * Math.cos(tilt);
-        return [x, newY + baseY + hh * Math.cos(tilt) + 4, newZ - hd * Math.sin(tilt) - 8];
-      });
-    };
-
-    const BOX_FACES = [
-      [0,1,2,3],  // top
-      [4,5,6,7],  // bottom
-      [0,1,5,4],  // front
-      [2,3,7,6],  // back
-      [0,3,7,4],  // left
-      [1,2,6,5],  // right
-    ];
-
-    // ── ORBITAL RINGS ──────────────────────────────────────────
-    type Ring = { tiltX:number; tiltZ:number; radius:number; speed:number; nodes:number; phase:number; colorShift:number };
-    const RINGS: Ring[] = [
-      { tiltX:0.35, tiltZ:0.0, radius:200, speed:0.012, nodes:6, phase:0,         colorShift:0   },
-      { tiltX:0.9,  tiltZ:0.5, radius:230, speed:-0.008, nodes:5, phase:1.2,      colorShift:1   },
-      { tiltX:0.15, tiltZ:1.1, radius:175, speed:0.018,  nodes:4, phase:2.4,      colorShift:2   },
-    ];
-
-    // ── DATA PACKETS on rings ─────────────────────────────────
-    type Packet = { ring:number; angle:number; speed:number; colorShift:number; trail:[number,number][] };
-    const packets: Packet[] = [];
-    RINGS.forEach((r, ri) => {
-      for(let i=0;i<3;i++) packets.push({
-        ring:ri, angle:Math.random()*Math.PI*2,
-        speed: r.speed * (0.8+Math.random()*0.4),
-        colorShift: ri * 0.66 + i * 0.2,
-        trail:[],
-      });
-    });
-
-    // ── CIRCUIT TRACES ────────────────────────────────────────
-    type Trace = { pts:[number,number][]; pulseT:number; pulseSpd:number };
-    const traces: Trace[] = [];
-    for(let i=0;i<12;i++) {
-      const ang = (i/12)*Math.PI*2;
-      const r = 100+Math.random()*60;
-      const x = Math.cos(ang)*r, y = Math.sin(ang)*r;
-      const mid = [ x*0.4 + (Math.random()-.5)*40, y*0.4 + (Math.random()-.5)*40 ];
-      traces.push({
-        pts: [[0,0], mid as [number,number], [x,y]],
-        pulseT: Math.random(), pulseSpd: 0.004+Math.random()*0.006,
-      });
-    }
-
-    // ── DATA NODES ────────────────────────────────────────────
-    type Node = { x:number; y:number; vx:number; vy:number; life:number; maxLife:number; size:number; text?:string };
-    const nodes: Node[] = [];
-    const DATA_LABELS = ["84kPa","±0.02g","87%","ECG","IMU","BLE","SPI","ADC","GPIO","PWM","NTP","OTA"];
-    let labelIdx = 0;
-
-    // ── SCREEN DATA (ECG-like graph) ───────────────────────────
-    const screenData: number[] = Array.from({length:40}, (_,i) => {
-      // ECG-like: mostly flat with spikes
-      const x = (i/40)*Math.PI*4;
-      return Math.sin(x)*0.2 + (Math.sin(x*6)>0.85 ? Math.sin(x*6)*2 : 0);
-    });
-    let screenOffset = 0;
-
-    // ── BULB PULSE ────────────────────────────────────────────
-    let bulbPulse = 0;
-
-    // ── FLOATING HUD LABELS ───────────────────────────────────
-    type HUD = { label:string; val:string; x:number; y:number; alpha:number; drift:number; colorShift:number };
-    const HUDS: HUD[] = [
-      { label:"GRIP",     val:"84 kPa",  x:-195, y:-90,  alpha:0, drift:0,   colorShift:0   },
-      { label:"TREMOR",   val:"±0.02g",  x: 195, y:-70,  alpha:0, drift:0.6, colorShift:0.9 },
-      { label:"ADHERENCE",val:"87%",     x:-185, y: 95,  alpha:0, drift:1.1, colorShift:1.6 },
-      { label:"XP PTS",   val:"+280",    x: 185, y:100,  alpha:0, drift:1.9, colorShift:2.3 },
-    ];
-
-    // ── SHOCKWAVE SYSTEM ──────────────────────────────────────
-    type Wave = { x:number; y:number; r:number; maxR:number; alpha:number; colorShift:number };
-    const waves: Wave[] = [];
-    let nextWave = 60;
-
-    // ── MAIN DRAW ─────────────────────────────────────────────
-    let raf = 0;
-
-    const drawBox = (
-      verts: [number,number,number][],
-      cx: number, cy: number,
-      fillAlpha: number,
-      strokeAlpha: number,
-      blur: number,
-      colorShift = 0,
-    ) => {
-      const pv = verts.map(v => project(v[0], v[1], v[2], cx, cy));
-      const col = getRGB(colorShift);
-      const csStr = `${col.r|0},${col.g|0},${col.b|0}`;
-
-      // Draw visible faces (simple depth sort: just draw back then front)
-      const faceOrder = [1,3,5,2,0,4]; // roughly back to front
-      faceOrder.forEach(fi => {
-        const face = BOX_FACES[fi];
-        ctx.beginPath();
-        face.forEach((vi, i) => {
-          const p = pv[vi];
-          i === 0 ? ctx.moveTo(p.px, p.py) : ctx.lineTo(p.px, p.py);
-        });
-        ctx.closePath();
-        ctx.fillStyle = `rgba(${csStr},${fillAlpha * (fi===0 ? 1 : fi===2 ? 0.7 : 0.4)})`;
-        ctx.strokeStyle = `rgba(${csStr},${strokeAlpha})`;
-        ctx.lineWidth = 1.2;
-        ctx.shadowBlur = blur;
-        ctx.shadowColor = `rgba(${csStr},0.8)`;
-        ctx.fill();
-        ctx.stroke();
-      });
-    };
-
-    const drawScreenContent = (sv: ReturnType<typeof project>[], cx: number, cy: number) => {
-      // Screen face is face index 0 (front face of screen box) = verts 0,1,2,3
-      const [p0,p1,p2,p3] = [sv[4],sv[5],sv[6],sv[7]]; // front face of screen
-      if (!p0 || !p1 || !p2 || !p3) return;
-
-      ctx.save();
-      // Clip to screen quad
-      ctx.beginPath();
-      ctx.moveTo(p0.px,p0.py); ctx.lineTo(p1.px,p1.py);
-      ctx.lineTo(p2.px,p2.py); ctx.lineTo(p3.px,p3.py);
-      ctx.closePath();
-      ctx.clip();
-
-      // Screen background
-      ctx.fillStyle = "rgba(2,12,24,0.95)";
-      ctx.fill();
-
-      // Estimate screen center and axes for drawing content inside
-      const scx = (p0.px+p1.px+p2.px+p3.px)/4;
-      const scy = (p0.py+p1.py+p2.py+p3.py)/4;
-      const sw  = Math.hypot(p1.px-p0.px, p1.py-p0.py) * 0.8;
-      const sh  = Math.hypot(p3.py-p0.py, p3.px-p0.px) * 0.75;
-
-      const col = getRGB(0.5);
-      const cStr = `${col.r|0},${col.g|0},${col.b|0}`;
-
-      // Draw ECG-like waveform
-      const waveY = scy + sh*0.12;
-      const waveH = sh*0.32;
-      const waveX0 = scx - sw/2;
-      const waveXW = sw;
-      ctx.beginPath();
-      screenData.forEach((v, i) => {
-        const x = waveX0 + (i/screenData.length)*waveXW;
-        const y = waveY - v*waveH;
-        i===0 ? ctx.moveTo(x,y) : ctx.lineTo(x,y);
-      });
-      ctx.strokeStyle = `rgba(${cStr},0.9)`;
-      ctx.lineWidth = 1.4;
-      ctx.shadowBlur = 8;
-      ctx.shadowColor = `rgba(${cStr},1)`;
-      ctx.stroke();
-
-      // Bar graph at bottom
-      for(let i=0;i<8;i++) {
-        const bx = scx - sw/2 + (i/8)*sw + sw/16;
-        const bh = (0.3+Math.sin(frame*0.05+i)*0.2)*sh*0.3;
-        const by = scy + sh*0.35;
-        const alpha = 0.3 + 0.4*(i/8);
-        const g = ctx.createLinearGradient(bx, by-bh, bx, by);
-        g.addColorStop(0, `rgba(${cStr},${alpha})`);
-        g.addColorStop(1, `rgba(${cStr},0.05)`);
-        ctx.fillStyle = g;
-        ctx.fillRect(bx, by-bh, sw/8-2, bh);
-      }
-
-      // Top label
-      ctx.font = "bold 7px monospace";
-      ctx.fillStyle = `rgba(${cStr},0.7)`;
-      ctx.textAlign = "center";
-      ctx.shadowBlur = 4;
-      ctx.fillText("REVIVEX · LIVE", scx, scy - sh*0.42);
-
-      // Scan line
-      const scanY = scy - sh/2 + ((frame*1.5) % (sh+4));
-      ctx.fillStyle = `rgba(${cStr},0.08)`;
-      ctx.fillRect(scx-sw/2, scanY, sw, 2);
-
-      ctx.restore();
-    };
-
-    // Ring point in 3D
-    const ringPt = (ring: Ring, angle: number): [number,number,number] => {
-      const x = Math.cos(angle) * ring.radius;
-      const y = Math.sin(angle) * ring.radius * Math.cos(ring.tiltX) - Math.sin(angle)*ring.radius*0.2;
-      const z = Math.sin(angle) * ring.radius * Math.sin(ring.tiltX) + Math.cos(angle)*ring.radius*Math.sin(ring.tiltZ)*0.5;
-      return [x, y, z];
-    };
-
-    const draw = () => {
-      frame++;
-      const d = dpr();
-      const W = canvas.width/d, H = canvas.height/d;
-      const CX = W * 0.50, CY = H * 0.50;
-
-      ctx.setTransform(d,0,0,d,0,0);
-      ctx.clearRect(0,0,W,H);
-
-      // ── Mouse tilt physics ─────────────────────────────────
-      const mx = mouseRef.current;
-      const targetTY = mx.x * 0.3;
-      const targetTX = mx.y * -0.18;
-      tiltVX = (tiltVX + (targetTX - tiltX) * 0.04) * 0.88;
-      tiltVY = (tiltVY + (targetTY - tiltY) * 0.04) * 0.88;
-      tiltX += tiltVX; tiltY += tiltVY;
-
-      // ── Hex grid background dots — redrawn every 3 frames (imperceptible, big perf gain) ──
-      if (frame % 3 === 0) {
-      ctx.save();
-      const hexR = 28;
-      for(let row=0; row<Math.ceil(H/hexR/2)+1; row++) {
-        for(let col=0; col<Math.ceil(W/hexR)+2; col++) {
-          const x = col*hexR*1.73 + (row%2)*hexR*0.87 - hexR;
-          const y = row*hexR*1.5 - hexR;
-          const dist = Math.hypot(x-CX, y-CY);
-          const fade = Math.max(0, 1 - dist/380);
-          if(fade<0.01) continue;
-          const pulse = Math.sin(frame*0.02 + dist*0.02)*0.5+0.5;
-          ctx.fillStyle = getThemeColor(fade * 0.045 * pulse);
-          ctx.beginPath(); ctx.arc(x, y, 1.2, 0, Math.PI*2); ctx.fill();
-        }
-      }
-      ctx.restore();
-      }
-
-      // ── Circuit traces (radiating from device) ─────────────
-      ctx.save();
-      ctx.shadowBlur = 0;
-      traces.forEach(tr => {
-        tr.pulseT += tr.pulseSpd;
-        if(tr.pulseT > 1) tr.pulseT = 0;
-
-        const [p0, p1, p2] = tr.pts;
-        const screenP0 = { px: CX + p0[0], py: CY + p0[1] };
-        const screenP1 = { px: CX + p1[0], py: CY + p1[1] };
-        const screenP2 = { px: CX + p2[0], py: CY + p2[1] };
-
-        // Draw trace line (faint)
-        ctx.beginPath();
-        ctx.moveTo(screenP0.px, screenP0.py);
-        ctx.quadraticCurveTo(screenP1.px, screenP1.py, screenP2.px, screenP2.py);
-        ctx.strokeStyle = getThemeColor(0.06);
-        ctx.lineWidth = 0.8;
-        ctx.shadowBlur = 0;
-        ctx.stroke();
-
-        // Draw moving pulse dot
-        const t = tr.pulseT;
-        const bx = (1-t)*(1-t)*screenP0.px + 2*(1-t)*t*screenP1.px + t*t*screenP2.px;
-        const by = (1-t)*(1-t)*screenP0.py + 2*(1-t)*t*screenP1.py + t*t*screenP2.py;
-        ctx.shadowBlur = 12;
-        ctx.shadowColor = getThemeColor(1);
-        ctx.fillStyle = getThemeColor(0.9);
-        ctx.beginPath(); ctx.arc(bx, by, 2.5, 0, Math.PI*2); ctx.fill();
-
-        // End node glow
-        const endFade = Math.sin(frame*0.03 + tr.pulseSpd*200)*0.3+0.7;
-        ctx.shadowBlur = 18;
-        ctx.fillStyle = getThemeColor(0.35*endFade);
-        ctx.beginPath(); ctx.arc(screenP2.px, screenP2.py, 5, 0, Math.PI*2); ctx.fill();
-        ctx.fillStyle = getThemeColor(0.9*endFade);
-        ctx.beginPath(); ctx.arc(screenP2.px, screenP2.py, 1.5, 0, Math.PI*2); ctx.fill();
-      });
-      ctx.restore();
-
-      // ── Orbital rings ──────────────────────────────────────
-      RINGS.forEach((ring, ri) => {
-        const STEPS = 72;
-        ctx.save();
-        ctx.lineWidth = 1;
-
-        // Draw ring path (dashed neon)
-        for(let i=0; i<STEPS; i++) {
-          const a0 = (i/STEPS)*Math.PI*2;
-          const a1 = ((i+1)/STEPS)*Math.PI*2;
-          if(i%4 < 2) continue; // dashed effect
-          const p0 = ringPt(ring, a0), p1 = ringPt(ring, a1);
-          const s0 = project(p0[0],p0[1],p0[2], CX,CY);
-          const s1 = project(p1[0],p1[1],p1[2], CX,CY);
-          const depth = (s0.depth+s1.depth)*0.5;
-          const alpha = 0.06 + Math.max(0, -depth/400)*0.12;
-          ctx.beginPath();
-          ctx.moveTo(s0.px,s0.py); ctx.lineTo(s1.px,s1.py);
-          ctx.strokeStyle = getThemeColor(alpha, ri*0.66);
-          ctx.shadowBlur = 8;
-          ctx.shadowColor = getThemeColor(0.4, ri*0.66);
-          ctx.stroke();
-        }
-
-        // Ring nodes (glowing dots at even positions)
-        for(let n=0; n<ring.nodes; n++) {
-          const a = (n/ring.nodes)*Math.PI*2 + frame*0.003*Math.sign(ring.speed);
-          const p = ringPt(ring, a);
-          const sp = project(p[0],p[1],p[2], CX,CY);
-          const pulse = Math.sin(frame*0.06 + n)*0.3+0.7;
-          const depth = sp.depth;
-          const sz = 3.5 * (1 + Math.max(0,-depth/500)*0.5) * pulse;
-          ctx.shadowBlur = 20;
-          ctx.shadowColor = getThemeColor(0.9, ri*0.66);
-          ctx.fillStyle = getThemeColor(0.8*pulse, ri*0.66);
-          ctx.beginPath(); ctx.arc(sp.px,sp.py,sz,0,Math.PI*2); ctx.fill();
-          ctx.fillStyle = "rgba(255,255,255,0.9)";
-          ctx.beginPath(); ctx.arc(sp.px,sp.py,1.2,0,Math.PI*2); ctx.fill();
-        }
-        ctx.restore();
-      });
-
-      // ── Data packets traveling along rings ─────────────────
-      packets.forEach(pkt => {
-        pkt.angle += pkt.speed * 1.8;
-        const ring = RINGS[pkt.ring];
-        const p3d = ringPt(ring, pkt.angle);
-        const sp = project(p3d[0],p3d[1],p3d[2], CX,CY);
-
-        // Trail
-        pkt.trail.push([sp.px, sp.py]);
-        if(pkt.trail.length > 18) pkt.trail.shift();
-        for(let ti=1; ti<pkt.trail.length; ti++) {
-          const a = (ti/pkt.trail.length) * 0.6;
-          ctx.beginPath();
-          ctx.moveTo(pkt.trail[ti-1][0], pkt.trail[ti-1][1]);
-          ctx.lineTo(pkt.trail[ti][0],   pkt.trail[ti][1]);
-          ctx.strokeStyle = getThemeColor(a, pkt.colorShift);
-          ctx.lineWidth = (ti/pkt.trail.length)*3;
-          ctx.shadowBlur = 10; ctx.shadowColor = getThemeColor(0.7,pkt.colorShift);
-          ctx.stroke();
-        }
-        // Head
-        ctx.save();
-        ctx.shadowBlur = 22; ctx.shadowColor = getThemeColor(1,pkt.colorShift);
-        ctx.fillStyle = "rgba(255,255,255,0.95)";
-        ctx.beginPath(); ctx.arc(sp.px,sp.py,3.2,0,Math.PI*2); ctx.fill();
-        ctx.restore();
-      });
-
-      // ── Shockwaves ────────────────────────────────────────
-      nextWave--;
-      if(nextWave<=0) {
-        waves.push({ x:CX, y:CY, r:0, maxR:260, alpha:0.6, colorShift:Math.random()*3 });
-        nextWave = 80+Math.floor(Math.random()*60);
-      }
-      for(let i=waves.length-1; i>=0; i--) {
-        const w=waves[i];
-        w.r += 2.8; w.alpha *= 0.965;
-        if(w.r >= w.maxR || w.alpha < 0.01) { waves.splice(i,1); continue; }
-        const prog = w.r/w.maxR;
-        ctx.beginPath();
-        ctx.ellipse(w.x, w.y, w.r, w.r*0.38, 0, 0, Math.PI*2);
-        ctx.strokeStyle = getThemeColor(w.alpha*(1-prog), w.colorShift);
-        ctx.lineWidth = 1.5*(1-prog*0.6);
-        ctx.shadowBlur = 16; ctx.shadowColor = getThemeColor(0.6, w.colorShift);
-        ctx.stroke();
-      }
-
-      // ── Floating HUD labels ───────────────────────────────
-      HUDS.forEach((hud, hi) => {
-        hud.alpha += 0.008;
-        const a = (Math.sin(frame*0.012 + hud.drift) * 0.25 + 0.75) * Math.min(1, hud.alpha);
-        const dy = Math.sin(frame*0.016 + hud.drift*2) * 6;
-        const sx = CX + hud.x, sy = CY + hud.y + dy;
-        const col = getRGB(hud.colorShift);
-        const cStr = `${col.r|0},${col.g|0},${col.b|0}`;
-
-        // Box
-        ctx.save();
-        ctx.shadowBlur = 20; ctx.shadowColor = `rgba(${cStr},0.4)`;
-        ctx.fillStyle = `rgba(2,12,24,${0.75*a})`;
-        ctx.strokeStyle = `rgba(${cStr},${0.4*a})`;
-        ctx.lineWidth = 1;
-        const bw=72, bh=32, br=6;
-        ctx.beginPath();
-        ctx.roundRect(sx-bw/2, sy-bh/2, bw, bh, br);
-        ctx.fill(); ctx.stroke();
-
-        // Label + value
-        ctx.shadowBlur = 6;
-        ctx.font = `500 7px "Space Mono",monospace`;
-        ctx.fillStyle = `rgba(${cStr},${0.55*a})`;
-        ctx.textAlign = "center";
-        ctx.fillText(hud.label, sx, sy-4);
-        ctx.font = `bold 11px "Space Mono",monospace`;
-        ctx.fillStyle = `rgba(255,255,255,${0.9*a})`;
-        ctx.fillText(hud.val, sx, sy+8);
-
-        // Connector dot
-        ctx.fillStyle = `rgba(${cStr},${0.7*a})`;
-        ctx.beginPath(); ctx.arc(sx, sy+bh/2, 2.5, 0, Math.PI*2); ctx.fill();
-        ctx.restore();
-      });
-
-      // ── 3D Device ─────────────────────────────────────────
-      ctx.save();
-      // Draw base box
-      const bvRaw = baseVerts();
-      const bvProj = bvRaw.map(v => project(v[0],v[1],v[2],CX,CY));
-
-      // Face rendering (back to front)
-      const baseFaceAlphas = [0.18, 0.04, 0.12, 0.04, 0.08, 0.14];
-      [1,3,5,2,4,0].forEach((fi, di) => {
-        const face = BOX_FACES[fi];
-        ctx.beginPath();
-        face.forEach((vi,i) => {
-          i===0 ? ctx.moveTo(bvProj[vi].px, bvProj[vi].py) : ctx.lineTo(bvProj[vi].px, bvProj[vi].py);
-        });
-        ctx.closePath();
-        const col = getRGB(0);
-        const cStr = `${col.r|0},${col.g|0},${col.b|0}`;
-        ctx.fillStyle = `rgba(4,14,30,0.88)`;
-        ctx.shadowBlur = 0; ctx.fill();
-        ctx.strokeStyle = `rgba(${cStr},${0.35+di*0.03})`;
-        ctx.lineWidth = 1.4; ctx.shadowBlur = 12;
-        ctx.shadowColor = `rgba(${cStr},0.7)`;
-        ctx.stroke();
-      });
-
-      // Logo "R" on front face
-      const frontFace = BOX_FACES[2].map(vi => bvProj[vi]);
-      const lx = frontFace.reduce((s,p)=>s+p.px,0)/4;
-      const ly = frontFace.reduce((s,p)=>s+p.py,0)/4;
-      ctx.font = "bold 9px 'Bebas Neue',sans-serif";
-      ctx.fillStyle = getThemeColor(0.9);
-      ctx.shadowBlur = 14; ctx.shadowColor = getThemeColor(1);
-      ctx.textAlign = "center"; ctx.textBaseline="middle";
-      ctx.fillText("R", lx, ly);
-      ctx.textBaseline = "alphabetic";
-
-      // LED strip on top edge of front face
-      const tf0 = bvProj[0], tf1 = bvProj[1];
-      for(let li=0; li<12; li++) {
-        const t2 = li/11;
-        const lx2 = tf0.px+(tf1.px-tf0.px)*t2;
-        const ly2 = tf0.py+(tf1.py-tf0.py)*t2;
-        const on = Math.sin(frame*0.08+li*0.7)>0.2;
-        ctx.fillStyle = on ? getThemeColor(0.85) : getThemeColor(0.15);
-        ctx.shadowBlur = on ? 10 : 0;
-        ctx.shadowColor = getThemeColor(1);
-        ctx.beginPath(); ctx.arc(lx2, ly2, 1.8, 0, Math.PI*2); ctx.fill();
-      }
-
-      // ── Screen slab ────────────────────────────────────────
-      const svRaw = screenVerts();
-      const svProj = svRaw.map(v => project(v[0],v[1],v[2],CX,CY));
-
-      // Draw screen frame (all faces)
-      [1,3,5,2,4,0].forEach(fi => {
-        const face = BOX_FACES[fi];
-        ctx.beginPath();
-        face.forEach((vi,i) => {
-          i===0 ? ctx.moveTo(svProj[vi].px, svProj[vi].py) : ctx.lineTo(svProj[vi].px, svProj[vi].py);
-        });
-        ctx.closePath();
-        ctx.fillStyle = "rgba(8,20,40,0.9)";
-        ctx.fill();
-        const col = getRGB(0.2);
-        ctx.strokeStyle = `rgba(${col.r|0},${col.g|0},${col.b|0},0.5)`;
-        ctx.lineWidth=1.2; ctx.shadowBlur=8; ctx.shadowColor=getThemeColor(0.5);
-        ctx.stroke();
-      });
-
-      // Screen content on front face
-      drawScreenContent(svProj, CX, CY);
-
-      // ── Cable + Bulb ───────────────────────────────────────
-      // Cable starts from left side of base
-      const cableStart = project(-BASE.w/2, 0, BASE.d*0.3, CX, CY);
-      const bulbAngle = frame * 0.011;
-      const bulbX = -BASE.w/2 - 110 + Math.sin(bulbAngle)*20;
-      const bulbY = 15 + Math.cos(bulbAngle*0.7)*12;
-      const bulbZ = BASE.d*0.2 + Math.sin(bulbAngle*0.5)*15;
-      const cableMid = project(-BASE.w/2-60, 30, BASE.d*0.3, CX, CY);
-      const bulbPos = project(bulbX, bulbY, bulbZ, CX, CY);
-
-      // Draw cable as bezier
-      ctx.beginPath();
-      ctx.moveTo(cableStart.px, cableStart.py);
-      ctx.quadraticCurveTo(cableMid.px, cableMid.py, bulbPos.px, bulbPos.py);
-      ctx.strokeStyle = "rgba(60,80,100,0.7)";
-      ctx.lineWidth = 3; ctx.shadowBlur = 0; ctx.stroke();
-      ctx.strokeStyle = getThemeColor(0.25);
-      ctx.lineWidth = 1; ctx.shadowBlur = 6; ctx.shadowColor = getThemeColor(0.8);
-      ctx.stroke();
-
-      // Bulb body
-      bulbPulse = Math.sin(frame*0.05)*0.25+0.75;
-      const bulbR = 18 * bulbPulse;
-      const col3 = getRGB(1.5);
-      const cStr3 = `${col3.r|0},${col3.g|0},${col3.b|0}`;
-
-      // Outer glow
-      const bulbGrad = ctx.createRadialGradient(bulbPos.px,bulbPos.py,0, bulbPos.px,bulbPos.py,bulbR*2.2);
-      bulbGrad.addColorStop(0,   `rgba(${cStr3},0.25)`);
-      bulbGrad.addColorStop(0.5, `rgba(${cStr3},0.10)`);
-      bulbGrad.addColorStop(1,   "transparent");
-      ctx.fillStyle = bulbGrad; ctx.shadowBlur=0;
-      ctx.beginPath(); ctx.arc(bulbPos.px,bulbPos.py,bulbR*2.2,0,Math.PI*2); ctx.fill();
-
-      // Bulb shell
-      ctx.beginPath(); ctx.ellipse(bulbPos.px,bulbPos.py,bulbR,bulbR*0.82,0,0,Math.PI*2);
-      ctx.fillStyle = `rgba(4,14,28,0.88)`;
-      ctx.strokeStyle = `rgba(${cStr3},${0.6+bulbPulse*0.3})`;
-      ctx.lineWidth=1.5; ctx.shadowBlur=18; ctx.shadowColor=`rgba(${cStr3},0.7)`;
-      ctx.fill(); ctx.stroke();
-
-      // Sensor lines inside bulb
-      for(let si=0;si<4;si++) {
-        const a = (si/4)*Math.PI + frame*0.022;
-        const sr = bulbR*0.55;
-        ctx.beginPath();
-        ctx.moveTo(bulbPos.px+Math.cos(a)*sr*0.3, bulbPos.py+Math.sin(a)*sr*0.3*0.82);
-        ctx.lineTo(bulbPos.px+Math.cos(a)*sr,     bulbPos.py+Math.sin(a)*sr*0.82);
-        ctx.strokeStyle = `rgba(${cStr3},${0.5*bulbPulse})`;
-        ctx.lineWidth=1; ctx.shadowBlur=6; ctx.stroke();
-      }
-      // Core
-      ctx.fillStyle = `rgba(255,255,255,${0.85*bulbPulse})`;
-      ctx.shadowBlur=10; ctx.shadowColor="white";
-      ctx.beginPath(); ctx.arc(bulbPos.px,bulbPos.py,3.5,0,Math.PI*2); ctx.fill();
-
-      // Pressure wave rings from bulb
-      for(let pw=0;pw<3;pw++) {
-        const pr = ((frame*0.8 + pw*25) % 55);
-        const pa = Math.max(0, 1 - pr/55) * 0.5;
-        ctx.beginPath();
-        ctx.ellipse(bulbPos.px,bulbPos.py, pr, pr*0.82, 0, 0, Math.PI*2);
-        ctx.strokeStyle = `rgba(${cStr3},${pa})`;
-        ctx.lineWidth=1; ctx.shadowBlur=8; ctx.stroke();
-      }
-
-      ctx.restore();
-
-      // ── Spawn data nodes from device ─────────────────────
-      if(frame % 40 === 0) {
-        nodes.push({
-          x: CX + (Math.random()-.5)*50,
-          y: CY - 60 + (Math.random()-.5)*30,
-          vx: (Math.random()-.5)*1.8,
-          vy: -(1+Math.random()*1.5),
-          life:0, maxLife:80+Math.floor(Math.random()*40),
-          size:1.5+Math.random()*2,
-          text: DATA_LABELS[(labelIdx++)%DATA_LABELS.length],
-        });
-      }
-      for(let i=nodes.length-1;i>=0;i--) {
-        const n=nodes[i]; n.x+=n.vx; n.y+=n.vy; n.vx*=0.99; n.life++;
-        const a2 = Math.sin((n.life/n.maxLife)*Math.PI)*0.85;
-        ctx.save();
-        ctx.shadowBlur=10; ctx.shadowColor=getThemeColor(0.8);
-        ctx.fillStyle=getThemeColor(a2);
-        ctx.beginPath(); ctx.arc(n.x,n.y,n.size,0,Math.PI*2); ctx.fill();
-        if(n.text && n.life<50) {
-          ctx.font="6px 'Space Mono',monospace";
-          ctx.fillStyle=getThemeColor(a2*0.8);
-          ctx.textAlign="center"; ctx.shadowBlur=4;
-          ctx.fillText(n.text, n.x, n.y-8);
-        }
-        ctx.restore();
-        if(n.life>=n.maxLife) nodes.splice(i,1);
-      }
-
-      // ── Master device glow ─────────────────────────────
-      ctx.save();
-      ctx.globalCompositeOperation = "lighter";
-      const masterGlow = ctx.createRadialGradient(CX,CY,0, CX,CY,220);
-      masterGlow.addColorStop(0, getThemeColor(0.04));
-      masterGlow.addColorStop(1, "transparent");
-      ctx.fillStyle = masterGlow;
-      ctx.beginPath(); ctx.arc(CX,CY,220,0,Math.PI*2); ctx.fill();
-      ctx.restore();
-
-      screenOffset = (screenOffset + 0.4) % 100;
-      raf = requestAnimationFrame(draw);
-    };
-
-    raf = requestAnimationFrame(draw);
-    return () => { cancelAnimationFrame(raf); window.removeEventListener("resize", resize); };
-  }, []);
-
-  return (
-    <canvas
-      ref={canvasRef}
-      style={{
-        position:"absolute", inset:0,
-        width:"100%", height:"100%",
-        display:"block",
-        pointerEvents:"auto",
-        zIndex:20,
-        willChange:"transform",
-      }}
-    />
-  );
-}
-
 function MedicalCursor() {
 
   const crossRef = useRef<HTMLDivElement>(null);
@@ -1668,31 +1019,10 @@ function MedicalCursor() {
 
 }
 
-const ECG_PATH = `
-  M-100 80 L0 80 
-  L20 76 L38 85 L56 18 L72 148 L84 6 L100 80 L250 80 
-  L270 76 L288 85 L306 18 L322 148 L334 6 L350 80 L500 80 
-  L520 76 L538 85 L556 18 L572 148 L584 6 L600 80 L750 80 
-  L770 76 L788 85 L806 18 L822 148 L834 6 L850 80 L1000 80 
-  L1020 76 L1038 85 L1056 18 L1072 148 L1084 6 L1100 80 L1250 80 
-  L1270 76 L1288 85 L1306 18 L1322 148 L1334 6 L1350 80 L1500 80 
-  L1520 76 L1538 85 L1556 18 L1572 148 L1584 6 L1600 80 L1750 80 
-  L1770 76 L1788 85 L1806 18 L1822 148 L1834 6 L1850 80 L2000 80 
-  L2020 76 L2038 85 L2056 18 L2072 148 L2084 6 L2100 80 L2250 80 
-  L2270 76 L2288 85 L2306 18 L2322 148 L2334 6 L2350 80 L2500 80 
-  L2520 76 L2538 85 L2556 18 L2572 148 L2584 6 L2600 80 L2750 80 
-  L2770 76 L2788 85 L2806 18 L2822 148 L2834 6 L2850 80 L3000 80
-`;
-
-//  PRELOADER (Procedural Neural Signal Generator)
-
 function Preloader({ onDone }: { onDone: () => void }) {
-  const [pct, setPct] = useState(0);
-  const [phase, setPhase] = useState<"loading" | "ready" | "exit">("loading");
-  const [msg, setMsg] = useState("DETECTING NEURAL SIGNAL...");
-
-  // 1. Static initial state for Server-Side Rendering (Fixes Hydration Error)
-  const [ecgPath, setEcgPath] = useState("M-50 80 L3000 80");
+  const [pct,   setPct]   = useState(0);
+  const [phase, setPhase] = useState<"loading"|"ready"|"exit">("loading");
+  const [msg,   setMsg]   = useState("DETECTING NEURAL SIGNAL...");
 
   const MSGS = [
     "DETECTING NEURAL SIGNAL...",
@@ -1703,154 +1033,225 @@ function Preloader({ onDone }: { onDone: () => void }) {
     "NEURAL LINK ESTABLISHED."
   ];
 
-  // 2. Generate the random procedural path ONLY on the client after mount
   useEffect(() => {
-    let path = "M-50 80";
-    let x = -50;
-    while (x < 3500) {
-      const noiseLength = 80 + Math.random() * 200;
-      const targetX = x + noiseLength;
-      while (x < targetX) {
-        x += 10 + Math.random() * 15;
-        const y = 80 + (Math.random() - 0.5) * 6;
-        path += ` L${x.toFixed(1)} ${y.toFixed(1)}`;
-      }
-      x += 18; path += ` L${x.toFixed(1)} ${70 - Math.random() * 12}`;
-      x += 12; path += ` L${x.toFixed(1)} ${80 + Math.random() * 4}`;
-      x += 10; path += ` L${x.toFixed(1)} ${95 + Math.random() * 10}`;
-      const isHuge = Math.random() > 0.8;
-      x += 12; path += ` L${x.toFixed(1)} ${(isHuge ? -30 : 10).toFixed(1)}`;
-      x += 14; path += ` L${x.toFixed(1)} ${(isHuge ? 190 : 150).toFixed(1)}`;
-      if (Math.random() > 0.7) {
-        x += 10; path += ` L${x.toFixed(1)} ${-5 - Math.random() * 20}`;
-        x += 12; path += ` L${x.toFixed(1)} ${140 + Math.random() * 20}`;
-      }
-      x += 15; path += ` L${x.toFixed(1)} ${80 + (Math.random() - 0.5) * 8}`;
-      x += 25; path += ` L${x.toFixed(1)} ${65 - Math.random() * 12}`;
-      x += 20; path += ` L${x.toFixed(1)} 80`;
-    }
-    setEcgPath(path);
-  }, []);
-
-  // 3. Handle the loading sequence and phases
-  useEffect(() => {
-    const counter = setInterval(() => {
-      setPct((p) => {
-        if (p >= 100) { clearInterval(counter); return 100; }
-        return p + 1;
-      });
-    }, 28);
-
+    const counter  = setInterval(() => setPct(p => { if (p >= 100) { clearInterval(counter); return 100; } return p + 1; }), 28);
     let mi = 0;
-    const msgTimer = setInterval(() => {
-      mi = Math.min(mi + 1, MSGS.length - 1);
-      setMsg(MSGS[mi]);
-    }, 600);
-
+    const msgTimer = setInterval(() => { mi = Math.min(mi+1, MSGS.length-1); setMsg(MSGS[mi]); }, 600);
     const t1 = setTimeout(() => setPhase("ready"), 3200);
-    const t2 = setTimeout(() => setPhase("exit"), 4200);
+    const t2 = setTimeout(() => setPhase("exit"),  4200);
     const t3 = setTimeout(onDone, 5000);
-
-    return () => { clearInterval(counter); clearInterval(msgTimer);[t1, t2, t3].forEach(clearTimeout); };
+    return () => { clearInterval(counter); clearInterval(msgTimer); [t1,t2,t3].forEach(clearTimeout); };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [onDone]);
+
+  // Premium ECG SVG points — the heartbeat polyline
+  const PTS = "0.157 23.954, 14 23.954, 21.843 48, 43 0, 50 24, 64 24";
 
   return (
     <AnimatePresence>
       {phase !== "exit" && (
         <motion.div
           key="pl"
-          exit={{ y: "-100%", opacity: 0, filter: "blur(10px)", transition: { duration: 0.9, ease: [0.76, 0, 0.24, 1] } }}
+          exit={{ y: "-100%", opacity: 0, filter: "blur(10px)", transition: { duration: 0.9, ease: [0.76,0,0.24,1] } }}
           style={{
             position: "fixed", inset: 0, zIndex: 9900,
             display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
-            overflow: "hidden", background: "linear-gradient(160deg, #050c18 0%, #080f1a 50%, #060d1c 100%)",
+            overflow: "hidden",
+            background: "linear-gradient(160deg, #030810 0%, #060e1a 50%, #040c16 100%)",
           }}
         >
+          {/* Radial glow behind everything */}
           <motion.div
-            animate={{ opacity: phase === "ready" ? 0.8 : 0.4, scale: phase === "ready" ? 1.5 : 1 }}
-            transition={{ duration: 0.8, ease: "easeOut" }}
+            animate={{ opacity: phase === "ready" ? 0.9 : 0.5, scale: phase === "ready" ? 1.6 : 1 }}
+            transition={{ duration: 1.0, ease: "easeOut" }}
             style={{
               position: "absolute", inset: 0, pointerEvents: "none",
-              background: "radial-gradient(circle at center, rgba(45,212,191,0.18) 0%, transparent 60%)"
+              background: "radial-gradient(ellipse 70% 50% at 50% 50%, rgba(45,212,191,0.15) 0%, transparent 70%)"
             }}
           />
 
-          <div className="grid-dk" style={{ position: "absolute", inset: 0, pointerEvents: "none", opacity: phase === "ready" ? 0.8 : 0.3, transition: "opacity 0.8s" }} />
+          {/* Grid */}
+          <div className="grid-dk" style={{ position:"absolute",inset:0,pointerEvents:"none",opacity: phase==="ready"?0.7:0.25,transition:"opacity 0.8s" }} />
 
-          <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", overflow: "hidden", pointerEvents: "none" }}>
-            <svg width="100%" height="160" viewBox="0 0 3000 160" preserveAspectRatio="none">
-              <motion.path d={ecgPath} fill="none" stroke="#2DD4BF" strokeWidth="6" strokeLinecap="round" strokeLinejoin="bevel"
-                style={{ filter: "blur(10px)" }}
-                initial={{ pathLength: 0, opacity: 0 }}
-                animate={{ pathLength: 1, opacity: phase === "ready" ? 0 : 0.7 }}
-                transition={{ duration: 2.8, ease: "linear" }}
+          {/* ── PREMIUM ECG SVG ── */}
+          <div style={{ position:"absolute",inset:0,display:"flex",alignItems:"center",overflow:"hidden",pointerEvents:"none" }}>
+            <svg
+              viewBox="0 0 64 48"
+              style={{ width:"100%", height:160, overflow:"visible" }}
+              preserveAspectRatio="xMidYMid meet"
+            >
+              <defs>
+                {/* Glistening gradient — teal → white → teal sweep */}
+                <linearGradient id="ecg-glisten" x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="0%"   stopColor="#2DD4BF" stopOpacity="0.9" />
+                  <stop offset="38%"  stopColor="#7ffff4" stopOpacity="1"   />
+                  <stop offset="50%"  stopColor="#ffffff" stopOpacity="1"   />
+                  <stop offset="62%"  stopColor="#7ffff4" stopOpacity="1"   />
+                  <stop offset="100%" stopColor="#2DD4BF" stopOpacity="0.9" />
+                  <animateTransform
+                    attributeName="gradientTransform" type="translate"
+                    from="-1 0" to="1 0"
+                    dur="1.8s" repeatCount="indefinite"
+                  />
+                </linearGradient>
+                {/* Outer glow filter */}
+                <filter id="ecg-glow" x="-20%" y="-200%" width="140%" height="500%">
+                  <feGaussianBlur stdDeviation="1.8" result="blur1" />
+                  <feGaussianBlur stdDeviation="4"   result="blur2" />
+                  <feMerge>
+                    <feMergeNode in="blur2" />
+                    <feMergeNode in="blur1" />
+                    <feMergeNode in="SourceGraphic" />
+                  </feMerge>
+                </filter>
+                {/* Sharp inner glow */}
+                <filter id="ecg-glow2" x="-20%" y="-200%" width="140%" height="500%">
+                  <feGaussianBlur stdDeviation="0.6" result="b" />
+                  <feMerge>
+                    <feMergeNode in="b" />
+                    <feMergeNode in="SourceGraphic" />
+                  </feMerge>
+                </filter>
+              </defs>
+
+              {/* Layer 1: fat teal soft glow */}
+              <polyline
+                points={PTS}
+                fill="none"
+                stroke="#2DD4BF"
+                strokeWidth="5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                style={{ filter:"blur(6px)", opacity:0.45 }}
               />
-              <motion.path d={ecgPath} fill="none" stroke="#FFFFFF" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="bevel"
-                initial={{ pathLength: 0, opacity: 0 }}
-                animate={{ pathLength: 1, opacity: phase === "ready" ? 0 : 1 }}
-                transition={{ duration: 2.8, ease: "linear" }}
+              {/* Layer 2: medium teal glow */}
+              <polyline
+                points={PTS}
+                fill="none"
+                stroke="#2DD4BF"
+                strokeWidth="3.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                filter="url(#ecg-glow)"
+                opacity={0.55}
+              />
+              {/* Layer 3: dim ghost track */}
+              <polyline
+                points={PTS}
+                fill="none"
+                stroke="rgba(45,212,191,0.18)"
+                strokeWidth="5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+              {/* Layer 4: main animated dash — glistening gradient stroke */}
+              <polyline
+                points={PTS}
+                fill="none"
+                stroke="url(#ecg-glisten)"
+                strokeWidth="4.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeDasharray="48 144"
+                strokeDashoffset="192"
+                filter="url(#ecg-glow2)"
+                style={{
+                  animation: "ecg-dash 1.4s linear infinite",
+                }}
+              />
+              {/* Layer 5: ultra-bright hair-thin centre line */}
+              <polyline
+                points={PTS}
+                fill="none"
+                stroke="rgba(255,255,255,0.92)"
+                strokeWidth="1.2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeDasharray="48 144"
+                strokeDashoffset="192"
+                style={{
+                  animation: "ecg-dash 1.4s linear infinite",
+                }}
               />
             </svg>
           </div>
 
-          <div style={{ position: "relative", zIndex: 2, textAlign: "center" }}>
+          {/* Inject keyframe for ecg-dash */}
+          <style dangerouslySetInnerHTML={{ __html: `
+            @keyframes ecg-dash {
+              72.5% { opacity: 0; }
+              to    { stroke-dashoffset: 0; }
+            }
+          ` }} />
+
+          {/* ── Centre content ── */}
+          <div style={{ position:"relative", zIndex:2, textAlign:"center" }}>
             <motion.div
-              animate={phase === "ready" ? { scale: [1, 1.5, 1], filter: ["blur(0px)", "blur(6px)", "blur(0px)"] } : {}}
-              transition={{ repeat: phase === "ready" ? Infinity : 0, duration: 0.4 }}
-              style={{ marginBottom: 18, color: "#2DD4BF", display: "flex", justifyContent: "center" }}
-              className={phase !== "ready" ? "heartbeat" : ""}
+              animate={phase==="ready" ? { scale:[1,1.5,1], filter:["blur(0px)","blur(6px)","blur(0px)"] } : {}}
+              transition={{ repeat: phase==="ready" ? Infinity : 0, duration: 0.4 }}
+              style={{ marginBottom:18, color:"#2DD4BF", display:"flex", justifyContent:"center" }}
+              className={phase!=="ready" ? "heartbeat" : ""}
             >
-              <Heart size={36} style={{ fill: "#2DD4BF", filter: phase === "ready" ? "drop-shadow(0 0 25px #2DD4BF)" : "none", transition: "filter 0.5s" }} />
+              <Heart size={36} style={{ fill:"#2DD4BF", filter: phase==="ready" ? "drop-shadow(0 0 25px #2DD4BF)" : "none", transition:"filter 0.5s" }} />
             </motion.div>
 
-            <div className="fM" style={{ fontSize: 9, color: "rgba(255,255,255,.3)", textTransform: "uppercase", letterSpacing: ".42em", marginBottom: 24 }}>
+            <div className="fM" style={{ fontSize:9, color:"rgba(255,255,255,.28)", textTransform:"uppercase", letterSpacing:".42em", marginBottom:24 }}>
               NEURO-REHABILITATION SYSTEM
             </div>
 
             <motion.div
-              initial={{ opacity: 0, scale: .8 }}
-              animate={{ opacity: 1, scale: phase === "ready" ? 1.05 : 1, textShadow: phase === "ready" ? "0 0 60px rgba(45,212,191,0.8)" : "none" }}
-              transition={{ delay: .4, duration: .7 }}
-              className="fB" style={{ fontSize: "clamp(4rem,14vw,11rem)", color: "#fff", letterSpacing: ".08em", lineHeight: 1 }}
+              initial={{ opacity:0, scale:.8 }}
+              animate={{ opacity:1, scale: phase==="ready"?1.05:1, textShadow: phase==="ready"?"0 0 60px rgba(45,212,191,0.8)":"none" }}
+              transition={{ delay:.4, duration:.7 }}
+              className="fB" style={{ fontSize:"clamp(3.5rem,11vw,9rem)", color:"#fff", letterSpacing:".08em", lineHeight:1 }}
             >
-              REVIVE<motion.span animate={{ color: phase === "ready" ? "#fff" : "#2DD4BF" }} transition={{ duration: 0.5 }}>X</motion.span>
+              REVIVE<motion.span animate={{ color: phase==="ready"?"#fff":"#2DD4BF" }} transition={{ duration:0.5 }}>X</motion.span>
             </motion.div>
 
-            <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "center", gap: 4, marginTop: 28, marginBottom: 14 }}>
+            {/* Progress number */}
+            <div style={{ display:"flex", alignItems:"flex-end", justifyContent:"center", gap:4, marginTop:32, marginBottom:16 }}>
               <motion.span
-                animate={{ color: phase === "ready" ? "#2DD4BF" : "rgba(255,255,255,.85)" }}
-                className="fM" style={{ fontSize: "3.2rem", lineHeight: 1 }}
+                animate={{ color: phase==="ready"?"#2DD4BF":"rgba(255,255,255,.85)" }}
+                className="fM" style={{ fontSize:"3.2rem", lineHeight:1 }}
               >
-                {String(pct).padStart(3, "0")}
+                {String(pct).padStart(3,"0")}
               </motion.span>
-              <span className="fM blink" style={{ fontSize: "1.6rem", color: "#2DD4BF", marginBottom: 4 }}>%</span>
+              <span className="fM blink" style={{ fontSize:"1.6rem", color:"#2DD4BF", marginBottom:4 }}>%</span>
             </div>
 
-            <div style={{ width: 240, height: 2, background: "rgba(255,255,255,.1)", margin: "0 auto 14px", overflow: "hidden", borderRadius: 2 }}>
+            {/* Progress bar — glistening */}
+            <div style={{ width:240, height:2, background:"rgba(255,255,255,.08)", margin:"0 auto 16px", overflow:"hidden", borderRadius:2, position:"relative" }}>
               <motion.div
-                animate={{ width: `${pct}%`, background: phase === "ready" ? "#fff" : "#2DD4BF" }}
-                transition={{ duration: .05 }}
-                style={{ height: "100%", boxShadow: "0 0 14px rgba(45,212,191,.8)" }}
+                animate={{ width:`${pct}%` }}
+                transition={{ duration:.05 }}
+                style={{
+                  height:"100%",
+                  background: phase==="ready"
+                    ? "linear-gradient(90deg,#2DD4BF,#fff,#2DD4BF)"
+                    : "linear-gradient(90deg,#14b8a6,#2DD4BF,#7ffff4)",
+                  boxShadow:"0 0 18px rgba(45,212,191,.9), 0 0 6px #fff",
+                  transition:"background 0.5s",
+                }}
               />
             </div>
 
             <AnimatePresence mode="wait">
               <motion.div
-                key={phase === "ready" ? "SYSTEM ONLINE." : msg}
-                initial={{ opacity: 0, y: 6 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -4 }}
-                transition={{ duration: .3 }}
+                key={phase==="ready"?"SYSTEM ONLINE.":msg}
+                initial={{ opacity:0, y:6 }}
+                animate={{ opacity:1, y:0 }}
+                exit={{ opacity:0, y:-4 }}
+                transition={{ duration:.3 }}
                 className="fM"
                 style={{
-                  fontSize: phase === "ready" ? 11 : 9,
-                  color: phase === "ready" ? "#2DD4BF" : "rgba(255,255,255,.3)",
-                  textTransform: "uppercase",
-                  letterSpacing: ".24em",
-                  fontWeight: phase === "ready" ? "bold" : "normal"
+                  fontSize: phase==="ready"?11:9,
+                  color: phase==="ready"?"#2DD4BF":"rgba(255,255,255,.3)",
+                  textTransform:"uppercase",
+                  letterSpacing:".24em",
+                  fontWeight: phase==="ready"?"bold":"normal",
                 }}
               >
-                {phase === "ready" ? "SYSTEM ONLINE. INITIALIZING UI..." : msg}
+                {phase==="ready" ? "SYSTEM ONLINE. INITIALIZING UI..." : msg}
               </motion.div>
             </AnimatePresence>
           </div>
@@ -1860,556 +1261,1239 @@ function Preloader({ onDone }: { onDone: () => void }) {
   );
 }
 
-function Navbar() {
-
-  const [scrolled, setScrolled] = useState(false);
-
-  useEffect(() => {
-
-    const h = () => setScrolled(window.scrollY > 60);
-
-    window.addEventListener("scroll", h, { passive: true });
-
-    return () => window.removeEventListener("scroll", h);
-
-  }, []);
-
+function SectionSep({ color = "#2DD4BF", dim = false }: { color?: string; dim?: boolean }) {
   return (
-
-    <motion.nav initial={{ y: -80, opacity: 0 }} animate={{ y: 0, opacity: 1 }}
-
-      transition={{ delay: .3, duration: .9, ease: [0.22, 1, 0.36, 1] }}
-
-      style={{
-
-        position: "fixed", top: 0, left: 0, right: 0, zIndex: 500,
-
-        display: "flex", alignItems: "center", justifyContent: "space-between",
-
-        padding: "18px 40px",
-
-        background: scrolled ? "rgba(8,15,26,.9)" : "transparent",
-
-        backdropFilter: scrolled ? "blur(22px)" : "none",
-
-        borderBottom: scrolled ? "1px solid rgba(45,212,191,.16)" : "none",
-
-        transition: "background .4s, backdrop-filter .4s, border .4s",
-
-      }}>
-
-      <div className="fB" style={{ fontSize: 22, letterSpacing: ".1em", color: "#fff" }}>
-
-        REVIVE<span style={{ color: "#2DD4BF" }}>X</span>
-
-      </div>
-
-      <div style={{ display: "flex", gap: 28, alignItems: "center" }}>
-
-        {[["Problem", "#problem"], ["Solution", "#solution"], ["Offer", "#offer"], ["Why Us", "#why"], ["Contact", "#contact"]].map(([l, h]) => (
-
-          <a key={l} href={h} data-mag className="fM"
-
-            style={{
-              fontSize: 9, textTransform: "uppercase", letterSpacing: ".22em",
-
-              color: "rgba(255,255,255,.52)", textDecoration: "none", transition: "color .3s"
-            }}
-
-            onMouseEnter={e => (e.currentTarget.style.color = "rgba(255,255,255,.85)")}
-
-            onMouseLeave={e => (e.currentTarget.style.color = "rgba(255,255,255,.38)")}>
-
-            {l}
-
-          </a>
-
-        ))}
-
-      </div>
-
-      <a href="#contact" data-mag className="fM"
-
-        style={{
-          fontSize: 9, textTransform: "uppercase", letterSpacing: ".2em",
-
-          color: "#2DD4BF", padding: "8px 18px", borderRadius: 99,
-
-          border: "1px solid rgba(45,212,191,.3)", textDecoration: "none", transition: "background .3s"
-        }}
-
-        onMouseEnter={e => (e.currentTarget.style.background = "rgba(45,212,191,.1)")}
-
-        onMouseLeave={e => (e.currentTarget.style.background = "transparent")}>
-
-        ● Get Started
-
-      </a>
-
-    </motion.nav>
-
-  );
-
-}
-
-
-
-// ── NEON TITLE — Cinematic word-blur reveal ─────────────────────────────────
-function NeonTitle({ line1 = "REWIRING", line2 = "RECOVERY." }: { line1?: string; line2?: string }) {
-  const ref = useRef(null);
-  const seen = useInView(ref, { once: true, margin: "-40px" });
-
-  // Shared easing for both lines
-  const ease: [number,number,number,number] = [0.16, 1, 0.3, 1];
-
-  return (
-    <div ref={ref} className="hero-title-wrap" style={{ marginBottom: 32, lineHeight: 0.9 }}>
-
-      {/* Beam sweep — scans once across the title block after reveal */}
-      <div className="hero-beam-sweep" />
-
-      {/* LINE 1 — white, lifts + unblurs */}
-      <div style={{ overflow: "hidden", display: "block" }}>
-        <motion.div
-          className="fB title-line-1"
-          style={{ fontSize: "clamp(3.8rem,9.5vw,9rem)", letterSpacing: ".03em" }}
-          initial={{ y: "100%", filter: "blur(18px)", opacity: 0 }}
-          animate={seen ? { y: "0%", filter: "blur(0px)", opacity: 1 } : {}}
-          transition={{ duration: 1.1, delay: 0.3, ease }}
-        >
-          {line1}
-        </motion.div>
-      </div>
-
-      {/* LINE 2 — teal, slight delay, same reveal */}
-      <div style={{ overflow: "hidden", display: "block" }}>
-        <motion.div
-          className="fB title-line-2"
-          style={{ fontSize: "clamp(3.8rem,9.5vw,9rem)", letterSpacing: ".03em" }}
-          initial={{ y: "100%", filter: "blur(18px)", opacity: 0 }}
-          animate={seen ? { y: "0%", filter: "blur(0px)", opacity: 1 } : {}}
-          transition={{ duration: 1.1, delay: 0.55, ease }}
-        >
-          {line2}
-        </motion.div>
-      </div>
-
-      {/* Thin beam line — draws in from left after text lands */}
-      <motion.div
-        className="hero-beam-line"
-        initial={{ scaleX: 0, opacity: 0 }}
-        animate={seen ? { scaleX: 1, opacity: 1 } : {}}
-        transition={{ duration: 1.0, delay: 1.3, ease: [0.22, 1, 0.36, 1] }}
-        style={{ transformOrigin: "left" }}
-      />
+    <div style={{ position: "relative", height: 1, overflow: "visible", zIndex: 10, pointerEvents: "none" }}>
+      <div style={{
+        position: "absolute", left: "10%", right: "10%", height: 1,
+        background: `linear-gradient(90deg, transparent 0%, ${color}${dim ? "30" : "55"} 30%, ${color}${dim ? "45" : "70"} 50%, ${color}${dim ? "30" : "55"} 70%, transparent 100%)`,
+      }} />
+      <div style={{ position: "absolute", left: "30%", right: "30%", height: 8, top: -3, filter: "blur(4px)", background: `linear-gradient(90deg, transparent, ${color}${dim ? "18" : "30"}, transparent)` }} />
     </div>
   );
 }
 
-function HeroSection() {
 
-  const router = useRouter();
+// ══════════════════════════════════════════════════════════════════════════════
+// AnimatedGradient — WebGL canvas gradient, subtle dark deep-sea data pulse
+// Memory-safe: renderer + RAF cleaned up on unmount via returned cleanup fn
+// ══════════════════════════════════════════════════════════════════════════════
+interface AGProps {
+  color1?: string; color2?: string; color3?: string;
+  speed?: number; className?: string; style?: React.CSSProperties;
+}
+function AnimatedGradient({ color1="#040a12", color2="#0a1c2c", color3="#062b2b", speed=0.18, className="", style }: AGProps) {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas || typeof window === "undefined") return;
+    const gl = canvas.getContext("webgl") || canvas.getContext("experimental-webgl") as WebGLRenderingContext | null;
+    if (!gl) return;
 
-  const skewY = useVelocitySkew();
+    const vert = `attribute vec2 a_pos; void main(){ gl_Position = vec4(a_pos,0.,1.); }`;
+    const frag = `
+      precision mediump float;
+      uniform float u_time;
+      uniform vec2  u_res;
+      uniform vec3  u_c1, u_c2, u_c3;
+      void main(){
+        vec2 uv = gl_FragCoord.xy / u_res;
+        float n1 = sin(uv.x*3.1+u_time*0.7)*0.5+0.5;
+        float n2 = sin(uv.y*2.8+u_time*0.5)*0.5+0.5;
+        float n3 = sin((uv.x+uv.y)*2.2+u_time*0.4)*0.5+0.5;
+        float t1 = smoothstep(0.,1.,n1*n2);
+        float t2 = smoothstep(0.,1.,n2*n3);
+        vec3 col = mix(u_c1, u_c2, t1);
+        col = mix(col, u_c3, t2*0.6);
+        gl_FragColor = vec4(col, 1.0);
+      }`;
 
-  const mouse = useMouseParallax();
+    const compile = (type: number, src: string) => {
+      const s = gl.createShader(type)!;
+      gl.shaderSource(s, src); gl.compileShader(s); return s;
+    };
+    const prog = gl.createProgram()!;
+    gl.attachShader(prog, compile(gl.VERTEX_SHADER, vert));
+    gl.attachShader(prog, compile(gl.FRAGMENT_SHADER, frag));
+    gl.linkProgram(prog); gl.useProgram(prog);
 
-  const smoothX = useSpring(mouse.x, { stiffness: 90, damping: 22 });
+    const buf = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1,-1,1,-1,-1,1,1,1]), gl.STATIC_DRAW);
+    const aPos = gl.getAttribLocation(prog, "a_pos");
+    gl.enableVertexAttribArray(aPos); gl.vertexAttribPointer(aPos, 2, gl.FLOAT, false, 0, 0);
 
-  const smoothY = useSpring(mouse.y, { stiffness: 90, damping: 22 });
+    const uTime = gl.getUniformLocation(prog, "u_time");
+    const uRes  = gl.getUniformLocation(prog, "u_res");
+    const uC1   = gl.getUniformLocation(prog, "u_c1");
+    const uC2   = gl.getUniformLocation(prog, "u_c2");
+    const uC3   = gl.getUniformLocation(prog, "u_c3");
 
+    const hex2rgb = (h: string) => {
+      const r = parseInt(h.slice(1,3),16)/255;
+      const g = parseInt(h.slice(3,5),16)/255;
+      const b = parseInt(h.slice(5,7),16)/255;
+      return [r,g,b];
+    };
+    const [r1,g1,b1] = hex2rgb(color1);
+    const [r2,g2,b2] = hex2rgb(color2);
+    const [r3,g3,b3] = hex2rgb(color3);
 
+    let rafId = 0, start = performance.now();
+    const resize = () => {
+      canvas.width  = canvas.offsetWidth;
+      canvas.height = canvas.offsetHeight;
+      gl.viewport(0, 0, canvas.width, canvas.height);
+    };
+    resize();
+    window.addEventListener("resize", resize);
 
-  const gX = useTransform(smoothX, v => v * 2);
+    const draw = () => {
+      rafId = requestAnimationFrame(draw);
+      if (document.hidden) return;
+      const t = (performance.now() - start) * 0.001 * speed;
+      gl.uniform1f(uTime, t);
+      gl.uniform2f(uRes, canvas.width, canvas.height);
+      gl.uniform3f(uC1, r1, g1, b1);
+      gl.uniform3f(uC2, r2, g2, b2);
+      gl.uniform3f(uC3, r3, g3, b3);
+      gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+    };
+    draw();
 
-  const gY = useTransform(smoothY, v => v * 2);
-
-  const nX = useTransform(smoothX, v => v * 6);
-
-  const nY = useTransform(smoothY, v => v * 6);
-
-  const dX = useTransform(smoothX, v => v * 10);
-
-  const dY = useTransform(smoothY, v => v * 10);
-
-
+    return () => {
+      cancelAnimationFrame(rafId);
+      window.removeEventListener("resize", resize);
+      gl.deleteProgram(prog);
+      gl.deleteBuffer(buf);
+    };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
-
-    <section data-theme="dark" style={{
-
-      position: "relative", minHeight: "100vh",
-
-      display: "flex", flexDirection: "column",
-
-      alignItems: "center", justifyContent: "center",
-
-      overflow: "hidden", background: "#080f1a",
-
-    }}>
-
-      {/* Breathing glow */}
-
-      <motion.div style={{ x: gX, y: gY, position: "absolute", inset: 0, pointerEvents: "none" }}>
-
-        <div className="glow-breath" style={{
-          width: "100%", height: "100%",
-
-          background: "radial-gradient(ellipse 70% 65% at 50% 58%, rgba(45,212,191,.18), transparent 68%)"
-        }} />
-
-      </motion.div>
-
-
-
-      <div className="grid-dk" style={{ position: "absolute", inset: 0, pointerEvents: "none" }} />
-
-      {/* Ambient drifting lights */}
-      <div className="aml aml-a" style={{ width:500, height:500, top:"10%",  left:"5%",   background:"radial-gradient(circle,rgba(45,212,191,.055),transparent 70%)" }} />
-      <div className="aml aml-b" style={{ width:600, height:600, top:"30%",  right:"-5%", background:"radial-gradient(circle,rgba(14,165,233,.045),transparent 70%)" }} />
-      <div className="aml aml-c" style={{ width:400, height:400, bottom:"5%",left:"20%",  background:"radial-gradient(circle,rgba(139,92,246,.035),transparent 70%)" }} />
-
-      {/* Decorative diagonal lines */}
-
-      {[7, 22, 48, 74, 90].map((p, i) => (
-
-        <div key={i} style={{
-          position: "absolute", top: "-30%", left: `${p}%`,
-
-          width: 1, height: "180%", pointerEvents: "none",
-
-          background: `linear-gradient(to bottom,transparent,rgba(45,212,191,${.042 - i * .006}),transparent)`,
-
-          transform: `rotate(${-13 + i * 5}deg)`
-        }} />
-
-      ))}
-
-      <div className="scanline" />
-
-      <FloatingParticles count={16} />
-
-      {/* Neural network layer */}
-
-      {/* Neural network layer — 3D brain, right side */}
-
-      {/* ── TWO-COLUMN LAYOUT ────────────────────────────────── */}
-      <motion.div style={{
-        skewY, width: "100%", maxWidth: 1400,
-        padding: "0 40px", display: "flex",
-        flexDirection: "row", alignItems: "center",
-        position: "relative", zIndex: 10,
-        minHeight: "100vh",
-      }}>
-
-        {/* LEFT COLUMN — Text content */}
-        <div style={{
-          flex: "0 0 52%", display: "flex", flexDirection: "column",
-          justifyContent: "center", padding: "120px 60px 100px 20px",
-        }}>
-
-        {/* Badge */}
-
-        <Reveal dir="down" delay={.2}>
-
-          <div className="fM" style={{
-            fontSize: 9, textTransform: "uppercase", letterSpacing: ".28em",
-
-            color: "rgba(255,255,255,.52)", marginBottom: 38,
-
-            display: "flex", alignItems: "center", gap: 10,
-
-            padding: "8px 20px", borderRadius: 99, width: "fit-content",
-
-            background: "rgba(255,255,255,.03)", border: "1px solid rgba(255,255,255,.07)"
-          }}>
-
-            <Heart size={11} style={{ color: "#2DD4BF" }} className="heartbeat" />
-
-            Democratizing Neuro-Rehabilitation · SDGP CS-09
-
-          </div>
-
-        </Reveal>
-
-
-
-        {/* Headline — NeonTitle replaces old SplitText */}
-        <NeonTitle line1="REWIRING" line2="RECOVERY." />
-
-
-
-        {/* Tagline */}
-
-        <Reveal dir="up" delay={1.1}>
-          <p className="fS" style={{
-            color: "rgba(255,255,255,.70)", fontSize: 16,
-            maxWidth: 440, lineHeight: 1.72,
-            fontWeight: 300, marginBottom: 48,
-          }}>
-            A revolutionary IoT device that turns repetitive physiotherapy into
-            <span style={{ color: "rgba(255,255,255,.92)", fontWeight: 500 }}> immersive games</span>
-            {" "}— so patients <span style={{ color: "#2DD4BF", fontWeight: 600 }}>actually want</span> to recover.
-          </p>
-        </Reveal>
-
-        {/* CTA pill - Patient & Doctor Access */}
-        <Reveal dir="up" delay={1.5}>
-          <div style={{
-            display: "flex", flexDirection: "row", alignItems: "center", gap: 8, padding: 8,
-            borderRadius: 32, background: "rgba(255,255,255,.03)",
-            border: "1px solid rgba(255,255,255,.07)",
-            backdropFilter: "blur(24px)",
-            boxShadow: "0 24px 64px rgba(0,0,0,.6), inset 0 1px 0 rgba(255,255,255,.04)",
-            width: "fit-content",
-          }}>
-            <MagButton onClick={() => router.push("/auth/patient/signin")}
-              className="btn-shim fB"
-              style={{
-                position: "relative", overflow: "hidden",
-                display: "flex", alignItems: "center", gap: 12,
-                padding: "18px 44px", borderRadius: 24, fontSize: 15, letterSpacing: ".12em",
-                background: "#2DD4BF", color: "#080f1a", border: "none",
-                boxShadow: "0 0 55px rgba(45,212,191,.42)"
-              }}>
-              <Play size={16} style={{ fill: "#080f1a", position: "relative", zIndex: 1 }} />
-              <span style={{ position: "relative", zIndex: 1 }}>Patient Sign In</span>
-            </MagButton>
-            <div style={{ width: 1, height: 46, background: "rgba(255,255,255,.06)" }} />
-            <MagButton onClick={() => router.push("/auth/doctor/signin")}
-              className="fB"
-              style={{
-                display: "flex", alignItems: "center", gap: 12,
-                padding: "18px 44px", borderRadius: 24, fontSize: 15, letterSpacing: ".12em",
-                background: "transparent", color: "rgba(255,255,255,.78)", border: "none"
-              }}>
-              <Stethoscope size={16} />
-              Doctor Sign In
-              <ArrowRight size={13} style={{ opacity: .4 }} />
-            </MagButton>
-          </div>
-        </Reveal>
-
-        {/* Signup links */}
-        <Reveal dir="up" delay={1.8}>
-          <div style={{
-            display: "flex", alignItems: "center", gap: 18,
-            marginTop: 24, justifyContent: "center"
-          }}>
-            <span className="fM" style={{
-              fontSize: 9, color: "rgba(255,255,255,.28)",
-              textTransform: "uppercase", letterSpacing: ".22em"
-            }}>
-              New user?
-            </span>
-            <a
-              href="/auth/patient/signup"
-              data-mag
-              className="fM"
-              style={{
-                fontSize: 9, textTransform: "uppercase", letterSpacing: ".20em",
-                color: "#2DD4BF", textDecoration: "none",
-                padding: "6px 14px", borderRadius: 99,
-                border: "1px solid rgba(45,212,191,.2)", transition: "all .3s"
-              }}
-              onMouseEnter={e => (e.currentTarget.style.background = "rgba(45,212,191,.08)")}
-              onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
-            >
-              Patient Signup
-            </a>
-            <span style={{ color: "rgba(255,255,255,.15)" }}>·</span>
-            <a
-              href="/auth/doctor/signup"
-              data-mag
-              className="fM"
-              style={{
-                fontSize: 9, textTransform: "uppercase", letterSpacing: ".20em",
-                color: "rgba(255,255,255,.45)", textDecoration: "none",
-                padding: "6px 14px", borderRadius: 99,
-                border: "1px solid rgba(255,255,255,.1)", transition: "all .3s"
-              }}
-              onMouseEnter={e => {
-                e.currentTarget.style.color = "rgba(255,255,255,.85)";
-                e.currentTarget.style.background = "rgba(255,255,255,.05)";
-              }}
-              onMouseLeave={e => {
-                e.currentTarget.style.color = "rgba(255,255,255,.45)";
-                e.currentTarget.style.background = "transparent";
-              }}
-            >
-              Doctor Signup
-            </a>
-          </div>
-        </Reveal>
-
-        {/* Scroll hint — stays inside left col at bottom */}
-        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}
-          transition={{ delay: 2.9, duration: 1 }}
-          style={{
-            display: "flex", flexDirection: "column", alignItems: "flex-start",
-            gap: 8, color: "rgba(255,255,255,.25)", marginTop: 52,
-          }}>
-          <span className="fM" style={{ fontSize: 8, textTransform: "uppercase", letterSpacing: ".3em" }}>Scroll</span>
-          <motion.div animate={{ y: [0, 7, 0] }} transition={{ repeat: Infinity, duration: 2, ease: "easeInOut" }}>
-            <ChevronDown size={13} />
-          </motion.div>
-        </motion.div>
-
-        </div>{/* end LEFT COLUMN */}
-
-        {/* RIGHT COLUMN — Device Canvas */}
-        <div style={{
-          flex: "0 0 48%",
-          position: "relative",
-          height: "100vh",
-          minHeight: 600,
-        }}>
-          <DeviceHoloCanvas mouse={mouse} />
-
-          {/* chips rendered inside canvas — no JSX duplication */}
-
-          {/* no column separator — seamless blend */}
-        </div>
-
-      </motion.div>{/* end TWO-COLUMN wrapper */}
-
-    </section>
-
+    <canvas
+      ref={canvasRef}
+      className={className}
+      style={{ display:"block", width:"100%", height:"100%", ...style }}
+    />
   );
-
 }
 
-//  ROAD BRIDGE  
-const RoadBridge = React.memo(function RoadBridge() {
-  const ref = useRef<HTMLDivElement>(null);
-  const { scrollYProgress: p } = useScroll({ target: ref, offset: ["start start", "end start"] });
+// ══════════════════════════════════════════════════════════════════════════════
+// VaporizeTextCycle — canvas particle vaporize effect cycling through texts
+// Memory-safe: single RAF, particles array cleared on each cycle + on unmount
+// ══════════════════════════════════════════════════════════════════════════════
+interface VTCProps {
+  texts: string[];
+  fontSize?: number;
+  color?: string;
+  fontFamily?: string;
+  style?: React.CSSProperties;
+  className?: string;
+}
+function VaporizeTextCycle({ texts, fontSize=120, color="#ef4444", fontFamily="'Syne',sans-serif", style, className="" }: VTCProps) {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const inView = useInView(containerRef, { once: false, margin: "0px" });
 
-  const bgColor = useTransform(p, [0, .6, .85, 1], ["#080f1a", "#080f1a", "#0B1E33", "#F8F9FA"]);
-  const sweepX = useTransform(p, [0, .10], ["-100%", "100%"]);
-  const sweepOp = useTransform(p, [3, .01, .10, .15], [2, 0, 0, 5]);
+  useEffect(() => {
+    if (!inView) return;
+    const canvas = canvasRef.current;
+    if (!canvas || typeof window === "undefined") return;
 
-  const iw = typeof window !== "undefined" ? window.innerWidth : 1440;
+    let rafId = 0;
+    let textIdx = 0;
+    let phase: "show" | "vaporize" | "wait" = "show";
+    let phaseTimer = 0;
+    let particles: { x:number; y:number; ox:number; oy:number; r:number; vx:number; vy:number; a:number; col:string }[] = [];
 
-  // ─── THE PATTERN ──────────────────────────────────────────────
- 
-  const t1 = 0.20; // THE ends
-  const t2 = 0.40; // PROBLEM ends
-  const t3 = 0.60; // IS REAL ends
-  const t4 = 0.80; // 28% ends
+    const SHOW_DURATION   = 2400; // ms text stays solid
+    const VAP_DURATION    = 1200; // ms vaporize anim
+    const WAIT_DURATION   = 400;  // ms blank between
 
-  const yC = useTransform(p, [0, 1], [0, -800]);
+    const W = () => canvas.width;
+    const H = () => canvas.height;
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
 
-  // 1. THE
-  const theScale = useTransform(p, [0, t1], [1, 15]);
-  const theOp = useTransform(p, [0, t1], [1, 0]);
+    const resize = () => {
+      const el = containerRef.current;
+      if (!el) return;
+      canvas.width  = el.offsetWidth  * dpr;
+      canvas.height = el.offsetHeight * dpr;
+      canvas.style.width  = el.offsetWidth  + "px";
+      canvas.style.height = el.offsetHeight + "px";
+    };
+    resize();
+    window.addEventListener("resize", resize);
 
-  // 2. PROBLEM (Moves UP during t1, Zooms out during t2)
-  const probY = useTransform(p, [0, t1], [1000, 0]);
-  const probScale = useTransform(p, [t1, t2], [1, 10]);
-  const probOp = useTransform(p, [0, t1, t2], [0, 1, 0]);
+    // Sample pixels of the text rendered off-screen
+    const sampleText = (text: string) => {
+      const off = document.createElement("canvas");
+      off.width  = W(); off.height = H();
+      const ctx = off.getContext("2d")!;
+      ctx.font = `900 ${fontSize * dpr}px ${fontFamily}`;
+      ctx.fillStyle = color;
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillText(text, W()/2, H()/2);
+      const data = ctx.getImageData(0, 0, W(), H()).data;
+      const pts: {x:number;y:number}[] = [];
+      const step = 4; // sample every 4px for density
+      for (let y = 0; y < H(); y += step) {
+        for (let x = 0; x < W(); x += step) {
+          const idx = (y * W() + x) * 4;
+          if (data[idx+3] > 60) pts.push({ x, y });
+        }
+      }
+      return pts;
+    };
 
-  // 3. IS REAL (Moves HORIZONTALLY during t2, Zooms out during t3)
-  const realX = useTransform(p, [t1, t2], [1000, 0]);
-  const realScale = useTransform(p, [t2, t3], [1, 10]);
-  const realOp = useTransform(p, [t1, t2, t3], [0, 1, 0]);
+    const spawnParticles = (text: string) => {
+      const pts = sampleText(text);
+      particles = pts.map(p => ({
+        x: p.x, y: p.y, ox: p.x, oy: p.y,
+        r: Math.random() * 1.5 + 0.5,
+        vx: 0, vy: 0, a: 1,
+        col: color,
+      }));
+    };
 
-  // 4. 28% & STATS (Moves UP during t3, Zooms out during t4)
-  const statY = useTransform(p, [t2, t3], [1000, 0]);
-  const statScale = useTransform(p, [t3, t4], [1, 10]);
-  const statOp = useTransform(p, [t2, t3, t4], [0, 1, 0]);
+    spawnParticles(texts[0]);
+    let lastTime = performance.now();
 
-  const statsY = useTransform(p, [t2, t3], [1000, 0]);
-  const statsScale = useTransform(p, [t3, t4], [1, 10]);
-  const statsOp = useTransform(p, [t2, t3, t4], [0, 1, 0]);
+    const draw = () => {
+      rafId = requestAnimationFrame(draw);
+      const now = performance.now();
+      const dt  = now - lastTime;
+      lastTime  = now;
+      phaseTimer += dt;
 
-  
+      const ctx = canvas.getContext("2d")!;
+      ctx.clearRect(0, 0, W(), H());
 
-  // ──────────────────────────────────────────────────────────────
+      if (phase === "show") {
+        // Draw particles in place (solid text)
+        particles.forEach(p => {
+          ctx.globalAlpha = 1;
+          ctx.fillStyle = p.col;
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, p.r, 0, Math.PI*2);
+          ctx.fill();
+        });
+        if (phaseTimer >= SHOW_DURATION) {
+          // Kick off vaporize velocities
+          particles.forEach(p => {
+            p.vx = (Math.random() - 0.3) * 3.5;
+            p.vy = -(Math.random() * 4 + 1.5);
+          });
+          phase = "vaporize";
+          phaseTimer = 0;
+        }
+      } else if (phase === "vaporize") {
+        const progress = Math.min(phaseTimer / VAP_DURATION, 1);
+        particles.forEach(p => {
+          p.x  += p.vx;
+          p.y  += p.vy;
+          p.vy += 0.06; // gentle gravity
+          p.a   = 1 - progress * progress;
+          ctx.globalAlpha = Math.max(0, p.a);
+          ctx.fillStyle = p.col;
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, p.r, 0, Math.PI*2);
+          ctx.fill();
+        });
+        if (phaseTimer >= VAP_DURATION) {
+          ctx.globalAlpha = 1;
+          particles = [];
+          phase = "wait";
+          phaseTimer = 0;
+        }
+      } else if (phase === "wait") {
+        if (phaseTimer >= WAIT_DURATION) {
+          textIdx = (textIdx + 1) % texts.length;
+          spawnParticles(texts[textIdx]);
+          phase = "show";
+          phaseTimer = 0;
+        }
+      }
+      ctx.globalAlpha = 1;
+    };
+    draw();
 
-  const textCol = useTransform(p, [.72, .85], ["#FFFFFF", "#0B1E33"]);
-  const subCol = useTransform(p, [.72, .85], ["rgba(255,255,255,.5)", "rgba(11,30,51,.6)"]);
-
-  const centerWrap: React.CSSProperties = {
-    position: "absolute",
-    inset: 0,
-    display: "grid",
-    placeItems: "center",
-    pointerEvents: "none",
-  };
+    return () => {
+      cancelAnimationFrame(rafId);
+      window.removeEventListener("resize", resize);
+      particles = [];
+    };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [inView]);
 
   return (
-    <div ref={ref} style={{ height: "250vh", position: "relative" }}>
+    <div ref={containerRef} className={className} style={{ position:"relative", width:"100%", minHeight: fontSize * 1.6 + "px", ...style }}>
+      <canvas ref={canvasRef} style={{ position:"absolute", inset:0, width:"100%", height:"100%" }} />
+    </div>
+  );
+}
 
-      <div className="grid-dk" style={{ position: "absolute", inset: 0, pointerEvents: "none" }} />
-      <div className="scanline" />
+// ══════════════════════════════════════════════════════════════════════════════
+// ParticleTextEffect — interactive canvas: hover shatters text into particles
+// Memory-safe: RAF cancelled on unmount, particles cleared between renders
+// Font: Bebas Neue (cinematic) matching ReViveX theme
+// ══════════════════════════════════════════════════════════════════════════════
+interface PTEProps {
+  text?: string;
+  colors?: string[];
+  className?: string;
+  animationForce?: number;
+  particleDensity?: number;
+}
+function ParticleTextEffect({
+  text = "BROKEN.",
+  colors = ["ef4444","dc2626","b91c1c","7f1d1d","450a0a"],
+  className = "",
+  animationForce = 90,
+  particleDensity = 3,
+}: PTEProps) {
+  const canvasRef  = useRef<HTMLCanvasElement>(null);
+  const ctxRef     = useRef<CanvasRenderingContext2D | null>(null);
+  const rafRef     = useRef<number | null>(null);
+  const ptsRef     = useRef<any[]>([]);
+  const ptrRef     = useRef<{ x?: number; y?: number }>({});
+  const hasPtrRef  = useRef(false);
+  const iRadRef    = useRef(120);
+  const textBoxRef = useRef<{ str:string; x?:number; y?:number; w?:number; h?:number }>({ str: text });
 
-      <motion.div style={{
-        position: "sticky", top: 0, height: "100vh", overflow: "hidden", backgroundColor: bgColor, perspective: 1000
+  const rand = (max=1, min=0) => min + Math.random() * (max - min);
+
+  const draw = () => {
+    const ctx = ctxRef.current;
+    const canvas = canvasRef.current;
+    if (!ctx || !canvas) return;
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ptsRef.current.forEach(p => {
+      // Move toward pointer if close
+      if (hasPtrRef.current && ptrRef.current.x !== undefined) {
+        const dx = p.cx - ptrRef.current.x!;
+        const dy = p.cy - ptrRef.current.y!;
+        const dist = Math.hypot(dx, dy);
+        if (dist < iRadRef.current && dist > 0) {
+          const force = Math.min(p.f, (iRadRef.current - dist) / dist * 2);
+          p.cx += (dx / dist) * force;
+          p.cy += (dy / dist) * force;
+        }
+      }
+      // Restore to origin
+      const odx = p.ox - p.cx, ody = p.oy - p.cy, od = Math.hypot(odx, ody);
+      if (od > 1) { p.cx += (odx / od) * Math.min(od * 0.1, 3); p.cy += (ody / od) * Math.min(od * 0.1, 3); }
+      // Draw
+      ctx.fillStyle = `rgb(${p.rgb.join(",")})`;
+      ctx.beginPath();
+      ctx.arc(p.cx, p.cy, p.r, 0, Math.PI * 2);
+      ctx.fill();
+    });
+    rafRef.current = requestAnimationFrame(draw);
+  };
+
+  const buildParticles = () => {
+    const canvas = canvasRef.current;
+    const ctx    = ctxRef.current;
+    if (!canvas || !ctx) return;
+
+    // Set canvas to fill its container
+    const parent = canvas.parentElement;
+    canvas.width  = parent ? parent.offsetWidth  : window.innerWidth;
+    canvas.height = parent ? parent.offsetHeight : 200;
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    // ── Measure + draw text to canvas ──────────────────────────────────
+    const tb    = textBoxRef.current;
+    tb.str      = text;
+    tb.h        = Math.min(canvas.height * 0.85, canvas.width / (text.length * 0.62));
+    iRadRef.current = Math.max(60, tb.h * 1.4);
+    ctx.font        = `900 ${tb.h}px 'Bebas Neue', 'Syne', sans-serif`;
+    ctx.textAlign   = "center";
+    ctx.textBaseline = "middle";
+    tb.w = Math.round(ctx.measureText(tb.str).width);
+    tb.x = Math.max(0, Math.round((canvas.width  - tb.w) / 2));
+    tb.y = Math.max(0, Math.round((canvas.height - tb.h) / 2));
+
+    // Build gradient across colors
+    const grad = ctx.createLinearGradient(tb.x, tb.y, tb.x + tb.w, tb.y + tb.h!);
+    const N = Math.max(colors.length - 1, 1);
+    colors.forEach((hex, i) => grad.addColorStop(i / N, `#${hex}`));
+    ctx.fillStyle = grad;
+    ctx.fillText(tb.str, canvas.width / 2, canvas.height / 2);
+
+    // ── Sample pixels → particles ─────────────────────────────────────
+    const imgData = ctx.getImageData(tb.x, tb.y, tb.w!, tb.h!).data;
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ptsRef.current = [];
+    const step = Math.max(1, particleDensity);
+    for (let row = 0; row < tb.h!; row += step) {
+      for (let col = 0; col < tb.w!; col += step) {
+        const idx = (row * tb.w! + col) * 4;
+        if (imgData[idx + 3] > 60) {
+          const ox  = tb.x + col;
+          const oy  = tb.y + row;
+          const rgb = [
+            Math.max(0, imgData[idx]   + rand(13, -13)),
+            Math.max(0, imgData[idx+1] + rand(13, -13)),
+            Math.max(0, imgData[idx+2] + rand(13, -13)),
+          ].map(Math.round);
+          ptsRef.current.push({
+            ox, oy, cx: ox, cy: oy,
+            r: rand(2.2, 0.7),
+            f: rand(animationForce + 15, animationForce - 15),
+            rgb,
+          });
+        }
+      }
+    }
+  };
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+    ctxRef.current = ctx;
+    buildParticles();
+    draw();
+
+    const onResize = () => { buildParticles(); };
+    window.addEventListener("resize", onResize);
+    return () => {
+      if (rafRef.current) cancelAnimationFrame(rafRef.current);
+      window.removeEventListener("resize", onResize);
+      ptsRef.current = [];
+    };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [text, colors.join(","), animationForce, particleDensity]);
+
+  return (
+    <canvas
+      ref={canvasRef}
+      className={`block w-full h-full ${className}`}
+      style={{ cursor: "none", touchAction: "none" }}
+      onPointerMove={e => {
+        const r = (e.currentTarget as HTMLCanvasElement).getBoundingClientRect();
+        const sx = (e.currentTarget as HTMLCanvasElement).width  / r.width;
+        const sy = (e.currentTarget as HTMLCanvasElement).height / r.height;
+        ptrRef.current = { x: (e.clientX - r.left) * sx, y: (e.clientY - r.top) * sy };
+        hasPtrRef.current = true;
+      }}
+      onPointerLeave={() => { hasPtrRef.current = false; ptrRef.current = {}; }}
+    />
+  );
+}
+
+function NavShinyButton({ children, href }: { children: React.ReactNode; href?: string }) {
+  const CSS = `
+    @property --nb-ga { syntax:"<angle>"; initial-value:0deg; inherits:false }
+    @property --nb-go { syntax:"<angle>"; initial-value:0deg; inherits:false }
+    @property --nb-gp { syntax:"<percentage>"; initial-value:5%; inherits:false }
+    @property --nb-gs { syntax:"<color>"; initial-value:white; inherits:false }
+    .nav-shiny {
+      --bg:#080f1a; --hl:#2DD4BF; --hl2:#a78bfa;
+      --anim:nb-ga-spin linear infinite; --dur:3s;
+      --t:700ms cubic-bezier(.25,1,.5,1);
+      isolation:isolate; position:relative; overflow:hidden; cursor:pointer;
+      padding:.55rem 1.2rem; font-family:'Syne',sans-serif; font-size:.72rem;
+      font-weight:700; text-transform:uppercase; letter-spacing:.08em;
+      border:1px solid transparent; border-radius:360px; color:#fff;
+      background:linear-gradient(var(--bg),var(--bg)) padding-box,
+        conic-gradient(from calc(var(--nb-ga) - var(--nb-go)),transparent,
+          var(--hl) var(--nb-gp),var(--nb-gs) calc(var(--nb-gp)*2),
+          var(--hl) calc(var(--nb-gp)*3),transparent calc(var(--nb-gp)*4)) border-box;
+      box-shadow:inset 0 0 0 1px #0B1E33;
+      transition:var(--t); transition-property:--nb-go,--nb-gp,--nb-gs;
+      text-decoration:none; display:inline-flex; align-items:center;
+    }
+    .nav-shiny::before,.nav-shiny::after,.nav-shiny span::before {
+      content:""; pointer-events:none; position:absolute;
+      inset-inline-start:50%; inset-block-start:50%; translate:-50% -50%; z-index:-1;
+    }
+    .nav-shiny::before {
+      --s:calc(100% - 6px); --p:2px; width:var(--s); height:var(--s);
+      background:radial-gradient(circle at var(--p) var(--p),white calc(var(--p)/4),transparent 0) padding-box;
+      background-size:calc(var(--p)*2) calc(var(--p)*2); background-repeat:space;
+      mask-image:conic-gradient(from calc(var(--nb-ga) + 45deg),black,transparent 10% 90%,black);
+      border-radius:inherit; opacity:.35; z-index:-1;
+    }
+    .nav-shiny::after {
+      width:100%; aspect-ratio:1;
+      background:linear-gradient(-50deg,transparent,var(--hl),transparent);
+      mask-image:radial-gradient(circle at bottom,transparent 40%,black); opacity:.55;
+      animation:nb-shimmer linear var(--dur) infinite;
+    }
+    .nav-shiny span{z-index:1;}
+    .nav-shiny span::before {
+      --s:calc(100% + 1rem); width:var(--s); height:var(--s);
+      box-shadow:inset 0 -1ex 2rem 4px var(--hl); opacity:0;
+      transition:opacity var(--t); animation:calc(var(--dur)*1.5) nb-breathe linear infinite;
+    }
+    .nav-shiny,.nav-shiny::before,.nav-shiny::after {
+      animation:var(--anim) var(--dur),var(--anim) calc(var(--dur)/.4) reverse paused;
+      animation-composition:add;
+    }
+    .nav-shiny:is(:hover,:focus-visible){--nb-gp:20%;--nb-go:95deg;--nb-gs:var(--hl2);}
+    .nav-shiny:is(:hover,:focus-visible),.nav-shiny:is(:hover,:focus-visible)::before,.nav-shiny:is(:hover,:focus-visible)::after{animation-play-state:running;}
+    .nav-shiny:is(:hover,:focus-visible) span::before{opacity:1;}
+    @keyframes nb-ga-spin{to{--nb-ga:360deg}}
+    @keyframes nb-shimmer{to{rotate:360deg}}
+    @keyframes nb-breathe{from,to{scale:1}50%{scale:1.2}}
+  `;
+  return (
+    <>
+      <style dangerouslySetInnerHTML={{ __html: CSS }} />
+      {href
+        ? <a href={href} className="nav-shiny"><span>{children}</span></a>
+        : <button className="nav-shiny"><span>{children}</span></button>
+      }
+    </>
+  );
+}
+
+function Navbar() {
+  const [scrolled, setScrolled] = useState(false);
+  useEffect(() => {
+    const h = () => setScrolled(window.scrollY > 40);
+    _lenisCallbacks.add(h);
+    window.addEventListener("scroll", h, { passive: true });
+    return () => { _lenisCallbacks.delete(h); window.removeEventListener("scroll", h); };
+  }, []);
+
+  return (
+    <motion.header
+      initial={{ y: -100, opacity: 0 }}
+      animate={{ y: 0, opacity: 1 }}
+      transition={{ delay: .4, duration: 1.0, ease: [0.22, 1, 0.36, 1] }}
+      style={{
+        position: "fixed", top: 0, left: 0, right: 0, zIndex: 500,
+        display: "flex", justifyContent: "center",
+        padding: "14px 24px",
+        pointerEvents: "none",
+      }}
+    >
+      {/* ─── Glass pill ─────────────────────────────────────────────────
+          Uses backgroundColor (not background shorthand) to prevent the
+          React "conflicting property" warning.
+          Gradient border done as a separate absolutely-positioned element. */}
+      <nav style={{
+        display: "flex", alignItems: "center", justifyContent: "space-between",
+        width: "100%", maxWidth: 1020,
+        padding: "10px 16px 10px 22px",
+        borderRadius: 999,
+        pointerEvents: "auto",
+        position: "relative",
+        overflow: "hidden",
+        backgroundColor: scrolled ? "rgba(8,15,26,0.82)" : "rgba(8,15,26,0.30)",
+        backdropFilter: "blur(24px) saturate(180%)",
+        WebkitBackdropFilter: "blur(24px) saturate(180%)",
+        boxShadow: scrolled
+          ? "0 8px 48px rgba(0,0,0,.55), inset 0 1px 0 rgba(255,255,255,.06)"
+          : "0 4px 24px rgba(0,0,0,.3), inset 0 1px 0 rgba(255,255,255,.04)",
+        transition: "background-color .5s, box-shadow .5s",
       }}>
+        {/* Gradient bottom border — separate div, no shorthand conflict */}
+        <div style={{
+          position: "absolute", bottom: 0, left: "8%", right: "8%", height: 1,
+          background: "linear-gradient(90deg, transparent, rgba(45,212,191,.22), transparent)",
+          opacity: scrolled ? 1 : 0.45,
+          transition: "opacity .5s",
+          pointerEvents: "none",
+        }} />
 
-        <motion.div style={{ x: sweepX, opacity: sweepOp, position: "absolute", top: "50%", left: 0, width: "100%", height: 3, background: "linear-gradient(90deg,transparent,#2DD4BF,transparent)", boxShadow: "0 0 30px rgba(45,212,191,1)", pointerEvents: "none" }} />
-
-        {/* 1. THE */}
-        <div style={{ ...centerWrap, zIndex: 2 }}>
-          <motion.div style={{ scale: theScale, opacity: theOp, display: "flex", flexDirection: "column", alignItems: "center", willChange: "transform, opacity" }}>
-            <motion.span className="fB" style={{ fontSize: "clamp(5rem,14vw,13rem)", letterSpacing: ".05em", color: textCol, lineHeight: .9 }}>
-              THE
-            </motion.span>
-          </motion.div>
+        {/* Logo */}
+        <div className="fB" style={{ fontSize: 20, letterSpacing: ".1em", color: "#fff", flexShrink: 0 }}>
+          REVIVE<span style={{ color: "#2DD4BF" }}>X</span>
         </div>
 
-        {/* 2. PROBLEM */}
-        <div style={{ ...centerWrap, zIndex: 10 }}>
-          <motion.div style={{ scale: probScale, opacity: probOp, y: probY, willChange: "transform, opacity" }}>
-            <motion.span className="fB" style={{ fontSize: "clamp(8rem,20vw,20rem)", letterSpacing: ".06em", color: textCol, lineHeight: 1 }}>PROBLEM</motion.span>
-          </motion.div>
-        </div>
-
-        {/* 3. IS REAL */}
-        <div style={{ ...centerWrap, zIndex: 4 }}>
-          
-          <motion.div style={{ x: realX, scale: realScale, opacity: realOp, willChange: "transform, opacity" }}>
-            <span className="fB" style={{ fontSize: "clamp(5rem,14vw,13rem)", letterSpacing: ".05em", color: "#ef4444", lineHeight: .9 }}>IS REAL.</span>
-          </motion.div>
-        </div>
-
-        {/* 4. 28% BACKGROUND */}
-        <div style={centerWrap}>
-        
-          <motion.div style={{ opacity: statOp, scale: statScale, y: statY, height: "50px", willChange: "transform, opacity" }}>
-            <span className="fB" style={{ fontSize: "clamp(10rem,30vw,30rem)", color: "#ef4444", letterSpacing: ".02em", lineHeight: 1, filter: "blur(1px)" }}>28%</span>
-          </motion.div>
-          
-          <motion.div className="fM" style={{ opacity: statOp, fontSize: 10, textTransform: "uppercase", letterSpacing: ".3em", color: "rgba(45,212,191,.55)", marginTop: 14 }}>
-            Of patients quit physiotherapy at home
-          </motion.div>
-        </div>
-
-        {/* 4. STATS FLOATING DATA */}
-       
-        <motion.div style={{ position: "absolute", inset: 0, scale: statsScale, opacity: statsOp, y: statsY, pointerEvents: "none", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 3, willChange: "transform, opacity" }}>
-          {[
-            { v: "80%", l: "Drop-out rate", x: -38, y: -25 },
-            { v: "$50K+", l: "Robotic cost", x: 38, y: -22 },
-            { v: "6–12m", l: "Recovery time", x: -38, y: 30 },
-            { v: "3 wks", l: "Before they quit", x: 38, y: 28 },
-          ].map(s => (
-            <motion.div key={s.v} style={{ position: "absolute", left: `${50 + s.x}vw`, top: `${50 + s.y}vh`, transform: "translate(-50%,-50%)" }}>
-              <div style={{ textAlign: "center", padding: "10px 18px", borderRadius: 16, background: "rgba(8,15,26,.85)", border: "1px solid rgba(255,255,255,.06)", backdropFilter: "blur(12px)" }}>
-                <div className="fB" style={{ fontSize: "2.2rem", color: "#ef4444", lineHeight: 1 }}>{s.v}</div>
-                <div className="fM" style={{ fontSize: 8, color: "rgba(255,255,255,.3)", textTransform: "uppercase", letterSpacing: ".18em" }}>{s.l}</div>
-              </div>
-            </motion.div>
+        {/* Nav links — text-shadow glow on hover */}
+        <div style={{ display: "flex", gap: 4, alignItems: "center" }}>
+          {[["Problem","#problem"],["Solution","#solution"],["Offer","#offer"],["Why Us","#why"],["Contact","#contact"]].map(([l, h]) => (
+            <a key={l} href={h} data-mag className="fM" style={{
+              fontSize: 8, textTransform: "uppercase", letterSpacing: ".22em",
+              color: "rgba(255,255,255,.42)", textDecoration: "none",
+              padding: "6px 11px", borderRadius: 99,
+              transition: "color .3s, text-shadow .3s, background-color .3s",
+            }}
+            onMouseEnter={e => {
+              e.currentTarget.style.color = "#fff";
+              e.currentTarget.style.textShadow = "0 0 18px rgba(45,212,191,.65)";
+              e.currentTarget.style.backgroundColor = "rgba(255,255,255,.05)";
+            }}
+            onMouseLeave={e => {
+              e.currentTarget.style.color = "rgba(255,255,255,.42)";
+              e.currentTarget.style.textShadow = "none";
+              e.currentTarget.style.backgroundColor = "transparent";
+            }}
+            >{l}</a>
           ))}
+        </div>
+
+        {/* ShinyButton CTA */}
+        <NavShinyButton href="#contact">Get Started</NavShinyButton>
+      </nav>
+    </motion.header>
+  );
+}
+
+
+function AnimatedHeroTitle() {
+  const ref = useRef(null);
+  const seen = useInView(ref, { once: true, margin: "-40px" });
+  const ease: [number,number,number,number] = [0.16, 1, 0.3, 1];
+  const text1Ref = useRef<HTMLSpanElement>(null);
+  const text2Ref = useRef<HTMLSpanElement>(null);
+  const words = ["RECOVERY.", "COGNITION.", "THE BRAIN.", "REHABILITATION.", "NEUROPLASTICITY."];
+  const MORPH_TIME = 1.0, COOLDOWN_TIME = 2.2;
+
+  useEffect(() => {
+    if (!seen) return;
+    const startDelay = setTimeout(() => {
+      let textIndex = 0, morph = 0, cooldown = COOLDOWN_TIME, lastTime = Date.now(), rafId = 0;
+      if (text1Ref.current) text1Ref.current.textContent = words[0];
+      if (text2Ref.current) text2Ref.current.textContent = words[1];
+      const setMorph = (f: number) => {
+        const t1 = text1Ref.current, t2 = text2Ref.current; if (!t1||!t2) return;
+        t2.style.filter = `blur(${Math.min(8/f-8,100)}px)`; t2.style.opacity = `${Math.pow(f,.4)*100}%`;
+        const inv = 1-f; t1.style.filter = `blur(${Math.min(8/inv-8,100)}px)`; t1.style.opacity = `${Math.pow(inv,.4)*100}%`;
+      };
+      const tick = () => {
+        rafId = requestAnimationFrame(tick);
+        const now = Date.now(), dt = (now-lastTime)/1000; lastTime = now; cooldown -= dt;
+        if (cooldown <= 0) {
+          if (cooldown+dt > 0) { textIndex=(textIndex+1)%words.length; if(text1Ref.current)text1Ref.current.textContent=words[textIndex]; if(text2Ref.current)text2Ref.current.textContent=words[(textIndex+1)%words.length]; }
+          morph -= cooldown; cooldown = 0;
+          const fraction = Math.min(morph/MORPH_TIME,1);
+          if (fraction >= 1) { cooldown=COOLDOWN_TIME; morph=0; if(text1Ref.current){text1Ref.current.style.filter="";text1Ref.current.style.opacity="0%";} if(text2Ref.current){text2Ref.current.style.filter="";text2Ref.current.style.opacity="100%";} }
+          else setMorph(fraction);
+        } else { if(text1Ref.current){text1Ref.current.style.filter="";text1Ref.current.style.opacity="0%";} if(text2Ref.current){text2Ref.current.style.filter="";text2Ref.current.style.opacity="100%";} }
+      };
+      rafId = requestAnimationFrame(tick);
+      return () => cancelAnimationFrame(rafId);
+    }, 1200);
+    return () => clearTimeout(startDelay);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [seen]);
+
+  return (
+    <div ref={ref} style={{ marginBottom: 32, lineHeight: 0.9, position: "relative" }}>
+      <div style={{ overflow: "hidden", display: "block" }}>
+        <motion.div className="fB title-line-1" style={{ fontSize: "clamp(2.8rem,6.5vw,7rem)", letterSpacing: ".03em" }}
+          initial={{ y: "100%", filter: "blur(18px)", opacity: 0 }}
+          animate={seen ? { y: "0%", filter: "blur(0px)", opacity: 1 } : {}}
+          transition={{ duration: 1.1, delay: 0.3, ease }}>REWIRING</motion.div>
+      </div>
+      <motion.div initial={{ opacity: 0 }} animate={seen ? { opacity: 1 } : {}} transition={{ duration: 0.5, delay: 0.7 }}
+        style={{ position: "relative", height: "clamp(2.8rem,6.5vw,7rem)", display: "flex", alignItems: "flex-end" }}>
+        <svg style={{ position: "absolute", width: 0, height: 0 }} aria-hidden>
+          <defs><filter id="hero-gooey"><feColorMatrix in="SourceGraphic" type="matrix" values="1 0 0 0 0 0 1 0 0 0 0 0 1 0 0 0 0 0 255 -120" /></filter></defs>
+        </svg>
+        <div style={{ position: "relative", filter: "url(#hero-gooey)", width: "100%", height: "100%" }}>
+          <span ref={text1Ref} className="fB title-line-2" style={{ position: "absolute", left: 0, bottom: 0, fontSize: "clamp(2.8rem,6.5vw,7rem)", letterSpacing: ".03em", lineHeight: 1, whiteSpace: "nowrap", opacity: "0%" }} />
+          <span ref={text2Ref} className="fB title-line-2" style={{ position: "absolute", left: 0, bottom: 0, fontSize: "clamp(2.8rem,6.5vw,7rem)", letterSpacing: ".03em", lineHeight: 1, whiteSpace: "nowrap", opacity: "100%" }} />
+        </div>
+      </motion.div>
+    </div>
+  );
+}
+
+// ══ BlurTextAnimation — cinematic per-word blur-in reveal ═══════════════════
+interface BlurWordData {
+  text: string;
+  duration: number;
+  delay: number;
+  blur: number;
+  scale: number;
+}
+
+function BlurTextAnimation({ text = "REDEFINING RECOVERY.", animationDelay = 4200 }: { text?: string; animationDelay?: number }) {
+  const [isAnimating, setIsAnimating] = React.useState(false);
+  const animRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const resetRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const words = React.useMemo<BlurWordData[]>(() => {
+    const split = text.split(" ");
+    return split.map((w, i) => {
+      const progress = i / split.length;
+      return {
+        text: w,
+        duration: 2.2 + Math.cos(i * 0.3) * 0.3,
+        delay: i * 0.06 + Math.pow(progress, 0.8) * 0.5 + (Math.random() - 0.5) * 0.04,
+        blur: 12 + Math.floor(Math.random() * 8),
+        scale: 0.9 + Math.sin(i * 0.2) * 0.05,
+      };
+    });
+  }, [text]);
+
+  useEffect(() => {
+    const start = () => {
+      setTimeout(() => setIsAnimating(true), 200);
+      const maxT = words.reduce((m, w) => Math.max(m, w.delay + w.duration), 0);
+      animRef.current = setTimeout(() => {
+        setIsAnimating(false);
+        resetRef.current = setTimeout(start, animationDelay);
+      }, (maxT + 1) * 1000);
+    };
+    start();
+    return () => {
+      if (animRef.current) clearTimeout(animRef.current);
+      if (resetRef.current) clearTimeout(resetRef.current);
+    };
+  }, [words, animationDelay]);
+
+  return (
+    <div style={{ display:"flex", alignItems:"center", justifyContent:"center", pointerEvents:"none" }}>
+      <p className="fB" style={{ fontSize:"clamp(3rem,8vw,7rem)", letterSpacing:".06em", lineHeight:1.0, textAlign:"center", color:"#fff", margin:0 }}>
+        {words.map((word, i) => (
+          <span
+            key={i}
+            style={{
+              display:"inline-block",
+              marginRight:"0.25em",
+              opacity: isAnimating ? 1 : 0,
+              filter: isAnimating ? "blur(0px) brightness(1)" : `blur(${word.blur}px) brightness(0.6)`,
+              transform: isAnimating ? "translateY(0) scale(1) rotateX(0deg)" : `translateY(20px) scale(${word.scale}) rotateX(-15deg)`,
+              transition: `opacity ${word.duration}s cubic-bezier(.25,.46,.45,.94) ${word.delay}s, filter ${word.duration}s cubic-bezier(.25,.46,.45,.94) ${word.delay}s, transform ${word.duration}s cubic-bezier(.25,.46,.45,.94) ${word.delay}s`,
+              willChange:"filter,transform,opacity",
+              transformStyle:"preserve-3d",
+              backfaceVisibility:"hidden",
+              textShadow: isAnimating ? "0 0 40px rgba(45,212,191,.4)" : "0 0 40px rgba(255,255,255,.2)",
+            }}
+          >
+            {word.text}
+          </span>
+        ))}
+      </p>
+    </div>
+  );
+}
+
+// ══ CINEMATIC HERO ════════════════════════════════════════════════════════════
+function CinematicHero() {
+  const sectionRef = useRef<HTMLDivElement>(null);
+  const canvasRef  = useRef<HTMLCanvasElement>(null);
+  const progRef    = useRef(0);
+  const progMV     = useMotionValue(0);          // drives DOM overlays — no React re-render
+  const router     = useRouter();
+  const [webglOk, setWebglOk] = useState<boolean | null>(null);
+
+  // ── DOM overlay transforms — derived from MotionValue, zero re-renders ──
+  const voidOp   = useTransform(progMV, [0, 0.15],         [1, 0]);
+  const labelOp  = useTransform(progMV, [0.32, 0.42, 0.50, 0.57], [0, 1, 1, 0]);
+  const ifaceOp  = useTransform(progMV, [0.55, 0.69],      [0, 1]);
+  const ifaceY   = useTransform(progMV, [0.55, 0.69],      [20, 0]);
+  const plungeOp = useTransform(progMV, [0.88, 1.0],       [0, 1]);
+  const ifacePE  = useTransform(ifaceOp, v => v > 0.3 ? "auto" : "none");
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas || typeof window === "undefined") return;
+
+    let rafId = 0, renderer: any = null, model: any = null;
+    let modelBaseScale = 1, scene: any = null, camera: any = null;
+    let tealL: any = null, purpL: any = null;
+    let particleMat: any = null;
+    let isDragging = false, lockedFace = false;
+    let rotY = 0, rotX = 0, velY = 0, modelPosX = 0;
+    let lastDragX = 0, lastDragY = 0;
+    let isVisible = true;
+
+    const cl  = (v: number, a: number, b: number) => Math.max(0, Math.min(1, (v-a)/(b-a)));
+    const eo  = (t: number) => 1 - Math.pow(1-t, 3);
+    const eio = (t: number) => t < 0.5 ? 4*t*t*t : 1 - Math.pow(-2*t+2,3)/2;
+    const lp  = (a: number, b: number, t: number) => a + (b-a)*t;
+
+    const init = async () => {
+      const THREE = await import("three");
+      const { GLTFLoader } = await import("three/examples/jsm/loaders/GLTFLoader.js" as any);
+
+      scene = new THREE.Scene();
+      scene.background = new THREE.Color(0x080f1a);
+      scene.fog = new THREE.FogExp2(0x080f1a, 0.006);
+      const W = window.innerWidth, H = window.innerHeight;
+      camera = new THREE.PerspectiveCamera(40, W/H, 0.1, 500);
+      camera.position.set(0, 0, 100);
+
+      const _ce = console.error; console.error = () => {};
+      try { renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: false, powerPreference: "high-performance", failIfMajorPerformanceCaveat: false }); }
+      catch(e) { console.error = _ce; setWebglOk(false); return; }
+      console.error = _ce;
+      if (!renderer) { setWebglOk(false); return; }
+      renderer.setSize(W, H); renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.0));
+      (renderer as any).outputColorSpace = "srgb";
+      renderer.toneMapping = (THREE as any).ACESFilmicToneMapping; renderer.toneMappingExposure = 1.6;
+
+      // Particles — sparse halo, never overlapping model
+      const N = 300;
+      const pPos = new Float32Array(N*3), pCol = new Float32Array(N*3), pSz = new Float32Array(N);
+      const CT = new THREE.Color("#2DD4BF"), CP = new THREE.Color("#a78bfa"), CW = new THREE.Color("#ddeeff");
+      for (let i = 0; i < N; i++) {
+        const angle = Math.random()*Math.PI*2, radius = 8+Math.random()*22, depth = -8-Math.random()*35;
+        pPos[i*3]=Math.cos(angle)*radius; pPos[i*3+1]=Math.sin(angle)*radius*.55; pPos[i*3+2]=depth;
+        const r=Math.random(), col=r<.4?CT:r<.7?CP:CW; pCol[i*3]=col.r;pCol[i*3+1]=col.g;pCol[i*3+2]=col.b; pSz[i]=Math.random()*1.2+.25;
+      }
+      const pGeo = new THREE.BufferGeometry();
+      pGeo.setAttribute("position",new THREE.BufferAttribute(pPos,3));
+      pGeo.setAttribute("aColor",new THREE.BufferAttribute(pCol,3));
+      pGeo.setAttribute("aSize",new THREE.BufferAttribute(pSz,1));
+      particleMat = new THREE.ShaderMaterial({ uniforms:{time:{value:0}},
+        vertexShader:`attribute float aSize;attribute vec3 aColor;varying vec3 vCol;uniform float time;void main(){vCol=aColor;vec3 p=position;p.x+=sin(time*.25+p.z*.08)*.3;p.y+=cos(time*.20+p.z*.06)*.22;vec4 mv=modelViewMatrix*vec4(p,1.);gl_PointSize=aSize*(280./-mv.z);gl_Position=projectionMatrix*mv;}`,
+        fragmentShader:`varying vec3 vCol;void main(){float d=length(gl_PointCoord-.5);if(d>.5)discard;float a=(1.-smoothstep(0.,.5,d))*.70;gl_FragColor=vec4(vCol,a);}`,
+        transparent:true, blending:THREE.AdditiveBlending, depthWrite:false });
+      scene.add(new THREE.Points(pGeo, particleMat));
+
+      // Lights
+      scene.add(new THREE.AmbientLight(0xd4eeff, 3.5));
+      const key = new THREE.DirectionalLight(0xffffff, 6.0); key.position.set(3,7,7); scene.add(key);
+      const fill = new THREE.DirectionalLight(0xa8d8ff, 3.0); fill.position.set(-5,2,5); scene.add(fill);
+      tealL = new THREE.PointLight(0x2DD4BF, 5.0, 28); tealL.position.set(-3,1,-2); scene.add(tealL);
+      purpL = new THREE.PointLight(0xa78bfa, 3.2, 22); purpL.position.set(4,-1,-2); scene.add(purpL);
+
+      // GLB
+      const cv = canvas as HTMLElement;
+      const loader = new (GLTFLoader as any)(); loader.setPath("/images/");
+      loader.load("revivex_3d.glb", (gltf: any) => {
+        model = gltf.scene;
+        const box = new THREE.Box3().setFromObject(model), center = box.getCenter(new THREE.Vector3()), size = box.getSize(new THREE.Vector3());
+        const s = 2.8/Math.max(size.x,size.y,size.z); modelBaseScale = s;
+        const off = center.multiplyScalar(-s); model.position.set(off.x, off.y+.2, off.z); model.scale.setScalar(modelBaseScale);
+        model.traverse((child: any)=>{ if(child.isMesh&&child.material){child.material.envMapIntensity=2.5;child.material.needsUpdate=true;} });
+        rotY=-0.65; rotX=0.12; model.rotation.set(rotX,rotY,0); scene.add(model); cv.style.cursor="grab";
+      }, undefined, (e: any)=>console.warn("GLB:",e));
+
+      // Drag
+      const onPD = (e: PointerEvent) => { isDragging=true; lastDragX=e.clientX; lastDragY=e.clientY; velY=0; cv.setPointerCapture(e.pointerId); cv.style.cursor="grabbing"; e.stopPropagation(); };
+      const onPM = (e: PointerEvent) => { if(!isDragging)return; const dx=e.clientX-lastDragX,dy=e.clientY-lastDragY; const dr=dx*.009,dp=dy*.007; rotY-=dr; velY=velY*.6-dr*.4; rotX=Math.max(-0.55,Math.min(0.55,rotX+dp)); lastDragX=e.clientX; lastDragY=e.clientY; if(model){model.rotation.y=rotY;model.rotation.x=rotX;} };
+      const onPU = () => { isDragging=false; cv.style.cursor="grab"; };
+      cv.addEventListener("pointerdown",onPD); cv.addEventListener("pointermove",onPM); cv.addEventListener("pointerup",onPU); cv.addEventListener("pointerleave",onPU);
+
+      // Scroll — updates progRef AND MotionValue. progRef drives Three.js camera (sync).
+      // progMV drives DOM overlays via useTransform (no re-renders).
+      const section = sectionRef.current!;
+      const updateProg = () => {
+        const rect = section.getBoundingClientRect();
+        const next = Math.min(1, Math.max(0, -rect.top / Math.max(1, section.offsetHeight - window.innerHeight)));
+        if (Math.abs(next - progRef.current) > 0.0003) {
+          progRef.current = next;
+          progMV.set(next);  // ← updates Framer Motion transforms, NOT React state
+        }
+      };
+      // Subscribe to Lenis directly (no window event flood)
+      const lenisUnsub = () => { _lenisCallbacks.delete(lenisHandler); };
+      const lenisHandler = () => updateProg();
+      _lenisCallbacks.add(lenisHandler);
+      // Fallback for native scroll (before Lenis loads)
+      window.addEventListener("scroll", updateProg, { passive: true });
+      updateProg();
+
+      const onResize = () => { const w=window.innerWidth,h=window.innerHeight; camera.aspect=w/h; camera.updateProjectionMatrix(); renderer.setSize(w,h); };
+      window.addEventListener("resize",onResize);
+
+      // Visibility — pause RAF when section is not in viewport
+      const visObs = new IntersectionObserver(e => { isVisible = e[0].isIntersecting; }, { rootMargin: "50px" });
+      visObs.observe(section);
+
+      // RAF — zero React state updates here
+      let firstFrame = true;
+      const draw = () => {
+        rafId = requestAnimationFrame(draw);
+        if (!isVisible || document.hidden) return;   // ← pauses GPU when off-screen
+        const t = Date.now()*.001, p = progRef.current;
+        if(particleMat?.uniforms) particleMat.uniforms.time.value = t;
+        const zoomP=eo(cl(p,0,.55)), cameraZ=lp(100,4.0,zoomP), slideP=eio(cl(p,.52,.74));
+        const cameraX=lp(0,-2.6,slideP), cameraY=lp(0,.2,zoomP), plungeP=eo(cl(p,.88,1.0));
+        camera.position.set(cameraX, lp(cameraY,-8,plungeP), lp(cameraZ,-20,plungeP));
+        camera.lookAt(cameraX*.3,.2,0);
+        if(tealL) tealL.intensity=5.0+Math.sin(t*1.3)*.9;
+        if(purpL) purpL.intensity=3.2+Math.sin(t*.9+1)*.6;
+        if(model){
+          // ── X position: slide right during reveal, smooth in both directions ──
+          const targetX = lp(0, 0.9, slideP);
+          const lerpRate = targetX < modelPosX ? 0.028 : 0.032;
+          modelPosX += (targetX - modelPosX) * lerpRate;
+          model.position.x = modelPosX;
+
+          const faceP   = cl(p, .48, .66);
+          const exitP   = eo(cl(p, .82, 1.0));  // exit ramp: 0 → 1 as model plunges
+
+          if (!isDragging) {
+            // Auto-spin only before face-lock, scales to zero before plunge
+            const autoSpin = 0.003 * Math.max(0, 1 - faceP * 2) * (1 - exitP);
+            rotY += autoSpin;
+
+            // Gentle face-forward pull
+            if (faceP > 0) {
+              rotY += (0 - rotY) * Math.min(faceP * 0.008, 0.04);
+              rotX += (0 - rotX) * Math.min(faceP * 0.006, 0.03);
+            }
+
+            // During exit: kill inertia so no wild spinning on the way out
+            const inertiaDamp = 1 - exitP * 0.85;
+            velY *= 0.965 * inertiaDamp;
+            rotY += velY;
+
+            // Exit: lock rotation to current pose — no drift
+            if (exitP > 0) {
+              rotY += (0 - rotY) * exitP * 0.06;
+              rotX += (0 - rotX) * exitP * 0.06;
+            }
+          }
+
+          if(faceP >= .97 && !lockedFace){ lockedFace=true; cv.style.cursor="grab"; }
+          model.rotation.y = rotY;
+          model.rotation.x = rotX;
+        }
+        try { renderer.render(scene,camera); if(firstFrame){firstFrame=false;setWebglOk(true);} }
+        catch(e) { setWebglOk(false); cancelAnimationFrame(rafId); }
+      };
+      draw();
+
+      return () => {
+        visObs.disconnect();
+        lenisUnsub();
+        window.removeEventListener("scroll",updateProg);
+        window.removeEventListener("resize",onResize);
+        cv.removeEventListener("pointerdown",onPD); cv.removeEventListener("pointermove",onPM);
+        cv.removeEventListener("pointerup",onPU); cv.removeEventListener("pointerleave",onPU);
+      };
+    };
+
+    let cleanupFn: (() => void) | undefined;
+    init().then(fn=>{cleanupFn=fn;});
+    return () => { cancelAnimationFrame(rafId); cleanupFn?.(); if(renderer) renderer.dispose(); };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const absC: React.CSSProperties = { position:"absolute",inset:0,pointerEvents:"none",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center" };
+
+  if (webglOk === false) {
+    return (
+      <section style={{ minHeight:"100vh", background:"#080f1a", position:"relative", overflow:"hidden", display:"flex", alignItems:"center" }}>
+        <div className="grid-dk" style={{ position:"absolute",inset:0,opacity:0.4,pointerEvents:"none" }} />
+        <div style={{ position:"absolute",top:"20%",right:"10%",width:500,height:500,borderRadius:"50%",background:"radial-gradient(circle,rgba(45,212,191,.10),transparent 65%)",pointerEvents:"none" }} />
+        <div style={{ maxWidth:1280,margin:"0 auto",padding:"100px 40px",display:"grid",gridTemplateColumns:"55% 45%",gap:40,alignItems:"center",width:"100%",position:"relative",zIndex:2 }}>
+          <div style={{ display:"flex",flexDirection:"column" }}>
+            <div className="fM" style={{ fontSize:8,color:"rgba(45,212,191,.55)",textTransform:"uppercase",letterSpacing:".22em",marginBottom:24,display:"flex",alignItems:"center",gap:10 }}>
+              <Heart size={10} style={{ color:"#2DD4BF" }} className="heartbeat" /> Democratizing Neuro-Rehabilitation · SDGP CS-09
+            </div>
+            <div style={{ overflow:"hidden",maxWidth:"100%" }}><AnimatedHeroTitle /></div>
+            <p className="fS" style={{ fontSize:15,color:"rgba(255,255,255,.62)",maxWidth:400,lineHeight:1.76,fontWeight:300,marginBottom:36 }}>
+              Clinical rehabilitation powered by immersive computing. We transform static routines into <span style={{ color:"rgba(255,255,255,.90)",fontWeight:500 }}>engaging digital experiences</span>.
+            </p>
+            <div style={{ display:"flex",gap:12 }}>
+              <button onClick={()=>router.push("/auth/patient/signin")} className="fB sweep-btn sweep-teal">
+                <span className="sweep-bar" style={{ background:"rgba(45,212,191,.6)", boxShadow:"0 0 10px 10px rgba(45,212,191,.25)" }} />
+                <Play size={13} style={{ fill:"#2DD4BF", flexShrink:0, position:"relative", zIndex:1 }} />
+                <span style={{ position:"relative", zIndex:1 }}>Patient Sign In</span>
+              </button>
+              <button onClick={()=>router.push("/auth/doctor/signin")} className="fB sweep-btn sweep-slate">
+                <span className="sweep-bar" style={{ background:"rgba(255,255,255,.35)", boxShadow:"0 0 10px 10px rgba(255,255,255,.10)" }} />
+                <Stethoscope size={13} style={{ flexShrink:0, position:"relative", zIndex:1 }} />
+                <span style={{ position:"relative", zIndex:1 }}>Doctor Sign In</span>
+              </button>
+            </div>
+          </div>
+          <div style={{ display:"flex",flexDirection:"column",gap:14 }}>
+            {[{label:"ESP32 Microcontroller",sub:"BLE 5.0 · Real-time",c:"#2DD4BF"},{label:"MPX5010DP Pressure",sub:"Medical-grade grip",c:"#a78bfa"},{label:"MPU-6050 Gyroscope",sub:"6-axis tremor detect",c:"#34d399"}].map(s=>(
+              <div key={s.label} style={{ padding:"16px 20px",borderRadius:12,background:`linear-gradient(135deg,${s.c}08,rgba(8,14,26,.96))`,border:`1px solid ${s.c}22` }}>
+                <div className="fM" style={{ fontSize:8,color:s.c,textTransform:"uppercase",letterSpacing:".14em",marginBottom:3 }}>{s.label}</div>
+                <div className="fS" style={{ fontSize:12,color:"rgba(255,255,255,.42)",fontWeight:300 }}>{s.sub}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  return (
+    <div ref={sectionRef} style={{ height:"260vh",position:"relative" }}>
+      <div style={{ position:"sticky",top:0,height:"100vh",overflow:"hidden" }}>
+        <canvas ref={canvasRef} style={{ position:"absolute",inset:0,width:"100%",height:"100%",display:"block",zIndex:0 }} />
+        <div style={{ position:"absolute",inset:0,zIndex:1,pointerEvents:"none",background:"linear-gradient(90deg,rgba(8,15,26,.92) 0%,rgba(8,15,26,.80) 36%,rgba(8,15,26,.22) 50%,transparent 58%)" }} />
+
+        {/* VOID — opacity driven by MotionValue, no React re-render */}
+        <motion.div style={{ ...absC, zIndex:10, opacity:voidOp }}>
+          {([{top:28,left:28,borderTop:"1px solid rgba(45,212,191,.28)",borderLeft:"1px solid rgba(45,212,191,.28)"},{top:28,right:28,borderTop:"1px solid rgba(45,212,191,.28)",borderRight:"1px solid rgba(45,212,191,.28)"},{bottom:28,left:28,borderBottom:"1px solid rgba(45,212,191,.28)",borderLeft:"1px solid rgba(45,212,191,.28)"},{bottom:28,right:28,borderBottom:"1px solid rgba(45,212,191,.28)",borderRight:"1px solid rgba(45,212,191,.28)"}] as React.CSSProperties[]).map((s,i)=>(
+            <div key={i} style={{ position:"absolute",width:24,height:24,pointerEvents:"none",...s }} />
+          ))}
+          <div className="fM" style={{ fontSize:"clamp(.44rem,.82vw,.70rem)",color:"rgba(45,212,191,.45)",textTransform:"uppercase",letterSpacing:".55em",marginBottom:28,textAlign:"center",display:"flex",alignItems:"center",gap:12,justifyContent:"center" }}>
+            <span style={{ width:22,height:1,background:"rgba(45,212,191,.35)",display:"inline-block" }} /> REVIVEX PLATFORM v1.2 <span style={{ width:22,height:1,background:"rgba(45,212,191,.35)",display:"inline-block" }} />
+          </div>
+          <BlurTextAnimation text="REDEFINING RECOVERY." />
+          <div style={{ width:"clamp(120px,18vw,200px)",height:1,background:"linear-gradient(90deg,transparent,rgba(45,212,191,.45),transparent)",margin:"22px auto" }} />
+          <div className="fM" style={{ fontSize:"clamp(.38rem,.72vw,.60rem)",color:"rgba(45,212,191,.40)",textTransform:"uppercase",letterSpacing:".52em",textAlign:"center" }}>Scroll to explore</div>
+          <div style={{ position:"absolute",top:"50%",left:"50%",transform:"translate(-50%,-50%)",pointerEvents:"none" }}>
+            <div className="ring-pop" style={{ width:260,height:260,borderRadius:"50%",border:"1px solid rgba(45,212,191,.14)" }} />
+            <div className="ring-pop" style={{ width:260,height:260,borderRadius:"50%",border:"1px solid rgba(167,139,250,.09)",animationDelay:"1.4s" }} />
+          </div>
+          <motion.div animate={{ y:[0,8,0] }} transition={{ repeat:Infinity,duration:2.2,ease:"easeInOut" }} style={{ position:"absolute",bottom:32,color:"rgba(255,255,255,.13)" }}>
+            <ChevronDown size={18} />
+          </motion.div>
         </motion.div>
 
+        {/* HARDWARE LABEL */}
+        <motion.div style={{ ...absC, justifyContent:"flex-end", paddingBottom:44, zIndex:10, opacity:labelOp }}>
+          <div className="fS" style={{ fontSize:9,fontWeight:600,color:"rgba(45,212,191,.55)",textTransform:"uppercase",letterSpacing:".20em",textAlign:"center" }}>ESP32 · MPX5010DP · MPU6050 · BLE 5.0</div>
+          <div className="fM" style={{ fontSize:8,color:"rgba(255,255,255,.18)",letterSpacing:".10em",marginTop:4,textAlign:"center" }}>ReViveX Hardware Rev 1.2</div>
+        </motion.div>
+
+        {/* INTERFACE — motion.div so opacity/transform are GPU-composited */}
+        <motion.div style={{ position:"absolute",inset:0,zIndex:20,display:"grid",gridTemplateColumns:"50% 50%",alignItems:"center",opacity:ifaceOp,y:ifaceY,pointerEvents:"none" }}>
+          <motion.div style={{ padding:"0 4% 0 6%",display:"flex",flexDirection:"column",pointerEvents:ifacePE }}>
+            <div className="fM" style={{ fontSize:8,textTransform:"uppercase",letterSpacing:".24em",color:"rgba(255,255,255,.45)",marginBottom:24,display:"flex",alignItems:"center",gap:10,padding:"6px 16px",borderRadius:99,width:"fit-content",background:"linear-gradient(135deg,rgba(45,212,191,.06),rgba(8,15,26,.8))",border:"1px solid rgba(45,212,191,.16)" }}>
+              <Heart size={10} style={{ color:"#2DD4BF" }} className="heartbeat" /> Democratizing Neuro-Rehabilitation · SDGP CS-09
+            </div>
+            <div style={{ overflow:"hidden",maxWidth:"100%" }}><AnimatedHeroTitle /></div>
+            <p className="fS" style={{ fontSize:15,color:"rgba(255,255,255,.62)",maxWidth:400,marginBottom:40,lineHeight:1.76,fontWeight:300 }}>
+              Clinical rehabilitation powered by immersive computing. We transform static routines into{" "}
+              <span style={{ color:"rgba(255,255,255,.85)",fontWeight:500 }}>engaging digital experiences</span>.
+            </p>
+            <div style={{ display:"flex",gap:12,flexWrap:"wrap" }}>
+              <button onClick={()=>router.push("/auth/patient/signin")} className="fB sweep-btn sweep-teal">
+                <span className="sweep-bar" style={{ background:"rgba(45,212,191,.6)", boxShadow:"0 0 10px 10px rgba(45,212,191,.25)" }} />
+                <Play size={14} style={{ fill:"#2DD4BF", flexShrink:0, position:"relative", zIndex:1 }} />
+                <span style={{ position:"relative", zIndex:1 }}>Patient Sign In</span>
+              </button>
+              <button onClick={()=>router.push("/auth/doctor/signin")} className="fB sweep-btn sweep-slate">
+                <span className="sweep-bar" style={{ background:"rgba(255,255,255,.35)", boxShadow:"0 0 10px 10px rgba(255,255,255,.10)" }} />
+                <Stethoscope size={14} style={{ flexShrink:0, position:"relative", zIndex:1 }} />
+                <span style={{ position:"relative", zIndex:1 }}>Doctor Sign In</span>
+                <ArrowRight size={11} style={{ opacity:.4, position:"relative", zIndex:1 }} />
+              </button>
+            </div>
+            <div style={{ marginTop:16 }}>
+              <a href="/auth/patient/signup" data-mag className="fS" style={{ fontSize:11,color:"rgba(45,212,191,.55)",textDecoration:"none",letterSpacing:".04em",transition:"color .25s" }}
+                onMouseEnter={e=>(e.currentTarget as HTMLElement).style.color="#2DD4BF"}
+                onMouseLeave={e=>(e.currentTarget as HTMLElement).style.color="rgba(45,212,191,.55)"}>New? Sign up →</a>
+            </div>
+          </motion.div>
+          <div style={{ position:"relative",height:"100%",pointerEvents:"none" }}>
+            {[{t:"GRIP SENSOR",s:"MPX5010DP",x:"5%",y:"16%",c:"#2DD4BF"},{t:"GYROSCOPE",s:"MPU-6050",x:"6%",y:"74%",c:"#a78bfa"},{t:"MICROCONTROLLER",s:"ESP32",x:"65%",y:"22%",c:"#34d399"}].map(tag=>(
+              <div key={tag.t} style={{ position:"absolute",left:tag.x,top:tag.y,padding:"6px 14px",borderRadius:10,background:"linear-gradient(135deg,rgba(6,12,24,.95),rgba(4,8,18,.98))",border:`1px solid ${tag.c}30`,backdropFilter:"blur(20px)" }}>
+                <div className="fM" style={{ fontSize:7,color:tag.c,textTransform:"uppercase",letterSpacing:".18em" }}>{tag.t}</div>
+                <div className="fM" style={{ fontSize:7,color:"rgba(255,255,255,.28)",letterSpacing:".08em",marginTop:1 }}>{tag.s}</div>
+              </div>
+            ))}
+            <div style={{ position:"absolute",bottom:"10%",left:"50%",transform:"translateX(-50%)",fontFamily:"Plus Jakarta Sans,sans-serif",fontSize:9,color:"rgba(45,212,191,.30)",letterSpacing:".12em",whiteSpace:"nowrap" }}>← drag to inspect →</div>
+          </div>
+        </motion.div>
+
+        {/* Plunge fade */}
+        <motion.div style={{ position:"absolute",inset:0,zIndex:40,background:"#080f1a",opacity:plungeOp,pointerEvents:"none" }} />
+      </div>
+    </div>
+  );
+}
+
+// ══ STAT PARTICLE SCATTER — 28% explodes all at once ════════════════════════
+function StatParticleScatter({ scatterP }: { scatterP: any }) {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const particlesRef = useRef<any[]>([]);
+  const rafRef = useRef(0);
+  const lastP = useRef(0);
+
+  useEffect(() => {
+    const canvas = canvasRef.current; if (!canvas) return;
+    const parent = canvas.parentElement!;
+    const W = parent.offsetWidth || window.innerWidth;
+    const H = parent.offsetHeight || window.innerHeight;
+    canvas.width = W; canvas.height = H;
+    canvas.style.width = W + "px"; canvas.style.height = H + "px";
+
+    // Render "28%" off-screen and sample pixels
+    const off = document.createElement("canvas");
+    off.width = W; off.height = H;
+    const ctx2 = off.getContext("2d")!;
+    const fs = Math.min(H * 0.75, W * 0.35);
+    ctx2.font = `900 ${fs}px 'Bebas Neue','Arial Black',sans-serif`;
+    ctx2.fillStyle = "#ef4444";
+    ctx2.textAlign = "center";
+    ctx2.textBaseline = "middle";
+    ctx2.fillText("28%", W / 2, H / 2);
+    const img = ctx2.getImageData(0, 0, W, H).data;
+
+    const pts: {x:number;y:number}[] = [];
+    const step = 4; // denser sampling
+    for (let y = 0; y < H; y += step)
+      for (let x = 0; x < W; x += step)
+        if (img[(y * W + x) * 4 + 3] > 60) pts.push({ x, y });
+
+    // Each particle: starts at its pixel position, explodes outward all at once
+    particlesRef.current = pts.map(p => {
+      const angle = Math.random() * Math.PI * 2;
+      const speed = Math.random() * 280 + 120; // px/s at full scatter
+      return {
+        ox: p.x, oy: p.y,
+        vx: Math.cos(angle) * speed,
+        vy: Math.sin(angle) * speed - Math.random() * 60, // slight upward bias
+        decay: Math.random() * 0.4 + 0.6,
+        r: Math.random() * 2 + 1,
+      };
+    });
+
+    const ctx = canvas.getContext("2d")!;
+    const draw = () => {
+      rafRef.current = requestAnimationFrame(draw);
+      const sp = lastP.current; // 0 → 1
+      ctx.clearRect(0, 0, W, H);
+      if (sp <= 0) return;
+
+      const t = sp; // scatter time 0→1 over ~0.4s of scroll
+      particlesRef.current.forEach(p => {
+        const x = p.ox + p.vx * t * 0.45;
+        const y = p.oy + p.vy * t * 0.45 + 200 * t * t; // gravity
+        const alpha = Math.max(0, (1 - t * p.decay * 1.6));
+        if (alpha <= 0) return;
+        ctx.globalAlpha = alpha;
+        // colour shifts from red → orange as it flies
+        const hue = 4 + t * 20;
+        const size = p.r * (1 + t * 1.2);
+        ctx.fillStyle = `hsl(${hue},92%,58%)`;
+        ctx.beginPath();
+        ctx.arc(x, y, size, 0, Math.PI * 2);
+        ctx.fill();
+      });
+      ctx.globalAlpha = 1;
+    };
+    draw();
+    return () => cancelAnimationFrame(rafRef.current);
+  }, []);
+
+  useEffect(() => {
+    return scatterP.on("change", (v: number) => { lastP.current = v; });
+  }, [scatterP]);
+
+  return (
+    <canvas ref={canvasRef} style={{
+      position: "absolute", inset: 0, width: "100%", height: "100%",
+      pointerEvents: "none", zIndex: 5,
+    }} />
+  );
+}
+
+
+// ══ PULSING SUBTITLE — rhythmic dim animation ═════════════════════════════
+function PulsingSubtitle() {
+  const [bright, setBright] = useState(true);
+  useEffect(() => {
+    const id = setInterval(() => setBright(b => !b), 900);
+    return () => clearInterval(id);
+  }, []);
+  return (
+    <div className="fB" style={{
+      color: bright ? "rgba(255,255,255,.95)" : "rgba(239,68,68,.55)",
+      fontSize: "clamp(1.8rem,3.2vw,3rem)",
+      textTransform: "uppercase", letterSpacing: ".14em", lineHeight: 1.2,
+      textShadow: bright
+        ? "0 0 60px rgba(255,255,255,.35), 0 0 120px rgba(239,68,68,.25)"
+        : "0 0 40px rgba(239,68,68,.60)",
+      transition: "color 0.7s ease, text-shadow 0.7s ease",
+    }}>
+      Of patients quit<br />physiotherapy at home
+    </div>
+  );
+}
+
+const RoadBridge = React.memo(function RoadBridge() {
+  const ref = useRef<HTMLDivElement>(null);
+  const p = useMotionValue(0);
+
+  useEffect(() => {
+    const el = ref.current; if(!el) return;
+    const onScroll = () => {
+      const rect = el.getBoundingClientRect(), total = el.offsetHeight-window.innerHeight;
+      p.set(Math.min(1,Math.max(0,-rect.top/Math.max(1,total))));
+    };
+    _lenisCallbacks.add(onScroll);
+    window.addEventListener("scroll",onScroll,{passive:true});
+    onScroll();
+    return () => { window.removeEventListener("scroll",onScroll); _lenisCallbacks.delete(onScroll); };
+  }, [p]);
+
+  const t1=0.18, t2=0.40, t3=0.60, t4=0.88;
+  const theScale  = useTransform(p,[0,t1],[1,16]);
+  const theOp     = useTransform(p,[0,t1],[1,0]);
+  const probY     = useTransform(p,[0,t1],[800,0]);
+  const probScale = useTransform(p,[t1,t2],[1,11]);
+  const probOp    = useTransform(p,[0,t1,t2],[0,1,0]);
+  // IS REAL: slides in from right → zoom-in peak → settle → slides out to left
+  const realX     = useTransform(p,[t1,    t2,    t2+0.08, t2+0.14, t3   ],[800,  0,     0,      0,      -800]);
+  const realScale = useTransform(p,[t1,    t2,    t2+0.08, t2+0.14, t3   ],[0.8,  0.8,   1.12,   1,      1   ]);
+  const realOp    = useTransform(p,[t1,    t1+0.04,        t2+0.14, t3-0.04, t3],[0, 1,  1,      1,      0   ]);
+  // 28%: rises → zoom peak → scatter/fade out at t3+0.06
+  const statY     = useTransform(p,[t2,    t3,    t3+0.04],[800,  0,     0   ]);
+  const statScale = useTransform(p,[t2,    t3,    t3+0.04, t3+0.10],[0.8, 0.8, 1.10, 2.2]);
+  const statOp    = useTransform(p,[t2,    t2+0.04, t3+0.04, t3+0.12],[0,  1,   1,    0   ]);
+  // particle scatter progress 0→1
+  const scatterP  = useTransform(p,[t3+0.04, t3+0.14],[0, 1]);
+  // subtitle fades in after scatter
+  const subOp     = useTransform(p,[t3+.12, t3+.22, t4],[0,1,1]);
+  const glowOp    = useTransform(p,[t1,t3],[0,0.55]);
+  const cardsOp   = useTransform(p,[t3+.05,t3+.14],[0,1]);
+  const C: React.CSSProperties = { position:"absolute",inset:0,display:"grid",placeItems:"center",pointerEvents:"none" };
+
+  return (
+    <div ref={ref} style={{ height:"340vh",position:"relative",background:"linear-gradient(180deg,#060e1c 0%,#080f1a 15%,#080f1a 85%,#060e1c 100%)" }}>
+      <div className="grid-dk" style={{ position:"absolute",inset:0,pointerEvents:"none",opacity:0.40 }} />
+      <div style={{ position:"absolute",inset:0,pointerEvents:"none",background:"radial-gradient(ellipse 70% 55% at 50% 50%,rgba(239,68,68,.10) 0%,rgba(120,10,10,.05) 50%,transparent 80%)" }} />
+      {([{top:"8vh",left:"4vw",borderTop:"1px solid rgba(239,68,68,.18)",borderLeft:"1px solid rgba(239,68,68,.18)"},{top:"8vh",right:"4vw",borderTop:"1px solid rgba(239,68,68,.18)",borderRight:"1px solid rgba(239,68,68,.18)"},{bottom:"8vh",left:"4vw",borderBottom:"1px solid rgba(239,68,68,.10)",borderLeft:"1px solid rgba(239,68,68,.10)"},{bottom:"8vh",right:"4vw",borderBottom:"1px solid rgba(239,68,68,.10)",borderRight:"1px solid rgba(239,68,68,.10)"}] as React.CSSProperties[]).map((s,i)=>(
+        <div key={i} style={{ position:"absolute",width:24,height:24,pointerEvents:"none",...s }} />
+      ))}
+      <motion.div style={{ position:"absolute",inset:0,zIndex:0,pointerEvents:"none",background:"radial-gradient(ellipse 60% 50% at 50% 50%,rgba(239,68,68,.14),transparent 70%)",opacity:glowOp }} />
+
+      <motion.div style={{ position:"sticky",top:0,height:"100vh",overflow:"hidden" }}>
+        <div style={{ ...C,zIndex:2 }}>
+          <motion.div style={{ scale:theScale,opacity:theOp,willChange:"transform,opacity" }}>
+            <span className="fB" style={{ fontSize:"clamp(4rem,10vw,10rem)",color:"#fff",letterSpacing:"-.02em",display:"block" }}>THE</span>
+          </motion.div>
+        </div>
+        <div style={{ ...C,zIndex:10 }}>
+          <motion.div style={{ scale:probScale,opacity:probOp,y:probY,willChange:"transform,opacity" }}>
+            <span className="fB" style={{ fontSize:"clamp(5rem,12vw,12rem)",color:"#fff",letterSpacing:"-.03em",display:"block" }}>PROBLEM</span>
+          </motion.div>
+        </div>
+        <div style={{ ...C,zIndex:4 }}>
+          <motion.div style={{ x:realX,scale:realScale,opacity:realOp,willChange:"transform,opacity" }}>
+            <span className="fB" style={{ fontSize:"clamp(4rem,10vw,10rem)",color:"#ef4444",letterSpacing:"-.02em",display:"block",textShadow:"0 0 80px rgba(239,68,68,.45)" }}>IS REAL.</span>
+          </motion.div>
+        </div>
+        {/* 28% — rises, zoom-pulses, then scatters into particles */}
+        <div style={{ ...C,zIndex:3 }}>
+          <motion.div style={{ opacity:statOp,scale:statScale,y:statY,willChange:"transform,opacity",textAlign:"center" }}>
+            <span className="fB" style={{ fontSize:"clamp(6rem,16vw,16rem)",color:"#ef4444",letterSpacing:"-.03em",display:"block",textShadow:"0 0 120px rgba(239,68,68,.55)" }}>28%</span>
+          </motion.div>
+        </div>
+        {/* Particle scatter canvas — fires when scatterP > 0 */}
+        <StatParticleScatter scatterP={scatterP} />
+        {/* Subtitle — pulses in and out rhythmically */}
+        <motion.div style={{ position:"absolute",inset:0,zIndex:6,display:"flex",alignItems:"center",justifyContent:"center",textAlign:"center",opacity:subOp,pointerEvents:"none" }}>
+          <div style={{ display:"flex",flexDirection:"column",alignItems:"center",gap:16 }}>
+            <div style={{ width:80,height:1,background:"linear-gradient(90deg,transparent,rgba(239,68,68,.65),transparent)" }} />
+            <PulsingSubtitle />
+            <div style={{ width:80,height:1,background:"linear-gradient(90deg,transparent,rgba(239,68,68,.65),transparent)" }} />
+          </div>
+        </motion.div>
+        <motion.div style={{ position:"absolute",inset:0,opacity:cardsOp,pointerEvents:"none",zIndex:4 }}>
+          {[{v:"80%",l:"Drop-out rate",x:-38,y:-24},{v:"$50K+",l:"Robotic cost",x:38,y:-22},{v:"6–12m",l:"Recovery time",x:-38,y:30},{v:"3 wks",l:"Before they quit",x:38,y:28}].map(s=>(
+            <div key={s.v} style={{ position:"absolute",left:`calc(50% + ${s.x}vw)`,top:`calc(50% + ${s.y}vh)`,transform:"translate(-50%,-50%)" }}>
+              <div style={{ textAlign:"center",padding:"14px 22px",borderRadius:16,background:"linear-gradient(145deg,rgba(18,4,4,.96),rgba(12,2,2,.98))",border:"1px solid rgba(239,68,68,.22)" }}>
+                <div className="fB" style={{ fontSize:"2.2rem",color:"#ef4444" }}>{s.v}</div>
+                <div className="fS" style={{ fontSize:11,color:"rgba(255,255,255,.45)",textTransform:"uppercase",letterSpacing:".12em",marginTop:5 }}>{s.l}</div>
+              </div>
+            </div>
+          ))}
+        </motion.div>
       </motion.div>
     </div>
   );
 });
-//  PROBLEM SECTION  
 
-const ProblemSection = React.memo(function ProblemSection() {
+
+function ProblemSection() {
 
   return (
 
@@ -2446,13 +2530,13 @@ const ProblemSection = React.memo(function ProblemSection() {
         </Reveal>
 
         <Reveal dir="zoom" style={{ marginBottom: 48 }}>
-
-          <h2 className="fB" style={{ fontSize: "clamp(3.5rem,8vw,7.5rem)", color: "#fff", letterSpacing: ".03em", lineHeight: .9 }}>
-
-            RECOVERY IS<br /><span style={{ color: "#ef4444", textShadow: "0 0 40px rgba(239,68,68,.5)" }}>BROKEN.</span>
-
-          </h2>
-
+          <VaporizeTextCycle
+            texts={["RECOVERY IS BROKEN.", "THE SYSTEM FAILS.", "WE REWIRE IT."]}
+            fontSize={96}
+            color="#ef4444"
+            fontFamily="'Syne',sans-serif"
+            style={{ minHeight: "180px" }}
+          />
         </Reveal>
 
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 48, marginBottom: 52 }}>
@@ -2534,7 +2618,7 @@ const ProblemSection = React.memo(function ProblemSection() {
 
           {[
 
-            { t: "No Motivation", c: "#ef4444", b: "Squeezing a rubber ball 100 times with zero feedback isn't therapy — it's punishment. The brain doesn't rewire under boredom." },
+            { t: "No Motivation", c: "#ef4444", b: "Repetitive motions without feedback limit progress. We replace passive routines with active cognitive engagement." },
 
             { t: "No Access", c: "#f97316", b: "Robotic exoskeletons cost more than a car. Hospital visits 3× a week for 6 months is unsustainable for almost any family." },
 
@@ -2568,90 +2652,482 @@ const ProblemSection = React.memo(function ProblemSection() {
 
   );
 
-});
+}
 
 
 //  DARK BRIDGE 
 
-function DarkBridge() {
-  const ref = useRef<HTMLDivElement>(null);
-  const { scrollYProgress: p } = useScroll({ target: ref, offset: ["start start", "end end"] });
+// ══ NEURAL BRIDGE — GLSLHills Pure Shader ══════════════════════════════════
+function NeuralBridge() {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const canvasRef    = useRef<HTMLCanvasElement>(null);
+  const progRef      = useRef(0);
+  const [prog, setProg] = useState(0);
 
-  // Background transition
-  const bg = useTransform(p, [0, 0.3], ["#F8F9FA", "#080f1a"]);
+  useEffect(() => {
+    let isMounted = true;
+    const container = containerRef.current;
+    const canvas    = canvasRef.current;
+    if (!container || !canvas || typeof window === "undefined") return;
 
-  const rawWordY = useTransform(p, [0, 0.18], [280, 0]);
-  // No spring on scale — spring physics caused the lag. Direct transform only.
-  const wordScale = useTransform(p, [0.28, 0.52], [1, 22]);
-  const wordOp = useTransform(p, [0, 0.06, 0.38, 0.52], [0, 1, 1, 0]);
+    let rafId = 0, renderer: any = null;
+    const stInstances: any[] = [];
+    const smoothPos = { x: 0, y: 8, z: 60 };
 
-  const statsOp = useTransform(p, [0.22, 0.28, 0.42, 0.52], [0, 1, 1, 0]);
+    const init = async () => {
+      const THREE = await import("three");
+      const { gsap } = await import("gsap");
+      const { ScrollTrigger } = await import("gsap/ScrollTrigger");
+      if (!isMounted || !canvasRef.current) return;
+      gsap.registerPlugin(ScrollTrigger);
 
-  // Light spring only on Y (fine for vertical glide, not scale)
-  const wordY = useSpring(rawWordY, { stiffness: 180, damping: 28, restDelta: 0.001 });
+      const scene: any = new THREE.Scene();
+      scene.background = new THREE.Color(0x080f1a);
+      scene.fog = new THREE.FogExp2(0x080f1a, 0.0095);
 
-  const absCenter: React.CSSProperties = {
-    position: "absolute", top: "50%", left: "50%", transform: "translate(-50%, -50%)",
-    display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
-    pointerEvents: "none", width: "100%"
-  };
+      const W = window.innerWidth, H = window.innerHeight;
+      const camera: any = new THREE.PerspectiveCamera(65, W / H, 0.1, 800);
+      camera.position.set(0, 8, 60);
+      camera.lookAt(0, 2, 0);
+
+      const _ce = console.error; console.error = () => {};
+      try {
+        renderer = new THREE.WebGLRenderer({
+          canvas: canvasRef.current as HTMLCanvasElement,
+          antialias: true, alpha: false,
+          powerPreference: "high-performance",
+          failIfMajorPerformanceCaveat: false,
+        });
+        renderer.setSize(W, H);
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.2));
+        renderer.setClearColor(0x080f1a, 1);
+        renderer.toneMapping = (THREE as any).ACESFilmicToneMapping;
+        renderer.toneMappingExposure = 0.70;
+      } catch (e) { console.error = _ce; return; }
+      console.error = _ce;
+      if (!renderer || !isMounted) return;
+
+      // ── GLSL HILLS — Perlin-displaced wireframe terrain ──────────────────
+      // Single PlaneGeometry + RawShaderMaterial with noise vertex displacement.
+      // Teal (#2DD4BF) lines on deep navy — glowing wireframe ocean of data.
+      const hillsVS = `
+        precision mediump float;
+        attribute vec3 position;
+        attribute vec2 uv;
+        uniform mat4 projectionMatrix;
+        uniform mat4 modelViewMatrix;
+        uniform float uTime;
+        uniform float uAmp;
+        varying float vElev;
+        varying vec2  vUv;
+
+        // Classic 2D Perlin noise
+        vec2 fade(vec2 t){ return t*t*t*(t*(t*6.0-15.0)+10.0); }
+        vec4 permute(vec4 x){ return mod(((x*34.0)+1.0)*x, 289.0); }
+        float cnoise(vec2 P){
+          vec4 Pi = floor(P.xyxy)+vec4(0.0,0.0,1.0,1.0);
+          vec4 Pf = fract(P.xyxy)-vec4(0.0,0.0,1.0,1.0);
+          Pi = mod(Pi,289.0);
+          vec4 ix=Pi.xzxz, iy=Pi.yyww;
+          vec4 fx=Pf.xzxz, fy=Pf.yyww;
+          vec4 i=permute(permute(ix)+iy);
+          vec4 gx=2.0*fract(i*0.0243902439)-1.0;
+          vec4 gy=abs(gx)-0.5;
+          vec4 tx=floor(gx+0.5);
+          gx=gx-tx;
+          vec2 g00=vec2(gx.x,gy.x), g10=vec2(gx.y,gy.y);
+          vec2 g01=vec2(gx.z,gy.z), g11=vec2(gx.w,gy.w);
+          vec4 norm=1.79284291400159-0.85373472095314*
+            vec4(dot(g00,g00),dot(g01,g01),dot(g10,g10),dot(g11,g11));
+          g00*=norm.x; g01*=norm.y; g10*=norm.z; g11*=norm.w;
+          float n00=dot(g00,vec2(fx.x,fy.x));
+          float n10=dot(g10,vec2(fx.y,fy.y));
+          float n01=dot(g01,vec2(fx.z,fy.z));
+          float n11=dot(g11,vec2(fx.w,fy.w));
+          vec2 fade_xy=fade(Pf.xy);
+          vec2 n_x=mix(vec2(n00,n01),vec2(n10,n11),fade_xy.x);
+          return 2.3*mix(n_x.x,n_x.y,fade_xy.y);
+        }
+
+        void main(){
+          vUv = uv;
+          vec3 p = position;
+          float n  = cnoise(p.xz * 0.18 + uTime * 0.12);
+          float n2 = cnoise(p.xz * 0.38 + uTime * 0.08 + 3.7);
+          float elev = n * uAmp + n2 * uAmp * 0.40;
+          p.y += elev;
+          vElev = elev;
+          gl_Position = projectionMatrix * modelViewMatrix * vec4(p, 1.0);
+        }`;
+
+      const hillsFS = `
+        precision mediump float;
+        uniform float uTime;
+        uniform float uAmp;
+        varying float vElev;
+        varying vec2  vUv;
+        void main(){
+          // Normalise elevation to 0–1
+          float t = clamp((vElev / uAmp) * 0.5 + 0.5, 0.0, 1.0);
+          // Teal core → brighter ice-teal at peaks
+          vec3 low  = vec3(0.01, 0.07, 0.10);   // near-black shadow
+          vec3 mid  = vec3(0.05, 0.28, 0.28);   // dark teal
+          vec3 high = vec3(0.12, 0.55, 0.52);   // muted teal peak
+          vec3 col  = t < 0.5 ? mix(low, mid, t*2.0) : mix(mid, high, (t-0.5)*2.0);
+          // Fog via vUv distance from centre (perspective fog approximation)
+          float dist = length(vUv - 0.5) * 2.0;
+          float fog  = clamp(1.0 - dist * dist * 0.9, 0.0, 1.0);
+          float a    = (0.08 + t * 0.14) * fog;
+          gl_FragColor = vec4(col, a);
+        }`;
+
+      const hillsMat: any = new THREE.RawShaderMaterial({
+        uniforms: { uTime:{value:0}, uAmp:{value:4.2} },
+        vertexShader:   hillsVS,
+        fragmentShader: hillsFS,
+        wireframe: true,
+        transparent: true,
+        blending: THREE.AdditiveBlending,
+        depthWrite: false,
+      });
+
+      // 256×256 plane — enough resolution for smooth hills without being heavy
+      const hillsGeo: any = new THREE.PlaneGeometry(220, 220, 160, 160);
+      hillsGeo.rotateX(-Math.PI / 2);
+      const hills: any = new THREE.Mesh(hillsGeo, hillsMat);
+      hills.position.set(0, -4, -20);
+      scene.add(hills);
+
+      // Second, slightly larger plane further back for infinite-horizon illusion
+      const hillsGeo2: any = new THREE.PlaneGeometry(380, 380, 100, 100);
+      hillsGeo2.rotateX(-Math.PI / 2);
+      const hills2: any = new THREE.Mesh(hillsGeo2, hillsMat);
+      hills2.position.set(0, -6, -130);
+      scene.add(hills2);
+
+      // ── DATA DUST — sparse teal floating points above terrain ─────────────
+      const dustN = 600;
+      const dustPos = new Float32Array(dustN * 3);
+      for (let i = 0; i < dustN; i++) {
+        dustPos[i*3]   = (Math.random() - 0.5) * 180;
+        dustPos[i*3+1] = Math.random() * 18 + 1;
+        dustPos[i*3+2] = (Math.random() - 0.5) * 180 - 20;
+      }
+      const dustGeo: any = new THREE.BufferGeometry();
+      dustGeo.setAttribute("position", new THREE.BufferAttribute(dustPos, 3));
+      const dustMat: any = new THREE.PointsMaterial({
+        color: 0x2dd4bf, size: 0.40, transparent: true, opacity: 0.22,
+        blending: THREE.AdditiveBlending, depthWrite: false, sizeAttenuation: true,
+      });
+      scene.add(new THREE.Points(dustGeo, dustMat));
+
+      // ── CAMERA KEYFRAMES ──────────────────────────────────────────────────
+      // Phase 0 (p=0):     horizon-level, looking out over hills
+      // Phase 1 (p=0.5):   flying forward + slight rise, skimming peaks
+      // Phase 2 (p=1.0):   final resting — slightly elevated, looking down
+      //                     at infinite grid — frames the right HUD perfectly
+      const camKeys = [
+        { x:  0, y:  8, z: 60,  lx:  0, ly: 2, lz: -60 },
+        { x: -6, y: 14, z: 10,  lx:  2, ly: 5, lz: -80 },
+        { x:  4, y: 20, z:-40,  lx:  0, ly: 4, lz:-160 },
+      ];
+      let tgtX=0, tgtY=8, tgtZ=60, tgtLX=0, tgtLY=2, tgtLZ=-60;
+      const lookSmooth = { x:0, y:2, z:-60 };
+      let scrollVel = 0;
+
+      // ── SCROLL TRIGGER ────────────────────────────────────────────────────
+      const st = ScrollTrigger.create({
+        trigger: container, start:"top top", end:"bottom bottom", scrub:0,
+        onUpdate:(self: any) => {
+          if (!isMounted) return;
+          const p = self.progress;
+          progRef.current = p;
+          scrollVel = self.getVelocity() * 0.0015;
+          // Blend across 3 keyframes
+          const seg = Math.min(Math.floor(p * 2), 1);
+          const sp  = (p * 2) % 1;
+          const kA = camKeys[seg], kB = camKeys[Math.min(seg+1,2)];
+          const bl = (a: number, b: number) => a + (b-a)*sp;
+          tgtX=bl(kA.x,kB.x); tgtY=bl(kA.y,kB.y); tgtZ=bl(kA.z,kB.z);
+          tgtLX=bl(kA.lx,kB.lx); tgtLY=bl(kA.ly,kB.ly); tgtLZ=bl(kA.lz,kB.lz);
+          if (isMounted) setProg(Math.round(p*100)/100);
+        },
+      });
+      stInstances.push(st);
+
+      const onResize = () => {
+        if (!renderer) return;
+        const w=window.innerWidth,h=window.innerHeight;
+        camera.aspect=w/h; camera.updateProjectionMatrix(); renderer.setSize(w,h);
+      };
+      window.addEventListener("resize", onResize);
+
+      // Pause GPU when section is off-screen
+      let nbVisible = true;
+      const visObs = new IntersectionObserver(([e]) => { nbVisible = e.isIntersecting; },{ rootMargin:"120px" });
+      visObs.observe(container);
+
+      const lp = (a: number, b: number, t: number) => a + (b-a)*t;
+      const SMOOTH = 0.052;
+
+      // ── RAF ───────────────────────────────────────────────────────────────
+      const draw = () => {
+        if (!isMounted) return;
+        rafId = requestAnimationFrame(draw);
+        if (document.hidden || !nbVisible) return;
+
+        const t = Date.now() * 0.001;
+        hillsMat.uniforms.uTime.value = t;
+
+        // Smooth camera
+        smoothPos.x = lp(smoothPos.x, tgtX, SMOOTH);
+        smoothPos.y = lp(smoothPos.y, tgtY, SMOOTH);
+        smoothPos.z = lp(smoothPos.z, tgtZ, SMOOTH);
+        lookSmooth.x = lp(lookSmooth.x, tgtLX, SMOOTH);
+        lookSmooth.y = lp(lookSmooth.y, tgtLY, SMOOTH);
+        lookSmooth.z = lp(lookSmooth.z, tgtLZ, SMOOTH);
+
+        camera.position.set(
+          smoothPos.x + Math.sin(t*0.09)*1.2,
+          smoothPos.y + Math.cos(t*0.12)*0.5,
+          smoothPos.z
+        );
+        camera.lookAt(lookSmooth.x, lookSmooth.y, lookSmooth.z);
+
+        // Dust drift
+        dustGeo.attributes.position.array.forEach((_: any, i: number) => {
+          if (i % 3 === 1) {
+            const base = (dustGeo.attributes.position.array as Float32Array);
+            base[i] += Math.sin(t * 0.4 + i) * 0.003;
+          }
+        });
+        dustGeo.attributes.position.needsUpdate = true;
+
+        scrollVel *= 0.84;
+        renderer.render(scene, camera);
+      };
+      draw();
+
+      return () => {
+        window.removeEventListener("resize", onResize);
+        stInstances.forEach((s: any) => s.kill());
+        cancelAnimationFrame(rafId);
+        visObs.disconnect();
+        hillsGeo.dispose(); hillsGeo2.dispose(); hillsMat.dispose();
+        dustGeo.dispose(); dustMat.dispose();
+        if (renderer) { renderer.forceContextLoss?.(); renderer.dispose(); (renderer as any).domElement = null; }
+      };
+    };
+
+    let cleanupFn: (() => void) | undefined;
+    init().then((fn: any) => { cleanupFn = fn; });
+    return () => {
+      isMounted = false;
+      cancelAnimationFrame(rafId);
+      cleanupFn?.();
+      if (renderer) {
+        try { renderer.forceContextLoss(); } catch (_) {}
+        renderer.dispose();
+        (renderer as any).domElement = null;
+        renderer = null;
+      }
+    };
+  }, []);
+
+  // ── HUD ───────────────────────────────────────────────────────────────────
+  const p = prog;
+  const s0Op = Math.max(0, 1 - p / 0.18);
+  const s1Op = Math.max(0, Math.min(1,(p-0.10)/0.12)) * Math.max(0,1-(p-0.52)/0.12);
+  const s2Op = Math.max(0, Math.min(1,(p-0.50)/0.12)) * Math.max(0,1-(p-0.88)/0.10);
+  const w0Op = Math.max(0, 1 - Math.max(0,(p-0.20)/0.10));
+  const w1Op = Math.max(0, Math.min(1,(p-0.28)/0.10)) * Math.max(0,1-Math.max(0,(p-0.52)/0.10));
+  const w2Op = Math.max(0, Math.min(1,(p-0.60)/0.10)) * Math.max(0,1-Math.max(0,(p-0.86)/0.08));
+  const c1X = s1Op > 0.01 ? 0 : -52;
+  const c2X = s2Op > 0.01 ? 0 :  52;
 
   return (
-    <div ref={ref} style={{ height: "170vh", position: "relative" }}>
-      <motion.div style={{ position: "sticky", top: 0, height: "100vh", overflow: "hidden", backgroundColor: bg }}>
-        <div className="grid-dk" style={{ position: "absolute", inset: 0, pointerEvents: "none" }} />
+    <div ref={containerRef} style={{ height:"300vh", position:"relative" }}>
+      <div style={{ position:"sticky", top:0, height:"100vh", overflow:"hidden" }}>
+        <canvas ref={canvasRef} style={{ position:"absolute",inset:0,width:"100%",height:"100%",display:"block",zIndex:0 }} />
+
+        {/* Consistent dark border on all 4 edges */}
+        <div style={{ position:"absolute",inset:0,zIndex:1,pointerEvents:"none",
+          background:"radial-gradient(ellipse 100% 90% at 50% 50%, transparent 32%, rgba(8,15,26,.82) 100%)" }} />
+        <div style={{ position:"absolute",top:0,left:0,right:0,height:"16%",zIndex:2,pointerEvents:"none",
+          background:"linear-gradient(to bottom,rgba(8,15,26,.92),transparent)" }} />
+        <div style={{ position:"absolute",bottom:0,left:0,right:0,height:"18%",zIndex:2,pointerEvents:"none",
+          background:"linear-gradient(to top,rgba(8,15,26,.95),transparent)" }} />
+        <div style={{ position:"absolute",top:0,bottom:0,left:0,width:"9%",zIndex:2,pointerEvents:"none",
+          background:"linear-gradient(to right,rgba(8,15,26,.88),transparent)" }} />
+        <div style={{ position:"absolute",top:0,bottom:0,right:0,width:"9%",zIndex:2,pointerEvents:"none",
+          background:"linear-gradient(to left,rgba(8,15,26,.88),transparent)" }} />
         <div className="scanline" />
 
-        {/* Floating Data Points */}
-        <div style={absCenter}>
-          <motion.div style={{
-            position: "absolute", opacity: statsOp,
-            width: "100vw", height: "100vh",
-            z: 0
-          }}>
+        {/* ── CENTER WORDS ─────────────────────────────────────────────────── */}
+        <div style={{ position:"absolute",inset:0,zIndex:10,pointerEvents:"none",
+          display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center" }}>
+          <div style={{ position:"relative",height:"clamp(3.2rem,9.5vw,9rem)",display:"flex",
+            alignItems:"center",justifyContent:"center",minWidth:"clamp(300px,60vw,900px)" }}>
             {[
-              { label: "MOTOR", x: -36, y: -18, ang: -12, c: "#2DD4BF" },
-              { label: "COGNITIVE", x: 34, y: -22, ang: 10, c: "#a78bfa" },
-              { label: "CLINICAL", x: -32, y: 20, ang: -8, c: "#fbbf24" },
-              { label: "REMOTE", x: 32, y: 22, ang: 6, c: "#34d399" },
-            ].map(d => (
-              <div key={d.label} style={{ position: "absolute", left: `calc(50% + ${d.x}vw)`, top: `calc(50% + ${d.y}vh)`, transform: `translate(-50%,-50%) rotate(${d.ang}deg)` }}>
-                <div className="fM" style={{ fontSize: 10, color: d.c, textTransform: "uppercase", letterSpacing: ".24em", opacity: .8, whiteSpace: "nowrap" }}>
-                  ·{d.label}·
-                </div>
-              </div>
+              { word:"THE SOLUTION", op:w0Op, color:"#2DD4BF", glow:"0 0 40px rgba(45,212,191,.25)" },
+              { word:"IMMERSIVE",    op:w1Op, color:"#7ef8f0", glow:"0 0 40px rgba(126,248,240,.22)" },
+              { word:"INTELLIGENT",  op:w2Op, color:"#38bdf8", glow:"0 0 40px rgba(56,189,248,.22)" },
+            ].map(({ word, op, color, glow }) => (
+              <div key={word} className="fB" style={{
+                position:"absolute", fontSize:"clamp(3.2rem,9.5vw,9rem)",
+                color, letterSpacing:".05em", lineHeight:1, textAlign:"center",
+                textShadow:glow, opacity:op,
+                transform:`translateY(${(1-op)*16}px)`,
+                transition:"opacity .70s cubic-bezier(.22,1,.36,1), transform .70s cubic-bezier(.22,1,.36,1)",
+                pointerEvents:"none", whiteSpace:"nowrap",
+              }}>{word}</div>
             ))}
-          </motion.div>
+          </div>
+
+          <div style={{ opacity:s0Op, transition:"opacity .5s ease", pointerEvents:"none", textAlign:"center" }}>
+            <div style={{ width:1,height:36,background:"linear-gradient(to bottom,rgba(45,212,191,.40),transparent)",margin:"18px auto 0" }} />
+            <div className="fM" style={{ fontSize:8,color:"rgba(45,212,191,.32)",letterSpacing:".48em",marginTop:12,textTransform:"uppercase" }}>
+              Neural Corridor · Active
+            </div>
+          </div>
+
+          {s0Op > 0.05 && (
+            <div style={{ position:"absolute",top:"50%",left:"50%",transform:"translate(-50%,-50%)",pointerEvents:"none" }}>
+              <div className="ring-pop" style={{ width:270,height:270,borderRadius:"50%",border:"1px solid rgba(45,212,191,.10)" }} />
+              <div className="ring-pop" style={{ width:270,height:270,borderRadius:"50%",border:"1px solid rgba(45,212,191,.05)",animationDelay:"1.6s" }} />
+            </div>
+          )}
+          {s1Op > 0.05 && p > 0.22 && p < 0.60 && (
+            <div className="fM" style={{ marginTop:18,fontSize:8,color:"rgba(45,212,191,.48)",letterSpacing:".32em",textTransform:"uppercase" }}>
+              PROTOCOL 01 · GAMIFIED THERAPY
+            </div>
+          )}
+          {s2Op > 0.05 && p > 0.60 && (
+            <div className="fM" style={{ marginTop:18,fontSize:8,color:"rgba(56,189,248,.48)",letterSpacing:".32em",textTransform:"uppercase" }}>
+              PROTOCOL 02 · ADAPTIVE AI
+            </div>
+          )}
         </div>
 
-        {/* THE SOLUTION */}
-        <div style={absCenter}>
-          {/* translateZ(0) forces hardware acceleration on the GPU */}
-          <motion.div style={{
-            y: wordY,
-            scale: wordScale,
-            opacity: wordOp,
-            textAlign: "center",
-            transformOrigin: "center center",
-            z: 0
-          }}>
-            <div className="fB" style={{ fontSize: "clamp(5rem,15vw,16rem)", letterSpacing: "0.04em", lineHeight: .88, color: "#FFFFFF" }}>
-              THE<br /><span style={{ color: "#2DD4BF" }}>SOLUTION</span>
-            </div>
-            <div className="fM" style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: ".3em", marginTop: 26, color: "rgba(45,212,191,.8)" }}>
-              ↓ A new paradigm in rehabilitation
-            </div>
-          </motion.div>
+        {/* ── HUD LEFT ─────────────────────────────────────────────────────── */}
+        <div style={{
+          position:"absolute",top:"50%",left:"6%",zIndex:12,pointerEvents:"none",
+          transform:`translate(${c1X}px,-50%)`,
+          opacity:s1Op, transition:"transform .70s cubic-bezier(.22,1,.36,1),opacity .55s ease",
+          background:"rgba(8,15,26,.78)", backdropFilter:"blur(16px)",
+          border:"1px solid rgba(45,212,191,.22)", borderRadius:20,
+          padding:"28px 26px", maxWidth:278,
+          boxShadow:"0 0 48px rgba(45,212,191,.07),inset 0 1px 0 rgba(45,212,191,.07)",
+        }}>
+          <div style={{ position:"absolute",top:0,left:0,width:44,height:2,background:"rgba(45,212,191,.55)",borderRadius:"0 0 2px 0" }} />
+          <div className="fM" style={{ fontSize:7,color:"rgba(45,212,191,.55)",letterSpacing:".28em",marginBottom:10,textTransform:"uppercase" }}>Protocol · 01</div>
+          <h3 className="fB" style={{ fontSize:"clamp(1.35rem,2.2vw,1.75rem)",color:"#fff",letterSpacing:".04em",lineHeight:1.1,marginBottom:10 }}>
+            IMMERSIVE<br/><span style={{ color:"#2DD4BF" }}>ENVIRONMENT</span>
+          </h3>
+          <div style={{ width:30,height:1,background:"rgba(45,212,191,.30)",marginBottom:10 }} />
+          <p className="fS" style={{ fontSize:12,color:"rgba(255,255,255,.52)",lineHeight:1.7 }}>
+            Gamified therapy that commands attention and builds real neural pathways.
+          </p>
+          <div style={{ marginTop:16,display:"flex",flexDirection:"column",gap:7 }}>
+            {[["SQUEEZE TO PLAY","Motor engagement"],["COGNITIVE GATES","Dual-task training"],["ADAPTIVE LEVELS","AI progression"]].map(([k,v])=>(
+              <div key={k} style={{ display:"flex",justifyContent:"space-between",alignItems:"center",borderBottom:"1px solid rgba(45,212,191,.06)",paddingBottom:5 }}>
+                <div className="fM" style={{ fontSize:7,color:"rgba(45,212,191,.62)",textTransform:"uppercase",letterSpacing:".12em" }}>{k}</div>
+                <div className="fS" style={{ fontSize:10,color:"rgba(255,255,255,.28)" }}>{v}</div>
+              </div>
+            ))}
+          </div>
         </div>
-      </motion.div>
+
+        {/* ── HUD RIGHT ────────────────────────────────────────────────────── */}
+        <div style={{
+          position:"absolute",top:"50%",right:"6%",zIndex:12,pointerEvents:"none",
+          transform:`translate(${c2X}px,-50%)`,
+          opacity:s2Op, transition:"transform .70s cubic-bezier(.22,1,.36,1),opacity .55s ease",
+          background:"rgba(8,15,26,.78)", backdropFilter:"blur(16px)",
+          border:"1px solid rgba(56,189,248,.22)", borderRadius:20,
+          padding:"28px 26px", maxWidth:278,
+          boxShadow:"0 0 48px rgba(56,189,248,.07),inset 0 1px 0 rgba(56,189,248,.07)",
+        }}>
+          <div style={{ position:"absolute",top:0,right:0,width:44,height:2,background:"rgba(56,189,248,.55)",borderRadius:"0 0 0 2px" }} />
+          <div className="fM" style={{ fontSize:7,color:"rgba(56,189,248,.55)",letterSpacing:".28em",marginBottom:10,textTransform:"uppercase",textAlign:"right" }}>Protocol · 02</div>
+          <h3 className="fB" style={{ fontSize:"clamp(1.35rem,2.2vw,1.75rem)",color:"#fff",letterSpacing:".04em",lineHeight:1.1,marginBottom:10,textAlign:"right" }}>
+            REAL-TIME<br/><span style={{ color:"#38bdf8" }}>ADAPTATION</span>
+          </h3>
+          <div style={{ width:30,height:1,background:"rgba(56,189,248,.30)",marginBottom:10,marginLeft:"auto" }} />
+          <p className="fS" style={{ fontSize:12,color:"rgba(255,255,255,.52)",lineHeight:1.7,textAlign:"right" }}>
+            AI adapts to every micro-movement, filtering tremors for clinical accuracy.
+          </p>
+          <div style={{ marginTop:16,display:"flex",flexDirection:"column",gap:7 }}>
+            {[["GRIP ANALYTICS","Force measurement"],["TREMOR FILTER","6-axis IMU"],["AI COMPANION","Live adjustment"]].map(([k,v])=>(
+              <div key={k} style={{ display:"flex",justifyContent:"space-between",alignItems:"center",borderBottom:"1px solid rgba(56,189,248,.06)",paddingBottom:5 }}>
+                <div className="fS" style={{ fontSize:10,color:"rgba(255,255,255,.28)" }}>{v}</div>
+                <div className="fM" style={{ fontSize:7,color:"rgba(56,189,248,.62)",textTransform:"uppercase",letterSpacing:".12em" }}>{k}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Scroll progress */}
+        <div style={{ position:"absolute",bottom:28,left:"50%",transform:"translateX(-50%)",zIndex:12,
+          display:"flex",flexDirection:"column",alignItems:"center",gap:8,pointerEvents:"none",
+          opacity:Math.min(1,p*8) }}>
+          <div className="fM" style={{ fontSize:7,color:"rgba(45,212,191,.35)",letterSpacing:".45em",textTransform:"uppercase" }}>SCROLL</div>
+          <div style={{ width:80,height:1,background:"rgba(45,212,191,.12)",position:"relative",overflow:"hidden" }}>
+            <div style={{ position:"absolute",left:0,top:0,height:"100%",background:"rgba(45,212,191,.55)",width:`${p*100}%`,transition:"width .1s" }} />
+          </div>
+          <div className="fM" style={{ fontSize:7,color:"rgba(45,212,191,.25)",letterSpacing:".20em" }}>
+            {String(Math.min(Math.floor(p*3)+1,3)).padStart(2,"0")} / 03
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
 
 
-//  SOLUTION SECTION
 
-const SolutionSection = React.memo(function SolutionSection() {
+
+// ══ INTERACTIVE TABLET ══════════════════════════════════════════════════════
+function InteractiveTablet() {
+  const TABLET_CSS = `
+    .tablet-wrapper{display:flex;justify-content:center;align-items:center;padding:40px 40px 160px;}
+    .tablet-card{position:relative;width:100%;max-width:900px;aspect-ratio:16/10;background:#040914;border-radius:24px;padding:16px;box-shadow:0 30px 60px rgba(0,0,0,.6),inset 0 1px 1px rgba(255,255,255,.10),0 0 0 1px rgba(45,212,191,.2);transition:all 0.8s cubic-bezier(.22,1,.36,1);z-index:10;}
+    .tablet-screen{width:100%;height:100%;border-radius:12px;overflow:hidden;position:relative;background:#000;}
+    .tablet-screen img{width:100%;height:100%;object-fit:cover;transition:transform 1s ease;display:block;}
+    .tablet-screen::after{content:"";position:absolute;inset:0;background:linear-gradient(135deg,rgba(255,255,255,.10) 0%,rgba(255,255,255,0) 40%);pointer-events:none;}
+    .tech-layer{position:absolute;padding:16px;background:rgba(8,15,26,.95);border-radius:24px;box-shadow:-10px 10px 30px rgba(0,0,0,.5);transform-origin:bottom left;transition:all 0.8s cubic-bezier(.22,1,.36,1);display:flex;align-items:flex-start;justify-content:flex-end;opacity:0;z-index:-1;}
+    .tech-layer::before{content:"";position:absolute;inset:0;border-radius:inherit;padding:2px;-webkit-mask:linear-gradient(#fff 0 0) content-box,linear-gradient(#fff 0 0);-webkit-mask-composite:xor;mask-composite:exclude;opacity:.8;}
+    .layer-1{width:70%;height:70%;bottom:0;left:0;}
+    .layer-1::before{background:linear-gradient(135deg,#2DD4BF,transparent);}
+    .layer-1 .tlicon{color:#2DD4BF;}
+    .layer-2{width:50%;height:50%;bottom:0;left:0;transition-delay:.05s;}
+    .layer-2::before{background:linear-gradient(135deg,#a78bfa,transparent);}
+    .layer-2 .tlicon{color:#a78bfa;}
+    .layer-3{width:30%;height:30%;bottom:0;left:0;transition-delay:.10s;}
+    .layer-3::before{background:linear-gradient(135deg,#fbbf24,transparent);}
+    .layer-3 .tlicon{color:#fbbf24;}
+    .tablet-wrapper:hover .tablet-card{transform:translateY(-20px) scale(1.02);box-shadow:0 50px 80px rgba(0,0,0,.8),0 0 60px rgba(45,212,191,.15);}
+    .tablet-wrapper:hover .tablet-screen img{transform:scale(1.05);}
+    .tablet-wrapper:hover .layer-1{bottom:-40px;left:-40px;opacity:1;}
+    .tablet-wrapper:hover .layer-2{bottom:-80px;left:-80px;opacity:1;}
+    .tablet-wrapper:hover .layer-3{bottom:-120px;left:-120px;opacity:1;}
+  `;
+  return (
+    <div className="tablet-wrapper">
+      <style>{TABLET_CSS}</style>
+      <div className="tablet-card">
+        <div className="tech-layer layer-1"><div className="tlicon"><Cpu size={32}/></div></div>
+        <div className="tech-layer layer-2"><div className="tlicon"><Brain size={32}/></div></div>
+        <div className="tech-layer layer-3"><div className="tlicon"><Cloud size={32}/></div></div>
+        <div className="tablet-screen">
+          <img src="/images/fishgame.jpg" alt="ReViveX Gameplay" />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function SolutionSection() {
   return (
     <section id="solution" data-theme="dark" style={{ background: "linear-gradient(180deg, #04101a 0%, #061421 60%, #060e1a 100%)", padding: "120px 40px", position: "relative", overflow: "hidden" }}>
       <div className="sol-orb-1" />
@@ -2665,32 +3141,50 @@ const SolutionSection = React.memo(function SolutionSection() {
       <div style={{ position: "absolute", bottom: 0, left: 0, width: 400, height: 400, pointerEvents: "none", background: "radial-gradient(circle at bottom left, rgba(45,212,191,.04), transparent 70%)" }} />
 
       <div style={{ maxWidth: 1280, margin: "0 auto" }}>
-        <Reveal dir="up" style={{ textAlign: "center", marginBottom: 72 }}>
+        <Reveal dir="up" style={{ textAlign: "center", marginBottom: 24 }}>
           <div className="fM" style={{ fontSize: 9, color: "rgba(45,212,191,.55)", textTransform: "uppercase", letterSpacing: ".32em", marginBottom: 16 }}>The Innovation</div>
-          <h2 className="fB" style={{ fontSize: "clamp(3rem,8vw,7.5rem)", letterSpacing: ".03em", lineHeight: .88, color: "#fff" }}>
-            YOU DON'T DO<br /><span style={{ color: "#2DD4BF" }}>EXERCISES.</span><br />YOU <span style={{ color: "#2DD4BF" }}>PLAY GAMES.</span>
-          </h2>
+        </Reveal>
+        <Reveal dir="zoom" style={{ marginBottom: 48 }}>
+          <VaporizeTextCycle
+            texts={["PLAY GAMES.", "HEAL FASTER.", "REWIRE IT."]}
+            fontSize={96}
+            color="#2DD4BF"
+            fontFamily="'Syne',sans-serif"
+            style={{ minHeight: "180px" }}
+          />
         </Reveal>
 {/* EXPANDED TABLET/GAMEPLAY CONTAINER */}
-        <Reveal dir="zoom" style={{ marginBottom: 60, display: "flex", justifyContent: "center" }}>
-          <div style={{ 
-            borderRadius: 36, 
-            overflow: "hidden", 
-            border: "1px solid rgba(45,212,191,.14)", 
-            boxShadow: "0 40px 100px rgba(0,0,0,.5)", 
-            width: "90vw", 
-            maxWidth: 1000 
+        <Reveal dir="up" style={{ marginBottom: 60, display:"flex", justifyContent:"center" }}>
+          <div style={{
+            position:"relative", width:"90vw", maxWidth:1000, borderRadius:32,
+            overflow:"hidden", border:"1px solid rgba(45,212,191,.22)",
+            boxShadow:"0 0 0 1px rgba(45,212,191,.08), 0 40px 100px rgba(0,0,0,.6), 0 0 60px rgba(45,212,191,.08)",
+            background:"#040914",
           }}>
-            <img 
-              src="/image/fishgame.jpeg" 
-              alt="ReViveX Gameplay" 
-              style={{ 
-                width: "100%", 
-                height: "460px", 
-                objectFit: "cover", 
-                display: "block" 
-              }} 
+            {/* Screen glare */}
+            <div style={{ position:"absolute",inset:0,zIndex:2,pointerEvents:"none",
+              background:"linear-gradient(135deg,rgba(255,255,255,.06) 0%,transparent 40%)" }} />
+            {/* Teal scan line */}
+            <div className="scanline" style={{ zIndex:3 }} />
+            <img
+              src="/images/fishgame.jpg"
+              alt="ReViveX Gameplay — Fish Game"
+              style={{ width:"100%", height:480, objectFit:"cover", display:"block" }}
             />
+            {/* Bottom HUD strip */}
+            <div style={{
+              position:"absolute", bottom:0, left:0, right:0, zIndex:4,
+              padding:"14px 24px", display:"flex", justifyContent:"space-between", alignItems:"center",
+              background:"linear-gradient(to top,rgba(4,9,20,.92),transparent)",
+            }}>
+              <div className="fM" style={{ fontSize:8, color:"rgba(45,212,191,.7)", letterSpacing:".28em", textTransform:"uppercase" }}>
+                ReViveX · Grip Therapy Game
+              </div>
+              <div style={{ display:"flex", gap:6, alignItems:"center" }}>
+                <div style={{ width:6, height:6, borderRadius:"50%", background:"#2DD4BF", boxShadow:"0 0 8px #2DD4BF", animation:"blink .85s step-end infinite" }} />
+                <div className="fM" style={{ fontSize:8, color:"rgba(45,212,191,.55)", letterSpacing:".18em" }}>LIVE SESSION</div>
+              </div>
+            </div>
           </div>
         </Reveal>
 
@@ -2718,14 +3212,14 @@ const SolutionSection = React.memo(function SolutionSection() {
       </div>
     </section>
   );
-});
+}
 
 
 
 //  OFFER SECTION  — white bento grid
 
 
-const OfferSection = React.memo(function OfferSection() {
+function OfferSection() {
 
   return (
 
@@ -2740,16 +3234,17 @@ const OfferSection = React.memo(function OfferSection() {
 
       <div style={{ maxWidth: 1280, margin: "0 auto" }}>
 
-        <Reveal dir="left" style={{ marginBottom: 60 }}>
-
+        <Reveal dir="left" style={{ marginBottom: 16 }}>
           <div className="fM" style={{ fontSize: 9, color: "rgba(167,139,250,.8)", textTransform: "uppercase", letterSpacing: ".3em", marginBottom: 12 }}>What We Offer</div>
-
-          <h2 className="fB" style={{ fontSize: "clamp(3rem,7vw,6.5rem)", letterSpacing: ".03em", lineHeight: .9, color: "#fff" }}>
-
-            EVERYTHING YOUR<br /><span style={{ color: "#a78bfa" }}>RECOVERY NEEDS.</span>
-
-          </h2>
-
+        </Reveal>
+        <Reveal dir="zoom" style={{ marginBottom: 48 }}>
+          <VaporizeTextCycle
+            texts={["ALL YOU NEED.", "ONE DEVICE.", "NOTHING LIKE IT."]}
+            fontSize={96}
+            color="#a78bfa"
+            fontFamily="'Syne',sans-serif"
+            style={{ minHeight: "180px" }}
+          />
         </Reveal>
 
 
@@ -2933,21 +3428,21 @@ const OfferSection = React.memo(function OfferSection() {
 
   );
 
-});
+}
 
 
 //  WHY SECTION
 
 
 
-const WhySection = React.memo(function WhySection() {
+function WhySection() {
 
   const POINTS = [
 
     {
       n: "01", c: "#2DD4BF", dir: "left" as const, t: "Dual-task is the only way.",
 
-      b: "Every other device trains motor OR cognitive. Science requires both simultaneously. ReViveX is the only system built around this clinical truth."
+      b: "Neuroplasticity requires simultaneous motor and cognitive training. Our dual-task protocol delivers both in real-time."
     },
 
     {
@@ -2983,16 +3478,17 @@ const WhySection = React.memo(function WhySection() {
 
       <div style={{ maxWidth: 1280, margin: "0 auto" }}>
 
-        <Reveal dir="zoom" style={{ textAlign: "center", marginBottom: 72 }}>
-
+        <Reveal dir="zoom" style={{ textAlign: "center", marginBottom: 24 }}>
           <div className="fM" style={{ fontSize: 9, color: "rgba(251,191,36,.75)", textTransform: "uppercase", letterSpacing: ".32em", marginBottom: 16 }}>Why ReViveX</div>
-
-          <h2 className="fB" style={{ fontSize: "clamp(3rem,8vw,7rem)", letterSpacing: ".03em", lineHeight: .9, color: "#fff" }}>
-
-            NOT ANOTHER<br /><span style={{ color: "#fbbf24" }}>REHAB GADGET.</span>
-
-          </h2>
-
+        </Reveal>
+        <Reveal dir="zoom" style={{ marginBottom: 48, textAlign: "center" }}>
+          <VaporizeTextCycle
+            texts={["NOT A GADGET.", "A REVOLUTION.", "BUILT FOR YOU."]}
+            fontSize={96}
+            color="#fbbf24"
+            fontFamily="'Syne',sans-serif"
+            style={{ minHeight: "180px" }}
+          />
         </Reveal>
 
         <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
@@ -3033,14 +3529,14 @@ const WhySection = React.memo(function WhySection() {
 
   );
 
-});
+}
 
 
 //  MARQUEE STRIP
 
 
 
-const MarqueeStrip = React.memo(function MarqueeStrip() {
+function MarqueeStrip() {
 
   const A = ["MOTOR RECOVERY", "COGNITIVE TRAINING", "GRIP STRENGTH", "TREMOR DETECTION", "DUAL-TASK PROTOCOL", "AI ADAPTATION", "TELE-REHABILITATION", "NEUROPLASTICITY"];
 
@@ -3096,11 +3592,177 @@ const MarqueeStrip = React.memo(function MarqueeStrip() {
 
   );
 
-});
+}
 
 //  FOOTER + CONTACT
 
 
+
+// ══ ISOMETRIC SOCIALS ════════════════════════════════════════════════════════
+function IsometricSocials() {
+  const ISO_CSS = `
+    .iso-card{display:flex;gap:1.5rem;list-style:none;padding:0;margin:0;flex-wrap:wrap;}
+    .iso-pro{position:relative;cursor:pointer;transition:0.5s;width:55px;height:55px;}
+    .iso-pro .iso-icon{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;border-radius:50%;border:1px solid rgba(255,255,255,0.15);background:rgba(255,255,255,0.05);backdrop-filter:blur(10px);transition:all 0.3s ease-out;z-index:4;color:rgba(255,255,255,0.6);box-shadow:inset 0 0 10px rgba(255,255,255,0.05),0 5px 10px rgba(0,0,0,0.3);}
+    .iso-pro:hover .iso-icon{transform:translate(12px,-12px);color:var(--clr);border-color:var(--clr);background:rgba(8,15,26,0.9);box-shadow:inset 0 0 20px rgba(255,255,255,0.1),0 10px 20px rgba(0,0,0,0.5);}
+    .iso-pro .iso-text{position:absolute;opacity:0;z-index:5;transition:all 0.3s ease-out;color:var(--clr);background:rgba(8,15,26,0.95);border:1px solid var(--clr);padding:4px 10px;border-radius:6px;font-size:10px;font-weight:bold;letter-spacing:0.15em;text-transform:uppercase;top:-10px;left:100%;pointer-events:none;box-shadow:0 5px 15px rgba(0,0,0,0.5);white-space:nowrap;}
+    .iso-pro:hover .iso-text{opacity:1;transform:translate(5px,-5px) skew(-5deg);}
+    .iso-pro span{position:absolute;inset:0;border-radius:50%;transition:all 0.3s ease-out;opacity:0;border:1px solid var(--clr);background:rgba(8,15,26,0.5);}
+    .iso-pro:hover span{opacity:1;}
+    .iso-pro:hover span:nth-child(1){opacity:0.2;transform:translate(0,0);}
+    .iso-pro:hover span:nth-child(2){opacity:0.4;transform:translate(4px,-4px);}
+    .iso-pro:hover span:nth-child(3){opacity:0.6;transform:translate(8px,-8px);}
+  `;
+  const socials = [
+    { name:"LinkedIn",  icon:<Linkedin  size={22}/>, color:"#0077b5", href:"#" },
+    { name:"Instagram", icon:<Instagram size={22}/>, color:"#E1306C", href:"#" },
+    { name:"GitHub",    icon:<Github    size={22}/>, color:"#2DD4BF", href:"#" },
+    { name:"Facebook",  icon:<Facebook  size={22}/>, color:"#1877f2", href:"#" },
+  ];
+  return (
+    <>
+      <style>{ISO_CSS}</style>
+      <ul className="iso-card">
+        {socials.map((s,i) => (
+          <li key={i} className="iso-pro" style={{"--clr":s.color} as any}>
+            <span/><span/><span/>
+            <a href={s.href} className="iso-icon" aria-label={s.name}>{s.icon}</a>
+            <div className="iso-text fM">{s.name}</div>
+          </li>
+        ))}
+      </ul>
+    </>
+  );
+}
+
+// ══ MAGNETIC TEXT — morphing cursor hover reveal ════════════════════════════
+function MagneticText({
+  text = "CREATIVE",
+  hoverText = "EXPLORE",
+  className = "",
+  style = {},
+}: {
+  text: string;
+  hoverText?: string;
+  className?: string;
+  style?: React.CSSProperties;
+}) {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const circleRef    = useRef<HTMLDivElement>(null);
+  const innerTextRef = useRef<HTMLDivElement>(null);
+  const [isHovered, setIsHovered] = useState(false);
+  const [containerSize, setContainerSize] = useState({ width:0, height:0 });
+  const mousePos   = useRef({ x:0, y:0 });
+  const currentPos = useRef({ x:0, y:0 });
+  const rafRef     = useRef<number>(0);
+
+  useEffect(() => {
+    const update = () => {
+      if (containerRef.current)
+        setContainerSize({ width:containerRef.current.offsetWidth, height:containerRef.current.offsetHeight });
+    };
+    update();
+    window.addEventListener("resize", update);
+    return () => window.removeEventListener("resize", update);
+  }, []);
+
+  useEffect(() => {
+    const lerp = (a:number, b:number, t:number) => a+(b-a)*t;
+    const tick = () => {
+      currentPos.current.x = lerp(currentPos.current.x, mousePos.current.x, 0.15);
+      currentPos.current.y = lerp(currentPos.current.y, mousePos.current.y, 0.15);
+      if (circleRef.current)
+        circleRef.current.style.transform = `translate(${currentPos.current.x}px,${currentPos.current.y}px) translate(-50%,-50%)`;
+      if (innerTextRef.current)
+        innerTextRef.current.style.transform = `translate(${-currentPos.current.x}px,${-currentPos.current.y}px)`;
+      rafRef.current = requestAnimationFrame(tick);
+    };
+    rafRef.current = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(rafRef.current);
+  }, []);
+
+  const onMove = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
+    if (!containerRef.current) return;
+    const r = containerRef.current.getBoundingClientRect();
+    mousePos.current = { x: e.clientX - r.left, y: e.clientY - r.top };
+  }, []);
+
+  const onEnter = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
+    if (!containerRef.current) return;
+    const r = containerRef.current.getBoundingClientRect();
+    const x = e.clientX - r.left, y = e.clientY - r.top;
+    mousePos.current = { x, y };
+    currentPos.current = { x, y };
+    setIsHovered(true);
+  }, []);
+
+  return (
+    <div ref={containerRef} onMouseMove={onMove} onMouseEnter={onEnter} onMouseLeave={() => setIsHovered(false)}
+      className={className} style={{ position:"relative", display:"inline-flex", alignItems:"center",
+        justifyContent:"center", cursor:"none", userSelect:"none", ...style }}>
+      <span>{text}</span>
+      <div ref={circleRef} style={{
+        position:"absolute", top:0, left:0, pointerEvents:"none", borderRadius:"50%",
+        overflow:"hidden", backgroundColor:"#2DD4BF",
+        width: isHovered ? 160 : 0, height: isHovered ? 160 : 0,
+        transition:"width .5s cubic-bezier(.33,1,.68,1), height .5s cubic-bezier(.33,1,.68,1)",
+        willChange:"transform, width, height",
+      }}>
+        <div ref={innerTextRef} style={{
+          position:"absolute", display:"flex", alignItems:"center", justifyContent:"center",
+          width: containerSize.width, height: containerSize.height, top:"50%", left:"50%",
+          willChange:"transform",
+        }}>
+          <span style={{ color:"#080f1a", whiteSpace:"nowrap" }}>{hoverText}</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ══ TYPEWRITER EFFECT SMOOTH ═════════════════════════════════════════════════
+function TypewriterEffectSmooth({
+  words,
+  className = "",
+  cursorClassName = "",
+}: {
+  words: { text: string; className?: string }[];
+  className?: string;
+  cursorClassName?: string;
+}) {
+  const wordsArray = words.map(w => ({ ...w, text: w.text.split("") }));
+  return (
+    <div style={{ display:"flex", alignItems:"center", gap:4, margin:"8px 0" }} className={className}>
+      <motion.div
+        style={{ overflow:"hidden", paddingBottom:8 }}
+        initial={{ width:"0%" }}
+        whileInView={{ width:"fit-content" }}
+        viewport={{ once:true }}
+        transition={{ duration:1.5, ease:"linear", delay:0.3 }}
+      >
+        <div style={{ whiteSpace:"nowrap" }}>
+          {wordsArray.map((word, wi) => (
+            <span key={wi} style={{ display:"inline-block" }}>
+              {word.text.map((char, ci) => (
+                <span key={ci} className={word.className || ""} style={!word.className ? { color:"#fff" } : {}}>
+                  {char}
+                </span>
+              ))}
+              {" "}
+            </span>
+          ))}
+        </div>
+      </motion.div>
+      <motion.span
+        initial={{ opacity:0 }}
+        animate={{ opacity:1 }}
+        transition={{ duration:0.8, repeat:Infinity, repeatType:"reverse" }}
+        style={{ display:"block", width:4, height:"1em", borderRadius:2, backgroundColor:"#2DD4BF", boxShadow:"0 0 10px #2DD4BF", flexShrink:0 }}
+        className={cursorClassName}
+      />
+    </div>
+  );
+}
 
 function Footer() {
 
@@ -3157,16 +3819,20 @@ function Footer() {
 
         <div style={{ textAlign: "center", marginBottom: 80, lineHeight: .9, overflow: "hidden" }}>
 
-          <div className="fB" style={{ fontSize: "clamp(3rem,10vw,9rem)", letterSpacing: ".03em", overflow: "hidden" }}>
-
-            <SplitText text="LET'S REWIRE" style={{ color: "#fff" }} delay={0} stagger={.042} />
-
-          </div>
-
-          <div className="fB" style={{ fontSize: "clamp(3rem,10vw,9rem)", letterSpacing: ".03em", overflow: "hidden" }}>
-
-            <SplitText text="THE FUTURE." style={{ color: "#2DD4BF" }} delay={.34} stagger={.042} />
-
+          <div className="fB" style={{ fontSize:"clamp(3rem,10vw,9rem)", letterSpacing:".03em",
+            lineHeight:1, display:"flex", flexDirection:"column", alignItems:"center", gap:4 }}>
+            <MagneticText
+              text="LET'S REWIRE"
+              hoverText="YOUR BRAIN."
+              className="fB"
+              style={{ fontSize:"clamp(3rem,10vw,9rem)", letterSpacing:".03em", color:"#fff" }}
+            />
+            <MagneticText
+              text="THE FUTURE."
+              hoverText="START TODAY."
+              className="fB"
+              style={{ fontSize:"clamp(3rem,10vw,9rem)", letterSpacing:".03em", color:"#2DD4BF" }}
+            />
           </div>
 
         </div>
@@ -3273,22 +3939,12 @@ function Footer() {
 
                   </div>
 
-                  <MagButton type="submit"
-
-                    className="btn-shim fB"
-
-                    style={{
-                      position: "relative", overflow: "hidden", width: "100%", padding: "18px",
-
-                      borderRadius: 16, fontSize: 15, letterSpacing: ".12em",
-
-                      background: "#2DD4BF", color: "#080f1a", border: "none",
-
-                      boxShadow: "0 0 44px rgba(45,212,191,.3)"
+                  <MagButton type="submit" className="fB sweep-btn sweep-teal" style={{
+                      width:"100%", padding:"16px", borderRadius:14,
+                      fontSize:15, letterSpacing:".12em", justifyContent:"center",
                     }}>
-
-                    <span style={{ position: "relative", zIndex: 1 }}>SEND MESSAGE</span>
-
+                    <span className="sweep-bar" style={{ background:"rgba(45,212,191,.6)", boxShadow:"0 0 10px 10px rgba(45,212,191,.25)" }} />
+                    <span style={{ position:"relative", zIndex:1 }}>SEND MESSAGE</span>
                   </MagButton>
 
                 </form>
@@ -3305,20 +3961,24 @@ function Footer() {
 
           <Reveal dir="right" delay={.15} style={{ paddingTop: 8 }}>
 
-            <h3 className="fB" style={{
-              fontSize: "clamp(1.8rem,3vw,2.8rem)", color: "#fff",
-
-              letterSpacing: ".04em", lineHeight: 1.1, marginBottom: 22
-            }}>
-
-              DESIGNED FOR PATIENTS.<br /><span style={{ color: "#2DD4BF" }}>BUILT FOR IMPACT.</span>
-
-            </h3>
+            <TypewriterEffectSmooth
+              className="fB"
+              cursorClassName=""
+              words={[
+                { text: "DESIGNED" },
+                { text: "FOR" },
+                { text: "PATIENTS." },
+                { text: "BUILT",   className: "tw-teal" },
+                { text: "FOR",     className: "tw-teal" },
+                { text: "IMPACT.", className: "tw-teal" },
+              ]}
+            />
+            <style dangerouslySetInnerHTML={{ __html: `.tw-teal { color: #2DD4BF !important; }` }} />
 
             <p className="fS" style={{
               fontSize: 15, color: "rgba(255,255,255,.78)",
 
-              lineHeight: 1.75, fontWeight: 300, marginBottom: 42
+              lineHeight: 1.75, fontWeight: 300, marginBottom: 42, marginTop: -10
             }}>
 
               Whether you're a clinician, a hospital administrator, or a patient wanting
@@ -3373,36 +4033,8 @@ function Footer() {
 
             ))}
 
-            <div style={{ display: "flex", gap: 12, marginTop: 22 }}>
-
-              {[
-
-                { icon: <Linkedin size={17} />, href: "#", label: "LinkedIn" },
-
-                { icon: <Instagram size={17} />, href: "#", label: "Instagram" },
-
-              ].map(s => (
-
-                <motion.a key={s.label} href={s.href} data-mag aria-label={s.label}
-
-                  whileHover={{ y: -5, scale: 1.12 }}
-
-                  style={{
-                    width: 50, height: 50, borderRadius: 16, textDecoration: "none",
-
-                    display: "flex", alignItems: "center", justifyContent: "center",
-
-                    background: "rgba(255,255,255,.04)", border: "1px solid rgba(255,255,255,.07)",
-
-                    color: "rgba(255,255,255,.70)"
-                  }}>
-
-                  {s.icon}
-
-                </motion.a>
-
-              ))}
-
+            <div style={{ marginTop: 32 }}>
+              <IsometricSocials />
             </div>
 
           </Reveal>
@@ -3476,13 +4108,14 @@ export default function LandingPage() {
 
             <Navbar />
 
-            <HeroSection />
-
+            <CinematicHero />
+            <SectionSep color="#ef4444" dim />
             <RoadBridge />
 
             <ProblemSection />
-
-            <DarkBridge />
+            <SectionSep color="#2DD4BF" dim />
+            <NeuralBridge />
+            <SectionSep color="#2DD4BF" />
 
             <SolutionSection />
 
