@@ -2239,12 +2239,12 @@ function CinematicHero() {
               Clinical rehabilitation powered by immersive computing. We transform static routines into <span style={{ color:"rgba(255,255,255,.90)",fontWeight:500 }}>engaging digital experiences</span>.
             </p>
             <div style={{ display:"flex",gap:12 }}>
-              <button onClick={()=>router.push("/auth/patient/signin")} className="fB sweep-btn sweep-teal">
+              <button onClick={()=>router.push("/patients/home?dev=true")} className="fB sweep-btn sweep-teal">
                 <span className="sweep-bar" style={{ background:"rgba(45,212,191,.6)", boxShadow:"0 0 10px 10px rgba(45,212,191,.25)" }} />
                 <Play size={13} style={{ fill:"#2DD4BF", flexShrink:0, position:"relative", zIndex:1 }} />
                 <span style={{ position:"relative", zIndex:1 }}>Patient Sign In</span>
               </button>
-              <button onClick={()=>router.push("/auth/doctor/signin")} className="fB sweep-btn sweep-slate">
+              <button onClick={()=>router.push("/doctor/home?dev=true")} className="fB sweep-btn sweep-slate">
                 <span className="sweep-bar" style={{ background:"rgba(255,255,255,.35)", boxShadow:"0 0 10px 10px rgba(255,255,255,.10)" }} />
                 <Stethoscope size={13} style={{ flexShrink:0, position:"relative", zIndex:1 }} />
                 <span style={{ position:"relative", zIndex:1 }}>Doctor Sign In</span>
@@ -4192,7 +4192,7 @@ function RoleSelectionModal({ isOpen, onClose }: { isOpen: boolean; onClose: () 
 
 
 //  ROOT PAGE
-
+// ─── MAIN LANDING PAGE ────────────────────────────────────────────────────────
 export default function LandingPage() {
   const [booted, setBooted] = useState(false);
   const [showRoleModal, setShowRoleModal] = useState(false); 
@@ -4205,7 +4205,6 @@ export default function LandingPage() {
       <MedicalCursor />
       {!booted && <Preloader onDone={() => setBooted(true)} />}
 
-      
       <AnimatePresence>
         {showRoleModal && (
           <RoleSelectionModal isOpen={showRoleModal} onClose={() => setShowRoleModal(false)} />
@@ -4219,7 +4218,6 @@ export default function LandingPage() {
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 1.05, ease: [0.22, 1, 0.36, 1] }}>
 
-
             <Navbar onGetStarted={() => setShowRoleModal(true)} />
 
             <CinematicHero />
@@ -4228,29 +4226,70 @@ export default function LandingPage() {
 
             <ProblemSection />
             <SectionSep color="#2DD4BF" dim />
-            <NeuralBridge />
+            
+            {/* 🔴 UPDATED: Using the section wrapper to hold the dev buttons */}
+            <NeuralBridgeSection />
+            
             <SectionSep color="#2DD4BF" />
 
             <SolutionSection />
-
             <OfferSection />
-
             <WhySection />
-
             <MarqueeStrip />
-
             <Footer />
 
-
-
           </motion.div>
-
         )}
-
       </AnimatePresence>
-
     </div>
-
   );
+}
 
+// ─── NEURAL BRIDGE SECTION (WITH DEV BACKDOOR BUTTONS) ───────────────────────
+function NeuralBridgeSection() {
+  const router = useRouter();
+
+  return (
+    <section style={{ position: "relative" }}>
+      <NeuralBridge />
+      
+      {/* Overlay Content */}
+      <div style={{ 
+        position: "absolute", 
+        inset: 0, 
+        zIndex: 20, 
+        display: "flex", 
+        flexDirection: "column", 
+        alignItems: "center", 
+        justifyContent: "flex-end",
+        paddingBottom: "10vh",
+        pointerEvents: "none" 
+      }}>
+        <div style={{ display: "flex", gap: 12, flexWrap: "wrap", pointerEvents: "auto" }}>
+          
+    
+          <button 
+            onClick={() => router.push("/patients/home?dev=true")} 
+            className="fB sweep-btn sweep-teal"
+          >
+            <span className="sweep-bar" style={{ background: "rgba(45,212,191,.6)", boxShadow: "0 0 10px 10px rgba(45,212,191,.25)" }} />
+            <Play size={14} style={{ fill: "#2DD4BF", flexShrink: 0, position: "relative", zIndex: 1 }} />
+            <span style={{ position: "relative", zIndex: 1 }}>Patient Sign In</span>
+          </button>
+
+          {/* DEV BACKDOOR: Bypasses auth directly to Doctor Home */}
+          <button 
+            onClick={() => router.push("/doctor/home?dev=true")} 
+            className="fB sweep-btn sweep-slate"
+          >
+            <span className="sweep-bar" style={{ background: "rgba(255,255,255,.35)", boxShadow: "0 0 10px 10px rgba(255,255,255,.10)" }} />
+            <Stethoscope size={14} style={{ flexShrink: 0, position: "relative", zIndex: 1 }} />
+            <span style={{ position: "relative", zIndex: 1 }}>Doctor Sign In</span>
+            <ArrowRight size={11} style={{ opacity: .4, position: "relative", zIndex: 1 }} />
+          </button>
+          
+        </div>
+      </div>
+    </section>
+  );
 }
