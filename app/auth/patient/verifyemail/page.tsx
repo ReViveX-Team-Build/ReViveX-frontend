@@ -20,3 +20,25 @@ const CSS = `
     animation: float 4s ease-in-out infinite, pulseGlow 3s ease-in-out infinite;
   }
 `;
+
+export default function VerifyEmailPage() {
+  const router = useRouter();
+  const [user, loading] = useAuthState(auth);
+  const [isChecking, setIsChecking] = useState(false);
+  const [resendCooldown, setResendCooldown] = useState(0);
+  const [message, setMessage] = useState<{ text: string; type: "success" | "error" } | null>(null);
+
+  // If there's no user, kick them to login
+  useEffect(() => {
+    if (!loading && !user) {
+      router.replace("/auth/patient/signin");
+    }
+  }, [user, loading, router]);
+
+  // Handle Cooldown Timer
+  useEffect(() => {
+    if (resendCooldown > 0) {
+      const timer = setTimeout(() => setResendCooldown(c => c - 1), 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [resendCooldown]);
