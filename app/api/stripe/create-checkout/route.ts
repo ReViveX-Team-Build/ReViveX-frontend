@@ -1,12 +1,16 @@
+// app/api/stripe/create-checkout/route.ts
 import { NextResponse } from "next/server";
 import Stripe from "stripe";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
+    apiVersion: "2025-01-27.acacia",
 });
 
+// ── Price IDs from your Stripe Dashboard (test mode) ─────────────────────────
+// Replace these with your actual Price IDs after creating products in Stripe
 const PRICE_IDS: Record<string, string> = {
     advanced_analytics: process.env.STRIPE_PRICE_ADVANCED_ANALYTICS!,
-    voice_companion: process.env.STRIPE_PRICE_VOICE_COMPANION!,
+    voice_companion:    process.env.STRIPE_PRICE_VOICE_COMPANION!,
 };
 
 export async function POST(req: Request) {
@@ -25,14 +29,16 @@ export async function POST(req: Request) {
             return NextResponse.json({ error: "Invalid plan" }, { status: 400 });
         }
 
+        // Create Stripe Checkout Session
         const session = await stripe.checkout.sessions.create({
             mode: "subscription",
             payment_method_types: ["card"],
             line_items: [{ price: priceId, quantity: 1 }],
+            // Pass uid so webhook can update Firestore
             metadata: { uid, plan },
             customer_email: email,
-            success_url: `${process.env.NEXT_PUBLIC_BASE_URL}/patients/upgrade/success?session_id={CHECKOUT_SESSION_ID}`,
-            cancel_url: `${process.env.NEXT_PUBLIC_BASE_URL}/patients/ai-companion`,
+            success_url: `${process.env.NEXT_PUBLIC_BASE_URL}/patients/ai-companion?upgraded=true`,
+            cancel_url:  `${process.env.NEXT_PUBLIC_BASE_URL}/patients/ai-companion`,
         });
 
         return NextResponse.json({ url: session.url });
