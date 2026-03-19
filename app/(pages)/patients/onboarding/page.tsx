@@ -193,3 +193,46 @@ export default function PatientOnboardingPage() {
                 </div>
               </div>
             </div>
+
+            {/* Doctor Selection */}
+            <div>
+              <label className="block text-xs font-bold text-teal-400/70 uppercase tracking-widest mb-2">Select Your Care Provider</label>
+              <div className="relative">
+                <select 
+                  value={selectedDoctor} 
+                  onChange={e => setSelectedDoctor(e.target.value)}
+                  className="w-full bg-white/5 border-b-2 border-purple-500/30 text-white p-4 rounded-t-xl outline-none appearance-none focus:border-purple-400 focus:bg-purple-500/5 transition-all cursor-pointer"
+                >
+                  <option value="" disabled className="bg-[#0B1E33]">Choose your doctor from the network...</option>
+                  {doctors.map(doc => (
+                    <option key={doc.id} value={doc.id} className="bg-[#0B1E33]">
+                      Dr. {doc.name} — {doc.specialization}
+                    </option>
+                  ))}
+                </select>
+                <Shield size={16} className="absolute right-4 top-1/2 -translate-y-1/2 text-purple-500/50 pointer-events-none" />
+              </div>
+            </div>
+
+            {/* Submit Button */}
+            <button 
+              type="submit"
+              disabled={isSubmitting}
+              className="w-full mt-6 relative group overflow-hidden bg-gradient-to-r from-teal-500 to-cyan-600 text-[#080f1a] font-bold text-sm tracking-widest uppercase py-4 rounded-xl transition-all disabled:opacity-70 disabled:cursor-not-allowed hover:shadow-[0_0_20px_rgba(45,212,191,0.4)]"
+            >
+              <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300 ease-out" />
+              <span className="relative flex items-center justify-center gap-2">
+                {isSubmitting ? (
+                  <><Loader2 size={18} className="animate-spin" /> Submitting to Clinic...</>
+                ) : (
+                  <>Complete Registration <ChevronRight size={18} /></>
+                )}
+              </span>
+            </button>
+
+          </form>
+        </div>
+      </div>
+    </div>
+  );
+}
