@@ -73,7 +73,10 @@ export default function PatientSignUpPage() {
         setGeneratedPatientId(result.patientId || "");
       } else {
         setError(result.error || "Registration failed");
-        setEmailExists(result.code === "auth/email-already-in-use");
+        setEmailExists(
+          result.status === "EXISTS" ||
+            result.code === "auth/email-already-in-use",
+        );
       }
     } catch (err: any) {
       setError("An unexpected error occurred");
