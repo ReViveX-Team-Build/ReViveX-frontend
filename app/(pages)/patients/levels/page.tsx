@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
+import { useDarkMode } from "@/app/lib/hooks/useDarkMode";
 import {
   Lock,
   Play,
@@ -333,6 +334,74 @@ const CSS = `
   }
   @media (max-width:480px) {
     .lv-filter-strip .lv-filter-btn { padding:7px 10px !important; font-size:8.5px !important; }
+  }
+
+  /* ── Dark Mode Surface Overrides ─────────────────────── */
+  .dark .lv-dash [style*="background:#fff"],
+  .dark .lv-dash [style*="background: #fff"],
+  .dark .lv-dash [style*="background: rgb(255,255,255)"],
+  .dark .lv-dash [style*="background: rgb(255, 255, 255)"],
+  .dark .lv-dash [style*="background:#f8fafc"],
+  .dark .lv-dash [style*="background: #f8fafc"],
+  .dark .lv-dash [style*="background: rgb(248,250,252)"],
+  .dark .lv-dash [style*="background: rgb(248, 250, 252)"],
+  .dark .lv-dash [style*="background: rgba(255,255,255"],
+  .dark .lv-dash [style*="background: rgba(255, 255, 255"],
+  .dark .lv-dash [style*="background: rgba(240,244,248"],
+  .dark .lv-dash [style*="background: rgba(240, 244, 248"],
+  .dark .lv-dash [style*="background: rgba(248,247,255"],
+  .dark .lv-dash [style*="background: rgba(248, 247, 255"],
+  .dark .lv-dash [style*="background: rgba(240,240,255"],
+  .dark .lv-dash [style*="background: rgba(240, 240, 255"],
+  .dark .lv-dash [style*="background:linear-gradient(135deg, #f0fdf8"],
+  .dark .lv-dash [style*="background: linear-gradient(135deg, #f0fdf8"],
+  .dark .lv-dash [style*="background:linear-gradient(135deg,#f8f7ff"],
+  .dark .lv-dash [style*="background: linear-gradient(135deg,#f8f7ff"],
+  .dark .lv-dash [style*="background:linear-gradient(135deg, #f8f7ff"],
+  .dark .lv-dash [style*="background: linear-gradient(135deg, #f8f7ff"],
+  .dark .lv-dash [style*="background:linear-gradient(145deg,rgba(99,102,241,0.07)"],
+  .dark .lv-dash [style*="background: linear-gradient(145deg,rgba(99,102,241,0.07)"],
+  .dark .lv-dash [style*="background:linear-gradient(135deg, rgb(240, 253, 248)"],
+  .dark .lv-dash [style*="background: linear-gradient(135deg, rgb(240, 253, 248)"],
+  .dark .lv-dash [style*="background:linear-gradient(135deg, rgb(248, 247, 255)"],
+  .dark .lv-dash [style*="background: linear-gradient(135deg, rgb(248, 247, 255)"] {
+    background: #0f172a !important;
+    border-color: rgba(71,85,105,0.65) !important;
+    box-shadow: 0 6px 24px rgba(2,6,23,0.35) !important;
+  }
+
+  .dark .lv-dash [style*="color: #0B1E33"],
+  .dark .lv-dash [style*="color:#0B1E33"],
+  .dark .lv-dash [style*="color: rgb(11,30,51)"],
+  .dark .lv-dash [style*="color: rgb(11, 30, 51)"] {
+    color: #e2e8f0 !important;
+  }
+
+  .dark .lv-dash [style*="color: #64748b"],
+  .dark .lv-dash [style*="color:#64748b"],
+  .dark .lv-dash [style*="color: rgb(100,116,139)"],
+  .dark .lv-dash [style*="color: rgb(100, 116, 139)"],
+  .dark .lv-dash [style*="color: #94a3b8"],
+  .dark .lv-dash [style*="color:#94a3b8"],
+  .dark .lv-dash [style*="color: rgb(148,163,184)"],
+  .dark .lv-dash [style*="color: rgb(148, 163, 184)"] {
+    color: #94a3b8 !important;
+  }
+
+  .dark .lv-dash [style*="border: 1px solid rgba(226,232,240"],
+  .dark .lv-dash [style*="border: 1.5px solid rgba(226,232,240"],
+  .dark .lv-dash [style*="border: 1px solid rgba(226, 232, 240"],
+  .dark .lv-dash [style*="border: 1.5px solid rgba(226, 232, 240"],
+  .dark .lv-dash [style*="border: 1px solid rgb(226, 232, 240)"],
+  .dark .lv-dash [style*="border: 1.5px solid rgb(226, 232, 240)"],
+  .dark .lv-dash [style*="border-top: 1px solid rgba(226,232,240"],
+  .dark .lv-dash [style*="borderTop: 1px solid rgba(226,232,240"] {
+    border-color: rgba(71,85,105,0.65) !important;
+  }
+
+  .dark .lv-dash .lv-card {
+    background: #0f172a !important;
+    border-color: rgba(71,85,105,0.65) !important;
   }
 `;
 
@@ -900,6 +969,7 @@ function FilterTab({
    MAIN PAGE
 ═══════════════════════════════════════════ */
 export default function LevelsPage() {
+  const isDark = useDarkMode();
   const router = useRouter();
   const [user, authLoading] = useAuthState(auth);
   const [activeCategory, setActiveCategory] = useState<Category>("ALL");
@@ -999,7 +1069,7 @@ export default function LevelsPage() {
         className="lv-dash"
         style={{
           minHeight: "100vh",
-          background: "#F0F4F8",
+          background: isDark ? "#0b1220" : "#F0F4F8",
           display: "flex",
           justifyContent: "center",
           alignItems: "center",
@@ -1066,7 +1136,11 @@ export default function LevelsPage() {
   return (
     <div
       className="lv-dash"
-      style={{ minHeight: "100vh", background: "#F0F4F8", paddingBottom: 52 }}>
+      style={{
+        minHeight: "100vh",
+        background: isDark ? "#0b1220" : "#F0F4F8",
+        paddingBottom: 52,
+      }}>
       <style>{CSS}</style>
 
       {/* ── Ambient BG ───────────────────────────────────────────── */}
@@ -1106,8 +1180,9 @@ export default function LevelsPage() {
           style={{
             position: "absolute",
             inset: 0,
-            backgroundImage:
-              "linear-gradient(rgba(11,30,51,0.022) 1px,transparent 1px),linear-gradient(90deg,rgba(11,30,51,0.022) 1px,transparent 1px)",
+            backgroundImage: isDark
+              ? "linear-gradient(rgba(148,163,184,0.035) 1px,transparent 1px),linear-gradient(90deg,rgba(148,163,184,0.035) 1px,transparent 1px)"
+              : "linear-gradient(rgba(11,30,51,0.022) 1px,transparent 1px),linear-gradient(90deg,rgba(11,30,51,0.022) 1px,transparent 1px)",
             backgroundSize: "52px 52px",
           }}
         />
@@ -2415,12 +2490,16 @@ export default function LevelsPage() {
                 style={{
                   animation:
                     "cardPop 0.55s cubic-bezier(0.22,1,0.36,1) 0.38s both",
-                  background: "#fff",
+                  background: isDark ? "#0f172a" : "#fff",
                   borderRadius: 20,
                   padding: "22px",
-                  border: "1.5px dashed rgba(139,92,246,0.25)",
+                  border: isDark
+                    ? "1.5px dashed rgba(139,92,246,0.4)"
+                    : "1.5px dashed rgba(139,92,246,0.25)",
                   textAlign: "center",
-                  boxShadow: "0 2px 14px rgba(139,92,246,0.06)",
+                  boxShadow: isDark
+                    ? "0 8px 28px rgba(2,6,23,0.4)"
+                    : "0 2px 14px rgba(139,92,246,0.06)",
                 }}>
                 <div
                   style={{
@@ -2440,7 +2519,7 @@ export default function LevelsPage() {
                   style={{
                     fontSize: 13,
                     fontWeight: 800,
-                    color: "#0B1E33",
+                    color: isDark ? "#e2e8f0" : "#0B1E33",
                     margin: "0 0 6px",
                   }}>
                   {nextLockedLevel.title} unlocks soon
@@ -2448,7 +2527,7 @@ export default function LevelsPage() {
                 <p
                   style={{
                     fontSize: 11,
-                    color: "#94a3b8",
+                    color: isDark ? "#94a3b8" : "#94a3b8",
                     margin: "0 0 14px",
                   }}>
                   Complete 1 more session

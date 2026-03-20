@@ -84,31 +84,39 @@ export default function SchedulePage() {
     <div className="p-10 max-w-4xl mx-auto space-y-8">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-semibold text-slate-800">My Schedule</h1>
-        <p className="text-slate-500 mt-1">
+        <h1 className="text-2xl font-semibold text-slate-800 dark:text-slate-100">
+          My Schedule
+        </h1>
+        <p className="text-slate-500 dark:text-slate-400 mt-1">
           View your upcoming and past therapy sessions
         </p>
       </div>
 
       {/* Upcoming Sessions */}
-      <div className="bg-white rounded-xl shadow p-6">
-        <h2 className="font-semibold text-slate-700 mb-4">Upcoming Sessions</h2>
+      <div className="bg-white dark:bg-slate-900 rounded-xl shadow p-6 border border-transparent dark:border-slate-700">
+        <h2 className="font-semibold text-slate-700 dark:text-slate-100 mb-4">
+          Upcoming Sessions
+        </h2>
 
         <div className="space-y-4">
           {loading ? (
-            <p className="text-sm text-slate-500">Loading sessions...</p>
+            <p className="text-sm text-slate-500 dark:text-slate-400">
+              Loading sessions...
+            </p>
           ) : upcomingSessions.length === 0 ? (
-            <p className="text-sm text-slate-500">No upcoming sessions.</p>
+            <p className="text-sm text-slate-500 dark:text-slate-400">
+              No upcoming sessions.
+            </p>
           ) : (
             upcomingSessions.map((session) => (
               <div
                 key={session.id}
-                className="flex justify-between items-center border rounded-lg p-4 bg-teal-50">
+                className="flex justify-between items-center border border-slate-200 dark:border-slate-700 rounded-lg p-4 bg-teal-50 dark:bg-teal-900/20">
                 <div>
-                  <p className="font-medium text-slate-800">
+                  <p className="font-medium text-slate-800 dark:text-slate-100">
                     {formatDate(session.scheduledDate)}
                   </p>
-                  <p className="text-sm text-slate-500">
+                  <p className="text-sm text-slate-500 dark:text-slate-400">
                     ⏰ {session.scheduledTime} • 🎮 {gameLabels[session.gameId]}{" "}
                     • L{session.level}
                   </p>
@@ -135,8 +143,10 @@ export default function SchedulePage() {
       </div>
 
       {/* Past Sessions */}
-      <div className="bg-white rounded-xl shadow p-6">
-        <h2 className="font-semibold text-slate-700 mb-4">Past Sessions</h2>
+      <div className="bg-white dark:bg-slate-900 rounded-xl shadow p-6 border border-transparent dark:border-slate-700">
+        <h2 className="font-semibold text-slate-700 dark:text-slate-100 mb-4">
+          Past Sessions
+        </h2>
 
         <div className="space-y-4">
           {loading
@@ -144,14 +154,14 @@ export default function SchedulePage() {
             : [...completedSessions, ...missedSessions].map((session) => (
                 <div
                   key={session.id}
-                  className="flex justify-between items-center border rounded-lg p-4 bg-slate-50">
+                  className="flex justify-between items-center border border-slate-200 dark:border-slate-700 rounded-lg p-4 bg-slate-50 dark:bg-slate-800/50">
                   <div className="flex items-start gap-3">
                     <span>{session.status === "completed" ? "✅" : "⭕"}</span>
                     <div>
-                      <p className="font-medium text-slate-800">
+                      <p className="font-medium text-slate-800 dark:text-slate-100">
                         {formatDate(session.scheduledDate)}
                       </p>
-                      <p className="text-sm text-slate-500">
+                      <p className="text-sm text-slate-500 dark:text-slate-400">
                         ⏰ {session.scheduledTime} • 🎮{" "}
                         {gameLabels[session.gameId]} • L{session.level}
                       </p>
