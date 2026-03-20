@@ -193,6 +193,35 @@ const FAQ_CATEGORIES: FAQCategory[] = [
           </>
         ),
       },
+
+    ],
+  },
+
+  {
+    id:    'security',
+    label: 'Privacy & Data Security',
+    icon:  <Shield size={16} />,
+    color: '#f59e0b',
+    bg:    'rgba(245,158,11,0.08)',
+    items: [
+      {
+        q: 'Is patient telemetry data encrypted and secure?',
+        a: (
+          <>
+            <p>Yes. ReViveX is architected with a multi-layer security model appropriate for clinical data environments. All patient telemetry is protected across every stage of its lifecycle:</p>
+            <ol>
+              <li><strong>In Transit:</strong> All communication between the patient's ESP32 device and the ReViveX cloud broker uses <span className="hc-code">TLS 1.3</span> encrypted MQTT channels. Web dashboard traffic is served exclusively over <span className="hc-code">HTTPS</span> with HSTS enforcement.</li>
+              <li><strong>At Rest:</strong> Session telemetry, grip force series, and patient identifiers are stored in a <strong>secure, partitioned NoSQL cloud database</strong> (Firebase Firestore) with field-level security rules. No patient record is accessible without a valid, role-scoped authentication token.</li>
+              <li><strong>Access Control:</strong> The system enforces strict Role-Based Access Control (RBAC). Doctors can only access records for patients explicitly assigned to their account. Admin-level operations require a secondary authentication challenge.</li>
+              <li><strong>AI Data Handling:</strong> When telemetry is sent to the Gemini API for summary generation, it is transmitted as anonymised structured data. No personally identifiable information (name, date of birth, address) is included in AI prompt context.</li>
+            </ol>
+            <div className="hc-note hc-note-amber">
+              <Lock size={12} />
+              For a full Data Processing Agreement or to request a security audit report, contact your institutional administrator or email <strong>compliance@revivex.com</strong>.
+            </div>
+          </>
+        ),
+      },
       
     ],
   },
