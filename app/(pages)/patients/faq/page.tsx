@@ -117,6 +117,7 @@ const FAQ_CATEGORIES: FAQCategory[] = [
           </>
         ),
       },
+
       {
         q: 'How do I adjust the difficulty for a patient who is struggling?',
         a: (
@@ -133,6 +134,66 @@ const FAQ_CATEGORIES: FAQCategory[] = [
           </>
         ),
       },
+
     ],
-  }
+  },
+
+  {
+    id:    'ai',
+    label: 'AI Clinical Assistant (Gemini)',
+    icon:  <Brain size={16} />,
+    color: '#6366f1',
+    bg:    'rgba(99,102,241,0.08)',
+    items: [
+      {
+        q: 'Where do the Weekly AI Summaries come from?',
+        a: (
+          <>
+            <p>Weekly AI Summaries are generated automatically every Monday at 06:00 UTC for each active patient on an <span className="hc-badge hc-badge-indigo"><Bot size={9} /> AI Companion</span> subscription tier.</p>
+            <p>The generation pipeline works as follows:</p>
+            <ol>
+              <li>A secure server-side process retrieves the <strong>last 7 days of Firebase Firestore telemetry</strong> for the patient — including per-session grip force series, endurance drop percentages, cognitive accuracy scores (for Memory Gate), and adherence timestamps.</li>
+              <li>This structured dataset is passed as context to the <strong>Gemini 1.5 Flash</strong> model via a controlled clinical system prompt, which instructs the model to produce concise, bulleted clinical observations.</li>
+              <li>The generated summary is written back to Firestore and surfaced in the patient's communications inbox as an <span className="hc-badge hc-badge-indigo">AI INSIGHT</span> message, visible to both the doctor and patient.</li>
+            </ol>
+            <div className="hc-note hc-note-indigo">
+              <Sparkles size={12} />
+              All AI-generated content is clearly flagged with an <strong>AI</strong> badge in the interface and is intended to support — not replace — clinical judgment.
+            </div>
+          </>
+        ),
+      },
+
+      {
+        q: 'What is the difference between the standard AI Summary and the AI Companion Chat?',
+        a: (
+          <>
+            <p>While both features are powered by Gemini and require the <strong>AI Companion plan</strong>, they serve distinct clinical purposes:</p>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, margin: '14px 0' }}>
+              <div className="hc-compare-box">
+                <div className="hc-compare-title"><BarChart3 size={13} /> Weekly Summary</div>
+                <ul>
+                  <li>Automated — generated every Monday</li>
+                  <li>Covers the full past 7 days of data</li>
+                  <li>Delivered as a structured bulletin to the patient's inbox</li>
+                  <li>Focuses on adherence rate, peak force trends, and overall progress direction</li>
+                </ul>
+              </div>
+              <div className="hc-compare-box hc-compare-box-indigo">
+                <div className="hc-compare-title"><MessageSquare size={13} /> AI Companion Chat</div>
+                <ul>
+                  <li>On-demand — initiated by doctor query</li>
+                  <li>Can span any custom time range</li>
+                  <li>Conversational — supports follow-up questions</li>
+                  <li>Capable of querying specific trends, e.g., <em>"Show tremor amplitude variance across the last 30 days"</em> or <em>"Compare left vs right hand endurance for October"</em></li>
+                </ul>
+              </div>
+            </div>
+            <p>Use Summaries for routine weekly monitoring. Use the Companion Chat for deep longitudinal analysis and complex clinical hypotheses.</p>
+          </>
+        ),
+      },
+      
+    ],
+  },
 ]
