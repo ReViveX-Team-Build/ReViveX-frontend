@@ -594,3 +594,54 @@ function AccordionItem({
     </div>
   );
 }
+
+function CategorySection({ cat, openMap, onToggle }: {
+  cat:     FAQCategory;
+  openMap: Record<string, boolean>;
+  onToggle:(key: string) => void;
+}) {
+  return (
+    <div id={cat.id} style={{ scrollMarginTop: 24 }}>
+      {/* Category header */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16 }}>
+        <div style={{
+          width: 36, height: 36, borderRadius: 11,
+          background: cat.bg, border: `1.5px solid ${cat.color}30`,
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          color: cat.color, flexShrink: 0,
+        }}>
+          {cat.icon}
+        </div>
+        <div>
+          <h2 style={{ fontSize: 15, fontWeight: 800, color: '#0B1E33', margin: 0 }}>
+            {cat.label}
+          </h2>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 2 }}>
+            <span className="mono" style={{ fontSize: 9, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.14em', fontWeight: 600 }}>
+              {cat.items.length} {cat.items.length === 1 ? 'topic' : 'topics'}
+            </span>
+          </div>
+        </div>
+        <div style={{ flex: 1, height: 1, background: 'rgba(226,232,240,0.8)', marginLeft: 4 }} />
+      </div>
+
+      {/* Renders the actual FAQ items for this category */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+        {cat.items.map((item, i) => {
+          const key = `${cat.id}-${i}`;
+          return (
+            <AccordionItem
+              key={key}
+              item={item}
+              catColor={cat.color}
+              catBg={cat.bg}
+              index={i}
+              isOpen={!!openMap[key]}
+              onToggle={() => onToggle(key)}
+            />
+          );
+        })}
+      </div>
+    </div>
+  );
+}
