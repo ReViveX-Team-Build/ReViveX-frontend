@@ -785,3 +785,72 @@ export default function DoctorHelpPage() {
             )}
           </div>
         </div>
+
+        {/* ══════════════════════════════════════════════════
+            CATEGORY FILTER TABS
+        ══════════════════════════════════════════════════ */}
+        <div style={{
+          display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap',
+          marginBottom: 24, animation: 'hcFadeUp 0.48s ease 0.12s both',
+        }}>
+          {[
+            { id: 'all', label: 'All Topics', icon: <BookOpen size={12} /> },
+            ...FAQ_CATEGORIES.map(c => ({ id: c.id, label: c.label.split(' ')[0] + (c.label.split(' ')[1] ? ' ' + c.label.split(' ')[1] : ''), icon: c.icon })),
+          ].map(tab => (
+            <button
+              key={tab.id}
+              className="hc-filter-tab"
+              onClick={() => { setFilter(tab.id); setSearch(''); }}
+              style={{
+                background: activeFilter === tab.id ? '#0B1E33' : '#fff',
+                color:      activeFilter === tab.id ? '#fff'    : '#64748b',
+                border:     `1.5px solid ${activeFilter === tab.id ? 'transparent' : 'rgba(226,232,240,0.9)'}`,
+                boxShadow:  activeFilter === tab.id ? '0 4px 14px rgba(11,30,51,0.20)' : 'none',
+              }}
+            >
+              {tab.icon}
+              {tab.label}
+            </button>
+          ))}
+
+          <div style={{ flex: 1 }} />
+
+          <span className="mono" style={{ fontSize: 10, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.12em', fontWeight: 600 }}>
+            {visibleCategories.reduce((n, c) => n + c.items.length, 0)} topics
+          </span>
+        </div>
+
+        {/* ══════════════════════════════════════════════════
+            FAQ ACCORDION SECTIONS
+        ══════════════════════════════════════════════════ */}
+        {visibleCategories.length === 0 ? (
+          <div style={{
+            textAlign: 'center', padding: '60px 24px',
+            background: '#fff', borderRadius: 18,
+            border: '1px solid rgba(226,232,240,0.9)',
+            animation: 'hcFadeUp 0.4s ease both',
+          }}>
+            <HelpCircle size={36} color="#cbd5e1" style={{ marginBottom: 14 }} />
+            <p style={{ fontSize: 15, fontWeight: 700, color: '#64748b', margin: 0 }}>
+              No topics found for <span style={{ color: '#0B1E33' }}>"{search}"</span>
+            </p>
+            <p style={{ fontSize: 13, color: '#94a3b8', marginTop: 6 }}>
+              Try a different search term, or{' '}
+              <button onClick={() => setSearch('')} style={{ background: 'none', border: 'none', color: '#2DD4BF', fontWeight: 700, cursor: 'pointer', fontSize: 13, fontFamily: "'Plus Jakarta Sans',sans-serif" }}>
+                clear the search
+              </button>
+              .
+            </p>
+          </div>
+        ) : (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 36 }}>
+            {visibleCategories.map(cat => (
+              <CategorySection
+                key={cat.id}
+                cat={cat}
+                openMap={openMap}
+                onToggle={toggleAccordion}
+              />
+            ))}
+          </div>
+        )}
