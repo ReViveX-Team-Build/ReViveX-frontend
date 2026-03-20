@@ -6,6 +6,7 @@ import { Play, RotateCcw, Zap, Hand, Wifi, WifiOff } from "lucide-react";
 import { useAuthState } from "react-firebase-hooks/auth";
 import { auth } from "@/app/lib/firebase";
 import { saveGameSession } from "../../app/lib/db/sessions";
+import { useHardware } from "@/app/lib/context/HardwareContext";
 import { updateSessionStatus } from "../../app/lib/db/schedule";
 import {
   getActiveProtocol,
@@ -153,7 +154,7 @@ const GameCanvas: React.FC = () => {
   // ── IoT — ORIGINAL INLINE SERIAL CODE (preserved exactly) ────────────────
   // pressRef is a bare ref mutated directly by _readLoop.
   // The game loop reads pressRef.current — no closure/stale-value issues.
-  const [isConnected, setIsConnected] = useState(false);
+  const { isConnected, setIsConnected } = useHardware();
   const isConnRef = useRef(false);
   const pressRef = useRef(0);
   const portRef = useRef<SerialPort | null>(null);
