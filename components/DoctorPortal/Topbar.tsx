@@ -1,9 +1,10 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
+import { useRouter } from "next/navigation";
 import { 
   Search, Bell, ChevronDown, X, Activity, Stethoscope, 
-  Clock, TrendingUp, CheckCircle2, XCircle, Settings, LogOut 
+  Clock, TrendingUp, CheckCircle2, XCircle, Settings, LogOut, User as UserIcon 
 } from "lucide-react";
 import { useAuthState } from "react-firebase-hooks/auth";
 import { auth, db } from "@/app/lib/firebase";
@@ -12,7 +13,7 @@ import { signOut } from "firebase/auth";
 
 // ─── Search Suggestions (Kept for your UI) ────────────────────────────────────
 const searchSuggestions = [
-  { label: "P.B. Silva",         sub: "Patient · P002",   icon: Stethoscope },
+  { label: "P.B. Silva",       sub: "Patient · P002",   icon: Stethoscope },
   { label: "Malini Perera",      sub: "Patient · P009",   icon: Stethoscope },
   { label: "Reports & Analytics",sub: "Page",             icon: TrendingUp  },
   { label: "Today's Schedule",   sub: "3 sessions",       icon: Clock       },
@@ -66,6 +67,7 @@ const STYLES = `
 `;
 
 export default function DoctorTopbar() {
+  const router = useRouter();
   const [user] = useAuthState(auth);
   const [searchFocused, setSearchFocused] = useState(false);
   const [searchVal, setSearchVal] = useState("");
@@ -91,7 +93,8 @@ export default function DoctorTopbar() {
         const name = data.name || "Doctor";
         const parts = name.trim().split(" ");
         const initials = parts.length >= 2 ? `${parts[0][0]}${parts[parts.length-1][0]}`.toUpperCase() : name.slice(0,2).toUpperCase();
-        setDoctorProfile({ name: `Dr. ${name}`, role: data.specialization || "Neurologist", initials });
+        // 🔴 UPDATED: Removed hardcoded "Dr." to prevent "Dr. Dr." duplication
+        setDoctorProfile({ name: name, role: data.specialization || "Neurologist", initials });
       }
     };
     fetchProfile();
@@ -284,9 +287,21 @@ export default function DoctorTopbar() {
                     </div>
                   </div>
                 </div>
-                <button className="dtb-menu-item"><Settings size={14}/> Account Settings</button>
+                
+                {/* 🔴 UPDATED: New Profile Link added */}
+                <button onClick={() => { setProfileOpen(false); router.push("/doctor/profile"); }} className="dtb-menu-item">
+                  <UserIcon size={14}/> View Profile
+                </button>
+                
+                <button onClick={() => { setProfileOpen(false); router.push("/doctor/settings"); }} className="dtb-menu-item">
+                  <Settings size={14}/> Account Settings
+                </button>
+                
                 <div style={{ height: 1, background: "rgba(255,255,255,0.07)", margin: "6px 0" }} />
-                <button onClick={() => signOut(auth)} className="dtb-menu-item" style={{ color: "#f87171" }}><LogOut size={14}/> Sign Out</button>
+                
+                <button onClick={() => signOut(auth).then(() => router.replace("/"))} className="dtb-menu-item" style={{ color: "#f87171" }}>
+                  <LogOut size={14}/> Sign Out
+                </button>
               </div>
             )}
           </div>
