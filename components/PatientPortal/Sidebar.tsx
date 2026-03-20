@@ -24,12 +24,19 @@ import {
   Trophy,
   Gamepad2, // ADDED: Gamepad icon for Therapy Games
 } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 type BreakPoint = "mobile" | "tablet" | "desktop";
+type NavItem = {
+  icon: LucideIcon;
+  label: string;
+  href: string;
+  badge: string | null;
+};
 
 // ─── Data ─────────────────────────────────────────────────────────────────────
-const navItems = [
+const navItems: NavItem[] = [
   { icon: Home, label: "Home", href: "/patients/home", badge: null },
   {
     icon: Gamepad2,
@@ -278,7 +285,7 @@ function SidebarContent({
   collapsed: boolean;
   onClose?: () => void;
   pathname: string;
-  navItems: typeof navItems;
+  navItems: NavItem[];
 }) {
   return (
     <div style={{ display: "flex", flexDirection: "column", height: "100%" }}>

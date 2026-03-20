@@ -429,13 +429,7 @@ function StatCard({
 
 export default function DoctorPatientsPage() {
   const [user, authLoading] = useAuthState(auth);
-  // TEMP DEV OVERRIDE: uses a fixed doctor UID in development when auth is not ready.
-  // Remove this once login is fully functional by replacing this block with:
-  // const doctorId = user?.uid ?? "";
-  const doctorId =
-    process.env.NODE_ENV === "development"
-      ? "doctor_test_001"
-      : (user?.uid ?? "");
+  const doctorId = user?.uid ?? "";
   const [displayPatients, setDisplayPatients] = useState<DisplayPatient[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -459,7 +453,7 @@ export default function DoctorPatientsPage() {
       return;
     }
 
-    // ── REAL PATH: use dev override in development, auth uid in production ──
+    // ── REAL PATH: use authenticated doctor uid ────────────────────────────
     if (authLoading && !doctorId) return;
     if (!doctorId) {
       setLoading(false);
@@ -540,8 +534,8 @@ export default function DoctorPatientsPage() {
           p.status.toLowerCase() === adherenceFilter;
         const matchC =
           conditionFilter === "all" ||
-          p.condition.toLowerCase().replace(/[\s-]/g, "") ===
-            conditionFilter.toLowerCase().replace(/[\s-]/g, "");
+          (p.condition || "").toLowerCase().replace(/[\s-]/g, "") ===
+            (conditionFilter || "").toLowerCase().replace(/[\s-]/g, "");
         return matchQ && matchA && matchC;
       }),
     [displayPatients, search, adherenceFilter, conditionFilter],
@@ -985,7 +979,7 @@ export default function DoctorPatientsPage() {
                                   verticalAlign: "middle",
                                 }}>
                                 <Link
-                                  href={`/doctor/protocols?patient=${p.id}`}
+                                  href={`/doctor/patients/${p.id}/profile`}
                                   className={`mpp-proto-btn${p.hasProtocol ? " has-protocol" : ""}`}>
                                   {p.hasProtocol && (
                                     <div className="mpp-proto-set" />
