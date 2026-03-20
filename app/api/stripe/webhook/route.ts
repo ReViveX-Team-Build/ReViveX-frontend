@@ -63,13 +63,15 @@ export async function POST(req: Request) {
             .where("subscription.stripeCustomerId", "==", customerId)
             .get();
 
-        snap.forEach(async (docSnap) => {
-          await adminDb.doc(`users/${docSnap.id}`).set(
-              { subscription: { plan: "free", status: "cancelled" } },
-              { merge: true }
-          );
-          console.log(`⚠️ Subscription cancelled for uid: ${docSnap.id}`);
-        });
+        await Promise.all(
+            snap.docs.map(async (docSnap) => {
+              await adminDb.doc(`users/${docSnap.id}`).set(
+                  { subscription: { plan: "free", status: "cancelled" } },
+                  { merge: true }
+              );
+              console.log(`⚠️ Subscription cancelled for uid: ${docSnap.id}`);
+            })
+        );
       }
       break;
     }
