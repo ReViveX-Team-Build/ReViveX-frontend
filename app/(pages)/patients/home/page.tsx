@@ -1343,38 +1343,40 @@ export default function PatientHome() {
                 </div>
 
                 {/* Open AI Companion Button */}
-                <button
-                  className="ai-btn"
-                  style={{
-                    width: "100%",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "space-between",
-                    background: "rgba(45,212,191,0.12)",
-                    border: "1.5px solid rgba(45,212,191,0.30)",
-                    borderRadius: 14,
-                    padding: "13px 18px",
-                    cursor: "pointer",
-                    color: "#0B1E33",
-                    fontFamily: "'Plus Jakarta Sans', sans-serif",
-                  }}>
-                  <span style={{ fontSize: 13, fontWeight: 700 }}>
-                    Open AI Companion
-                  </span>
-                  <div
-                    style={{
-                      width: 30,
-                      height: 30,
-                      borderRadius: "50%",
-                      background: "#2DD4BF",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      boxShadow: "0 4px 12px rgba(45,212,191,0.40)",
-                    }}>
-                    <Send size={13} color="#fff" />
-                  </div>
-                </button>
+                  <Link
+                      href="/patients/ai-companion"
+                      className="ai-btn"
+                      style={{
+                          width: "100%",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "space-between",
+                          background: "rgba(45,212,191,0.12)",
+                          border: "1.5px solid rgba(45,212,191,0.30)",
+                          borderRadius: 14,
+                          padding: "13px 18px",
+                          cursor: "pointer",
+                          color: "#0B1E33",
+                          textDecoration: "none",
+                          fontFamily: "'Plus Jakarta Sans', sans-serif",
+                      }}>
+                      <span style={{ fontSize: 13, fontWeight: 700 }}>
+                        Open AI Companion
+                      </span>
+                      <div
+                          style={{
+                              width: 30,
+                              height: 30,
+                              borderRadius: "50%",
+                              background: "#2DD4BF",
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              boxShadow: "0 4px 12px rgba(45,212,191,0.40)",
+                          }}>
+                          <Send size={13} color="#fff" />
+                      </div>
+                  </Link>
               </div>
             </div>
 
