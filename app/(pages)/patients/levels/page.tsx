@@ -88,15 +88,6 @@ const BASE_LEVELS: Level[] = [
     completedSessions: 0, targetSessions: 5,
     tags: ["Endurance", "Strength"],
   },
-  {
-    id: 6, title: "Flappy Push", category: "COGNITIVE",
-    desc: "Navigate obstacles while memorising colour sequences. Combines fine motor control with working memory training.",
-    locked: false, path: "/game/memory-diver", difficulty: "Medium", difficultyN: 2,
-    accentHex: "#A78BFA",
-    icon: <Brain size={18} />, xp: 350, duration: "15 min",
-    completedSessions: 0, targetSessions: 5,
-    tags: ["Memory", "Working Memory"],
-  },
 ];
 
 /* ═══════════════════════════════════════════
