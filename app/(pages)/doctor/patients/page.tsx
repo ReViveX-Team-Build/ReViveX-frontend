@@ -534,8 +534,8 @@ export default function DoctorPatientsPage() {
           p.status.toLowerCase() === adherenceFilter;
         const matchC =
           conditionFilter === "all" ||
-          p.condition.toLowerCase().replace(/[\s-]/g, "") ===
-            conditionFilter.toLowerCase().replace(/[\s-]/g, "");
+          (p.condition || "").toLowerCase().replace(/[\s-]/g, "") ===
+            (conditionFilter || "").toLowerCase().replace(/[\s-]/g, "");
         return matchQ && matchA && matchC;
       }),
     [displayPatients, search, adherenceFilter, conditionFilter],
@@ -979,7 +979,7 @@ export default function DoctorPatientsPage() {
                                   verticalAlign: "middle",
                                 }}>
                                 <Link
-                                  href={`/doctor/protocols?patient=${p.id}`}
+                                  href={`/doctor/patients/${p.id}/profile`}
                                   className={`mpp-proto-btn${p.hasProtocol ? " has-protocol" : ""}`}>
                                   {p.hasProtocol && (
                                     <div className="mpp-proto-set" />

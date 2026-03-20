@@ -1,11 +1,20 @@
+// app/lib/hooks/useSubscription.ts
 import { useEffect, useState } from "react";
 import { doc, onSnapshot } from "firebase/firestore";
 import { db } from "@/app/lib/firebase";
 
 export type PlanType = "free" | "advanced_analytics" | "voice_companion";
 
+interface Subscription {
+    plan: PlanType;
+    status: "active" | "cancelled" | null;
+}
+
 export function useSubscription(uid: string | undefined) {
-    const [plan, setPlan] = useState<PlanType>("free");
+    const [subscription, setSubscription] = useState<Subscription>({
+        plan: "free",
+        status: null,
+    });
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
@@ -14,16 +23,20 @@ export function useSubscription(uid: string | undefined) {
             return;
         }
 
-        const unsub = onSnapshot(doc(db, "patients", uid), (snap) => {
+        // Real-time listener — updates instantly after webhook fires
+        const unsubscribe = onSnapshot(doc(db, "users", uid), (snap) => {
             if (snap.exists()) {
                 const data = snap.data();
-                setPlan(data?.subscription?.plan ?? "free");
+                setSubscription({
+                    plan:   data?.subscription?.plan   ?? "free",
+                    status: data?.subscription?.status ?? null,
+                });
             }
             setLoading(false);
         });
 
-        return () => unsub();
+        return () => unsubscribe();
     }, [uid]);
 
-    return { plan, loading };
+    return { subscription, loading };
 }

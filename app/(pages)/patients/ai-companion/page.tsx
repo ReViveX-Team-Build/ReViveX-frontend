@@ -98,7 +98,8 @@ export default function PatientAICompanion() {
   );
 
   // ── Subscription ─────────────────────────────────────────────────────────
-  const { plan: currentPlan } = useSubscription(user?.uid); // ← matches hook return shape
+  const { subscription } = useSubscription(user?.uid);
+  const currentPlan = subscription.plan;
 
   // ── Upgrade loading state per button ─────────────────────────────────────
   const [upgradingPlan, setUpgradingPlan] = useState<string | null>(null); // ← NEW
