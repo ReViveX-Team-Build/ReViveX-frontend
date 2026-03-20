@@ -33,7 +33,7 @@ export async function POST(req: Request) {
       const { uid, plan } = session.metadata ?? {};
 
       if (uid && plan) {
-        await adminDb.doc(`patients/${uid}`).set(
+        await adminDb.doc(`users/${uid}`).set(
             {
               subscription: {
                 plan,
@@ -59,12 +59,12 @@ export async function POST(req: Request) {
 
       if (customerId) {
         const snap = await adminDb
-            .collection("patients")
+            .collection("users")
             .where("subscription.stripeCustomerId", "==", customerId)
             .get();
 
         snap.forEach(async (docSnap) => {
-          await adminDb.doc(`patients/${docSnap.id}`).set(
+          await adminDb.doc(`users/${docSnap.id}`).set(
               { subscription: { plan: "free", status: "cancelled" } },
               { merge: true }
           );
