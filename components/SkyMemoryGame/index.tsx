@@ -8,7 +8,7 @@ import { calculateCognitiveAccuracy, calculateEnduranceDrop, getPeakGripForce } 
 import { Timestamp } from "firebase/firestore";
 import { SkyBird } from "../../util/game-core/SynapseSkyBird";
 import { SkyBackground } from "../../util/game-core/SynapseSky";
-import { SkyGate } from "../../util/game-core/SynapseSkyGate";
+import { SkyGate, MemoryColor, SKY_COLOR_PALETTE } from "../../util/game-core/SynapseSkyGate";
 import { Particle } from "../../util/game-core/SynapseParticles";
 
 // ── WEB SERIAL TYPES ──────────────────────────────────────────────────────────
@@ -132,6 +132,9 @@ const SkyMemoryGame: React.FC = () => {
     // Game tracking
     const scoreRef = useRef(0);
     const streakRef = useRef(0);
+    const maxStreakRef = useRef(0);
+    const distanceTraveledRef = useRef(0);
+    const lastXRef = useRef(0);
     const sequenceRef = useRef<string[]>([]);
     const gateTimerRef = useRef(0);
     const gateSpawnTimerRef = useRef(0);
@@ -359,6 +362,8 @@ const SkyMemoryGame: React.FC = () => {
         gatesRef.current = [];
         scoreRef.current = 0;
         streakRef.current = 0;
+        distanceTraveledRef.current = 0;
+        lastXRef.current = 120; // bird start X
         failsRef.current = 0;
         
         metricsRef.current = {
@@ -404,11 +409,19 @@ const SkyMemoryGame: React.FC = () => {
         const numGates = 3;
         const gateSpacing = 650;
         for (let i = 0; i < numGates; i++) {
+            // Generate proper sequence using settings
+            const sequence: MemoryColor[] = [];
+            for (let j = 0; j < settings.sequenceLength; j++) {
+                const availableColors = j < settings.colors ? SKY_COLOR_PALETTE.slice(0, settings.colors) : SKY_COLOR_PALETTE;
+                const colorConfig = availableColors[Math.floor(Math.random() * availableColors.length)];
+                sequence.push(colorConfig.name);
+            }
+            
             const gate = new SkyGate(
                 c.width + (i * gateSpacing),
                 c.height,
-                [], // no sequence
-                0, // no checkpoints
+                sequence,
+                settings.sequenceLength,
                 gameLevel
             );
             gatesRef.current.push(gate);
@@ -561,6 +574,12 @@ const SkyMemoryGame: React.FC = () => {
             
             // Check if bird hit the ground - stay there until user presses space to jump
             if (isOnGround) {
+                // Reset streak when hitting ground
+                if (streakRef.current > 0) {
+                    streakRef.current = 0;
+                    setStreak(0);
+                }
+                
                 // Keep bird on the ground
                 if (skyRef.current) {
                     const groundY = c.height - skyRef.current.sandHeight - bird.radius;
@@ -596,6 +615,14 @@ const SkyMemoryGame: React.FC = () => {
                 ceilingIdleTimerRef.current = 0; // reset when not at ceiling
             }
             // Normal flying - update physics
+// Distance scoring - score progresses with SCROLL_SPEED * time
+            if (physics) {
+                distanceTraveledRef.current += SCROLL_SPEED;
+                const distancePoints = Math.floor(distanceTraveledRef.current / 10); // 1pt per 10px
+                scoreRef.current = Math.max(scoreRef.current, distancePoints);
+                setScore(scoreRef.current);
+            }
+            
             if (physics) {
                 bird.update(delta, groundH);
                 
