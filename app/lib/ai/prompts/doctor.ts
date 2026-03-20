@@ -1,5 +1,3 @@
-// lib/ai/prompts/doctor.ts
-
 export interface ProcessedCohortContext {
   doctor: { name: string; totalPatients: number };
   cohort: {
@@ -37,11 +35,14 @@ ${ctx.cohort.decliningPatients.map(
 This week: ${ctx.weeklySnapshot.totalSessionsCompleted} sessions completed, ${ctx.weeklySnapshot.totalSessionsMissed} missed.
 High adherence patients (>80%): ${ctx.weeklySnapshot.highAdherenceCount}
 Low adherence patients (<50%): ${ctx.weeklySnapshot.lowAdherenceCount}
+
+CRITICAL RULE REGARDING NEW PATIENTS: 
+If a patient has 0 sessions completed or is flagged as having joined recently, you MUST NOT criticize their 0% adherence, flag them as disengaged, or say they require immediate attention. Treat them as "Currently in the onboarding phase" and frame their status positively.
 `;
 
-  // ✅ Fixed: dataPointsAnalyzed pre-computed — Gemini was outputting literal placeholder text
   const dataPoints = ctx.doctor.totalPatients * 5 * 5;
 
+  
   const modes: Record<typeof mode, string> = {
     chat: `
 You are a clinical decision support tool for rehabilitation medicine.
@@ -53,7 +54,7 @@ You are a clinical decision support tool for rehabilitation medicine.
 - You CAN identify at-risk patients and suggest interventions
 - You CAN analyze cohort-wide trends across all patients
 `,
-    // ✅ Fixed: hardcoded dataPointsAnalyzed value instead of angle-bracket placeholder
+   
     weekly_summary: `
 Generate a weekly cohort summary for the doctor dashboard.
 Return EXACTLY this JSON (no markdown fences, no preamble):
@@ -68,9 +69,9 @@ Return EXACTLY this JSON (no markdown fences, no preamble):
   "dataPointsAnalyzed": ${dataPoints},
   "summary": "One paragraph executive summary of this week's patient cohort performance, max 60 words"
 }
-Respond ONLY with valid JSON.
+Respond ONLY with valid JSON. Do not include new patients in the attentionRequired count.
 `,
-    // ✅ Fixed: added "name" field so dashboard can display patient names
+   
     triage: `
 From the patients requiring attention listed above, identify the top 3 most at-risk.
 For each, explain WHY they are at risk in one sentence and suggest ONE specific intervention.
@@ -82,7 +83,7 @@ Return ONLY this JSON (no markdown fences):
     { "patientId": "", "name": "", "reason": "", "intervention": "" }
   ]
 }
-If fewer than 3 patients are at risk, return only those that qualify.
+If fewer than 3 patients are at risk, return only those that qualify. DO NOT include new patients in triage.
 Respond ONLY with valid JSON.
 `,
   };

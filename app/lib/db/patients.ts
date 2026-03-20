@@ -9,12 +9,6 @@ import {
 import { PatientData } from "./types";
 import { getLastSessionPerPatient, getCohortSessionsThisWeek } from "./sessions";
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Single patient
-// ✅ Fixed: uses getDoc (direct doc lookup) instead of querying by field.
-//    Patient docs use uid as the document ID so this is faster and cheaper.
-// ─────────────────────────────────────────────────────────────────────────────
-
 export async function getPatientById(uid: string): Promise<PatientData | null> {
   const snap = await getDoc(doc(db, "users", uid));
   if (!snap.exists()) return null;

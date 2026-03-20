@@ -1,14 +1,23 @@
 import { NextResponse } from "next/server";
-import { askGemini  } from "../../lib/ai/gemini";
+import { chatWithHistory } from "../../lib/ai/gemini"; 
+import { getHistoryForAI } from "../../lib/db/conversations";
 import { db } from "../../lib/firebase";
 import { collection, getDocs } from "firebase/firestore";
 
 export async function POST(req: Request) {
   try {
-    const { message } = await req.json();
+    // Extract the message, uid, and mode sent by useAiCompanion.ts
+    const { message, uid } = await req.json();
 
+    if (!uid) {
+      return NextResponse.json(
+        { error: "User ID (uid) is required to fetch history." }, 
+        { status: 400 }
+      );
+    }
+
+    // 1. Fetch the patient overview for the System Prompt
     const usersSnapshot = await getDocs(collection(db, "users"));
-
     let patientsSummary = "";
 
     usersSnapshot.forEach((doc) => {
@@ -22,26 +31,29 @@ export async function POST(req: Request) {
       }
     });
 
-    const prompt = `
-            You are an AI Clinical Assistant supporting a rehabilitation doctor.
-            
-            Here is the current patient overview:
-            ${patientsSummary}
-            
-            Doctor question:
-            "${message}"
-            
-            Provide analytical insights.
-            Identify risks and recommendations.
-        `;
+    // 2. Define the System Instructions (Rules for the AI)
+    const systemPrompt = `
+      You are an AI Clinical Assistant supporting a rehabilitation doctor.
+      
+      Here is the current patient overview:
+      ${patientsSummary}
+      
+      Provide analytical insights. Identify risks and recommendations based on the conversation context.
+    `;
 
-    const response = await generateOnce(prompt);
+    // 3. Fetch the past conversation history for this specific user
+    const history = await getHistoryForAI(uid);
 
+    // 4. Send the System Prompt, the History, and the New Message to Gemini
+    const response = await chatWithHistory(systemPrompt, history, message);
+    
+    // Return the response back to useAiCompanion.ts
     return NextResponse.json({ reply: response });
+
   } catch (error) {
-    console.error(error);
+    console.error("AI Route Error:", error);
     return NextResponse.json(
-      { reply: "Error generating AI response." },
+      { error: "Error generating AI response. Please check server logs." },
       { status: 500 },
     );
   }
