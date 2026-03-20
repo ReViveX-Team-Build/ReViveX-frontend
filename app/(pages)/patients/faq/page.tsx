@@ -509,3 +509,88 @@ const CSS = `
     .hc-accordion-content { padding:0 18px 18px !important; }
   }
 `;
+
+// AccordionItem renders a single faq with expand/collapse functionality.
+// It uses isOpen state to conditionally display the answer and applies animations.
+
+function AccordionItem({
+  item,
+  catColor,
+  catBg,
+  index,
+  isOpen,
+  onToggle,
+}: {
+  item: FAQItem;
+  catColor: string;
+  catBg: string;
+  index: number;
+  isOpen: boolean;
+  onToggle: ()=> void;
+}) {
+  return(
+    <div
+      className={`hc-accordion-item ${isOpen ? 'open' : ''}`}
+      style={{
+        borderColor: isOpen ? `${catColor}38` : 'rgba(226,232,240,0.9)',
+        animationDelay: `${index * 0.06}s`,
+        animation: `hcCardPop 0.45s cubic-bezier(0.22,1,0.36,1) ${index * 0.06}s both`,
+      }}
+    >
+      <button
+        className={`hc-accordion-trigger ${isOpen ? 'open' : ''}`}
+        onClick={onToggle}
+        aria-expanded={isOpen}
+      >
+        {/* Number + question */}
+        <div style={{ display: 'flex', alignItems: 'flex-start', gap: 14 }}>
+          <div style={{
+            width: 28, height: 28, borderRadius: 9, flexShrink: 0,
+            background: isOpen ? catBg : 'rgba(240,244,248,0.8)',
+            border: `1.5px solid ${isOpen ? catColor + '40' : 'rgba(226,232,240,0.9)'}`,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            fontFamily: "'JetBrains Mono',monospace",
+            fontSize: 10, fontWeight: 700,
+            color: isOpen ? catColor : '#94a3b8',
+            transition: 'all 0.2s ease', marginTop: 1,
+          }}>
+            {String(index + 1).padStart(2, '0')}
+          </div>
+          <span style={{
+            fontSize: 14.5, fontWeight: 700,
+            color: isOpen ? '#0B1E33' : '#334155',
+            lineHeight: 1.5, flex: 1,
+          }}>
+            {item.q}
+          </span>
+        </div>
+
+        {/* Chevron icon */}
+        <div style={{
+          width: 30, height: 30, borderRadius: 9, flexShrink: 0,
+          background: isOpen ? catBg : 'rgba(240,244,248,0.8)',
+          border: `1.5px solid ${isOpen ? catColor + '35' : 'rgba(226,232,240,0.9)'}`,
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          transition: 'all 0.28s cubic-bezier(0.22,1,0.36,1)',
+          color: isOpen ? catColor : '#94a3b8',
+        }}>
+          <ChevronDown
+            size={15}
+            style={{
+              transform: isOpen ? 'rotate(180deg)' : 'rotate(0deg)',
+              transition: 'transform 0.28s cubic-bezier(0.22,1,0.36,1)',
+            }}
+          />
+        </div>
+      </button>
+
+      {isOpen && (
+        <div className="hc-accordion-content">
+          <div style={{ paddingTop: 16 }}>
+            {item.a}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
