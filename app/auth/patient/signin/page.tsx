@@ -32,6 +32,30 @@ function PatientSignInContent() {
     }
   }, [searchParams]);
 
+  const getErrorMessage = (err: any): string => {
+    const errorCode = err?.code || err?.message || "";
+    
+    if (errorCode.includes("auth/invalid-credential") || errorCode.includes("auth/wrong-password")) {
+      return "Incorrect credentials. Please double-check your details and try again.";
+    }
+    if (errorCode.includes("auth/user-not-found")) {
+      return "No account found. Please check your details or sign up.";
+    }
+    if (errorCode.includes("auth/too-many-requests")) {
+      return "Too many failed attempts. Please try again later or reset your password.";
+    }
+    if (errorCode.includes("auth/network-request-failed")) {
+      return "Network error. Please check your internet connection.";
+    }
+    if (errorCode.includes("auth/invalid-email")) {
+      return "Please enter a valid email address.";
+    }
+    if (typeof err === "string") {
+      return err;
+    }
+    return "An unexpected error occurred. Please try again.";
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
@@ -40,20 +64,25 @@ function PatientSignInContent() {
     try {
       let result;
 
+      // 1. Attempt login
       if (loginMethod === "patientId") {
         result = await signInWithPatientId(patientId, password);
       } else {
         result = await signInWithEmail(email, password);
       }
 
-      if (result.success) {
+      // 2. Handle successful response objects
+      if (result && result.success) {
         router.push("/patients/home");
-      } else {
-        setError(result.error || "Sign in failed");
+      } 
+      // 3. Handle failed response objects
+      else if (result && !result.success) {
+        setError(getErrorMessage(result.error));
       }
     } catch (err: any) {
-      setError("An unexpected error occurred");
-      console.error(err);
+      // 4. Handle thrown Firebase exceptions
+      console.error("Sign in error:", err);
+      setError(getErrorMessage(err));
     } finally {
       setIsLoading(false);
     }
@@ -99,7 +128,7 @@ function PatientSignInContent() {
                 <div className="flex gap-2 mb-6">
                   <button
                     type="button"
-                    onClick={() => setLoginMethod("patientId")}
+                    onClick={() => { setLoginMethod("patientId"); setError(""); }}
                     className={`flex-1 py-2 px-4 rounded-lg font-medium transition-colors ${
                       loginMethod === "patientId"
                         ? "bg-purple-500 text-white"
@@ -109,7 +138,7 @@ function PatientSignInContent() {
                   </button>
                   <button
                     type="button"
-                    onClick={() => setLoginMethod("email")}
+                    onClick={() => { setLoginMethod("email"); setError(""); }}
                     className={`flex-1 py-2 px-4 rounded-lg font-medium transition-colors ${
                       loginMethod === "email"
                         ? "bg-purple-500 text-white"
@@ -121,10 +150,10 @@ function PatientSignInContent() {
 
                 {/* Error Message */}
                 {error && (
-                  <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+                  <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg animate-pulse">
                     <p className="text-sm text-red-600 flex items-center gap-2">
                       <svg
-                        className="w-5 h-5"
+                        className="w-5 h-5 flex-shrink-0"
                         fill="currentColor"
                         viewBox="0 0 20 20">
                         <path
@@ -196,13 +225,13 @@ function PatientSignInContent() {
                         }}
                         placeholder="Enter your password"
                         autoComplete="off"
-                        className="w-full px-4 py-2.5 border-2 border-gray-200 rounded-lg focus:outline-none focus:border-purple-500 transition-colors text-gray-900 placeholder-gray-400"
+                        className="w-full px-4 py-2.5 border-2 border-gray-200 rounded-lg focus:outline-none focus:border-purple-500 transition-colors text-gray-900 placeholder-gray-400 pr-10"
                         required
                       />
                       <button
                         type="button"
                         onClick={() => setShowPassword(!showPassword)}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 p-1">
                         {showPassword ? "👁️" : "👁️‍🗨️"}
                       </button>
                     </div>
@@ -215,7 +244,7 @@ function PatientSignInContent() {
                         type="checkbox"
                         checked={rememberMe}
                         onChange={(e) => setRememberMe(e.target.checked)}
-                        className="w-4 h-4 text-purple-500 rounded"
+                        className="w-4 h-4 text-purple-500 rounded border-gray-300 focus:ring-purple-500"
                       />
                       <span className="ml-2 text-sm text-gray-600">
                         Remember me
@@ -231,7 +260,7 @@ function PatientSignInContent() {
                   {/* Sign In Button */}
                   <button
                     type="submit"
-                    disabled={isLoading}
+                    disabled={isLoading || (!email && !patientId) || !password}
                     className="w-full bg-gradient-to-r from-purple-500 to-pink-600 text-white py-2.5 rounded-lg font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none">
                     {isLoading ? "Signing in..." : "Sign In"}
                   </button>
@@ -257,7 +286,7 @@ function PatientSignInContent() {
 
 export default function PatientSignInPage() {
   return (
-    <Suspense fallback={<div className="min-h-screen bg-slate-900" />}>
+    <Suspense fallback={<div className="min-h-screen bg-slate-900 flex items-center justify-center"><div className="w-10 h-10 border-4 border-purple-500 border-t-transparent rounded-full animate-spin"></div></div>}>
       <PatientSignInContent />
     </Suspense>
   );
