@@ -979,7 +979,7 @@ export default function DoctorPatientsPage() {
                                   verticalAlign: "middle",
                                 }}>
                                 <Link
-                                  href={`/doctor/protocols?patient=${p.id}`}
+                                  href={`/doctor/patients/${p.id}/profile`}
                                   className={`mpp-proto-btn${p.hasProtocol ? " has-protocol" : ""}`}>
                                   {p.hasProtocol && (
                                     <div className="mpp-proto-set" />

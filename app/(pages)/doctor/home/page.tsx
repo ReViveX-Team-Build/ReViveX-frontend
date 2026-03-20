@@ -38,7 +38,7 @@ import { useDarkMode } from "@/app/lib/hooks/useDarkMode";
 // Set USE_MOCK_FALLBACK = false before real deployment.
 // When true: if Firestore returns 0 patients, mock data is shown instead of zeros.
 // ─────────────────────────────────────────────────────────────────────────────
-const USE_MOCK_FALLBACK = true;
+const USE_MOCK_FALLBACK = false;
 
 const MOCK_PATIENTS: PatientRow[] = [
   {
