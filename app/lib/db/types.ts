@@ -151,16 +151,32 @@ export interface Communication {
 // ─────────────────────────────────────────────────────────────────────────────
 // SCHEDULED SESSIONS — 
 // ─────────────────────────────────────────────────────────────────────────────
-
 export interface ScheduledSession {
   id?: string;
   doctorId: string;
   patientId: string;
-  gameId: GameId;
-  level: number;
+  gameId: string;        // <-- Restored!
+  level: number;         // <-- Restored!
+  scheduledDate: string; 
+  scheduledTime: string; 
+  exactTimestamp?: any;  
+  durationMinutes: number;
+  status: "scheduled" | "completed" | "missed" | "cancelled";
+  createdAt?: any;
+}
+
+export interface Appointment {
+  id?: string;
+  doctorId: string;
+  patientId: string;
+  patientName: string;
+  patientCode: string;
+  date: any; 
   scheduledDate: string;
   scheduledTime: string;
   durationMinutes: number;
-  status: "scheduled" | "completed" | "missed" | "cancelled";
-  createdAt: Timestamp;
+  title: string;
+  mode: "telehealth" | "in-person";
+  status: "pending" | "confirmed" | "completed" | "missed" | "cancelled";
+  createdAt?: any;
 }
