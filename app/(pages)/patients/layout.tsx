@@ -16,10 +16,29 @@ function PatientLayoutContent({ children }: { children: React.ReactNode }) {
   const [isAuthorized, setIsAuthorized] = useState(false);
   const [isCheckingRole, setIsCheckingRole] = useState(true);
 
-  const isSpecialPage = ["/patients/onboarding", "/patients/waiting-room", "/patients/rejected"].includes(pathname);
-  
- 
+  const isSpecialPage = [
+    "/patients/onboarding",
+    "/patients/waiting-room",
+    "/patients/rejected",
+  ].includes(pathname);
+
   const isDevMode = searchParams.get("dev") === "true";
+
+  useEffect(() => {
+    const root = document.documentElement;
+    const hadDarkClass = root.classList.contains("dark");
+    const saved = localStorage.getItem("darkMode");
+    const shouldEnableDark = saved === null ? true : saved === "true";
+
+    root.classList.toggle("dark", shouldEnableDark);
+    if (saved === null) {
+      localStorage.setItem("darkMode", "true");
+    }
+
+    return () => {
+      root.classList.toggle("dark", hadDarkClass);
+    };
+  }, []);
 
   useEffect(() => {
     let active = true;
@@ -33,21 +52,33 @@ function PatientLayoutContent({ children }: { children: React.ReactNode }) {
       }
 
       if (authLoading) return;
-      if (!user) { router.replace("/auth/patient/signin"); return; }
-      if (!user.emailVerified) { router.replace("/auth/patient/verify-email"); return; }
+      if (!user) {
+        router.replace("/auth/patient/signin");
+        return;
+      }
+      if (!user.emailVerified) {
+        router.replace("/auth/patient/verify-email");
+        return;
+      }
 
       try {
         const profile = await getDoc(doc(db, "users", user.uid));
         if (!active) return;
         const data = profile.data();
-        
+
         if (data?.role === "patient") {
           const status = data.connectionStatus;
           if (status === "none" && pathname !== "/patients/onboarding") {
             router.replace("/patients/onboarding");
-          } else if (status === "pending" && pathname !== "/patients/waiting-room") {
+          } else if (
+            status === "pending" &&
+            pathname !== "/patients/waiting-room"
+          ) {
             router.replace("/patients/waiting-room");
-          } else if (status === "rejected" && pathname !== "/patients/rejected") {
+          } else if (
+            status === "rejected" &&
+            pathname !== "/patients/rejected"
+          ) {
             router.replace("/patients/rejected");
           } else if (status === "accepted" && isSpecialPage) {
             router.replace("/patients/home");
@@ -67,11 +98,17 @@ function PatientLayoutContent({ children }: { children: React.ReactNode }) {
     }
 
     checkAccess();
-    return () => { active = false; };
+    return () => {
+      active = false;
+    };
   }, [authLoading, router, user, pathname, isSpecialPage, isDevMode]);
 
   if (authLoading || isCheckingRole) {
-    return <div className="min-h-screen bg-[#080f1a] flex items-center justify-center"><div className="w-10 h-10 border-4 border-teal-500/20 border-t-teal-400 rounded-full animate-spin" /></div>;
+    return (
+      <div className="min-h-screen bg-[#080f1a] flex items-center justify-center">
+        <div className="w-10 h-10 border-4 border-teal-500/20 border-t-teal-400 rounded-full animate-spin" />
+      </div>
+    );
   }
 
   if (!isAuthorized) return null;
@@ -79,18 +116,24 @@ function PatientLayoutContent({ children }: { children: React.ReactNode }) {
   if (isSpecialPage && !isDevMode) return <>{children}</>;
 
   return (
-    <div className="flex min-h-screen bg-[#F8FAFC]">
+    <div className="flex min-h-screen bg-[#F8FAFC] dark:bg-slate-950 text-[#0B1E33] dark:text-slate-100">
       <PatientSidebar />
-      <main className="flex-1 ml-72 relative flex flex-col min-w-0">
-        <PatientTopbar /> 
-        <div className="p-8 flex-1 overflow-y-auto animate-fade-in"><div className="max-w-7xl mx-auto">{children}</div></div>
+      <main className="flex-1 ml-72 relative flex flex-col min-w-0 bg-transparent">
+        <PatientTopbar />
+        <div className="p-8 flex-1 overflow-y-auto animate-fade-in">
+          <div className="max-w-7xl mx-auto">{children}</div>
+        </div>
       </main>
     </div>
   );
 }
 
 // Wrap in Suspense because useSearchParams() requires it in Next.js App Router
-export default function PatientLayout({ children }: { children: React.ReactNode }) {
+export default function PatientLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   return (
     <Suspense fallback={null}>
       <PatientLayoutContent>{children}</PatientLayoutContent>

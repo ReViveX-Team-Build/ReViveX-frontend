@@ -12,6 +12,7 @@ import {
 } from "@/app/lib/db/communications";
 import { getPatientData } from "@/app/lib/db/users";
 import { Communication } from "@/app/lib/db/types";
+import { useDarkMode } from "@/app/lib/hooks/useDarkMode";
 import { Timestamp } from "firebase/firestore";
 import {
   ArrowLeft,
@@ -394,6 +395,30 @@ const CSS = `
   }
   .pm-back-btn:hover { background: #f8fafc; color: #0B1E33; border-color: rgba(11,30,51,0.14); }
 
+  /* ── Dark Mode Surface Overrides ─────────────────────── */
+  .dark .pm .pm-back-btn {
+    background: #0f172a;
+    border-color: rgba(71,85,105,0.75);
+    color: #cbd5e1;
+  }
+  .dark .pm .pm-back-btn:hover {
+    background: #1e293b;
+    border-color: rgba(100,116,139,0.8);
+    color: #e2e8f0;
+  }
+  .dark .pm .pm-chat-panel,
+  .dark .pm .pm-chat-input {
+    background: #0f172a;
+    border-color: rgba(71,85,105,0.75);
+    color: #e2e8f0;
+  }
+  .dark .pm .pm-chat-input::placeholder {
+    color: #64748b;
+  }
+  .dark .pm .pm-chat-input:focus {
+    background: #1e293b;
+  }
+
   @media (max-width: 640px) {
     .pm main { padding: 16px 14px !important; }
     .pm-filter-strip { flex-wrap: wrap !important; }
@@ -408,6 +433,7 @@ const CSS = `
    MAIN PAGE
 ══════════════════════════════════════════════════════════ */
 export default function PatientMessagesPage() {
+  const isDark = useDarkMode();
   const [user, loading] = useAuthState(auth);
   const patientId = user?.uid ?? "";
   const [inbox, setInbox] = useState<PatientMessage[]>([]);
@@ -533,7 +559,11 @@ export default function PatientMessagesPage() {
   return (
     <div
       className="pm"
-      style={{ minHeight: "100vh", background: "#F0F4F8", paddingBottom: 80 }}>
+      style={{
+        minHeight: "100vh",
+        background: isDark ? "#0b1220" : "#F0F4F8",
+        paddingBottom: 80,
+      }}>
       <style>{CSS}</style>
 
       {/* ── Ambient BG ─────────────────────────────────────── */}
@@ -573,8 +603,9 @@ export default function PatientMessagesPage() {
           style={{
             position: "absolute",
             inset: 0,
-            backgroundImage:
-              "linear-gradient(rgba(11,30,51,0.020) 1px,transparent 1px),linear-gradient(90deg,rgba(11,30,51,0.020) 1px,transparent 1px)",
+            backgroundImage: isDark
+              ? "linear-gradient(rgba(148,163,184,0.035) 1px,transparent 1px),linear-gradient(90deg,rgba(148,163,184,0.035) 1px,transparent 1px)"
+              : "linear-gradient(rgba(11,30,51,0.020) 1px,transparent 1px),linear-gradient(90deg,rgba(11,30,51,0.020) 1px,transparent 1px)",
             backgroundSize: "52px 52px",
           }}
         />
@@ -827,7 +858,7 @@ export default function PatientMessagesPage() {
               style={{
                 fontSize: 17,
                 fontWeight: 800,
-                color: "#0B1E33",
+                color: isDark ? "#e2e8f0" : "#0B1E33",
                 margin: 0,
               }}>
               Care Updates
@@ -851,11 +882,17 @@ export default function PatientMessagesPage() {
             style={{
               display: "flex",
               gap: 4,
-              background: "rgba(255,255,255,0.85)",
-              border: "1px solid rgba(226,232,240,0.8)",
+              background: isDark
+                ? "rgba(15,23,42,0.75)"
+                : "rgba(255,255,255,0.85)",
+              border: isDark
+                ? "1px solid rgba(71,85,105,0.55)"
+                : "1px solid rgba(226,232,240,0.8)",
               borderRadius: 16,
               padding: "4px",
-              boxShadow: "0 2px 12px rgba(11,30,51,0.06)",
+              boxShadow: isDark
+                ? "0 2px 12px rgba(2,6,23,0.35)"
+                : "0 2px 12px rgba(11,30,51,0.06)",
             }}>
             {(
               [
@@ -897,12 +934,14 @@ export default function PatientMessagesPage() {
           {filtered.length === 0 && (
             <div
               style={{
-                background: "#fff",
+                background: isDark ? "#0f172a" : "#fff",
                 borderRadius: 18,
                 padding: "48px",
-                border: "1.5px dashed rgba(226,232,240,0.9)",
+                border: isDark
+                  ? "1.5px dashed rgba(71,85,105,0.75)"
+                  : "1.5px dashed rgba(226,232,240,0.9)",
                 textAlign: "center",
-                color: "#94a3b8",
+                color: isDark ? "#94a3b8" : "#94a3b8",
                 fontSize: 14,
                 fontWeight: 500,
               }}>
@@ -1205,8 +1244,12 @@ export default function PatientMessagesPage() {
           style={{
             marginTop: 22,
             padding: "14px 18px",
-            background: "rgba(255,255,255,0.70)",
-            border: "1px dashed rgba(45,212,191,0.22)",
+            background: isDark
+              ? "rgba(15,23,42,0.72)"
+              : "rgba(255,255,255,0.70)",
+            border: isDark
+              ? "1px dashed rgba(45,212,191,0.32)"
+              : "1px dashed rgba(45,212,191,0.22)",
             borderRadius: 14,
             display: "flex",
             alignItems: "center",
@@ -1230,11 +1273,15 @@ export default function PatientMessagesPage() {
           <p
             style={{
               fontSize: 12,
-              color: "#64748b",
+              color: isDark ? "#94a3b8" : "#64748b",
               margin: 0,
               lineHeight: 1.65,
             }}>
-            <span style={{ fontWeight: 700, color: "#0B1E33" }}>
+            <span
+              style={{
+                fontWeight: 700,
+                color: isDark ? "#e2e8f0" : "#0B1E33",
+              }}>
               How to use:
             </span>{" "}
             Tick the circle next to each message once you've read and noted it.
@@ -1264,7 +1311,7 @@ export default function PatientMessagesPage() {
               height: 18,
               borderRadius: "50%",
               background: "#ef4444",
-              border: "2.5px solid #F0F4F8",
+              border: isDark ? "2.5px solid #0b1220" : "2.5px solid #F0F4F8",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
