@@ -132,7 +132,7 @@ const SkyMemoryGame: React.FC = () => {
     // Game tracking
     const scoreRef = useRef(0);
     const streakRef = useRef(0);
-    const sequenceRef = useRef<MemoryColor[]>([]);
+    const sequenceRef = useRef<string[]>([]);
     const gateTimerRef = useRef(0);
     const gateSpawnTimerRef = useRef(0);
     const failsRef = useRef(0);
@@ -392,7 +392,7 @@ const SkyMemoryGame: React.FC = () => {
                 setGameState('PLAYING');
                 console.log('Transitioned to PLAYING state');
                 // Spawn first gate - skip showing sequence for first gate
-                spawnNewGate(false);
+                spawnNewGate();
             }
         }, 900);
     };
@@ -440,7 +440,7 @@ const SkyMemoryGame: React.FC = () => {
         }
 
         // Update and draw gates
-        if (state === 'SHOWING_SEQUENCE' || state === 'PLAYING' || state === 'GATE_RESULT') {
+        if (state === 'PLAYING') {
             gateTimerRef.current += delta;
             
             if (state === 'PLAYING' && gatesRef.current.length === 0) {
@@ -788,7 +788,7 @@ const SkyMemoryGame: React.FC = () => {
             )}
 
             {/* ── PLAYING HUD ── */}
-            {(uiState === 'PLAYING' || uiState === 'SHOWING_SEQUENCE' || uiState === 'GATE_RESULT') && (
+            {(uiState === 'PLAYING') && (
                 <>
                     {/* Score + Streak */}
                     <div style={{ position: 'absolute', top: 14, left: '50%', transform: 'translateX(-50%)', display: 'flex', gap: 10, zIndex: 30, pointerEvents: 'none', animation: 'hudin 0.38s ease both' }}>
@@ -807,27 +807,14 @@ const SkyMemoryGame: React.FC = () => {
                         </div>
                     </div>
 
-                    {/* Sequence Display */}
-                    {uiState === 'SHOWING_SEQUENCE' && currentSequence.length > 0 && (
+                    {/* Sequence Display (DISABLED) */}
+{false && (
                         <div style={{ position: 'absolute', top: 80, left: '50%', transform: 'translateX(-50%)', zIndex: 35, animation: 'hudin 0.3s ease both' }}>
                             <div style={{ background: 'rgba(30, 41, 59, 0.9)', border: '2px solid rgba(139,92,246,0.60)', borderRadius: 16, padding: '12px 24px', display: 'flex', alignItems: 'center', gap: 12, boxShadow: '0 0 30px rgba(139,92,246,0.3)' }}>
-                                <Clock size={16} style={{ color: '#A78BFA' }} />
-                                <span style={{ color: '#fff', fontWeight: 700, fontSize: 13, marginRight: 8 }}>MEMORIZE:</span>
-                                {currentSequence.map((color, i) => {
-                                    const colorMap: Record<string, string> = {
-                                        red: '#EF4444', green: '#22C55E', blue: '#3B82F6', yellow: '#FACC15'
-                                    };
-                                    return (
-                                        <div key={i} style={{
-                                            width: 28, height: 28, borderRadius: '50%',
-                                            background: colorMap[color],
-                                            boxShadow: `0 0 12px ${colorMap[color]}80`,
-                                        }} />
-                                    );
-                                })}
                             </div>
                         </div>
                     )}
+
 
                     {/* Pressure gauge */}
                     {isConnected && (
