@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { useDarkMode } from "@/app/lib/hooks/useDarkMode";
+import { useHardware } from "@/app/lib/context/HardwareContext";
 import {
   Calendar,
   Clock,
@@ -10,6 +11,7 @@ import {
   TrendingUp,
   CheckCircle2,
   Wifi,
+    WifiOff,
   Zap,
   ArrowRight,
   Activity,
@@ -624,6 +626,7 @@ export default function PatientHome() {
   const [mounted, setMounted] = useState(false);
   const [msgIdx, setMsgIdx] = useState(0);
   const [msgVisible, setMsgVisible] = useState(true);
+  const { isConnected } = useHardware();
 
   useEffect(() => {
     setMounted(true);
@@ -1642,28 +1645,53 @@ export default function PatientHome() {
                   style={{ fontSize: 14, fontWeight: 700, color: "#0B1E33" }}>
                   Device Status
                 </span>
-                <div
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 6,
-                    background: "rgba(16,185,129,0.12)",
-                    border: "1px solid rgba(16,185,129,0.25)",
-                    borderRadius: 99,
-                    padding: "4px 12px",
-                  }}>
-                  <CircleCheck size={13} color="#10b981" />
-                  <span
-                    className="mono"
+                {isConnected ? (
+                  <div
                     style={{
-                      fontSize: 9.5,
-                      fontWeight: 700,
-                      color: "#10b981",
-                      letterSpacing: "0.08em",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 6,
+                      background: "rgba(16,185,129,0.12)",
+                      border: "1px solid rgba(16,185,129,0.25)",
+                      borderRadius: 99,
+                      padding: "4px 12px",
                     }}>
-                    Connected
-                  </span>
-                </div>
+                    <CircleCheck size={13} color="#10b981" />
+                    <span
+                      className="mono"
+                      style={{
+                        fontSize: 9.5,
+                        fontWeight: 700,
+                        color: "#10b981",
+                        letterSpacing: "0.08em",
+                      }}>
+                      Connected
+                    </span>
+                  </div>
+                ) : (
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 6,
+                      background: "rgba(239,68,68,0.10)",
+                      border: "1px solid rgba(239,68,68,0.25)",
+                      borderRadius: 99,
+                      padding: "4px 12px",
+                    }}>
+                    <WifiOff size={13} color="#ef4444" />
+                    <span
+                      className="mono"
+                      style={{
+                        fontSize: 9.5,
+                        fontWeight: 700,
+                        color: "#ef4444",
+                        letterSpacing: "0.08em",
+                      }}>
+                      Offline
+                    </span>
+                  </div>
+                )}
               </div>
 
               <div
