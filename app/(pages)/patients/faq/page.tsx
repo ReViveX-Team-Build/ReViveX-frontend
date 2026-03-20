@@ -10,6 +10,7 @@ import {
   AlertCircle, CheckCircle2, BookOpen, Settings2,
   Lock, Server, Bot, Sparkles, BarChart3, Eye,
   Send,
+  Icon,
 } from 'lucide-react';
 
 // Represents a single faq item
@@ -222,7 +223,52 @@ const FAQ_CATEGORIES: FAQCategory[] = [
           </>
         ),
       },
-      
+
     ],
+  },
+]
+
+// Quick access navigation cards displayed at the top of the Help page.
+// Each card links to a specific FAQ category using anchor-based scrolling.
+
+const QUICK_ACTIONS = [
+  {
+    icon: <Cpu size={20}/>,
+    label: 'Hardware Troubleshooting',
+    desc: 'Sensor calibration, connectivity & device IDs',
+    color: '#0891b2',
+    bg: 'rgba(8,145,178,0.08)',
+    border:'rgba(8,145,178,0.22)',
+    anchor:'#hardware',
+  },
+
+  {
+    icon: <Stethoscope size={20}/>,
+    label: 'Therapy Protocols',
+    desc: 'Difficulty settings, hand targeting & metrics',
+    color: '#2DD4BF',
+    bg: 'rgba(45,212,191,0.08)',
+    border:'rgba(45,212,191,0.25)',
+    anchor:'#protocols',
+  },
+
+  {
+    icon:  <Brain size={20} />,
+    label: 'AI Insights',
+    desc:  'Summaries, Companion Chat & Gemini features',
+    color: '#6366f1',
+    bg:    'rgba(99,102,241,0.08)',
+    border:'rgba(99,102,241,0.22)',
+    anchor:'#ai',
+  },
+  
+  {
+    icon:  <LifeBuoy size={20} />,
+    label: 'Contact Support',
+    desc:  'Submit a ticket or reach the support team',
+    color: '#f59e0b',
+    bg:    'rgba(245,158,11,0.08)',
+    border:'rgba(245,158,11,0.22)',
+    anchor:'#contact',
   },
 ]
