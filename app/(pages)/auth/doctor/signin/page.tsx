@@ -79,7 +79,7 @@ function DoctorSignInContent() {
                 <h2 className="text-3xl font-bold text-white mb-3">
                   Welcome Back,
                   <br />
-                  Doctor! 👋
+                  Doctor !
                 </h2>
                 <p className="text-gray-300 text-base">
                   Sign in to access your patient dashboard

@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Lottie from "lottie-react";
-import doctorAnimation from "@/public/animations/patient-animation.json";
+import patientAnimation from "@/public/animations/patient-animation.json";
 import { registerPatient } from "@/app/lib/auth/patientAuth";
 
 export default function PatientSignUpPage() {
@@ -14,7 +14,7 @@ export default function PatientSignUpPage() {
     email: "",
     password: "",
     confirmPassword: "",
-    doctorId: "", // Optional field to link to a doctor
+    doctorId: "",
   });
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -89,11 +89,17 @@ export default function PatientSignUpPage() {
   // Success Modal
   if (generatedPatientId) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 p-4">
-        <div className="bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full text-center">
-          <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#080f1a] via-[#0B1E33] to-[#060e1c] p-4 relative overflow-hidden">
+        {/* Ambient Background */}
+        <div className="absolute inset-0 pointer-events-none">
+          <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-[radial-gradient(circle,rgba(45,212,191,0.1),transparent_70%)]" />
+          <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-[radial-gradient(circle,rgba(45,212,191,0.08),transparent_70%)]" />
+        </div>
+
+        <div className="bg-gradient-to-br from-[#0B1E33] to-[#060e1c] rounded-2xl shadow-[0_0_60px_rgba(45,212,191,0.2)] p-8 max-w-md w-full text-center border border-[rgba(45,212,191,0.3)] relative z-10">
+          <div className="w-20 h-20 bg-[rgba(45,212,191,0.15)] rounded-full flex items-center justify-center mx-auto mb-4 border border-[rgba(45,212,191,0.3)]">
             <svg
-              className="w-10 h-10 text-green-500"
+              className="w-10 h-10 text-[#2DD4BF]"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24">
@@ -106,16 +112,16 @@ export default function PatientSignUpPage() {
             </svg>
           </div>
 
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">
+          <h2 className="text-2xl font-bold text-white mb-2">
             Account Created Successfully! 🎉
           </h2>
-          <p className="text-gray-600 mb-6">
+          <p className="text-gray-400 mb-6">
             Welcome to ReViveX, {formData.name}!
           </p>
 
-          <div className="bg-purple-50 border-2 border-purple-200 rounded-lg p-4 mb-6">
-            <p className="text-sm text-gray-600 mb-2">Your Patient ID:</p>
-            <p className="text-2xl font-bold text-purple-600 tracking-wider">
+          <div className="bg-[rgba(45,212,191,0.08)] border-2 border-[#2DD4BF] rounded-lg p-4 mb-6">
+            <p className="text-sm text-gray-400 mb-2">Your Patient ID:</p>
+            <p className="text-2xl font-bold text-[#2DD4BF] tracking-wider">
               {generatedPatientId}
             </p>
             <p className="text-xs text-gray-500 mt-2">
@@ -125,7 +131,7 @@ export default function PatientSignUpPage() {
 
           <button
             onClick={() => router.push("/auth/patient/signin")}
-            className="w-full bg-gradient-to-r from-purple-500 to-pink-600 text-white py-3 rounded-lg font-semibold shadow-lg hover:shadow-xl transition-all">
+            className="w-full bg-gradient-to-r from-[#2DD4BF] to-[#0d9488] text-[#0B1E33] py-3 rounded-lg font-semibold shadow-[0_0_20px_rgba(45,212,191,0.4)] hover:shadow-[0_0_30px_rgba(45,212,191,0.6)] transition-all duration-300">
             Continue to Sign In
           </button>
         </div>
@@ -134,54 +140,66 @@ export default function PatientSignUpPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 py-8">
-      <div className="w-full max-w-6xl mx-auto px-4">
-        <div className="bg-white rounded-2xl shadow-2xl overflow-hidden">
-          <div className="grid grid-cols-1 lg:grid-cols-5">
-            {/* Left side - Branding */}
-            <div className="lg:col-span-2 bg-gradient-to-br from-purple-400 via-pink-500 to-purple-500 p-8 flex flex-col justify-center">
-              <h3 className="text-3xl font-bold text-white mb-6">ReViveX</h3>
-              <h2 className="text-3xl font-bold text-white mb-3">
-                Start Your Recovery Journey! 💪
-              </h2>
-              <p className="text-purple-50 text-base mb-8">
-                Create your patient account and begin your path to better health
-              </p>
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#080f1a] via-[#0B1E33] to-[#060e1c] py-8 relative overflow-hidden">
+      {/* Ambient Background Effects */}
+      <div className="absolute inset-0 pointer-events-none overflow-hidden">
+        <div className="absolute top-0 left-0 w-[600px] h-[600px] bg-[radial-gradient(circle,rgba(45,212,191,0.08),transparent_70%)]" />
+        <div className="absolute bottom-0 right-0 w-[500px] h-[500px] bg-[radial-gradient(circle,rgba(45,212,191,0.06),transparent_70%)]" />
+        <div className="absolute inset-0 bg-[linear-gradient(rgba(45,212,191,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(45,212,191,0.02)_1px,transparent_1px)] bg-[size:44px_44px]" />
+      </div>
 
-              <div className="flex justify-center">
-                <Lottie
-                  animationData={doctorAnimation}
-                  loop={true}
-                  className="w-56 h-56"
-                />
+      <div className="w-full max-w-6xl mx-auto px-4 relative z-10">
+        <div className="bg-gradient-to-br from-[#0B1E33] to-[#060e1c] rounded-2xl shadow-[0_0_50px_rgba(45,212,191,0.15)] overflow-hidden border border-[rgba(45,212,191,0.2)]">
+          <div className="grid grid-cols-1 lg:grid-cols-5">
+            {/* Left Side - Dark Teal Branding */}
+            <div className="lg:col-span-2 bg-gradient-to-br from-[#0B1E33] via-[#0d1f38] to-[#060e1c] p-8 flex flex-col justify-center relative overflow-hidden border-r border-[rgba(45,212,191,0.15)]">
+              {/* Teal Glow Effects */}
+              <div className="absolute top-0 right-0 w-64 h-64 bg-[radial-gradient(circle,rgba(45,212,191,0.15),transparent_60%)] blur-3xl" />
+              <div className="absolute bottom-0 left-0 w-48 h-48 bg-[radial-gradient(circle,rgba(45,212,191,0.1),transparent_60%)] blur-2xl" />
+              
+              <div className="relative z-10">
+                <h3 className="text-3xl font-bold text-white mb-6 tracking-wide">
+                  REVIVE<span className="text-[#2DD4BF]">X</span>
+                </h3>
+                <h2 className="text-3xl font-bold text-white mb-3">
+                  Start Your Recovery Journey ! 
+                </h2>
+                <p className="text-gray-300 text-base mb-8">
+                  Create your patient account and begin your path to better health
+                </p>
+
+                <div className="flex justify-center">
+                  <Lottie
+                    animationData={patientAnimation}
+                    loop={true}
+                    className="w-56 h-56"
+                  />
+                </div>
               </div>
+
+              {/* Corner Accents */}
+              <div className="absolute top-6 left-6 w-6 h-6 border-t-2 border-l-2 border-[#2DD4BF] opacity-40" />
+              <div className="absolute bottom-6 right-6 w-6 h-6 border-b-2 border-r-2 border-[#2DD4BF] opacity-40" />
             </div>
 
-            {/* Right side - Sign Up Form */}
-            <div className="lg:col-span-3 bg-white p-8">
+            {/* Right Side - Dark Sign Up Form */}
+            <div className="lg:col-span-3 bg-[#0a0e1a] p-8">
               <div className="max-w-md mx-auto">
                 <div className="text-center mb-6">
-                  <h1 className="text-2xl font-bold text-gray-900 mb-1">
+                  <h1 className="text-2xl font-bold text-white mb-1">
                     Create Patient Account
                   </h1>
-                  <p className="text-gray-600 text-sm">
+                  <p className="text-gray-400 text-sm">
                     Fill in your details to get started
                   </p>
                 </div>
 
                 {/* Error Message */}
                 {error && (
-                  <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
-                    <p className="text-sm text-red-600 flex items-center gap-2">
-                      <svg
-                        className="w-5 h-5"
-                        fill="currentColor"
-                        viewBox="0 0 20 20">
-                        <path
-                          fillRule="evenodd"
-                          d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
-                          clipRule="evenodd"
-                        />
+                  <div className="mb-4 p-3 bg-[rgba(239,68,68,0.1)] border border-[rgba(239,68,68,0.3)] rounded-lg">
+                    <p className="text-sm text-red-400 flex items-center gap-2">
+                      <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
                       </svg>
                       {error}
                     </p>
@@ -193,17 +211,17 @@ export default function PatientSignUpPage() {
                             `/auth/patient/signin?email=${encodeURIComponent(formData.email)}`,
                           )
                         }
-                        className="mt-2 text-sm font-semibold text-purple-700 hover:text-purple-800">
+                        className="mt-2 text-sm font-semibold text-[#2DD4BF] hover:text-[#14b8a6] transition-colors">
                         Account already exists. Sign in instead.
                       </button>
                     )}
                   </div>
                 )}
 
-                <form onSubmit={handleSubmit} className="space-y-4">
+                <form onSubmit={handleSubmit} className="space-y-4" autoComplete="off">
                   {/* Full Name */}
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                    <label className="block text-sm font-medium text-gray-300 mb-1.5">
                       Full Name *
                     </label>
                     <input
@@ -212,14 +230,15 @@ export default function PatientSignUpPage() {
                       value={formData.name}
                       onChange={handleChange}
                       placeholder="John Doe"
-                      className="w-full px-4 py-2.5 border-2 border-gray-200 rounded-lg focus:outline-none focus:border-purple-500 transition-colors text-gray-900"
+                      autoComplete="off"
+                      className="w-full px-4 py-2.5 bg-[rgba(30,41,59,0.7)] border border-[rgba(71,85,105,0.5)] rounded-lg focus:outline-none focus:border-[#2DD4BF] focus:ring-2 focus:ring-[rgba(45,212,191,0.2)] focus:bg-[rgba(30,41,59,0.9)] transition-all text-white placeholder-gray-500"
                       required
                     />
                   </div>
 
                   {/* Email */}
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                    <label className="block text-sm font-medium text-gray-300 mb-1.5">
                       Email Address *
                     </label>
                     <input
@@ -228,14 +247,15 @@ export default function PatientSignUpPage() {
                       value={formData.email}
                       onChange={handleChange}
                       placeholder="patient@example.com"
-                      className="w-full px-4 py-2.5 border-2 border-gray-200 rounded-lg focus:outline-none focus:border-purple-500 transition-colors text-gray-900"
+                      autoComplete="off"
+                      className="w-full px-4 py-2.5 bg-[rgba(30,41,59,0.7)] border border-[rgba(71,85,105,0.5)] rounded-lg focus:outline-none focus:border-[#2DD4BF] focus:ring-2 focus:ring-[rgba(45,212,191,0.2)] focus:bg-[rgba(30,41,59,0.9)] transition-all text-white placeholder-gray-500"
                       required
                     />
                   </div>
 
                   {/* Password */}
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                    <label className="block text-sm font-medium text-gray-300 mb-1.5">
                       Password *
                     </label>
                     <div className="relative">
@@ -245,13 +265,14 @@ export default function PatientSignUpPage() {
                         value={formData.password}
                         onChange={handleChange}
                         placeholder="Minimum 6 characters"
-                        className="w-full px-4 py-2.5 border-2 border-gray-200 rounded-lg focus:outline-none focus:border-purple-500 transition-colors text-gray-900"
+                        autoComplete="new-password"
+                        className="w-full px-4 py-2.5 bg-[rgba(30,41,59,0.7)] border border-[rgba(71,85,105,0.5)] rounded-lg focus:outline-none focus:border-[#2DD4BF] focus:ring-2 focus:ring-[rgba(45,212,191,0.2)] focus:bg-[rgba(30,41,59,0.9)] transition-all text-white placeholder-gray-500"
                         required
                       />
                       <button
                         type="button"
                         onClick={() => setShowPassword(!showPassword)}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-[#2DD4BF] transition-colors">
                         {showPassword ? "👁️" : "👁️‍🗨️"}
                       </button>
                     </div>
@@ -259,7 +280,7 @@ export default function PatientSignUpPage() {
 
                   {/* Confirm Password */}
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                    <label className="block text-sm font-medium text-gray-300 mb-1.5">
                       Confirm Password *
                     </label>
                     <div className="relative">
@@ -269,7 +290,8 @@ export default function PatientSignUpPage() {
                         value={formData.confirmPassword}
                         onChange={handleChange}
                         placeholder="Re-enter password"
-                        className="w-full px-4 py-2.5 border-2 border-gray-200 rounded-lg focus:outline-none focus:border-purple-500 transition-colors text-gray-900"
+                        autoComplete="new-password"
+                        className="w-full px-4 py-2.5 bg-[rgba(30,41,59,0.7)] border border-[rgba(71,85,105,0.5)] rounded-lg focus:outline-none focus:border-[#2DD4BF] focus:ring-2 focus:ring-[rgba(45,212,191,0.2)] focus:bg-[rgba(30,41,59,0.9)] transition-all text-white placeholder-gray-500"
                         required
                       />
                       <button
@@ -277,7 +299,7 @@ export default function PatientSignUpPage() {
                         onClick={() =>
                           setShowConfirmPassword(!showConfirmPassword)
                         }
-                        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-[#2DD4BF] transition-colors">
                         {showConfirmPassword ? "👁️" : "👁️‍🗨️"}
                       </button>
                     </div>
@@ -285,7 +307,7 @@ export default function PatientSignUpPage() {
 
                   {/* Doctor ID (Optional) */}
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                    <label className="block text-sm font-medium text-gray-300 mb-1.5">
                       Doctor ID (Optional)
                     </label>
                     <input
@@ -294,7 +316,8 @@ export default function PatientSignUpPage() {
                       value={formData.doctorId}
                       onChange={handleChange}
                       placeholder="e.g., d123456"
-                      className="w-full px-4 py-2.5 border-2 border-gray-200 rounded-lg focus:outline-none focus:border-purple-500 transition-colors text-gray-900"
+                      autoComplete="off"
+                      className="w-full px-4 py-2.5 bg-[rgba(30,41,59,0.7)] border border-[rgba(71,85,105,0.5)] rounded-lg focus:outline-none focus:border-[#2DD4BF] focus:ring-2 focus:ring-[rgba(45,212,191,0.2)] focus:bg-[rgba(30,41,59,0.9)] transition-all text-white placeholder-gray-500"
                     />
                     <p className="text-xs text-gray-500 mt-1">
                       Enter your doctor's ID to link your account
@@ -305,16 +328,16 @@ export default function PatientSignUpPage() {
                   <button
                     type="submit"
                     disabled={isLoading}
-                    className="w-full bg-gradient-to-r from-purple-500 to-pink-600 text-white py-3 rounded-lg font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none mt-6">
+                    className="w-full bg-gradient-to-r from-[#2DD4BF] to-[#0d9488] text-[#0B1E33] py-3 rounded-lg font-semibold shadow-[0_0_20px_rgba(45,212,191,0.3)] hover:shadow-[0_0_30px_rgba(45,212,191,0.5)] transform hover:-translate-y-0.5 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none mt-6">
                     {isLoading ? "Creating Account..." : "Create Account"}
                   </button>
 
                   {/* Sign In Link */}
-                  <p className="text-center text-sm text-gray-600 mt-4">
+                  <p className="text-center text-sm text-gray-400 mt-4">
                     Already have an account?{" "}
                     <Link
                       href="/auth/patient/signin"
-                      className="text-purple-600 hover:text-purple-700 font-semibold">
+                      className="text-[#2DD4BF] hover:text-[#14b8a6] font-semibold transition-colors">
                       Sign in here
                     </Link>
                   </p>
