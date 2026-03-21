@@ -112,16 +112,19 @@ class GodRays {
   }
 
   draw(
-    ctx:  CanvasRenderingContext2D,
-    nf:   number,
-    wave: WaveEngine,
-    amp:  number,
-    t:    number
+    ctx:           CanvasRenderingContext2D,
+    nf:            number,
+    wave:          WaveEngine,
+    amp:           number,
+    t:             number,
+    pressureRatio: number = 0,
   ) {
     if (nf >= 0.82) return; // no god rays at night
     // Bright in day (nf≈0), fades at dusk
-    const dayFactor = 1 - nf / 0.82;
-    const baseAlpha = dayFactor * 0.13;
+    const dayFactor  = 1 - nf / 0.82;
+    // Pressure boost: full squeeze makes rays up to 3.2× brighter
+    const pBoost     = 1 + pressureRatio * 2.2;
+    const baseAlpha  = dayFactor * 0.13 * pBoost;
     if (baseAlpha < 0.003) return;
 
     ctx.save();
@@ -150,7 +153,8 @@ class GodRays {
       // Ray reaches about 80% down the water column
       const rayLen = (this.H - yTop) * 0.82;
       const xBot   = xTop + drift;
-      const halfW  = this.widths[ri];
+      // Pressure widens beams — max 2.6× at full squeeze
+      const halfW  = this.widths[ri] * (1 + pressureRatio * 1.6);
 
       // Pulse brightness slightly
       const pulse = 0.85 + Math.sin(t * 0.00055 + this.phase[ri] * 2.1) * 0.15;
@@ -577,8 +581,14 @@ class Bubble {
     this.phase  = Math.random() * Math.PI * 2;
     this.active = true;
   }
+  scatter() {
+    // Called on error flash — kicks bubble in a random direction
+    this.vx += (Math.random() - 0.5) * 3.5;
+    this.vy += (Math.random() - 0.5) * 2.5 - 0.8;
+  }
   update(scrollSpeed: number) {
     this.phase += 0.034;
+    this.vx    *= 0.96;  // dampen any scatter impulse
     this.x     += this.vx + Math.sin(this.phase) * 0.16 - scrollSpeed * 0.80;
     this.y     += this.vy;
     if (this.x < 0) this.x += this.W;
@@ -609,32 +619,59 @@ class Bubble {
 // ═══════════════════════════════════════════════════════════════════════════
 class Plankton {
   x = 0; y = 0; vx = 0; vy = 0; r = 0; phase = 0; hue = 0;
+  warpOffset = 0;   // stable horizontal offset per particle for smooth streaming
   constructor(private W: number, private H: number) { this.reset(H * 0.7); }
   reset(surfY: number) {
-    this.x     = Math.random() * this.W;
-    this.y     = surfY + Math.random() * (this.H - surfY) * 0.90;
-    this.vx    = (Math.random() - 0.5) * 0.12;
-    this.vy    = (Math.random() - 0.5) * 0.09 - 0.02;
-    this.r     = 0.5 + Math.random() * 1.2;
-    this.phase = Math.random() * Math.PI * 2;
-    this.hue   = [172, 188, 158, 202][Math.floor(Math.random() * 4)];
+    this.x          = Math.random() * this.W;
+    this.y          = surfY + Math.random() * (this.H - surfY) * 0.90;
+    this.vx         = (Math.random() - 0.5) * 0.12;
+    this.vy         = (Math.random() - 0.5) * 0.09 - 0.02;
+    this.r          = 0.5 + Math.random() * 1.2;
+    this.phase      = Math.random() * Math.PI * 2;
+    this.hue        = [172, 188, 158, 202][Math.floor(Math.random() * 4)];
+    this.warpOffset = 5 + Math.random() * 9;  // unique streak speed per particle
   }
-  update(surfY: number, scrollSpeed: number) {
-    this.phase += 0.020;
-    this.x     += this.vx - scrollSpeed * 0.38;
+  update(surfY: number, scrollSpeed: number, hyperFlow = 0) {
+    this.phase += 0.020 + hyperFlow * 0.05;
+    // In HyperFlow each particle streams left at its own stable warpOffset speed
+    const warp  = hyperFlow * this.warpOffset;
+    this.x     += this.vx - scrollSpeed * 0.38 - warp;
     this.y     += this.vy;
-    if (this.x < 0) this.x += this.W;
-    if (this.x > this.W) this.x -= this.W;
+    // Wrap around — particles that fly off the left re-enter from the right
+    if (this.x < -10) this.x = this.W + 10;
+    if (this.x > this.W + 10) this.x = -10;
     if (this.y < surfY + 32 || this.y > this.H) this.reset(surfY);
   }
-  draw(ctx: CanvasRenderingContext2D, nf: number) {
-    const a = (0.20 + Math.sin(this.phase) * 0.80) * (0.04 + nf * 0.16);
+  draw(ctx: CanvasRenderingContext2D, nf: number, hyperFlow = 0) {
+    // Brightness up to 3× in HyperFlow
+    const brightMult = 1 + hyperFlow * 2.0;
+    const baseA      = (0.20 + Math.sin(this.phase) * 0.80) * (0.04 + nf * 0.16);
+    const a          = Math.min(0.92, baseA * brightMult);
     if (a < 0.006) return;
-    const grd = ctx.createRadialGradient(this.x, this.y, 0, this.x, this.y, this.r * 4.5);
-    grd.addColorStop(0, `hsla(${this.hue},88%,62%,${a})`);
-    grd.addColorStop(1, `hsla(${this.hue},68%,42%,0)`);
-    ctx.beginPath();
-    ctx.arc(this.x, this.y, this.r * 4.5, 0, Math.PI * 2);
+
+    // Warp-star horizontal streak trail (only in HyperFlow)
+    if (hyperFlow > 0.12) {
+      const trailLen = hyperFlow * this.warpOffset * 6;
+      const tg = ctx.createLinearGradient(this.x, this.y, this.x + trailLen, this.y);
+      tg.addColorStop(0,   `hsla(${this.hue},95%,75%,${a * 0.85})`);
+      tg.addColorStop(0.4, `hsla(${this.hue},90%,62%,${a * 0.35})`);
+      tg.addColorStop(1,   `hsla(${this.hue},80%,55%,0)`);
+      const hw = this.r * (0.8 + hyperFlow * 0.6);
+      ctx.beginPath();
+      ctx.moveTo(this.x, this.y - hw);
+      ctx.lineTo(this.x + trailLen, this.y);
+      ctx.lineTo(this.x, this.y + hw);
+      ctx.closePath();
+      ctx.fillStyle = tg; ctx.fill();
+    }
+
+    // Core glow — grows slightly in HyperFlow
+    const rad = this.r * 4.5 * (1 + hyperFlow * 0.55);
+    const grd = ctx.createRadialGradient(this.x, this.y, 0, this.x, this.y, rad);
+    grd.addColorStop(0,    `hsla(${this.hue},96%,78%,${a})`);
+    grd.addColorStop(0.45, `hsla(${this.hue},88%,60%,${a * 0.55})`);
+    grd.addColorStop(1,    `hsla(${this.hue},70%,44%,0)`);
+    ctx.beginPath(); ctx.arc(this.x, this.y, rad, 0, Math.PI * 2);
     ctx.fillStyle = grd; ctx.fill();
   }
 }
@@ -825,6 +862,44 @@ class DistantMountains {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
+//  SILT PARTICLE
+// ═══════════════════════════════════════════════════════════════════════════
+class SiltParticle {
+  x: number; y: number;
+  private vx: number; private vy: number;
+  private r: number; private life: number; private maxLife: number;
+  private hue: number;
+  constructor(originX: number, originY: number) {
+    this.x       = originX + (Math.random() - 0.5) * 80;
+    this.y       = originY;
+    this.vx      = (Math.random() - 0.5) * 2.8;
+    this.vy      = -(Math.random() * 2.2 + 0.5);
+    this.r       = 3 + Math.random() * 6;
+    this.maxLife = 70 + Math.random() * 55;
+    this.life    = this.maxLife;
+    this.hue     = 26 + Math.random() * 18;
+  }
+  update() {
+    this.vx *= 0.972; this.vy *= 0.966;
+    this.vy += 0.04;   // slight gravity pulls silt back down slowly
+    this.x  += this.vx; this.y += this.vy;
+    this.r  *= 0.994;
+    this.life--;
+  }
+  get dead() { return this.life <= 0 || this.r < 0.5; }
+  draw(ctx: CanvasRenderingContext2D) {
+    const a = (this.life / this.maxLife) * 0.52;
+    const g = ctx.createRadialGradient(this.x, this.y, 0, this.x, this.y, this.r * 2.5);
+    g.addColorStop(0,    `hsla(${this.hue},58%,44%,${a})`);
+    g.addColorStop(0.55, `hsla(${this.hue},48%,33%,${a * 0.45})`);
+    g.addColorStop(1,    `hsla(${this.hue},40%,24%,0)`);
+    ctx.beginPath();
+    ctx.arc(this.x, this.y, this.r * 2.5, 0, Math.PI * 2);
+    ctx.fillStyle = g; ctx.fill();
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
 //  MAIN CLASS
 // ═══════════════════════════════════════════════════════════════════════════
 export class SynapseBackground {
@@ -852,7 +927,28 @@ export class SynapseBackground {
   private wallT    = 0;
   private globalT  = 0;
 
+  // ── Reactive systems ────────────────────────────────────────────────────
+  private hyperFlow:       number = 0;   // 0→1 smooth
+  private pressureSmooth:  number = 0;   // smoothed pressureRatio
+  private errorFlashT:     number = 0;   // ms countdown
+  private siltParticles:   SiltParticle[] = [];
+
   get sandHeight(): number { return this.floor.sandHeight; }
+
+  // ── Public API (called from index.tsx) ────────────────────────────────
+  /** Trigger Cognitive Shockwave — call when bad pearl collected */
+  triggerErrorFlash(): void {
+    this.errorFlashT = 500;
+    // Scatter all active bubbles
+    for (const b of this.activeBubbles) b.scatter();
+  }
+
+  /** Spawn silt cloud — call when fish hits the floor */
+  triggerSiltCloud(playerX: number, playerY: number): void {
+    const count = 22 + Math.floor(Math.random() * 14);
+    for (let i = 0; i < count; i++)
+      this.siltParticles.push(new SiltParticle(playerX, playerY));
+  }
 
   constructor(W: number, H: number) {
     this.gameWidth  = W;
@@ -872,7 +968,8 @@ export class SynapseBackground {
   }
 
   // ─────────────────────────────────────────────────────────────────────────
-  update(gameTime: number, delta: number, scrollSpeed: number): number {
+  // streak & pressureRatio are optional — backward compatible
+  update(gameTime: number, delta: number, scrollSpeed: number, streak = 0, pressureRatio = 0): number {
     const C = 180_000; // 3-minute cycle
     this.globalT = ((gameTime % C) / C + 0.24) % 1.0;
 
@@ -887,13 +984,34 @@ export class SynapseBackground {
     }
 
     this.wallT = Date.now();
+
+    // ── HYPER-FLOW ────────────────────────────────────────────────────────
+    // Smooth 0→1 as streak climbs from 5 to 20, snaps back to 0 when lost
+    const hfTarget   = streak >= 5 ? Math.min(1, (streak - 5) / 15) : 0;
+    const hfRate     = hfTarget > this.hyperFlow ? 0.022 : 0.010;
+    this.hyperFlow  += (hfTarget - this.hyperFlow) * hfRate;
+
+    // ── PRESSURE SMOOTH (for god rays) ───────────────────────────────────
+    const pLerp            = pressureRatio > this.pressureSmooth ? 0.20 : 0.06;
+    this.pressureSmooth   += (pressureRatio - this.pressureSmooth) * pLerp;
+
+    // ── ERROR FLASH countdown ─────────────────────────────────────────────
+    if (this.errorFlashT > 0) this.errorFlashT = Math.max(0, this.errorFlashT - delta);
+
+    // ── SILT update ───────────────────────────────────────────────────────
+    for (let i = this.siltParticles.length - 1; i >= 0; i--) {
+      this.siltParticles[i].update();
+      if (this.siltParticles[i].dead) this.siltParticles.splice(i, 1);
+    }
     const diff = clamp((this.floor.sandHeight - 80) / 140, 0, 1);
     this.waveAmp = Math.max(12, 28 * (1 - diff * 0.42));
 
-    this.floor.update(gameTime, scrollSpeed);
-    this.mounts.update(scrollSpeed);
-    this.sils.update(scrollSpeed);
-    this.wave.scroll(scrollSpeed * 0.78);
+    // HyperFlow speeds up all layers smoothly — max 1.70× at full streak
+    const hfMult = 1 + this.hyperFlow * 0.70;
+    this.floor.update(gameTime, scrollSpeed * hfMult);
+    this.mounts.update(scrollSpeed * hfMult);
+    this.sils.update(scrollSpeed * hfMult);
+    this.wave.scroll(scrollSpeed * 0.78 * hfMult);
     this.surfY = this.wave.surfaceY(this.gameWidth / 2, this.wallT, this.waveAmp);
     this.aurora.tick();
 
@@ -917,7 +1035,7 @@ export class SynapseBackground {
       return true;
     });
 
-    this.plankton.forEach(p => p.update(this.surfY, scrollSpeed));
+    this.plankton.forEach(p => p.update(this.surfY, scrollSpeed, this.hyperFlow));
     this.snow.forEach(s => s.update(this.surfY, scrollSpeed));
 
     return nf;
@@ -929,13 +1047,15 @@ export class SynapseBackground {
     const t = this.wallT, sy = this.surfY;
 
     // ── 1. SKY ────────────────────────────────────────────────────────────
-    // Day: near-white cyan at top → bright sky blue at horizon
-    // Night: deep navy
+    // Error-flash: sky shifts to dark storm hue for 0.5 s, then snaps back
+    const efT    = clamp(this.errorFlashT / 500, 0, 1);        // 1 at flash start → 0
+    const efEase = efT * efT;                                   // quadratic — sharp hit, fast fade
+
     const sky = ctx.createLinearGradient(0, 0, 0, sy);
-    sky.addColorStop(0,    lerpColor('#8EC8E8', '#08101E', nf));  // upper sky
-    sky.addColorStop(0.35, lerpColor('#AADCF4', '#0C1E36', nf));  // mid sky
-    sky.addColorStop(0.75, lerpColor('#C8EEF8', '#182848', nf));  // horizon glow
-    sky.addColorStop(1,    lerpColor('#D8F4FC', '#1E3258', nf));  // just above water
+    sky.addColorStop(0,    lerpColor(lerpColor('#8EC8E8','#1C1218',efEase), '#08101E', nf));
+    sky.addColorStop(0.35, lerpColor(lerpColor('#AADCF4','#22181E',efEase), '#0C1E36', nf));
+    sky.addColorStop(0.75, lerpColor(lerpColor('#C8EEF8','#2A1C22',efEase), '#182848', nf));
+    sky.addColorStop(1,    lerpColor(lerpColor('#D8F4FC','#301E26',efEase), '#1E3258', nf));
     ctx.fillStyle = sky;
     ctx.fillRect(0, 0, W, H);
 
@@ -958,12 +1078,12 @@ export class SynapseBackground {
     // ── 6. WATER BODY ─────────────────────────────────────────────────────
     // Day: bright vivid cyan-blue. Night: deep blue-navy.
     // Reference shows water is NOT dark — upper portion almost white-cyan.
+    // Murky desaturated grey-green when error flash fires
+    const FLASH_WATER = ['#1E2820','#18221A','#121A14','#0C1210'];
+
     const WC = [
-      // Front layer (most detailed)
       { d: ['#68C8E8','#40A8D0','#2888B8','#186898'], n: ['#1A5890','#103878','#0A2860','#061848'] },
-      // Mid layer
       { d: ['#50B8DC','#3298C4','#1E78A8','#105888'], n: ['#144878','#0C3060','#082048','#051030'] },
-      // Back layer
       { d: ['#3CA8D0','#2288B8','#1268A0','#0A4880'], n: ['#103870','#0A2858','#061840','#040E28'] },
     ];
 
@@ -973,10 +1093,11 @@ export class SynapseBackground {
       const midY = pts[Math.floor(pts.length / 2)].y;
 
       const wg = ctx.createLinearGradient(0, midY, 0, H);
-      wg.addColorStop(0,    lerpColor(lc.d[0], lc.n[0], nf));
-      wg.addColorStop(0.18, lerpColor(lc.d[1], lc.n[1], nf));
-      wg.addColorStop(0.55, lerpColor(lc.d[2], lc.n[2], nf));
-      wg.addColorStop(1,    lerpColor(lc.d[3], lc.n[3], nf));
+      // Triple-lerp: day→night via nf, then that result→flash via efEase
+      wg.addColorStop(0,    lerpColor(lerpColor(lc.d[0], lc.n[0], nf), FLASH_WATER[0], efEase));
+      wg.addColorStop(0.18, lerpColor(lerpColor(lc.d[1], lc.n[1], nf), FLASH_WATER[1], efEase));
+      wg.addColorStop(0.55, lerpColor(lerpColor(lc.d[2], lc.n[2], nf), FLASH_WATER[2], efEase));
+      wg.addColorStop(1,    lerpColor(lerpColor(lc.d[3], lc.n[3], nf), FLASH_WATER[3], efEase));
 
       ctx.beginPath();
       ctx.moveTo(0, H); ctx.lineTo(0, pts[0].y);
@@ -1038,7 +1159,7 @@ export class SynapseBackground {
     }
 
     // ── 8. GOD RAYS ───────────────────────────────────────────────────────
-    this.rays.draw(ctx, nf, this.wave, this.waveAmp, t);
+    this.rays.draw(ctx, nf, this.wave, this.waveAmp, t, this.pressureSmooth);
 
     // ── 9. BACKGROUND SILHOUETTE PLANTS ───────────────────────────────────
     // Draw AFTER god rays so silhouettes cast into the lit water naturally
@@ -1048,12 +1169,15 @@ export class SynapseBackground {
     ctx.save();
     ctx.beginPath(); ctx.rect(0, sy + 1, W, H - sy - 1); ctx.clip();
     this.snow.forEach(s => s.draw(ctx));
-    this.plankton.forEach(p => p.draw(ctx, nf));
+    this.plankton.forEach(p => p.draw(ctx, nf, this.hyperFlow));
     this.activeBubbles.forEach(b => b.draw(ctx));
     ctx.restore();
 
     // ── 11. SEAFLOOR ──────────────────────────────────────────────────────
     this.floor.draw(ctx, nf, t);
+
+    // ── 11b. SILT CLOUD ───────────────────────────────────────────────────
+    for (const sp of this.siltParticles) sp.draw(ctx);
 
     // ── 12. DEPTH VIGNETTE (subtle — doesn't dominate like before) ────────
     // Only darken the very bottom corners and edges — not the whole frame
@@ -1070,5 +1194,18 @@ export class SynapseBackground {
     bdg.addColorStop(1, `rgba(0,5,18,${0.16 + nf * 0.14})`);
     ctx.fillStyle = bdg;
     ctx.fillRect(0, H * 0.72, W, H * 0.28);
+
+    // ── ERROR FLASH edge burst — dark red-brown shockwave at screen perimeter
+    if (efEase > 0.01) {
+      // Edge vignette pulses in from all four sides
+      const ev = ctx.createRadialGradient(W/2, H/2, H * 0.18, W/2, H/2, Math.max(W,H) * 0.82);
+      ev.addColorStop(0,    'rgba(0,0,0,0)');
+      ev.addColorStop(0.52, 'rgba(0,0,0,0)');
+      ev.addColorStop(1,    `rgba(28,8,10,${efEase * 0.72})`);
+      ctx.fillStyle = ev; ctx.fillRect(0, 0, W, H);
+      // Desaturating grey wash over the whole frame
+      ctx.fillStyle = `rgba(30,28,28,${efEase * 0.22})`;
+      ctx.fillRect(0, 0, W, H);
+    }
   }
 }

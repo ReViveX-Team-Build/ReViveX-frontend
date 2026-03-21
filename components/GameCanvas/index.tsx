@@ -239,6 +239,27 @@ const GameCanvas: React.FC = () => {
   const pearlsRef = useRef<Pearl[]>([]);
   const taskTimerRef = useRef(0);
 
+  const isKeyPressedRef = useRef(false);
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.code === "Space" || e.code === "ArrowUp") {
+        isKeyPressedRef.current = true;
+        e.preventDefault(); // Stop page from scrolling
+      }
+    };
+    const handleKeyUp = (e: KeyboardEvent) => {
+      if (e.code === "Space" || e.code === "ArrowUp") {
+        isKeyPressedRef.current = false;
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    window.addEventListener("keyup", handleKeyUp);
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+      window.removeEventListener("keyup", handleKeyUp);
+    };
+  }, []);
+
   // State (dual ref+state for game loop compatibility)
   const gsRef = useRef<"MENU" | "PLAYING" | "SOFT_FAIL">("MENU");
   const cdRef = useRef<CountdownValue>(null);
@@ -287,18 +308,16 @@ const GameCanvas: React.FC = () => {
     cdRef.current = v;
     setUiCd(v);
   };
-
-  // ── swimUp: HARDWARE ONLY ─────────────────────────────────────────────────
-  // No keyboard fallback — device must be connected to play.
-  // Reads pressRef.current directly (never getPressure() or React state).
+// ── swimUp: HARDWARE + KEYBOARD FALLBACK ──────────────────────────────────
   const swimUp = (): boolean => {
-    if (!isConnRef.current) return false; // hardware required
-
-    const p = pressRef.current;
+    // If connected, use real sensor. If not, simulate a good pressure if spacebar is held.
+    const p = isConnRef.current 
+      ? pressRef.current 
+      : (isKeyPressedRef.current ? (IDLE_THRESHOLD + 0.2) : 0);
+      
     const isSwimming = p > IDLE_THRESHOLD && p < DANGER_THRESHOLD;
 
     if (isSwimming) {
-      // First squeeze after a pearl spawned → record reaction time
       if (lastSpawnTimeRef.current > 0) {
         const reactionTime = Date.now() - lastSpawnTimeRef.current;
         metricsRef.current.reactionTimes.push(reactionTime);
@@ -309,7 +328,6 @@ const GameCanvas: React.FC = () => {
         metricsRef.current.currentSqueezePeak = p;
       }
     } else if (metricsRef.current.isSqueezing) {
-      // Squeeze released → save the peak and reset
       metricsRef.current.jumpPressures.push(
         metricsRef.current.currentSqueezePeak,
       );
@@ -433,7 +451,7 @@ const GameCanvas: React.FC = () => {
     let nf = 0,
       sandH = 80;
     if (bgRef.current) {
-      nf = bgRef.current.update(elapsed, delta, scrollSpeed);
+      nf = bgRef.current.update(elapsed, delta, scrollSpeed, streak, pressRef.current / DANGER_THRESHOLD);
       bgRef.current.draw(ctx, nf);
       sandH = bgRef.current.sandHeight;
     }
@@ -470,6 +488,7 @@ const GameCanvas: React.FC = () => {
           taskTimerRef.current = 0;
         }
         if (playerRef.current.status === "hit_floor") {
+          bgRef.current?.triggerSiltCloud(playerRef.current.x, playerRef.current.y);
           setFailReason("floor");
           setGs("SOFT_FAIL");
         }
@@ -563,6 +582,7 @@ const GameCanvas: React.FC = () => {
       setScore((p) => Math.max(0, p - 50));
       setStreak(0);
       triggerFeedback("Oops! Focus on Blue!", "#FF6B6B");
+      bgRef.current?.triggerErrorFlash();
       for (let i = 0; i < 12; i++) {
         const p = new Particle(pearl.x, pearl.y, 1.5, true);
         p.color = "rgba(255,69,0,0.8)";
@@ -983,55 +1003,36 @@ const GameCanvas: React.FC = () => {
 
             <button
               onClick={startSession}
-              disabled={!isConnected}
+              disabled={false} // UNLOCKED FOR TESTING
               style={{
                 position: "relative",
                 overflow: "hidden",
-                background: isConnected ? "#2DD4BF" : "rgba(45,212,191,0.25)",
-                color: isConnected ? "#061422" : "rgba(6,20,34,0.50)",
+                background: isConnected ? "#2DD4BF" : "rgba(99,102,241,0.8)", // Purple if testing
+                color: isConnected ? "#061422" : "#fff",
                 border: "none",
                 borderRadius: 999,
                 padding: "15px 50px",
                 fontSize: 17,
                 fontWeight: 900,
                 letterSpacing: "0.07em",
-                cursor: isConnected ? "pointer" : "not-allowed",
+                cursor: "pointer",
                 boxShadow: isConnected
                   ? "0 0 38px rgba(45,212,191,0.50)"
-                  : "none",
+                  : "0 0 38px rgba(99,102,241,0.50)",
                 display: "inline-flex",
                 alignItems: "center",
                 gap: 11,
                 transition: "transform .14s",
               }}
-              onMouseEnter={(e) => {
-                if (isConnected)
-                  e.currentTarget.style.transform = "scale(1.05)";
-              }}
-              onMouseLeave={(e) =>
-                (e.currentTarget.style.transform = "scale(1)")
-              }>
-              {isConnected && (
-                <div
-                  style={{
-                    position: "absolute",
-                    top: 0,
-                    left: 0,
-                    width: "38%",
-                    height: "100%",
-                    background: "rgba(255,255,255,0.32)",
-                    animation: "shimmer 1.9s ease-in-out infinite",
-                    pointerEvents: "none",
-                  }}
-                />
-              )}
+              onMouseEnter={(e) => (e.currentTarget.style.transform = "scale(1.05)")}
+              onMouseLeave={(e) => (e.currentTarget.style.transform = "scale(1)")}>
               <Play
                 size={20}
-                fill={isConnected ? "#061422" : "rgba(6,20,34,0.50)"}
+                fill={isConnected ? "#061422" : "#fff"}
                 style={{ position: "relative", zIndex: 1 }}
               />
               <span style={{ position: "relative", zIndex: 1 }}>
-                {isConnected ? "START MISSION" : "CONNECT DEVICE FIRST"}
+                {isConnected ? "START MISSION" : "TEST (KEYBOARD MODE)"}
               </span>
             </button>
           </div>
