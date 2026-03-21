@@ -228,7 +228,6 @@ export default function PatientSignUpPage() {
                       value={formData.email}
                       onChange={handleChange}
                       placeholder="patient@example.com"
-                      autoComplete="off"
                       className="w-full px-4 py-2.5 border-2 border-gray-200 rounded-lg focus:outline-none focus:border-purple-500 transition-colors text-gray-900"
                       required
                     />
@@ -246,7 +245,6 @@ export default function PatientSignUpPage() {
                         value={formData.password}
                         onChange={handleChange}
                         placeholder="Minimum 6 characters"
-                        autoComplete="new-password"
                         className="w-full px-4 py-2.5 border-2 border-gray-200 rounded-lg focus:outline-none focus:border-purple-500 transition-colors text-gray-900"
                         required
                       />
@@ -271,7 +269,6 @@ export default function PatientSignUpPage() {
                         value={formData.confirmPassword}
                         onChange={handleChange}
                         placeholder="Re-enter password"
-                        autoComplete="new-password"
                         className="w-full px-4 py-2.5 border-2 border-gray-200 rounded-lg focus:outline-none focus:border-purple-500 transition-colors text-gray-900"
                         required
                       />

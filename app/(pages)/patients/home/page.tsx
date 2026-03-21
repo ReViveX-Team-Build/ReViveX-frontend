@@ -3,6 +3,9 @@
 import React, { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { useDarkMode } from "@/app/lib/hooks/useDarkMode";
+import { useAuthState } from "react-firebase-hooks/auth";
+import { auth, db } from "@/app/lib/firebase";
+import { doc, getDoc, collection, query, where, getDocs } from "firebase/firestore";
 import { useHardware } from "@/app/lib/context/HardwareContext";
 import {
   Calendar,
@@ -23,66 +26,8 @@ import {
   CircleCheck,
   Bot,
   Send,
+  Loader2,
 } from "lucide-react";
-
-// ─── Data ────────────────────────────────────────────────────────────────────
-const patient = {
-  name: "Silva",
-  initials: "PB",
-  streak: 5,
-  xp: 2450,
-};
-
-const nextSession = {
-  date: "Nov 17",
-  year: "2025",
-  time: "10:30 AM",
-  hand: "Right Hand",
-  protocol: "Protocol A",
-  duration: "15 min",
-};
-
-const adherence = {
-  score: 71,
-  completed: 5,
-  total: 7,
-};
-
-const quickStats = [
-  {
-    label: "Grip Strength",
-    value: 15,
-    suffix: "%",
-    prefix: "+",
-    icon: Activity,
-    color: "#2DD4BF",
-    bg: "rgba(45,212,191,0.10)",
-  },
-  {
-    label: "Memory Success",
-    value: 85,
-    suffix: "%",
-    prefix: "+",
-    icon: Brain,
-    color: "#6366f1",
-    bg: "rgba(99,102,241,0.10)",
-  },
-  {
-    label: "Journey",
-    value: 40,
-    suffix: "%",
-    prefix: "+",
-    icon: Footprints,
-    color: "#f59e0b",
-    bg: "rgba(245,158,11,0.10)",
-  },
-];
-
-const aiMessages = [
-  "Ready for your session! Your grip strength is trending up! 💪",
-  "You've completed 5/7 sessions this week — amazing consistency!",
-  "Morning sessions show 23% better results for you. Let's go! 🚀",
-];
 
 // ─── Animated Number ─────────────────────────────────────────────────────────
 function AnimNum({
@@ -623,10 +568,146 @@ const CSS = `
 // ─── Main Component ───────────────────────────────────────────────────────────
 export default function PatientHome() {
   const isDark = useDarkMode();
+  const [user, authLoading] = useAuthState(auth);
   const [mounted, setMounted] = useState(false);
   const [msgIdx, setMsgIdx] = useState(0);
   const [msgVisible, setMsgVisible] = useState(true);
   const { isConnected } = useHardware();
+
+  // 🔴 REAL DATA STATES
+  const [patientData, setPatientData] = useState({
+    name: "Loading...", initials: "PT", streak: 0, xp: 0
+  });
+
+  const [nextSession, setNextSession] = useState({
+    date: "--", year: "----", time: "--:--", hand: "Any", duration: "--", exists: false
+  });
+
+  const [adherence, setAdherence] = useState({
+    score: 0, completed: 0, total: 0
+  });
+
+  const [deviceOnline, setDeviceOnline] = useState(false);
+  const [deviceId, setDeviceId] = useState("Not Linked");
+
+  // Dynamic AI Messages
+  const [aiMessages, setAiMessages] = useState([
+    "Loading your personalized insights...",
+    "Syncing with your therapy protocol...",
+  ]);
+
+  const [quickStats, setQuickStats] = useState([
+    { label: "Level", value: 1, suffix: "", prefix: "", icon: Activity, color: "#2DD4BF", bg: "rgba(45,212,191,0.10)" },
+    { label: "Accuracy", value: 0, suffix: "%", prefix: "", icon: Brain, color: "#6366f1", bg: "rgba(99,102,241,0.10)" },
+    { label: "Adherence", value: 0, suffix: "%", prefix: "", icon: Footprints, color: "#f59e0b", bg: "rgba(245,158,11,0.10)" },
+  ]);
+
+  // 🔴 FETCH ALL REAL DATA
+  useEffect(() => {
+    if (authLoading || !user) return;
+
+    const fetchDashboardData = async () => {
+      try {
+        // 1. Fetch Profile Data
+        const userDoc = await getDoc(doc(db, "users", user.uid));
+        if (userDoc.exists()) {
+          const d = userDoc.data();
+          const name = d.name || "Patient";
+          const parts = name.trim().split(" ");
+          const initials = parts.length >= 2 ? `${parts[0][0]}${parts[parts.length-1][0]}`.toUpperCase() : name.slice(0,2).toUpperCase();
+
+          setPatientData({
+            name: name.split(" ")[0], // Use first name for welcome
+            initials,
+            streak: d.streak || 0,
+            xp: d.xp || 0,
+          });
+
+          // Check Hardware
+          setDeviceOnline(d.hardwareStatus?.status === "connected");
+          setDeviceId(d.hardwareStatus?.deviceId || "R-103");
+
+          // Update Quick Stats based on real data
+          setQuickStats([
+            { label: "Current Level", value: d.level || 1, suffix: "", prefix: "", icon: Activity, color: "#2DD4BF", bg: "rgba(45,212,191,0.10)" },
+            { label: "XP Progress", value: d.xp > 100 ? Math.round((d.xp % 100)) : d.xp || 0, suffix: "%", prefix: "", icon: Brain, color: "#6366f1", bg: "rgba(99,102,241,0.10)" },
+            { label: "Streak Bonus", value: d.streak * 5 || 0, suffix: "%", prefix: "+", icon: Footprints, color: "#f59e0b", bg: "rgba(245,158,11,0.10)" },
+          ]);
+        }
+
+        // 2. Fetch Schedule for Next Session & Adherence
+        const sQuery = query(collection(db, "scheduled_sessions"), where("patientId", "==", user.uid));
+        const sSnap = await getDocs(sQuery);
+        const aQuery = query(collection(db, "appointments"), where("patientId", "==", user.uid));
+        const aSnap = await getDocs(aQuery);
+
+        const allEvents = [...sSnap.docs.map(d => d.data()), ...aSnap.docs.map(d => d.data())];
+
+        // Find next future session
+        const now = new Date();
+        const futureEvents = allEvents.filter(e => {
+           if (e.status === "completed" || e.status === "cancelled") return false;
+           return new Date(`${e.scheduledDate}T${e.scheduledTime}`) >= now;
+        }).sort((a, b) => new Date(`${a.scheduledDate}T${a.scheduledTime}`).getTime() - new Date(`${b.scheduledDate}T${b.scheduledTime}`).getTime());
+
+        if (futureEvents.length > 0) {
+          const next = futureEvents[0];
+          const dObj = new Date(`${next.scheduledDate}T${next.scheduledTime}`);
+          setNextSession({
+            date: dObj.toLocaleDateString("en-US", { month: "short", day: "numeric" }),
+            year: dObj.getFullYear().toString(),
+            time: dObj.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" }),
+            hand: next.targetHand || "Any",
+            duration: `${next.durationMinutes || 30} min`,
+            exists: true,
+          });
+        }
+
+        // Calculate Weekly Adherence
+        const sevenDaysAgo = new Date();
+        sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+        let weekTotal = 0;
+        let weekCompleted = 0;
+
+        allEvents.forEach(e => {
+          const eDate = new Date(e.scheduledDate);
+          if (eDate >= sevenDaysAgo && eDate <= now) {
+            weekTotal++;
+            if (e.status === "completed") weekCompleted++;
+          }
+        });
+
+        const score = weekTotal > 0 ? Math.round((weekCompleted / weekTotal) * 100) : 0;
+        setAdherence({ score, completed: weekCompleted, total: weekTotal });
+
+        // Update AI Messages based on adherence
+        if (score >= 80) {
+          setAiMessages([
+            "Your adherence is fantastic! Keep up the great work! 🌟",
+            "Morning sessions show the best results for you. Let's go! 🚀",
+            `You've completed ${weekCompleted} sessions this week. Awesome! 💪`
+          ]);
+        } else if (score > 0) {
+          setAiMessages([
+            "Ready for your next session? You can do this! 💪",
+            `You are at ${score}% adherence this week. Let's push for 100%!`,
+            "Every completed session brings you closer to your goal. 🎯"
+          ]);
+        } else {
+          setAiMessages([
+            "Welcome to ReViveX! Let's start your recovery journey. 🌟",
+            "Check your schedule to see your assigned sessions.",
+            "I am your AI Companion. Click below if you need help! 🤖"
+          ]);
+        }
+
+      } catch (error) {
+        console.error("Error fetching patient home data:", error);
+      }
+    };
+
+    fetchDashboardData();
+  }, [user, authLoading]);
 
   useEffect(() => {
     setMounted(true);
@@ -821,7 +902,7 @@ export default function PatientHome() {
                   lineHeight: 1.15,
                 }}>
                 Welcome Back,{" "}
-                <span style={{ color: "#2DD4BF" }}>{patient.name}</span>! 👋
+                <span style={{ color: "#2DD4BF" }}>{patientData.name}</span>! 👋
               </h1>
               <p
                 style={{
@@ -868,7 +949,7 @@ export default function PatientHome() {
                     color: "#0B1E33",
                     lineHeight: 1,
                   }}>
-                  {patient.streak} Days
+                  {patientData.streak} Days
                 </div>
               </div>
             </div>
@@ -901,7 +982,7 @@ export default function PatientHome() {
                     color: "#0B1E33",
                     lineHeight: 1,
                   }}>
-                  <AnimNum to={patient.xp} delay={400} />
+                  <AnimNum to={patientData.xp} delay={400} />
                 </div>
               </div>
             </div>
@@ -986,109 +1067,115 @@ export default function PatientHome() {
                 Next Therapy Session
               </div>
 
-              <div
-                style={{ display: "flex", alignItems: "flex-start", gap: 20 }}>
-                {/* Calendar visual */}
-                <div
-                  style={{
-                    width: 60,
-                    height: 64,
-                    borderRadius: 14,
-                    background: "#0B1E33",
-                    display: "flex",
-                    flexDirection: "column",
-                    overflow: "hidden",
-                    flexShrink: 0,
-                    boxShadow: "0 4px 16px rgba(11,30,51,0.18)",
-                  }}>
+              {nextSession.exists ? (
+                <div style={{ display: "flex", alignItems: "flex-start", gap: 20 }}>
+                  {/* Calendar visual */}
                   <div
                     style={{
-                      background: "#2DD4BF",
-                      padding: "4px 0",
-                      textAlign: "center",
-                    }}>
-                    <span
-                      className="mono"
-                      style={{
-                        fontSize: 8,
-                        fontWeight: 700,
-                        color: "#0B1E33",
-                        textTransform: "uppercase",
-                        letterSpacing: "0.10em",
-                      }}>
-                      NOV
-                    </span>
-                  </div>
-                  <div
-                    style={{
-                      flex: 1,
+                      width: 60,
+                      height: 64,
+                      borderRadius: 14,
+                      background: "#0B1E33",
                       display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
+                      flexDirection: "column",
+                      overflow: "hidden",
+                      flexShrink: 0,
+                      boxShadow: "0 4px 16px rgba(11,30,51,0.18)",
                     }}>
-                    <span
-                      style={{ fontSize: 22, fontWeight: 800, color: "#fff" }}>
-                      17
-                    </span>
-                  </div>
-                </div>
-
-                {/* Session details */}
-                <div className="resp-session-grid">
-                  {[
-                    {
-                      label: "Date",
-                      value: `${nextSession.date}, ${nextSession.year}`,
-                      icon: Calendar,
-                    },
-                    { label: "Time", value: nextSession.time, icon: Clock },
-                    {
-                      label: "Prescribed Hand",
-                      value: nextSession.hand,
-                      icon: Hand,
-                      highlight: true,
-                    },
-                    {
-                      label: "Duration",
-                      value: nextSession.duration,
-                      icon: Activity,
-                    },
-                  ].map((item) => (
-                    <div key={item.label}>
-                      <div
+                    <div
+                      style={{
+                        background: "#2DD4BF",
+                        padding: "4px 0",
+                        textAlign: "center",
+                      }}>
+                      <span
                         className="mono"
                         style={{
-                          fontSize: 8.5,
-                          color: "#94a3b8",
+                          fontSize: 8,
+                          fontWeight: 700,
+                          color: "#0B1E33",
                           textTransform: "uppercase",
-                          letterSpacing: "0.12em",
-                          marginBottom: 3,
+                          letterSpacing: "0.10em",
                         }}>
-                        {item.label}
-                      </div>
-                      <div
-                        style={{
-                          display: "flex",
-                          alignItems: "center",
-                          gap: 5,
-                        }}>
-                        <item.icon
-                          size={12}
-                          color={item.highlight ? "#2DD4BF" : "#64748b"}
-                        />
-                        <span
-                          style={{
-                            fontSize: 13,
-                            fontWeight: item.highlight ? 800 : 600,
-                            color: item.highlight ? "#2DD4BF" : "#0B1E33",
-                          }}>
-                          {item.value}
-                        </span>
-                      </div>
+                        {nextSession.date.split(" ")[0]}
+                      </span>
                     </div>
-                  ))}
+                    <div
+                      style={{
+                        flex: 1,
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                      }}>
+                      <span
+                        style={{ fontSize: 22, fontWeight: 800, color: "#fff" }}>
+                        {nextSession.date.split(" ")[1]}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Session details */}
+                  <div className="resp-session-grid">
+                    {[
+                      {
+                        label: "Date",
+                        value: `${nextSession.date}, ${nextSession.year}`,
+                        icon: Calendar,
+                      },
+                      { label: "Time", value: nextSession.time, icon: Clock },
+                      {
+                        label: "Prescribed Hand",
+                        value: nextSession.hand,
+                        icon: Hand,
+                        highlight: true,
+                      },
+                      {
+                        label: "Duration",
+                        value: nextSession.duration,
+                        icon: Activity,
+                      },
+                    ].map((item) => (
+                      <div key={item.label}>
+                        <div
+                          className="mono"
+                          style={{
+                            fontSize: 8.5,
+                            color: "#94a3b8",
+                            textTransform: "uppercase",
+                            letterSpacing: "0.12em",
+                            marginBottom: 3,
+                          }}>
+                          {item.label}
+                        </div>
+                        <div
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: 5,
+                          }}>
+                          <item.icon
+                            size={12}
+                            color={item.highlight ? "#2DD4BF" : "#64748b"}
+                          />
+                          <span
+                            style={{
+                              fontSize: 13,
+                              fontWeight: item.highlight ? 800 : 600,
+                              color: item.highlight ? "#2DD4BF" : "#0B1E33",
+                            }}>
+                            {item.value}
+                          </span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
                 </div>
-              </div>
+              ) : (
+                <div style={{ display: "flex", alignItems: "center", gap: 10, color: "#64748b" }}>
+                  <CheckCircle2 size={24} color="#10b981" />
+                  <span style={{ fontSize: 14, fontWeight: 600 }}>All caught up! No upcoming sessions right now.</span>
+                </div>
+              )}
             </div>
 
             {/* Adherence Score */}
@@ -1135,7 +1222,7 @@ export default function PatientHome() {
 
               {/* Session dots */}
               <div style={{ display: "flex", gap: 6, marginTop: 12 }}>
-                {Array.from({ length: adherence.total }).map((_, i) => (
+                {adherence.total > 0 ? Array.from({ length: adherence.total }).map((_, i) => (
                   <div
                     key={i}
                     style={
@@ -1158,7 +1245,9 @@ export default function PatientHome() {
                       } as React.CSSProperties
                     }
                   />
-                ))}
+                )) : (
+                   <span style={{ fontSize: 12, color: "#94a3b8", fontStyle: "italic" }}>Start a session to track your weekly adherence.</span>
+                )}
               </div>
             </div>
 
@@ -1343,40 +1432,40 @@ export default function PatientHome() {
                 </div>
 
                 {/* Open AI Companion Button */}
-                  <Link
-                      href="/patients/ai-companion"
-                      className="ai-btn"
-                      style={{
-                          width: "100%",
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "space-between",
-                          background: "rgba(45,212,191,0.12)",
-                          border: "1.5px solid rgba(45,212,191,0.30)",
-                          borderRadius: 14,
-                          padding: "13px 18px",
-                          cursor: "pointer",
-                          color: "#0B1E33",
-                          textDecoration: "none",
-                          fontFamily: "'Plus Jakarta Sans', sans-serif",
-                      }}>
-                      <span style={{ fontSize: 13, fontWeight: 700 }}>
-                        Open AI Companion
-                      </span>
-                      <div
-                          style={{
-                              width: 30,
-                              height: 30,
-                              borderRadius: "50%",
-                              background: "#2DD4BF",
-                              display: "flex",
-                              alignItems: "center",
-                              justifyContent: "center",
-                              boxShadow: "0 4px 12px rgba(45,212,191,0.40)",
-                          }}>
-                          <Send size={13} color="#fff" />
-                      </div>
-                  </Link>
+                <Link
+                  href="/patients/ai-companion"
+                  className="ai-btn"
+                  style={{
+                    width: "100%",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    background: "rgba(45,212,191,0.12)",
+                    border: "1.5px solid rgba(45,212,191,0.30)",
+                    borderRadius: 14,
+                    padding: "13px 18px",
+                    cursor: "pointer",
+                    color: "#0B1E33",
+                    fontFamily: "'Plus Jakarta Sans', sans-serif",
+                    textDecoration: "none"
+                  }}>
+                  <span style={{ fontSize: 13, fontWeight: 700 }}>
+                    Open AI Companion
+                  </span>
+                  <div
+                    style={{
+                      width: 30,
+                      height: 30,
+                      borderRadius: "50%",
+                      background: "#2DD4BF",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      boxShadow: "0 4px 12px rgba(45,212,191,0.40)",
+                    }}>
+                    <Send size={13} color="#fff" />
+                  </div>
+                </Link>
               </div>
             </div>
 
@@ -1424,7 +1513,7 @@ export default function PatientHome() {
                   </h3>
                 </div>
                 <Link
-                  href="/patients/stats"
+                  href="/patients/progress"
                   style={{
                     display: "flex",
                     alignItems: "center",
@@ -1518,7 +1607,7 @@ export default function PatientHome() {
                     }}>
                     <div style={{ position: "relative" }}>
                       <ProgressArc
-                        value={s.value}
+                        value={s.value > 100 ? s.value % 100 : s.value} // ensure it arcs properly for xp
                         size={52}
                         stroke={4.5}
                         color={s.color}
@@ -1647,6 +1736,28 @@ export default function PatientHome() {
                   style={{ fontSize: 14, fontWeight: 700, color: "#0B1E33" }}>
                   Device Status
                 </span>
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 6,
+                    background: deviceOnline ? "rgba(16,185,129,0.12)" : "rgba(245,158,11,0.12)",
+                    border: `1px solid ${deviceOnline ? 'rgba(16,185,129,0.25)' : 'rgba(245,158,11,0.25)'}`,
+                    borderRadius: 99,
+                    padding: "4px 12px",
+                  }}>
+                  {deviceOnline ? <CircleCheck size={13} color="#10b981" /> : <Wifi size={13} color="#f59e0b" />}
+                  <span
+                    className="mono"
+                    style={{
+                      fontSize: 9.5,
+                      fontWeight: 700,
+                      color: deviceOnline ? "#10b981" : "#f59e0b",
+                      letterSpacing: "0.08em",
+                    }}>
+                    {deviceOnline ? "Connected" : "Offline"}
+                  </span>
+                </div>
                 {isConnected ? (
                   <div
                     style={{
@@ -1707,34 +1818,38 @@ export default function PatientHome() {
                       height: 68,
                       borderRadius: "50%",
                       background:
-                        "linear-gradient(135deg, rgba(45,212,191,0.15), rgba(45,212,191,0.05))",
-                      border: "2px solid rgba(45,212,191,0.25)",
+                        deviceOnline ? "linear-gradient(135deg, rgba(45,212,191,0.15), rgba(45,212,191,0.05))" : "linear-gradient(135deg, rgba(245,158,11,0.15), rgba(245,158,11,0.05))",
+                      border: `2px solid ${deviceOnline ? 'rgba(45,212,191,0.25)' : 'rgba(245,158,11,0.25)'}`,
                       display: "flex",
                       alignItems: "center",
                       justifyContent: "center",
-                      animation: "deviceGlow 2.5s ease-in-out infinite",
+                      animation: deviceOnline ? "deviceGlow 2.5s ease-in-out infinite" : "none",
                     }}>
-                    <Wifi size={28} color="#2DD4BF" />
+                    <Wifi size={28} color={deviceOnline ? "#2DD4BF" : "#f59e0b"} />
                   </div>
                   {/* Pulse rings */}
-                  <div
-                    style={{
-                      position: "absolute",
-                      inset: 0,
-                      borderRadius: "50%",
-                      border: "2px solid rgba(45,212,191,0.3)",
-                      animation: "pulseRing 2.5s ease-out infinite",
-                    }}
-                  />
-                  <div
-                    style={{
-                      position: "absolute",
-                      inset: 0,
-                      borderRadius: "50%",
-                      border: "2px solid rgba(45,212,191,0.2)",
-                      animation: "pulseRing 2.5s ease-out infinite 0.8s",
-                    }}
-                  />
+                  {deviceOnline && (
+                    <>
+                      <div
+                        style={{
+                          position: "absolute",
+                          inset: 0,
+                          borderRadius: "50%",
+                          border: "2px solid rgba(45,212,191,0.3)",
+                          animation: "pulseRing 2.5s ease-out infinite",
+                        }}
+                      />
+                      <div
+                        style={{
+                          position: "absolute",
+                          inset: 0,
+                          borderRadius: "50%",
+                          border: "2px solid rgba(45,212,191,0.2)",
+                          animation: "pulseRing 2.5s ease-out infinite 0.8s",
+                        }}
+                      />
+                    </>
+                  )}
                 </div>
 
                 <div>
@@ -1756,7 +1871,7 @@ export default function PatientHome() {
                       color: "#0B1E33",
                       letterSpacing: "-0.02em",
                     }}>
-                    R-103
+                    {deviceId}
                   </div>
                   <div style={{ display: "flex", gap: 4, marginTop: 8 }}>
                     {[1, 2, 3, 4, 5].map((bar) => (
@@ -1767,9 +1882,9 @@ export default function PatientHome() {
                           height: bar * 5 + 6,
                           borderRadius: 3,
                           background:
-                            bar <= 4 ? "#2DD4BF" : "rgba(45,212,191,0.15)",
+                            deviceOnline && bar <= 4 ? "#2DD4BF" : "rgba(148,163,184,0.15)",
                           boxShadow:
-                            bar <= 4 ? "0 0 4px rgba(45,212,191,0.4)" : "none",
+                            deviceOnline && bar <= 4 ? "0 0 4px rgba(45,212,191,0.4)" : "none",
                           alignSelf: "flex-end",
                         }}
                       />
@@ -1979,11 +2094,11 @@ export default function PatientHome() {
                         height: h,
                         borderRadius: 3,
                         background:
-                          i < 4
+                          deviceOnline && i < 4
                             ? `rgba(45,212,191,${0.5 + i * 0.12})`
-                            : "rgba(45,212,191,0.12)",
+                            : "rgba(148,163,184,0.12)",
                         boxShadow:
-                          i < 4 ? "0 0 4px rgba(45,212,191,0.35)" : "none",
+                          deviceOnline && i < 4 ? "0 0 4px rgba(45,212,191,0.35)" : "none",
                       }}
                     />
                   ))}
