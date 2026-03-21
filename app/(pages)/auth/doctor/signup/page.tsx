@@ -166,7 +166,7 @@ export default function DoctorSignUpPage() {
                   REVIVE<span className="text-[#2DD4BF]">X</span>
                 </h3>
                 <h2 className="text-3xl font-bold text-white mb-3">
-                  Join Our Platform 🚀
+                  Join Our Platform 
                 </h2>
                 <p className="text-gray-300 text-base mb-8">
                   Create your doctor account and start helping patients recover better
