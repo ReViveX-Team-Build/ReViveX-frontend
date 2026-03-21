@@ -2,11 +2,11 @@
 
 import React, { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useAuthState } from "react-firebase-hooks/auth";
-import { auth } from "@/app/lib/firebase";
-import { getPatientSchedule } from "@/app/lib/db/schedule";
-import { ScheduledSession } from "@/app/lib/db/types";
+import { auth, db } from "@/app/lib/firebase";
+import { doc, getDoc, collection, query, where, onSnapshot } from "firebase/firestore";
+import { signOut } from "firebase/auth";
 import {
   Home,
   TrendingUp,
@@ -20,9 +20,7 @@ import {
   ChevronRight,
   X,
   Menu,
-  Zap,
-  Trophy,
-  Gamepad2, // ADDED: Gamepad icon for Therapy Games
+  Gamepad2, 
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
@@ -43,7 +41,7 @@ const navItems: NavItem[] = [
     label: "Therapy Games",
     href: "/patients/levels",
     badge: null,
-  }, // ADDED: Therapy Games Link
+  }, 
   {
     icon: TrendingUp,
     label: "My Progress",
@@ -66,7 +64,7 @@ const navItems: NavItem[] = [
     icon: MessageCircle,
     label: "Doctor Messages",
     href: "/patients/messages",
-    badge: "1",
+    badge: null, // Removed the fake "1" badge
   },
 ];
 
@@ -74,15 +72,6 @@ const bottomItems = [
   { icon: Settings, label: "Settings", href: "/patients/settings" },
   { icon: HelpCircle, label: "FAQ & Support", href: "/patients/faq" },
 ];
-
-const patient = {
-  name: "P.B. Silva",
-  level: "Level 4",
-  xp: 2450,
-  streak: 5,
-  initials: "PB",
-  adherence: 71,
-};
 
 // ─── CSS ──────────────────────────────────────────────────────────────────────
 const STYLES = `
@@ -217,12 +206,6 @@ const STYLES = `
     z-index:199; animation:overlayFade 0.25s ease both;
   }
 
-  /* XP bar fill */
-  .xp-bar-fill {
-    --xp-w: 71%;
-    animation:xpFill 1.4s cubic-bezier(0.22,1,0.36,1) 0.4s both;
-  }
-
   /* Stagger */
   .psb-nav-animate .psb-item { opacity:0; animation:sbFadeIn 0.45s cubic-bezier(0.22,1,0.36,1) both; }
   .psb-nav-animate .psb-item:nth-child(1){ animation-delay:0.05s; }
@@ -230,50 +213,11 @@ const STYLES = `
   .psb-nav-animate .psb-item:nth-child(3){ animation-delay:0.15s; }
   .psb-nav-animate .psb-item:nth-child(4){ animation-delay:0.20s; }
   .psb-nav-animate .psb-item:nth-child(5){ animation-delay:0.25s; }
-  .psb-nav-animate .psb-item:nth-child(6){ animation-delay:0.30s; } /* ADDED delay for 6th item */
+  .psb-nav-animate .psb-item:nth-child(6){ animation-delay:0.30s; } 
 
   .no-psb::-webkit-scrollbar { display:none; }
   .no-psb { -ms-overflow-style:none; scrollbar-width:none; }
 `;
-
-// ─── AdherenceRing ─────────────────────────────────────────────────────────────
-function AdherenceRing({ value }: { value: number }) {
-  const size = 38,
-    stroke = 3.5,
-    r = (size - stroke) / 2;
-  const circ = 2 * Math.PI * r;
-  const offset = circ - (value / 100) * circ;
-  return (
-    <svg
-      width={size}
-      height={size}
-      style={{ transform: "rotate(-90deg)", flexShrink: 0 }}>
-      <circle
-        cx={size / 2}
-        cy={size / 2}
-        r={r}
-        fill="none"
-        stroke="rgba(45,212,191,0.12)"
-        strokeWidth={stroke}
-      />
-      <circle
-        cx={size / 2}
-        cy={size / 2}
-        r={r}
-        fill="none"
-        stroke="#2DD4BF"
-        strokeWidth={stroke}
-        strokeDasharray={circ}
-        strokeDashoffset={offset}
-        strokeLinecap="round"
-        style={{
-          filter: "drop-shadow(0 0 4px rgba(45,212,191,0.7))",
-          transition: "stroke-dashoffset 1.4s cubic-bezier(0.22,1,0.36,1) 0.5s",
-        }}
-      />
-    </svg>
-  );
-}
 
 // ─── Sidebar Content ──────────────────────────────────────────────────────────
 function SidebarContent({
@@ -281,11 +225,15 @@ function SidebarContent({
   onClose,
   pathname,
   navItems,
+  patientInitials,
+  onLogout
 }: {
   collapsed: boolean;
   onClose?: () => void;
   pathname: string;
   navItems: NavItem[];
+  patientInitials: string;
+  onLogout: () => void;
 }) {
   return (
     <div style={{ display: "flex", flexDirection: "column", height: "100%" }}>
@@ -384,7 +332,7 @@ function SidebarContent({
               fontWeight: 800,
               color: "#0B1E33",
             }}>
-            {patient.initials}
+            {patientInitials}
           </div>
         </div>
       )}
@@ -542,29 +490,28 @@ function SidebarContent({
           </div>
         )}
 
-        <Link href="/" style={{ textDecoration: "none", display: "block" }}>
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: collapsed ? 0 : 10,
-              justifyContent: collapsed ? "center" : "flex-start",
-              padding: collapsed ? "10px" : "10px 14px",
-              borderRadius: 12,
-              background: "rgba(239,68,68,0.07)",
-              border: "1px solid rgba(239,68,68,0.15)",
-              color: "#f87171",
-              fontSize: 13,
-              fontWeight: 700,
-              cursor: "pointer",
-              transition: "all 0.2s ease",
-              position: "relative",
-            }}>
-            <LogOut size={16} />
-            {!collapsed && <span>Sign Out</span>}
-            {collapsed && <div className="psb-tooltip">Sign Out</div>}
-          </div>
-        </Link>
+        <div
+          onClick={onLogout}
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: collapsed ? 0 : 10,
+            justifyContent: collapsed ? "center" : "flex-start",
+            padding: collapsed ? "10px" : "10px 14px",
+            borderRadius: 12,
+            background: "rgba(239,68,68,0.07)",
+            border: "1px solid rgba(239,68,68,0.15)",
+            color: "#f87171",
+            fontSize: 13,
+            fontWeight: 700,
+            cursor: "pointer",
+            transition: "all 0.2s ease",
+            position: "relative",
+          }}>
+          <LogOut size={16} />
+          {!collapsed && <span>Sign Out</span>}
+          {collapsed && <div className="psb-tooltip">Sign Out</div>}
+        </div>
       </div>
     </div>
   );
@@ -573,42 +520,79 @@ function SidebarContent({
 // ─── Main Component ───────────────────────────────────────────────────────────
 export default function PatientSidebar() {
   const pathname = usePathname();
+  const router = useRouter();
   const [user] = useAuthState(auth);
   const [bp, setBp] = useState<BreakPoint>("desktop");
   const [mobileOpen, setMobileOpen] = useState(false);
   const [upcomingCount, setUpcomingCount] = useState(0);
+  const [patientInitials, setPatientInitials] = useState("PT");
+  const [rawSchedule, setRawSchedule] = useState<any[]>([]);
 
+  // 1. Fetch Patient Initials
   useEffect(() => {
-    const loadUpcomingCount = async () => {
-      if (!user) {
-        setUpcomingCount(0);
-        return;
+    if (!user) return;
+    getDoc(doc(db, "users", user.uid)).then(dSnap => {
+      if (dSnap.exists()) {
+        const name = dSnap.data().name || "Patient";
+        const parts = name.trim().split(" ");
+        setPatientInitials(parts.length >= 2 ? `${parts[0][0]}${parts[parts.length-1][0]}`.toUpperCase() : name.slice(0,2).toUpperCase());
       }
+    });
+  }, [user]);
 
-      try {
-        const schedule = await getPatientSchedule(user.uid);
-        const now = new Date();
-        const upcoming = schedule.filter((session: ScheduledSession) => {
-          if (session.status !== "scheduled") return false;
-          const dt = new Date(
-            `${session.scheduledDate}T${session.scheduledTime}`,
-          );
-          return !Number.isNaN(dt.getTime()) && dt >= now;
-        }).length;
-        setUpcomingCount(upcoming);
-      } catch (e) {
-        console.error("Failed to load patient schedule count:", e);
-        setUpcomingCount(0);
-      }
+  // 2. Real-time Schedule Fetch
+  useEffect(() => {
+    if (!user) return;
+    const unsubs: any[] = [];
+    const todayStr = new Date().toISOString().slice(0, 10);
+
+    // Appointments (Telehealth/In-person)
+    const qAppt = query(collection(db, "appointments"), where("patientId", "==", user.uid), where("scheduledDate", "==", todayStr));
+    unsubs.push(onSnapshot(qAppt, snap => {
+      const appts = snap.docs.map(d => ({ id: d.id, ...d.data(), eventType: 'meeting' }));
+      setRawSchedule(prev => [...prev.filter(p => p.eventType !== 'meeting'), ...appts]);
+    }));
+
+    // Game Sessions
+    const qGame = query(collection(db, "scheduled_sessions"), where("patientId", "==", user.uid), where("scheduledDate", "==", todayStr));
+    unsubs.push(onSnapshot(qGame, snap => {
+      const games = snap.docs.map(d => ({ id: d.id, ...d.data(), eventType: 'game' }));
+      setRawSchedule(prev => [...prev.filter(p => p.eventType !== 'game'), ...games]);
+    }));
+
+    return () => unsubs.forEach(u => u());
+  }, [user]);
+
+  // 3. Time Engine (Count Upcoming)
+  useEffect(() => {
+    const checkTimes = () => {
+      const now = new Date();
+      const upcoming = rawSchedule.filter(item => {
+         if (item.status === 'completed' || item.status === 'cancelled' || item.status === 'missed') return false;
+         const itemDate = new Date(`${item.scheduledDate}T${item.scheduledTime}`);
+         return itemDate.getTime() >= now.getTime(); // Count any time in the future today
+      }).length;
+      setUpcomingCount(upcoming);
     };
+    
+    checkTimes(); // run immediately
+    const iv = setInterval(checkTimes, 60000); // Check every minute
+    return () => clearInterval(iv);
+  }, [rawSchedule]);
 
-    void loadUpcomingCount();
-  }, [user, pathname]);
+  const handleLogout = async () => {
+    try {
+      await signOut(auth);
+      router.replace("/");
+    } catch (error) {
+      console.error("Logout failed", error);
+    }
+  };
 
   const navItemsWithCounts = useMemo(
     () =>
       navItems.map((item) =>
-        item.href === "/patients/schedule"
+        item.href === "/patients/schedule" && upcomingCount > 0
           ? { ...item, badge: String(upcomingCount) }
           : item,
       ),
@@ -690,6 +674,8 @@ export default function PatientSidebar() {
           onClose={bp === "mobile" ? () => setMobileOpen(false) : undefined}
           pathname={pathname}
           navItems={navItemsWithCounts}
+          patientInitials={patientInitials}
+          onLogout={handleLogout}
         />
       </aside>
 

@@ -1052,7 +1052,9 @@ export default function DoctorDashboard() {
                   margin: 0,
                 }}>
                 Welcome Back,{" "}
-                <span style={{ color: "#2DD4BF" }}>Dr. {doctorName}</span>
+                <span style={{ color: "#2DD4BF" }}>
+                  {doctorName.toLowerCase().startsWith("dr") ? doctorName : `Dr. ${doctorName}`}
+                </span>
               </h1>
               <p
                 style={{

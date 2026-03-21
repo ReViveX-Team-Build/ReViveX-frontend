@@ -1,26 +1,23 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
+import { useRouter } from "next/navigation";
 import {
   Search, Bell, ChevronDown, X,
   Zap, Trophy, Flame, BrainCircuit,
   CalendarClock, TrendingUp, MessageCircle,
+  Video, Gamepad2, CheckCircle2
 } from "lucide-react";
+import { useAuthState } from "react-firebase-hooks/auth";
+import { auth, db } from "@/app/lib/firebase";
+import { doc, getDoc, collection, query, where, onSnapshot } from "firebase/firestore";
+import { signOut } from "firebase/auth";
 
-// ─── Data ─────────────────────────────────────────────────────────────────────
-const patient = { name: "P.B. Silva", id: "RVX-9988", initials: "PB", xp: 2450, streak: 5, level: 4 };
-
-const notifications = [
-  { id: 1, type: "session", title: "Session starts in 30 minutes",        time: "Now",    read: false, dot: "#2DD4BF", icon: CalendarClock },
-  { id: 2, type: "message", title: "Dr. Suresh sent you a message",       time: "14m ago",read: false, dot: "#6366f1", icon: MessageCircle },
-  { id: 3, type: "badge",   title: "You earned the '7-Day Streak' badge", time: "1h ago", read: true,  dot: "#f59e0b", icon: Trophy        },
-  { id: 4, type: "tip",     title: "Morning sessions boost your score",   time: "3h ago", read: true,  dot: "#34d399", icon: TrendingUp    },
-];
-
+// ─── Static Suggestions ────────────────────────────────────────────────────────
 const suggestions = [
-  { label: "My Progress",    sub: "View your therapy stats",  icon: TrendingUp    },
-  { label: "Today's Session",sub: "10:30 AM · Right Hand",    icon: CalendarClock },
-  { label: "AI Companion",   sub: "Chat with your AI coach",  icon: BrainCircuit  },
+  { label: "My Progress",  sub: "View your therapy stats",  icon: TrendingUp, path: "/patients/progress" },
+  { label: "Schedule",     sub: "View upcoming sessions",   icon: CalendarClock, path: "/patients/schedule" },
+  { label: "AI Companion", sub: "Chat with your AI coach",  icon: BrainCircuit, path: "/patients/ai-companion" },
 ];
 
 // ─── CSS ──────────────────────────────────────────────────────────────────────
@@ -152,7 +149,7 @@ const STYLES = `
     font-size:13px; font-weight:500;
     color:rgba(255,255,255,0.60);
     cursor:pointer; transition:all 0.18s ease;
-    text-decoration:none;
+    text-decoration:none; border:none; width:100%; text-align:left; background:transparent;
   }
   .ptb-menu-item:hover { background:rgba(255,255,255,0.07); color:#fff; }
 
@@ -172,6 +169,10 @@ const STYLES = `
 `;
 
 export default function PatientTopbar() {
+  const router = useRouter();
+  const [user] = useAuthState(auth);
+  
+  // UI States
   const [searchFocused, setSearchFocused]       = useState(false);
   const [searchVal, setSearchVal]               = useState("");
   const [notifOpen, setNotifOpen]               = useState(false);
@@ -179,10 +180,90 @@ export default function PatientTopbar() {
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
   const [scrolled, setScrolled]                 = useState(false);
 
+  // Real Data States
+  const [patientData, setPatientData] = useState({
+    name: "Loading...", id: "...", initials: "PT", xp: 0, streak: 0, level: 1
+  });
+  const [reminderMinutes, setReminderMinutes] = useState(30); // Default to 30 mins
+  const [rawSchedule, setRawSchedule] = useState<any[]>([]);
+  const [upcomingAlerts, setUpcomingAlerts] = useState<any[]>([]);
+
   const notifRef   = useRef<HTMLDivElement>(null);
   const profileRef = useRef<HTMLDivElement>(null);
-  const unread     = notifications.filter(n => !n.read).length;
 
+  // 1. Fetch Profile & Doctor's Reminder Settings
+  useEffect(() => {
+    if (!user) return;
+    const fetchProfile = async () => {
+      const dSnap = await getDoc(doc(db, "users", user.uid));
+      if (dSnap.exists()) {
+        const data = dSnap.data();
+        const name = data.name || "Patient";
+        const parts = name.trim().split(" ");
+        const initials = parts.length >= 2 ? `${parts[0][0]}${parts[parts.length-1][0]}`.toUpperCase() : name.slice(0,2).toUpperCase();
+        
+        setPatientData({
+          name,
+          id: data.patientId || `P${user.uid.slice(-4).toUpperCase()}`,
+          initials,
+          xp: data.xp || 0,
+          streak: data.streak || 0,
+          level: data.level || 1,
+        });
+
+        // Check assigned doctor's preference for reminder timing
+        if (data.assignedDoctorId) {
+          const docSnap = await getDoc(doc(db, "users", data.assignedDoctorId));
+          if (docSnap.exists() && docSnap.data().settings?.reminderMinutes) {
+            setReminderMinutes(docSnap.data().settings.reminderMinutes);
+          }
+        }
+      }
+    };
+    fetchProfile();
+  }, [user]);
+
+  // 2. Real-time Schedule Fetch
+  useEffect(() => {
+    if (!user) return;
+    const unsubs: any[] = [];
+    const todayStr = new Date().toISOString().slice(0, 10);
+
+    // Appointments (Telehealth/In-person)
+    const qAppt = query(collection(db, "appointments"), where("patientId", "==", user.uid), where("scheduledDate", "==", todayStr));
+    unsubs.push(onSnapshot(qAppt, snap => {
+      const appts = snap.docs.map(d => ({ id: d.id, ...d.data(), eventType: 'meeting' }));
+      setRawSchedule(prev => [...prev.filter(p => p.eventType !== 'meeting'), ...appts]);
+    }));
+
+    // Game Sessions
+    const qGame = query(collection(db, "scheduled_sessions"), where("patientId", "==", user.uid), where("scheduledDate", "==", todayStr));
+    unsubs.push(onSnapshot(qGame, snap => {
+      const games = snap.docs.map(d => ({ id: d.id, ...d.data(), eventType: 'game' }));
+      setRawSchedule(prev => [...prev.filter(p => p.eventType !== 'game'), ...games]);
+    }));
+
+    return () => unsubs.forEach(u => u());
+  }, [user]);
+
+  // 3. Time Engine (Check for alerts)
+  useEffect(() => {
+    const checkTimes = () => {
+      const now = new Date();
+      const alerts = rawSchedule.filter(item => {
+         if (item.status === 'completed' || item.status === 'cancelled') return false;
+         const itemDate = new Date(`${item.scheduledDate}T${item.scheduledTime}`);
+         const diffMins = (itemDate.getTime() - now.getTime()) / 60000;
+         return diffMins > 0 && diffMins <= reminderMinutes;
+      });
+      setUpcomingAlerts(alerts);
+    };
+    checkTimes(); // run immediately
+    const iv = setInterval(checkTimes, 60000); // Check every minute
+    return () => clearInterval(iv);
+  }, [rawSchedule, reminderMinutes]);
+
+  // UI Listeners
   useEffect(() => {
     const h = () => setScrolled(window.scrollY > 8);
     window.addEventListener("scroll", h, { passive: true });
@@ -198,17 +279,24 @@ export default function PatientTopbar() {
     return () => document.removeEventListener("mousedown", h);
   }, []);
 
+  const handleLogout = async () => {
+    try {
+      await signOut(auth);
+      router.replace("/");
+    } catch (error) {
+      console.error("Logout failed", error);
+    }
+  };
+
   const filteredSugg = searchVal.length > 0
     ? suggestions.filter(s => s.label.toLowerCase().includes(searchVal.toLowerCase()))
     : [];
   const showSugg = (searchFocused && searchVal.length === 0) || filteredSugg.length > 0;
 
   return (
-    // FIX: Outer div acts as a placeholder so content doesn't jump underneath
     <div className="ptb" style={{ width: "100%", height: 64 }}>
       <style>{STYLES}</style>
 
-      {/* FIX: Position fixed and added class so it attaches to sidebar mathematically */}
       <header className="pat-main-offset" style={{
         position: "fixed",
         top: 0, left: 0, right: 0, zIndex: 400,
@@ -245,7 +333,7 @@ export default function PatientTopbar() {
             <Flame size={14} color="#f59e0b" fill="#f59e0b"
               style={{ animation: "streakBounce 2s ease-in-out infinite" }} />
             <span style={{ fontSize: 12, fontWeight: 800, color: "#f59e0b" }}>
-              {patient.streak}
+              {patientData.streak}
             </span>
             <span className="mono" style={{ fontSize: 9, color: "rgba(245,158,11,0.6)",
               textTransform: "uppercase", letterSpacing: "0.10em" }}>streak</span>
@@ -262,12 +350,11 @@ export default function PatientTopbar() {
             <div>
               <div style={{ display: "flex", alignItems: "baseline", gap: 4 }}>
                 <span style={{ fontSize: 12, fontWeight: 800, color: "#2DD4BF", lineHeight: 1 }}>
-                  {patient.xp.toLocaleString()}
+                  {patientData.xp.toLocaleString()}
                 </span>
                 <span className="mono" style={{ fontSize: 8, color: "rgba(45,212,191,0.5)",
                   textTransform: "uppercase", letterSpacing: "0.10em" }}>xp</span>
               </div>
-              {/* Mini XP bar */}
               <div style={{ width: 44, height: 3, background: "rgba(45,212,191,0.12)",
                 borderRadius: 99, overflow: "hidden", marginTop: 3 }}>
                 <div className="ptb-xp-fill" style={{
@@ -288,7 +375,7 @@ export default function PatientTopbar() {
           }}>
             <Trophy size={13} color="#818cf8" />
             <span style={{ fontSize: 12, fontWeight: 800, color: "#818cf8" }}>
-              Lv.{patient.level}
+              Lv.{patientData.level}
             </span>
           </div>
         </div>
@@ -337,7 +424,7 @@ export default function PatientTopbar() {
                 </div>
               )}
               {(searchVal.length === 0 ? suggestions : filteredSugg).map((s, i) => (
-                <div key={s.label} className="ptb-sugg" style={{ animationDelay: `${i * 0.05}s` }}>
+                <div key={s.label} className="ptb-sugg" style={{ animationDelay: `${i * 0.05}s` }} onClick={() => router.push(s.path)}>
                   <div style={{ width: 32, height: 32, borderRadius: 10,
                     background: "rgba(45,212,191,0.10)", display: "flex",
                     alignItems: "center", justifyContent: "center", color: "#2DD4BF", flexShrink: 0 }}>
@@ -365,11 +452,11 @@ export default function PatientTopbar() {
             <Search size={18} />
           </button>
 
-          {/* Notifications */}
+          {/* Notifications / Alerts */}
           <div ref={notifRef} style={{ position: "relative" }}>
             <button className="ptb-icon-btn" onClick={() => { setNotifOpen(p => !p); setProfileOpen(false); }}>
               <Bell size={18} />
-              {unread > 0 && (
+              {upcomingAlerts.length > 0 && (
                 <span style={{
                   position: "absolute", top: 7, right: 7,
                   width: 8, height: 8, borderRadius: "50%",
@@ -385,52 +472,51 @@ export default function PatientTopbar() {
                   borderBottom: "1px solid rgba(255,255,255,0.06)",
                   display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                   <div>
-                    <div style={{ fontSize: 14, fontWeight: 700, color: "#fff" }}>Notifications</div>
+                    <div style={{ fontSize: 14, fontWeight: 700, color: "#fff" }}>Alerts & Reminders</div>
                     <div className="mono" style={{ fontSize: 9, color: "rgba(255,255,255,0.30)",
                       textTransform: "uppercase", letterSpacing: "0.12em", marginTop: 3 }}>
-                      {unread} new
+                      {upcomingAlerts.length} upcoming
                     </div>
                   </div>
-                  <button style={{ fontSize: 11, fontWeight: 700, color: "#2DD4BF",
-                    background: "none", border: "none", cursor: "pointer" }}>
-                    Clear all
-                  </button>
                 </div>
 
                 <div style={{ maxHeight: 288, overflowY: "auto" }}>
-                  {notifications.map((n, i) => (
-                    <div key={n.id} className="ptb-notif-item"
-                      style={{ animationDelay: `${i * 0.06}s`, opacity: n.read ? 0.5 : 1 }}>
-                      <div style={{
-                        width: 32, height: 32, borderRadius: 10, flexShrink: 0,
-                        background: `${n.dot}18`,
-                        display: "flex", alignItems: "center", justifyContent: "center",
-                        color: n.dot,
-                      }}>
-                        <n.icon size={15} />
-                      </div>
-                      <div style={{ flex: 1, minWidth: 0 }}>
-                        <div style={{ fontSize: 12.5, fontWeight: n.read ? 500 : 700,
-                          color: "#fff", lineHeight: 1.4 }}>{n.title}</div>
-                        <div className="mono" style={{ fontSize: 9.5,
-                          color: "rgba(255,255,255,0.28)", marginTop: 3 }}>{n.time}</div>
-                      </div>
-                      {!n.read && (
-                        <div style={{ width: 6, height: 6, borderRadius: "50%",
-                          background: "#2DD4BF", flexShrink: 0, marginTop: 5 }} />
-                      )}
+                  {upcomingAlerts.length === 0 ? (
+                    <div style={{ padding: "30px 16px", textAlign: "center", color: "rgba(255,255,255,0.4)" }}>
+                      <CheckCircle2 size={24} className="mx-auto mb-2 opacity-50" />
+                      <p className="text-sm font-medium">All caught up!</p>
+                      <p className="text-xs mt-1">No upcoming sessions right now.</p>
                     </div>
-                  ))}
-                </div>
+                  ) : (
+                    upcomingAlerts.map((alert, i) => {
+                      const now = new Date();
+                      const itemDate = new Date(`${alert.scheduledDate}T${alert.scheduledTime}`);
+                      const minsLeft = Math.round((itemDate.getTime() - now.getTime()) / 60000);
+                      const isMeeting = alert.eventType === 'meeting';
 
-                <div style={{ padding: "10px 16px", borderTop: "1px solid rgba(255,255,255,0.06)" }}>
-                  <button style={{
-                    width: "100%", padding: "9px", borderRadius: 12,
-                    background: "rgba(45,212,191,0.08)", border: "1px solid rgba(45,212,191,0.16)",
-                    color: "#2DD4BF", fontSize: 12, fontWeight: 700, cursor: "pointer",
-                  }}>
-                    View All Notifications
-                  </button>
+                      return (
+                        <div key={alert.id} className="ptb-notif-item" style={{ animationDelay: `${i * 0.06}s` }} onClick={() => isMeeting ? window.open(`/patients/meeting/${alert.id}`, "_blank") : router.push("/patients/schedule")}>
+                          <div style={{
+                            width: 32, height: 32, borderRadius: 10, flexShrink: 0,
+                            background: isMeeting ? "rgba(99,102,241,0.18)" : "rgba(45,212,191,0.18)",
+                            display: "flex", alignItems: "center", justifyContent: "center",
+                            color: isMeeting ? "#6366f1" : "#2DD4BF",
+                          }}>
+                            {isMeeting ? <Video size={15} /> : <Gamepad2 size={15} />}
+                          </div>
+                          <div style={{ flex: 1, minWidth: 0 }}>
+                            <div style={{ fontSize: 12.5, fontWeight: 700, color: "#fff", lineHeight: 1.4 }}>
+                              {isMeeting ? alert.title || "Telehealth Session" : "Therapy Game Session"}
+                            </div>
+                            <div className="mono" style={{ fontSize: 9.5, color: "rgba(255,255,255,0.28)", marginTop: 3 }}>
+                              Starting in {minsLeft} min
+                            </div>
+                          </div>
+                          <div style={{ width: 6, height: 6, borderRadius: "50%", background: "#f87171", flexShrink: 0, marginTop: 5 }} />
+                        </div>
+                      )
+                    })
+                  )}
                 </div>
               </div>
             )}
@@ -449,12 +535,12 @@ export default function PatientTopbar() {
                 fontSize: 13, fontWeight: 800, color: "#0B1E33",
                 animation: "glowAvatar 3s ease-in-out infinite", flexShrink: 0,
               }}>
-                {patient.initials}
+                {patientData.initials}
               </div>
               <div style={{ textAlign: "left" }} className="ptb-profile-text">
-                <div style={{ fontSize: 13, fontWeight: 700, color: "#fff", lineHeight: 1 }}>{patient.name}</div>
+                <div style={{ fontSize: 13, fontWeight: 700, color: "#fff", lineHeight: 1 }}>{patientData.name}</div>
                 <div className="mono" style={{ fontSize: 9, color: "rgba(255,255,255,0.35)", marginTop: 3 }}>
-                  ID: {patient.id}
+                  ID: {patientData.id}
                 </div>
               </div>
               <ChevronDown size={14} color="rgba(255,255,255,0.35)"
@@ -475,22 +561,22 @@ export default function PatientTopbar() {
                       background: "linear-gradient(135deg,#2DD4BF,#0891b2)",
                       display: "flex", alignItems: "center", justifyContent: "center",
                       fontSize: 14, fontWeight: 800, color: "#0B1E33" }}>
-                      {patient.initials}
+                      {patientData.initials}
                     </div>
                     <div>
-                      <div style={{ fontSize: 13, fontWeight: 700, color: "#fff" }}>{patient.name}</div>
+                      <div style={{ fontSize: 13, fontWeight: 700, color: "#fff" }}>{patientData.name}</div>
                       <div className="mono" style={{ fontSize: 9, color: "#2DD4BF",
                         textTransform: "uppercase", letterSpacing: "0.10em" }}>
-                        {patient.id}
+                        {patientData.id}
                       </div>
                     </div>
                   </div>
                   {/* Stats row */}
                   <div style={{ display: "flex", gap: 8 }}>
                     {[
-                      { label: "Streak", value: `${patient.streak}d`, color: "#f59e0b" },
-                      { label: "Level",  value: `Lv.${patient.level}`,color: "#818cf8"  },
-                      { label: "XP",     value: patient.xp.toLocaleString(), color: "#2DD4BF" },
+                      { label: "Streak", value: `${patientData.streak}d`, color: "#f59e0b" },
+                      { label: "Level",  value: `Lv.${patientData.level}`,color: "#818cf8"  },
+                      { label: "XP",     value: patientData.xp.toLocaleString(), color: "#2DD4BF" },
                     ].map(s => (
                       <div key={s.label} style={{ flex: 1, textAlign: "center",
                         background: "rgba(255,255,255,0.04)", borderRadius: 10, padding: "6px 4px" }}>
@@ -502,22 +588,16 @@ export default function PatientTopbar() {
                   </div>
                 </div>
 
-                {[
-                  { label: "My Profile",    href: "/patients/profile"   },
-                  { label: "Settings",      href: "/patients/settings"  },
-                  { label: "FAQ & Help",    href: "/patients/faq"       },
-                ].map(item => (
-                  <a key={item.label} href={item.href} className="ptb-menu-item">{item.label}</a>
-                ))}
-
+                <button onClick={() => router.push("/patients/profile")} className="ptb-menu-item">My Profile</button>
+                <button onClick={() => router.push("/patients/settings")} className="ptb-menu-item">Settings</button>
+                
                 <div style={{ height: 1, background: "rgba(255,255,255,0.07)", margin: "6px 0" }} />
-                <a href="/" className="ptb-menu-item" style={{ color: "#f87171" }}>Sign Out</a>
+                <button onClick={handleLogout} className="ptb-menu-item" style={{ color: "#f87171" }}>Sign Out</button>
               </div>
             )}
           </div>
         </div>
 
-        {/* FIX: Moved Mobile Search Panel INSIDE the fixed header so it drops down properly */}
         {mobileSearchOpen && (
           <div className="ptb-mobile-search">
             <div style={{ position: "relative" }}>
