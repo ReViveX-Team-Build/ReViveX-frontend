@@ -624,40 +624,51 @@ export default function DoctorDashboard() {
           orderBy("timestamp", "desc"),
         ),
       );
-      const allSessions = sSnap.docs.map(
+      const allCompletedSessions = sSnap.docs.map(
         (d) => ({ id: d.id, ...d.data() }) as any,
       );
 
       const sessionsPerPatient: Record<string, number> = {};
       const lastSeen: Record<string, Timestamp> = {};
       
-      allSessions.forEach((s: any) => {
+      allCompletedSessions.forEach((s: any) => {
         const uid = s.userId;
         sessionsPerPatient[uid] = (sessionsPerPatient[uid] || 0) + 1;
         if (!lastSeen[uid] || s.timestamp.seconds > lastSeen[uid].seconds)
           lastSeen[uid] = s.timestamp;
       });
 
-      // 🔴 REPLACED: Fetch real data from the new appointments and scheduled_sessions tables!
+      // Fetch real data from the appointments and scheduled_sessions tables!
       const schedSnap = await getDocs(query(collection(db, "scheduled_sessions"), where("doctorId", "==", user.uid)));
       const apptSnap = await getDocs(query(collection(db, "appointments"), where("doctorId", "==", user.uid)));
 
-      const allEvents = [
+      const rawEvents = [
         ...schedSnap.docs.map(d => d.data()),
         ...apptSnap.docs.map(d => d.data())
       ];
 
-      // Ensure local YYYY-MM-DD match to properly get "Today's Sessions"
+      // 🔴 STRICT FRONT-END TIME CHECK
       const now = new Date();
       const localMonth = String(now.getMonth() + 1).padStart(2, '0');
       const localDay = String(now.getDate()).padStart(2, '0');
       const todayStr = `${now.getFullYear()}-${localMonth}-${localDay}`;
 
+      const allEvents = rawEvents.map((e: any) => {
+        if (e.status === "completed" || e.status === "cancelled" || e.status === "missed") {
+          return e;
+        }
+        const eventTime = new Date(`${e.scheduledDate}T${e.scheduledTime || "00:00"}:00`);
+        if (eventTime < now) {
+          return { ...e, status: "missed" };
+        }
+        return e;
+      });
+
       let realCompletedToday = 0;
       let realMissedToday = 0;
       let realUpcomingToday = 0;
 
-      // Map today's stats based on the exact status inside the DB
+      // Map today's stats based on the PROCESSED status
       allEvents.filter((e: any) => e.scheduledDate === todayStr).forEach((e: any) => {
         if (e.status === "completed") realCompletedToday++;
         else if (e.status === "missed") realMissedToday++;
@@ -673,7 +684,6 @@ export default function DoctorDashboard() {
          return eDate >= sevenDaysAgoDate;
       }).length;
 
-
       let totalAdh = 0,
         devOnline = 0;
       const rows: PatientRow[] = [];
@@ -686,12 +696,12 @@ export default function DoctorDashboard() {
         if (p.hardwareStatus?.status === "connected") devOnline++;
         const urgency: "critical" | "warning" | "mild" =
           adh < 40 ? "critical" : adh < 70 ? "warning" : "mild";
-        const recent = allSessions.filter(
+        const recent = allCompletedSessions.filter(
           (s: any) =>
             s.userId === p.uid &&
             s.timestamp.toMillis() > Date.now() - 3 * 86400000,
         ).length;
-        const older = allSessions.filter(
+        const older = allCompletedSessions.filter(
           (s: any) =>
             s.userId === p.uid &&
             s.timestamp.toMillis() > Date.now() - 6 * 86400000 &&
@@ -717,16 +727,16 @@ export default function DoctorDashboard() {
       setKpis({
         totalPatients: patients.length,
         avgAdherence: avg,
-        missedSessions: realTotalMissed, // 🔴 NOW PULLING REAL DATA
+        missedSessions: realTotalMissed, 
         devicesOnline: devOnline,
       });
       setTriage(
         [...rows].sort((a, b) => a.adherence - b.adherence).slice(0, 3),
       );
       setSessions({
-        completed: realCompletedToday,   // 🔴 NOW PULLING REAL DATA
-        missed: realMissedToday,         // 🔴 NOW PULLING REAL DATA
-        upcoming: realUpcomingToday,     // 🔴 NOW PULLING REAL DATA
+        completed: realCompletedToday,   
+        missed: realMissedToday,         
+        upcoming: realUpcomingToday,     
       });
       setDataLoading(false);
       fetchAI(user.uid, patients.length, avg, realTotalMissed, devOnline, false);

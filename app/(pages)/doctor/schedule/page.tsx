@@ -344,7 +344,7 @@ export default function SchedulePage() {
   const refreshData = async (uid: string) => {
     setLoading(true); setError(null);
     try {
-      await markMissedSessionsForDoctor(uid);
+      await markMissedSessionsForDoctor(uid).catch(e => console.warn("Backend mark missed failed:", e));
       await checkUpcomingRemindersForDoctor(uid).catch(e => console.warn("Reminder check skipped:", e));
       
       const [pts, sched, appts] = await Promise.all([
@@ -352,10 +352,31 @@ export default function SchedulePage() {
         getDoctorSchedule(uid),
         getDoctorAppointments(uid)
       ]);
+
+      // 🔴 STRICT FRONT-END TIME CHECK
+      // Compares the scheduled time against your computer's local time.
+      const now = new Date();
+      const processStatus = (item: any) => {
+        if (item.status === "completed" || item.status === "cancelled" || item.status === "missed") {
+          return item; // Keep explicit statuses
+        }
+        
+        // Construct a proper Date object for the event
+        const eventTime = new Date(`${item.scheduledDate}T${item.scheduledTime}:00`);
+        
+        // If the event time is in the past, override the status to "missed" for the UI
+        if (eventTime < now) {
+          return { ...item, status: "missed" };
+        }
+        return item;
+      };
+
+      const processedSessions = sched.map(processStatus) as ScheduledSession[];
+      const processedAppointments = appts.map(processStatus) as Appointment[];
       
       setPatients(pts); 
-      setSessions(sched);
-      setAppointments(appts);
+      setSessions(processedSessions);
+      setAppointments(processedAppointments);
       
       if (!sessionForm.patientId && pts.length > 0) {
         setSessionForm(prev => ({...prev, patientId: pts[0].uid}));
@@ -671,7 +692,7 @@ export default function SchedulePage() {
                 </div>
               </div>
 
-              {/*  REMINDERS CARD */}
+              {/* REMINDERS CARD */}
               <div style={{ padding:"20px 22px", borderRadius:18, background:"rgba(99,102,241,.06)", border:"1.5px dashed rgba(99,102,241,.25)", transition: "all 0.3s" }}>
                 <div style={{ display:"flex", alignItems:"center", gap:10, marginBottom:10 }}>
                   <div style={{ width:30, height:30, borderRadius:9, background:"rgba(99,102,241,.12)", display:"flex", alignItems:"center", justifyContent:"center", color:"#6366f1" }}>
