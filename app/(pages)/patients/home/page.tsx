@@ -6,6 +6,7 @@ import { useDarkMode } from "@/app/lib/hooks/useDarkMode";
 import { useAuthState } from "react-firebase-hooks/auth";
 import { auth, db } from "@/app/lib/firebase";
 import { doc, getDoc, collection, query, where, getDocs } from "firebase/firestore";
+import { useHardware } from "@/app/lib/context/HardwareContext";
 import {
   Calendar,
   Clock,
@@ -13,6 +14,7 @@ import {
   TrendingUp,
   CheckCircle2,
   Wifi,
+    WifiOff,
   Zap,
   ArrowRight,
   Activity,
@@ -570,16 +572,17 @@ export default function PatientHome() {
   const [mounted, setMounted] = useState(false);
   const [msgIdx, setMsgIdx] = useState(0);
   const [msgVisible, setMsgVisible] = useState(true);
+  const { isConnected } = useHardware();
 
   // 🔴 REAL DATA STATES
   const [patientData, setPatientData] = useState({
     name: "Loading...", initials: "PT", streak: 0, xp: 0
   });
-  
+
   const [nextSession, setNextSession] = useState({
     date: "--", year: "----", time: "--:--", hand: "Any", duration: "--", exists: false
   });
-  
+
   const [adherence, setAdherence] = useState({
     score: 0, completed: 0, total: 0
   });
@@ -612,7 +615,7 @@ export default function PatientHome() {
           const name = d.name || "Patient";
           const parts = name.trim().split(" ");
           const initials = parts.length >= 2 ? `${parts[0][0]}${parts[parts.length-1][0]}`.toUpperCase() : name.slice(0,2).toUpperCase();
-          
+
           setPatientData({
             name: name.split(" ")[0], // Use first name for welcome
             initials,
@@ -639,7 +642,7 @@ export default function PatientHome() {
         const aSnap = await getDocs(aQuery);
 
         const allEvents = [...sSnap.docs.map(d => d.data()), ...aSnap.docs.map(d => d.data())];
-        
+
         // Find next future session
         const now = new Date();
         const futureEvents = allEvents.filter(e => {
@@ -720,9 +723,9 @@ export default function PatientHome() {
       }, 400);
     }, 4000);
     return () => clearInterval(iv);
-  }, [aiMessages.length]); // depend on the array length so it uses the real messages
+  }, []);
 
-  if (!mounted || authLoading) return null;
+  if (!mounted) return null;
 
   return (
     <div
@@ -860,7 +863,7 @@ export default function PatientHome() {
                     color: "#fff",
                     letterSpacing: "-0.02em",
                   }}>
-                  {patientData.initials}
+                  PB
                 </span>
               </div>
               {/* Online dot */}
@@ -1755,6 +1758,53 @@ export default function PatientHome() {
                     {deviceOnline ? "Connected" : "Offline"}
                   </span>
                 </div>
+                {isConnected ? (
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 6,
+                      background: "rgba(16,185,129,0.12)",
+                      border: "1px solid rgba(16,185,129,0.25)",
+                      borderRadius: 99,
+                      padding: "4px 12px",
+                    }}>
+                    <CircleCheck size={13} color="#10b981" />
+                    <span
+                      className="mono"
+                      style={{
+                        fontSize: 9.5,
+                        fontWeight: 700,
+                        color: "#10b981",
+                        letterSpacing: "0.08em",
+                      }}>
+                      Connected
+                    </span>
+                  </div>
+                ) : (
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 6,
+                      background: "rgba(239,68,68,0.10)",
+                      border: "1px solid rgba(239,68,68,0.25)",
+                      borderRadius: 99,
+                      padding: "4px 12px",
+                    }}>
+                    <WifiOff size={13} color="#ef4444" />
+                    <span
+                      className="mono"
+                      style={{
+                        fontSize: 9.5,
+                        fontWeight: 700,
+                        color: "#ef4444",
+                        letterSpacing: "0.08em",
+                      }}>
+                      Offline
+                    </span>
+                  </div>
+                )}
               </div>
 
               <div
