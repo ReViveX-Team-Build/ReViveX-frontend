@@ -28,6 +28,7 @@ interface Checkpoint {
 }
 
 export class SkyGate {
+    difficulty: number;
     x: number;
     y: number;
     width: number;
@@ -76,6 +77,7 @@ export class SkyGate {
         this.holdDuration = baseHoldTime - (difficulty - 1) * 300; // Less time to pass at higher levels
         
         this.checkpoints = this.createCheckpoints(checkpointCount);
+        this.difficulty = difficulty;  // Store for gap sizing
         
         // Generate multiple pillar positions at different heights
         this.generatePillars(gameHeight);
@@ -86,8 +88,8 @@ export class SkyGate {
     pillarBottoms: number[] = [];
     
     private generatePillars(gameHeight: number): void {
-        // Generate gap position - VERY LARGE GAP for therapy/easy gameplay
-        const gapSize = this.height * 0.85; // Original value
+        // Dynamic gap size by difficulty - tighter for Precision Peaks+
+        const gapSize = this.height * (this.difficulty <= 3 ? 0.85 : this.difficulty === 4 ? 0.70 : 0.60);
         const minY = gameHeight * 0.10;
         const maxY = gameHeight - gapSize - gameHeight * 0.10;
         
