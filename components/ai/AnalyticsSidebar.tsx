@@ -89,7 +89,9 @@ function GripChart({ data, isDark }: { data: { date: string; grip: number }[]; i
         <div className={`rounded-xl p-3 border ${isDark ? "bg-slate-800 border-slate-700" : "bg-white border-gray-100"}`}>
             <div className="flex items-center justify-between mb-2">
                 <p className={`text-xs font-semibold ${isDark ? "text-slate-100" : "text-[#0A2E4C]"}`}>30-Day Grip Trend</p>
-                <p className={`text-xs ${isDark ? "text-slate-500" : "text-gray-400"}`}>{data.length} sessions</p>
+                <p className={`text-xs ${isDark ? "text-slate-500" : "text-gray-400"}`}>
+                    {data.length} {data.length === 1 ? "session" : "sessions"}
+                </p>
             </div>
             <svg viewBox={`0 0 ${width} ${height}`} className="w-full" style={{ height: 70 }}>
                 <polygon points={area} fill="rgba(45,212,191,0.08)" />
