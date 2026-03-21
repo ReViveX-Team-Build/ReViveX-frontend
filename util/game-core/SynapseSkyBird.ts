@@ -18,9 +18,9 @@ export class SkyBird {
     
     // Physics - adjusted for therapy ball use (gentler, slower, less sensitive)
     gravity: number = 0.15;      // Reduced from 0.25 - falls slower
-    jumpForce: number = -3.5;    // Reduced from -5.5 - rises slower
+    jumpForce: number = -2.2;    // Further reduced - gentle therapy motion
     maxFallSpeed: number = 4;    // Reduced from 6 - slower fall
-    maxRiseSpeed: number = -4;   // Reduced from -6 - slower rise
+    maxRiseSpeed: number = -2.6; // Further reduced - moves only a bit
     
     status: BirdStatus = "flying";
     isDead: boolean = false;
