@@ -407,7 +407,7 @@ const SkyMemoryGame: React.FC = () => {
         const c = canvasRef.current; if (!c) return;
         
 const numGates = gameLevel === 3 ? 3 : gameLevel === 4 ? 4 : 5;  // More gates for Precision Peaks+
-const gateSpacing = gameLevel === 3 ? 650 : gameLevel === 4 ? 500 : 450;  // Less distance Precision Peaks+
+const gateSpacing = gameLevel === 3 ? 750 : gameLevel === 4 ? 600 : 550;  // Updated per specs
         for (let i = 0; i < numGates; i++) {
             // Generate proper sequence using settings
             const sequence: MemoryColor[] = [];
