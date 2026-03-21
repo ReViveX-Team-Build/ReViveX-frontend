@@ -89,7 +89,7 @@ export class SkyGate {
     
     private generatePillars(gameHeight: number): void {
         // Dynamic gap size by difficulty - tighter for Precision Peaks+
-        const gapSize = this.height * (this.difficulty <= 3 ? 0.85 : this.difficulty === 4 ? 0.70 : 0.60);
+        const gapSize = this.height * (this.difficulty === 3 ? 0.90 : this.difficulty === 4 ? 0.80 : 0.70); // User specs
         const minY = gameHeight * 0.10;
         const maxY = gameHeight - gapSize - gameHeight * 0.10;
         
