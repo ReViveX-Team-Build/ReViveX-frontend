@@ -4,28 +4,32 @@ import React, { useRef, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Play, RotateCcw, Zap, Hand, Wifi, WifiOff } from "lucide-react";
 import { useAuthState } from "react-firebase-hooks/auth";
+import { Timestamp } from "firebase/firestore";
+
+
 import { auth } from "@/app/lib/firebase";
-import { saveGameSession } from "../../app/lib/db/sessions";
+import { saveGameSession } from "@/app/lib/db/sessions";
 import { useHardware } from "@/app/lib/context/HardwareContext";
-import { updateSessionStatus } from "../../app/lib/db/schedule";
+import { updateSessionStatus } from "@/app/lib/db/schedule";
 import {
   getActiveProtocol,
   addXpToPatient,
   updateHardwareStatus,
-} from "../../../app/lib/db/users";
+} from "@/app/lib/db/users";
+import { TherapyProtocol } from "@/app/lib/db/types";
+
+
 import {
   calculateCognitiveAccuracy,
   calculateEnduranceDrop,
   getPeakGripForce,
 } from "../../../util/game-core/MetricsCalculator";
-import { Timestamp } from "firebase/firestore";
 import { Player } from "../../../util/game-core/SynapsePlayer";
 import { SynapseBackground } from "../../../util/game-core/SynapseBackground";
 import { SeaGrass } from "../../../util/game-core/SynapseSeaGrass";
 import { Particle } from "../../../util/game-core/SynapseParticles";
 import { SynapseCorals } from "../../../util/game-core/SynapseCorals";
 import { Pearl, CognitiveTask } from "../../../util/game-core/SynapseCognitive";
-import { TherapyProtocol } from "@/app/lib/db/types";
 
 // ── WEB SERIAL TYPES ──────────────────────────────────────────────────────────
 interface SerialPort {
