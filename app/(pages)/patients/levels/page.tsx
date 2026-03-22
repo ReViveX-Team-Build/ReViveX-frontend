@@ -148,7 +148,7 @@ const BASE_LEVELS: Level[] = [
     category: "STRENGTH",
     desc: "Ultimate cognitive-motor challenge. Long sequences and heavy resistance constraints.",
     locked: false,
-    path: "/games/memory_gate?level=3",
+    path: "/game/sky-memory?level=5",
     difficulty: "Expert",
     difficultyN: 5,
     accentHex: "#ef4444",
