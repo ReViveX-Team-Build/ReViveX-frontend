@@ -6,7 +6,7 @@ import { usePathname } from "next/navigation";
 import { useAuthState } from "react-firebase-hooks/auth";
 import { auth, db } from "@/app/lib/firebase";
 import { getDoctorSchedule } from "@/app/lib/db/schedule";
-import { doc, getDoc } from "firebase/firestore";
+import { doc, getDoc, collection, query, where, getDocs } from "firebase/firestore";
 import { ScheduledSession } from "@/app/lib/db/types";
 import { signOut } from "firebase/auth";
 import {
@@ -45,7 +45,8 @@ const navItems: NavItem[] = [
     href: "/doctor/home",
     badge: null,
   },
-  { icon: Users, label: "My Patients", href: "/doctor/patients", badge: "8" },
+
+  { icon: Users, label: "My Patients", href: "/doctor/patients", badge: null },
   {
     icon: CalendarDays,
     label: "Schedule",
@@ -489,7 +490,6 @@ function SidebarContent({
           </div>
         )}
 
-       
         <button
           onClick={() => signOut(auth)}
           style={{
@@ -524,12 +524,13 @@ export default function DoctorSidebar() {
   const [user] = useAuthState(auth);
   const [bp, setBp] = useState<BreakPoint>("desktop");
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [upcomingCount, setUpcomingCount] = useState(0);
   
- 
+  //  States for badges
+  const [upcomingCount, setUpcomingCount] = useState(0);
+  const [patientCount, setPatientCount] = useState(0);
   const [initials, setInitials] = useState("DR");
 
-  
+  // Load Doctor Initials
   useEffect(() => {
     if (!user) return;
     getDoc(doc(db, "users", user.uid)).then((d) => {
@@ -544,13 +545,13 @@ export default function DoctorSidebar() {
     });
   }, [user]);
 
+  // Load Schedule Count
   useEffect(() => {
     const loadUpcomingCount = async () => {
       if (!user) {
         setUpcomingCount(0);
         return;
       }
-
       try {
         const schedule = await getDoctorSchedule(user.uid);
         const now = new Date();
@@ -567,18 +568,46 @@ export default function DoctorSidebar() {
         setUpcomingCount(0);
       }
     };
-
     void loadUpcomingCount();
   }, [user, pathname]);
 
+  // 🟢 Load Real Patient Count
+  useEffect(() => {
+    const loadPatientCount = async () => {
+      if (!user) {
+        setPatientCount(0);
+        return;
+      }
+      try {
+        // Query users collection for patients assigned to this doctor
+        const q = query(
+          collection(db, "users"),
+          where("role", "==", "patient"),
+          where("assignedDoctorId", "==", user.uid)
+        );
+        const snap = await getDocs(q);
+        setPatientCount(snap.size);
+      } catch (e) {
+        console.error("Failed to load patient count:", e);
+        setPatientCount(0);
+      }
+    };
+    void loadPatientCount();
+  }, [user, pathname]);
+
+  // 🟢 Dynamically map badges onto the navigation items
   const navItemsWithCounts = useMemo(
     () =>
-      navItems.map((item) =>
-        item.href === "/doctor/schedule"
-          ? { ...item, badge: upcomingCount > 0 ? String(upcomingCount) : null }
-          : item,
-      ),
-    [upcomingCount],
+      navItems.map((item) => {
+        if (item.href === "/doctor/schedule") {
+          return { ...item, badge: upcomingCount > 0 ? String(upcomingCount) : null };
+        }
+        if (item.href === "/doctor/patients") {
+          return { ...item, badge: patientCount > 0 ? String(patientCount) : null };
+        }
+        return item;
+      }),
+    [upcomingCount, patientCount]
   );
 
   useEffect(() => {
