@@ -270,32 +270,31 @@ function SidebarContent({
             <X size={16} />
           </button>
         )}
-        <div
-          style={{
-            width: 40,
-            height: 40,
-            borderRadius: 13,
-            background: "linear-gradient(135deg,#2DD4BF,#0891b2)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            flexShrink: 0,
-            animation: "glowBreath 3s ease-in-out infinite",
-          }}>
-          <BrainCircuit size={20} color="#0B1E33" strokeWidth={2.5} />
-        </div>
-        {!collapsed && (
-          <div>
-            <div
+        {/* Logo — /public/images/logo.png */}
+        {collapsed ? (
+          <img
+            src="/images/logo.png"
+            alt="ReViveX"
+            style={{
+              width: 36,
+              height: 36,
+              objectFit: "contain",
+              flexShrink: 0,
+              display: "block",
+            }}
+          />
+        ) : (
+          <div style={{ display: "flex", flexDirection: "column", gap: 4, overflow: "hidden" }}>
+            <img
+              src="/images/logo.png"
+              alt="ReViveX"
               style={{
-                fontSize: 17,
-                fontWeight: 800,
-                color: "#fff",
-                letterSpacing: "0.02em",
-                lineHeight: 1.2,
-              }}>
-              ReVive<span style={{ color: "#2DD4BF" }}>X</span>
-            </div>
+                height: 34,
+                width: "auto",
+                objectFit: "contain",
+                display: "block",
+              }}
+            />
             <div
               style={{
                 fontSize: 9,
