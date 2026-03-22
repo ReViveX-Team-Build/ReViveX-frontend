@@ -134,6 +134,7 @@ const GameCanvas: React.FC = () => {
   // useAuthState is called unconditionally at top level (React hook rules)
   const [user] = useAuthState(auth);
   const [protocol, setProtocol] = useState<TherapyProtocol | null>(null);
+  const currentLevel = protocol?.level ?? 1;
 
   // userRef keeps a stable ref to user.uid so connectSerial / disconnectSerial
   // can call updateHardwareStatus even though they're defined before the effect
@@ -447,7 +448,7 @@ const GameCanvas: React.FC = () => {
     const state = gsRef.current;
     const isCounting = cdRef.current !== null;
     const physics = state === "PLAYING" && !isCounting;
-    const scrollSpeed = physics ? 4.0 : 0.8;
+    const scrollSpeed = physics ? (currentLevel === 1 ? 2.5 : 4.0) : 0.8;
 
     let nf = 0,
       sandH = 80;
@@ -457,8 +458,8 @@ const GameCanvas: React.FC = () => {
       sandH = bgRef.current.sandHeight;
     }
     if (coralsRef.current) {
-      coralsRef.current.update();
-      coralsRef.current.draw(ctx, nf);
+      coralsRef.current.update(scrollSpeed);
+      coralsRef.current.draw(ctx, nf, c.height - sandH);
     }
     if (grassRef.current && playerRef.current) {
       grassRef.current.update(playerRef.current.x, playerRef.current.y, delta);
@@ -466,11 +467,12 @@ const GameCanvas: React.FC = () => {
     }
 
     if (playerRef.current) {
-      // Danger pressure check — uses pressRef.current directly
+      // Danger pressure — only hard-fail in Level 2+
       if (
         isConnRef.current &&
         pressRef.current >= DANGER_THRESHOLD &&
-        physics
+        physics &&
+        currentLevel >= 2
       ) {
         setFailReason("pressure");
         setGs("SOFT_FAIL");
@@ -490,10 +492,14 @@ const GameCanvas: React.FC = () => {
         }
         if (playerRef.current.status === "hit_floor") {
           bgRef.current?.triggerSiltCloud(playerRef.current.x, playerRef.current.y);
-          setFailReason("floor");
-          setGs("SOFT_FAIL");
+          if (currentLevel >= 2) {
+            setFailReason("floor");
+            setGs("SOFT_FAIL");
+          }
+        } else {
+          (bgRef.current as any)?.clearSiltCloud?.();
         }
-        if (playerRef.current.status === "hit_ceiling") {
+        if (playerRef.current.status === "hit_ceiling" && currentLevel >= 2) {
           setFailReason("ceiling");
           setGs("SOFT_FAIL");
         }
@@ -503,7 +509,7 @@ const GameCanvas: React.FC = () => {
               dy = playerRef.current!.y - pearl.y;
             if (
               Math.hypot(dx, dy) <
-              playerRef.current!.radius + pearl.radius + 10
+              playerRef.current!.radius + pearl.radius + 14
             )
               collectPearl(pearl);
           }
@@ -520,7 +526,11 @@ const GameCanvas: React.FC = () => {
 
     for (let i = pearlsRef.current.length - 1; i >= 0; i--) {
       const p = pearlsRef.current[i];
-      if (physics) p.update(4 + scrollSpeed * 0.5);
+      if (physics) p.update(
+        4 + scrollSpeed * 0.5,
+        playerRef.current?.x ?? -999,
+        playerRef.current?.y ?? -999,
+      );
       p.draw(ctx);
       if (p.markedForDeletion) {
         if (!p.collected && p.isTarget) metricsRef.current.missed++;
@@ -539,24 +549,20 @@ const GameCanvas: React.FC = () => {
 
   // ── Helpers ───────────────────────────────────────────────────────────────
   const spawnPearls = (w: number, h: number) => {
-    const top = Math.random() > 0.5;
-    pearlsRef.current.push(
-      new Pearl(
-        w + 50,
-        h * 0.3,
-        top ? currentTask.targetColor : "#FF4500",
-        top,
-      ),
-    );
-    pearlsRef.current.push(
-      new Pearl(
-        w + 50,
-        h * 0.72,
-        !top ? currentTask.targetColor : "#FF4500",
-        !top,
-      ),
-    );
-    // Record spawn time so swimUp() can compute reaction time
+    if (currentLevel === 1) {
+      // Level 1: single gold target, random height — no decoys
+      const y = h * 0.3 + Math.random() * (h * 0.72 - h * 0.3);
+      pearlsRef.current.push(new Pearl(w + 50, y, "#FFD700", true));
+    } else {
+      // Level 2+: one target + one decoy at fixed heights
+      const top = Math.random() > 0.5;
+      pearlsRef.current.push(
+        new Pearl(w + 50, h * 0.3,  top ? currentTask.targetColor : "#FF4500", top),
+      );
+      pearlsRef.current.push(
+        new Pearl(w + 50, h * 0.72, !top ? currentTask.targetColor : "#FF4500", !top),
+      );
+    }
     lastSpawnTimeRef.current = Date.now();
   };
 
@@ -566,7 +572,7 @@ const GameCanvas: React.FC = () => {
   };
 
   const collectPearl = (pearl: Pearl) => {
-    pearl.collected = true;
+    pearl.collect();
     metricsRef.current.accuracy.total++;
     if (pearl.isTarget) {
       metricsRef.current.accuracy.correct++;
@@ -601,6 +607,7 @@ const GameCanvas: React.FC = () => {
       playerRef.current.floorTime = 0;
       playerRef.current.surfaceTime = 0;
     }
+    (bgRef.current as any)?.clearSiltCloud?.();
     setFailReason(null);
     setGs("PLAYING");
   };
@@ -850,7 +857,7 @@ const GameCanvas: React.FC = () => {
                 textTransform: "uppercase",
                 margin: "0 0 26px",
               }}>
-              Protocol A · Motor &amp; Cognitive
+              {currentLevel >= 2 ? "Level 2: Motor & Cognitive" : "Level 1: Motor Baseline"}
             </p>
 
             <div
@@ -961,44 +968,23 @@ const GameCanvas: React.FC = () => {
                     GOAL
                   </span>
                 </div>
-                <div
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 7,
-                    marginBottom: 6,
-                  }}>
-                  <div
-                    style={{
-                      width: 9,
-                      height: 9,
-                      borderRadius: "50%",
-                      background: "#00BFFF",
-                      boxShadow: "0 0 7px #00BFFF",
-                      flexShrink: 0,
-                    }}
-                  />
-                  <span
-                    style={{ color: "rgba(255,255,255,0.58)", fontSize: 11.5 }}>
-                    Collect Blue (+100)
-                  </span>
-                </div>
-                <div style={{ display: "flex", alignItems: "center", gap: 7 }}>
-                  <div
-                    style={{
-                      width: 9,
-                      height: 9,
-                      borderRadius: "50%",
-                      background: "#FF4500",
-                      boxShadow: "0 0 7px #FF4500",
-                      flexShrink: 0,
-                    }}
-                  />
-                  <span
-                    style={{ color: "rgba(255,255,255,0.58)", fontSize: 11.5 }}>
-                    Avoid Red (−50)
-                  </span>
-                </div>
+                {currentLevel === 1 ? (
+                  <div style={{ display: "flex", alignItems: "center", gap: 7 }}>
+                    <div style={{ width: 9, height: 9, borderRadius: "50%", background: "#FFD700", boxShadow: "0 0 7px #FFD700", flexShrink: 0 }} />
+                    <span style={{ color: "rgba(255,255,255,0.58)", fontSize: 11.5 }}>Collect Gold (+100)</span>
+                  </div>
+                ) : (
+                  <>
+                    <div style={{ display: "flex", alignItems: "center", gap: 7, marginBottom: 6 }}>
+                      <div style={{ width: 9, height: 9, borderRadius: "50%", background: "#00BFFF", boxShadow: "0 0 7px #00BFFF", flexShrink: 0 }} />
+                      <span style={{ color: "rgba(255,255,255,0.58)", fontSize: 11.5 }}>Collect Blue (+100)</span>
+                    </div>
+                    <div style={{ display: "flex", alignItems: "center", gap: 7 }}>
+                      <div style={{ width: 9, height: 9, borderRadius: "50%", background: "#FF4500", boxShadow: "0 0 7px #FF4500", flexShrink: 0 }} />
+                      <span style={{ color: "rgba(255,255,255,0.58)", fontSize: 11.5 }}>Avoid Red (−50)</span>
+                    </div>
+                  </>
+                )}
               </div>
             </div>
 
