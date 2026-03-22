@@ -3,7 +3,8 @@
 import React, { useEffect, useRef, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useAuthState } from "react-firebase-hooks/auth";
-import { auth } from "@/app/lib/firebase";
+import { auth, db } from "@/app/lib/firebase"; 
+import { doc, updateDoc } from "firebase/firestore"; 
 import { ArrowLeft, Loader2, ShieldCheck } from "lucide-react";
 
 declare global {
@@ -18,21 +19,47 @@ export default function DoctorMeetingPage() {
   const [user, loading] = useAuthState(auth);
   const jitsiContainerRef = useRef<HTMLDivElement>(null);
   const [isJitsiLoading, setIsJitsiLoading] = useState(true);
-  const apiRef = useRef<any>(null); // Store the API instance to clean it up
+  const apiRef = useRef<any>(null);
 
+  
   const meetingId = (params?.id as string)?.replace(/[^a-zA-Z0-9]/g, "") || "default";
-  const roomName = `ReViveX-Telehealth-Clinic-${meetingId}`;
+  const roomName = `ReViveX_Telehealth_${meetingId}`;
 
-  // Helper to go back to schedule
-  const handleExit = () => {
+  // Helper to go back to schedule and update database
+  const handleExit = async () => {
     if (apiRef.current) {
       apiRef.current.dispose(); // Properly kill the video session
     }
+
+    if (params?.id) {
+      try {
+        await updateDoc(doc(db, "appointments", params.id as string), {
+          doctorJoined: false
+        });
+      } catch (e) {
+        console.error("Failed to update exit status", e);
+      }
+    }
+
     router.push("/doctor/schedule");
   };
 
   useEffect(() => {
     if (loading || !user || !jitsiContainerRef.current) return;
+
+   
+    const markDoctorAsPresent = async () => {
+      if (params?.id) {
+        try {
+          await updateDoc(doc(db, "appointments", params.id as string), {
+            doctorJoined: true
+          });
+        } catch (e) {
+          console.error("Failed to update presence", e);
+        }
+      }
+    };
+    markDoctorAsPresent();
 
     const script = document.createElement("script");
     script.src = "https://meet.jit.si/external_api.js"; 
@@ -64,11 +91,11 @@ export default function DoctorMeetingPage() {
 
       const api = new window.JitsiMeetExternalAPI(domain, options);
       apiRef.current = api;
+      
       api.addEventListener("videoConferenceLeft", () => {
         handleExit();
       });
 
-      // This fires when Jitsi is ready to close the frame
       api.addEventListener("readyToClose", () => {
         handleExit();
       });
@@ -83,8 +110,15 @@ export default function DoctorMeetingPage() {
     return () => {
       if (apiRef.current) apiRef.current.dispose();
       if (script.parentNode) script.parentNode.removeChild(script);
+      
+      // Cleanup: Mark doctor as left if they close the tab
+      if (params?.id) {
+        updateDoc(doc(db, "appointments", params.id as string), {
+          doctorJoined: false
+        }).catch(console.error);
+      }
     };
-  }, [user, loading, roomName]);
+  }, [user, loading, roomName, params?.id]);
 
   if (loading) return null;
 

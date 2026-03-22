@@ -8,9 +8,8 @@ import {
   RefreshCw, Video, MapPin, Play, Gamepad2
 } from "lucide-react";
 import { auth, db } from "@/app/lib/firebase";
-import { collection, query, where, getDocs } from "firebase/firestore";
+import { collection, query, where, getDocs, updateDoc, doc } from "firebase/firestore"; // 🟢 Added updateDoc & doc
 import { useDarkMode } from "@/app/lib/hooks/useDarkMode";
-import { GameId } from "@/app/lib/db/types";
 
 // ─── Constants & Types ───
 const gameLabels: Record<string, string> = {
@@ -147,6 +146,22 @@ function PatientAgendaRow({ item, isDark, router }: { item: any; isDark: boolean
   const isGame = item.type === "game";
   const isActionable = item.status === "scheduled" || item.status === "confirmed" || item.status === "pending";
 
+  // 🟢 Ping DB when patient joins a meeting
+  const handleJoinCall = async () => {
+    try {
+      await updateDoc(doc(db, "appointments", item.id), { patientJoined: true });
+    } catch (e) { console.error("Failed to log join", e); }
+    window.open(`/patients/meeting/${item.id}`, "_blank");
+  };
+
+  // 🟢 Ping DB when patient starts a game
+  const handleStartGame = async () => {
+    try {
+      await updateDoc(doc(db, "scheduled_sessions", item.id), { patientJoined: true });
+    } catch (e) { console.error("Failed to log start", e); }
+    router.push(`/games/${item.gameId}?sessionId=${item.id}`);
+  };
+
   return (
     <div className="sc-session-row">
       <div style={{ display:"flex", alignItems:"center", gap:16, flex:1, minWidth:0 }}>
@@ -190,14 +205,14 @@ function PatientAgendaRow({ item, isDark, router }: { item: any; isDark: boolean
         
         {/* Play Game Button */}
         {isGame && isActionable && (
-          <button onClick={() => router.push(`/games/${item.gameId}?sessionId=${item.id}`)} className="sc-btn-play">
+          <button onClick={handleStartGame} className="sc-btn-play">
             <Play size={13} fill="#0B1E33" /> Start Game
           </button>
         )}
 
         {/* Join Call Button */}
         {!isGame && item.mode === "telehealth" && isActionable && (
-          <button onClick={() => window.open(`/patients/meeting/${item.id}`, "_blank")} className="sc-btn-call">
+          <button onClick={handleJoinCall} className="sc-btn-call">
             <Video size={13} /> Join Call
           </button>
         )}
@@ -243,28 +258,61 @@ export default function PatientSchedulePage() {
   const router = useRouter();
   const [user, authLoading] = useAuthState(auth);
   
-  // To avoid hydration mismatch, initialize with empty string and set in useEffect
   const [selectedDate, setSelectedDate] = useState("");
   const [events, setEvents] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    // Set initial date to today on mount
     setSelectedDate(new Date().toISOString().slice(0, 10));
   }, []);
 
   const refreshData = async (uid: string) => {
     setLoading(true); setError(null);
     try {
-      // Fetch both scheduled sessions (games) and appointments (meetings)
       const sQuery = query(collection(db, "scheduled_sessions"), where("patientId", "==", uid));
       const sSnap = await getDocs(sQuery);
       const aQuery = query(collection(db, "appointments"), where("patientId", "==", uid));
       const aSnap = await getDocs(aQuery);
 
-      const games = sSnap.docs.map(d => ({ id: d.id, ...d.data(), type: "game" }));
-      const appts = aSnap.docs.map(d => ({ id: d.id, ...d.data(), type: "meeting" }));
+      const now = new Date();
+
+      // 🟢 THE SMART AUTO-TRACKER: Checks the clock and updates past events
+      const processEvents = async (snap: any, collectionName: string, type: string) => {
+        const items = [];
+        for (const d of snap.docs) {
+          const data = d.data();
+          let status = data.status;
+
+          // Attempt to parse the event end time securely
+          let eventTime = new Date(`${data.scheduledDate}T${data.scheduledTime}`);
+          if (isNaN(eventTime.getTime())) {
+            eventTime = new Date(`${data.scheduledDate} ${data.scheduledTime}`);
+          }
+
+          if (!isNaN(eventTime.getTime())) {
+            const duration = data.durationMinutes || 30;
+            const endTime = new Date(eventTime.getTime() + duration * 60000);
+
+            // If the current time is past the end time, and it's still marked as pending/scheduled
+            if (now > endTime && ["scheduled", "pending", "confirmed"].includes(status)) {
+              // If they joined, it's completed. Otherwise, they missed it!
+              if (data.patientJoined) {
+                status = "completed";
+              } else {
+                status = "missed";
+              }
+              // Update the database permanently
+              await updateDoc(doc(db, collectionName, d.id), { status });
+            }
+          }
+          items.push({ id: d.id, ...data, status, type });
+        }
+        return items;
+      };
+
+      const games = await processEvents(sSnap, "scheduled_sessions", "game");
+      const appts = await processEvents(aSnap, "appointments", "meeting");
       
       setEvents([...games, ...appts]);
     } catch (e) {
