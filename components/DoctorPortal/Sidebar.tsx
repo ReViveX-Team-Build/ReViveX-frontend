@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import { useAuthState } from "react-firebase-hooks/auth";
 import { auth, db } from "@/app/lib/firebase";
 import { getDoctorSchedule } from "@/app/lib/db/schedule";
+import { getPatientsByDoctor } from "@/app/lib/db/users";
 import { doc, getDoc } from "firebase/firestore";
 import { ScheduledSession } from "@/app/lib/db/types";
 import { signOut } from "firebase/auth";
@@ -45,7 +46,7 @@ const navItems: NavItem[] = [
     href: "/doctor/home",
     badge: null,
   },
-  { icon: Users, label: "My Patients", href: "/doctor/patients", badge: "8" },
+  { icon: Users, label: "My Patients", href: "/doctor/patients", badge: null },
   {
     icon: CalendarDays,
     label: "Schedule",
@@ -226,7 +227,7 @@ function SidebarContent({
   onClose,
   pathname,
   navItems,
-  initials, 
+  initials,
 }: {
   collapsed: boolean;
   onClose?: () => void;
@@ -489,7 +490,6 @@ function SidebarContent({
           </div>
         )}
 
-       
         <button
           onClick={() => signOut(auth)}
           style={{
@@ -525,11 +525,10 @@ export default function DoctorSidebar() {
   const [bp, setBp] = useState<BreakPoint>("desktop");
   const [mobileOpen, setMobileOpen] = useState(false);
   const [upcomingCount, setUpcomingCount] = useState(0);
-  
- 
+  const [patientCount, setPatientCount] = useState<number | null>(null);
+
   const [initials, setInitials] = useState("DR");
 
-  
   useEffect(() => {
     if (!user) return;
     getDoc(doc(db, "users", user.uid)).then((d) => {
@@ -538,11 +537,30 @@ export default function DoctorSidebar() {
         setInitials(
           parts.length >= 2
             ? `${parts[0][0]}${parts[parts.length - 1][0]}`.toUpperCase()
-            : d.data().name.slice(0, 2).toUpperCase()
+            : d.data().name.slice(0, 2).toUpperCase(),
         );
       }
     });
   }, [user]);
+
+  useEffect(() => {
+    const loadPatientCount = async () => {
+      if (!user) {
+        setPatientCount(null);
+        return;
+      }
+
+      try {
+        const patients = await getPatientsByDoctor(user.uid);
+        setPatientCount(patients.length);
+      } catch (e) {
+        console.error("Failed to load doctor patient count:", e);
+        setPatientCount(null);
+      }
+    };
+
+    void loadPatientCount();
+  }, [user, pathname]);
 
   useEffect(() => {
     const loadUpcomingCount = async () => {
@@ -576,9 +594,14 @@ export default function DoctorSidebar() {
       navItems.map((item) =>
         item.href === "/doctor/schedule"
           ? { ...item, badge: upcomingCount > 0 ? String(upcomingCount) : null }
-          : item,
+          : item.href === "/doctor/patients"
+            ? {
+                ...item,
+                badge: patientCount !== null ? String(patientCount) : null,
+              }
+            : item,
       ),
-    [upcomingCount],
+    [upcomingCount, patientCount],
   );
 
   useEffect(() => {
@@ -657,7 +680,7 @@ export default function DoctorSidebar() {
           onClose={bp === "mobile" ? () => setMobileOpen(false) : undefined}
           pathname={pathname}
           navItems={navItemsWithCounts}
-          initials={initials} 
+          initials={initials}
         />
       </aside>
 
