@@ -39,7 +39,7 @@ const CSS = `
 
   :root {
 
-    --dk:  #080f1a;
+    --dk:  #050d1a;
 
     --dk2: #0B1E33;
 
@@ -1824,8 +1824,8 @@ function Navbar({ onGetStarted }: { onGetStarted: () => void }) {
           pointerEvents: "none",
         }} />
 
-        <div className="fB" style={{ fontSize: 20, letterSpacing: ".1em", color: "#fff", flexShrink: 0 }}>
-          REVIVE<span style={{ color: "#2DD4BF" }}>X</span>
+        <div style={{ display: "flex", alignItems: "center" }}>
+          <img src="/images/logo.png" alt="ReViveX" style={{ height: 38, width: "auto", objectFit: "contain", display: "block" }} />
         </div>
 
         <div style={{ display: "flex", gap: 4, alignItems: "center" }}>
@@ -2239,12 +2239,12 @@ function CinematicHero() {
               Clinical rehabilitation powered by immersive computing. We transform static routines into <span style={{ color:"rgba(255,255,255,.90)",fontWeight:500 }}>engaging digital experiences</span>.
             </p>
             <div style={{ display:"flex",gap:12 }}>
-              <button onClick={()=>router.push("/patients/home?dev=true")} className="fB sweep-btn sweep-teal">
+              <button onClick={()=>router.push("/auth/patient/signin")} className="fB sweep-btn sweep-teal">
                 <span className="sweep-bar" style={{ background:"rgba(45,212,191,.6)", boxShadow:"0 0 10px 10px rgba(45,212,191,.25)" }} />
                 <Play size={13} style={{ fill:"#2DD4BF", flexShrink:0, position:"relative", zIndex:1 }} />
                 <span style={{ position:"relative", zIndex:1 }}>Patient Sign In</span>
               </button>
-              <button onClick={()=>router.push("/doctor/home?dev=true")} className="fB sweep-btn sweep-slate">
+              <button onClick={()=>router.push("/auth/doctor/signin")} className="fB sweep-btn sweep-slate">
                 <span className="sweep-bar" style={{ background:"rgba(255,255,255,.35)", boxShadow:"0 0 10px 10px rgba(255,255,255,.10)" }} />
                 <Stethoscope size={13} style={{ flexShrink:0, position:"relative", zIndex:1 }} />
                 <span style={{ position:"relative", zIndex:1 }}>Doctor Sign In</span>
@@ -2728,8 +2728,8 @@ function NeuralBridge() {
       gsap.registerPlugin(ScrollTrigger);
 
       const scene: any = new THREE.Scene();
-      scene.background = new THREE.Color(0x080f1a);
-      scene.fog = new THREE.FogExp2(0x080f1a, 0.0095);
+      scene.background = new THREE.Color(0x0a1628);
+      scene.fog = new THREE.FogExp2(0x0a1628, 0.006);
 
       const W = window.innerWidth, H = window.innerHeight;
       const camera: any = new THREE.PerspectiveCamera(65, W / H, 0.1, 800);
@@ -2746,9 +2746,9 @@ function NeuralBridge() {
         });
         renderer.setSize(W, H);
         renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.2));
-        renderer.setClearColor(0x080f1a, 1);
+        renderer.setClearColor(0x0a1628, 1);
         renderer.toneMapping = (THREE as any).ACESFilmicToneMapping;
-        renderer.toneMappingExposure = 0.70;
+        renderer.toneMappingExposure = 1.30;
       } catch (e) { console.error = _ce; return; }
       console.error = _ce;
       if (!renderer || !isMounted) return;
@@ -2816,14 +2816,13 @@ function NeuralBridge() {
           // Normalise elevation to 0–1
           float t = clamp((vElev / uAmp) * 0.5 + 0.5, 0.0, 1.0);
           // Teal core → brighter ice-teal at peaks
-          vec3 low  = vec3(0.01, 0.07, 0.10);   // near-black shadow
-          vec3 mid  = vec3(0.05, 0.28, 0.28);   // dark teal
-          vec3 high = vec3(0.12, 0.55, 0.52);   // muted teal peak
+          vec3 low  = vec3(0.02, 0.14, 0.18);   // deep teal base
+          vec3 mid  = vec3(0.08, 0.45, 0.44);   // vivid mid teal
+          vec3 high = vec3(0.20, 0.82, 0.78);   // bright ice-teal peak
           vec3 col  = t < 0.5 ? mix(low, mid, t*2.0) : mix(mid, high, (t-0.5)*2.0);
-          // Fog via vUv distance from centre (perspective fog approximation)
           float dist = length(vUv - 0.5) * 2.0;
-          float fog  = clamp(1.0 - dist * dist * 0.9, 0.0, 1.0);
-          float a    = (0.08 + t * 0.14) * fog;
+          float fog  = clamp(1.0 - dist * dist * 0.7, 0.0, 1.0);
+          float a    = (0.18 + t * 0.32) * fog;
           gl_FragColor = vec4(col, a);
         }`;
 
@@ -2862,7 +2861,7 @@ function NeuralBridge() {
       const dustGeo: any = new THREE.BufferGeometry();
       dustGeo.setAttribute("position", new THREE.BufferAttribute(dustPos, 3));
       const dustMat: any = new THREE.PointsMaterial({
-        color: 0x2dd4bf, size: 0.40, transparent: true, opacity: 0.22,
+        color: 0x2dd4bf, size: 0.55, transparent: true, opacity: 0.45,
         blending: THREE.AdditiveBlending, depthWrite: false, sizeAttenuation: true,
       });
       scene.add(new THREE.Points(dustGeo, dustMat));
@@ -4095,11 +4094,9 @@ function Footer() {
           display: "flex", justifyContent: "space-between", alignItems: "center"
         }}>
 
-          <div className="fB" style={{ fontSize: 20, letterSpacing: ".10em", color: "#fff" }}>
-
-            REVIVE<span style={{ color: "#2DD4BF" }}>X</span>
-
-          </div>
+          <div style={{ display: "flex", alignItems: "center" }}>
+          <img src="/images/logo.png" alt="ReViveX" style={{ height: 38, width: "auto", objectFit: "contain", display: "block" }} />
+        </div>
 
           <div className="fM" style={{
             fontSize: 8, color: "rgba(255,255,255,.38)",
@@ -4199,7 +4196,7 @@ export default function LandingPage() {
 
   useLenis();
   return (
-    <div className="grain" style={{ background: "#080f1a" }}>
+    <div className="grain" style={{ background: "linear-gradient(160deg, #0a1628 0%, #050d1a 50%, #071020 100%)" }}>
       <style>{CSS}</style>
 
       <MedicalCursor />
@@ -4227,7 +4224,7 @@ export default function LandingPage() {
             <ProblemSection />
             <SectionSep color="#2DD4BF" dim />
             
-            {/* 🔴 UPDATED: Using the section wrapper to hold the dev buttons */}
+           
             <NeuralBridgeSection />
             
             <SectionSep color="#2DD4BF" />
@@ -4245,51 +4242,11 @@ export default function LandingPage() {
   );
 }
 
-// ─── NEURAL BRIDGE SECTION (WITH DEV BACKDOOR BUTTONS) ───────────────────────
+// ─── NEURAL BRIDGE SECTION ────────────────────────────────────────────────────
 function NeuralBridgeSection() {
-  const router = useRouter();
-
   return (
     <section style={{ position: "relative" }}>
       <NeuralBridge />
-      
-      {/* Overlay Content */}
-      <div style={{ 
-        position: "absolute", 
-        inset: 0, 
-        zIndex: 20, 
-        display: "flex", 
-        flexDirection: "column", 
-        alignItems: "center", 
-        justifyContent: "flex-end",
-        paddingBottom: "10vh",
-        pointerEvents: "none" 
-      }}>
-        <div style={{ display: "flex", gap: 12, flexWrap: "wrap", pointerEvents: "auto" }}>
-          
-    
-          <button 
-            onClick={() => router.push("/patients/home?dev=true")} 
-            className="fB sweep-btn sweep-teal"
-          >
-            <span className="sweep-bar" style={{ background: "rgba(45,212,191,.6)", boxShadow: "0 0 10px 10px rgba(45,212,191,.25)" }} />
-            <Play size={14} style={{ fill: "#2DD4BF", flexShrink: 0, position: "relative", zIndex: 1 }} />
-            <span style={{ position: "relative", zIndex: 1 }}>Patient Sign In</span>
-          </button>
-
-          {/* DEV BACKDOOR: Bypasses auth directly to Doctor Home */}
-          <button 
-            onClick={() => router.push("/doctor/home?dev=true")} 
-            className="fB sweep-btn sweep-slate"
-          >
-            <span className="sweep-bar" style={{ background: "rgba(255,255,255,.35)", boxShadow: "0 0 10px 10px rgba(255,255,255,.10)" }} />
-            <Stethoscope size={14} style={{ flexShrink: 0, position: "relative", zIndex: 1 }} />
-            <span style={{ position: "relative", zIndex: 1 }}>Doctor Sign In</span>
-            <ArrowRight size={11} style={{ opacity: .4, position: "relative", zIndex: 1 }} />
-          </button>
-          
-        </div>
-      </div>
     </section>
   );
 }

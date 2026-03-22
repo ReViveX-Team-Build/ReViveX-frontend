@@ -229,7 +229,7 @@ export default function PatientAICompanion() {
         <div className="grid gap-5 lg:grid-cols-[1fr_320px] min-h-0 flex-1">
           {/* ── Chat panel ──────────────────────────────────────── */}
           <div
-            className={`border shadow-sm rounded-2xl flex flex-col min-h-0 h-full overflow-hidden ${isDark ? "bg-slate-900 border-slate-700" : "bg-white border-gray-100"}`}>
+            className={`border shadow-sm rounded-2xl flex flex-col min-h-0 h-[70vh] sm:h-[72vh] overflow-hidden ${isDark ? "bg-slate-900 border-slate-700" : "bg-white border-gray-100"}`}>
             {/* Chat header bar */}
             <div className="px-5 py-3.5 bg-gradient-to-r from-[#0A2E4C] to-[#0d3a5c] flex items-center gap-3">
               <div className="w-9 h-9 rounded-full bg-gradient-to-br from-[#2DD4BF] to-teal-400 flex items-center justify-center flex-shrink-0 shadow-md">
@@ -367,7 +367,7 @@ export default function PatientAICompanion() {
                   onKeyDown={(e) => {
                     if (e.key === "Enter" && !e.shiftKey) {
                       e.preventDefault();
-                      handleSend();
+                      void handleSend();
                     }
                   }}
                   placeholder="Ask about your progress, sessions, or recovery..."
@@ -421,6 +421,21 @@ export default function PatientAICompanion() {
                   ))}
                 </div>
               </div>
+              {currentPlan !== "free" && (
+                <button
+                  onClick={async () => {
+                    const res = await fetch("/api/stripe/create-portal", {
+                      method: "POST",
+                      headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify({ uid: user.uid }),
+                    });
+                    const data = await res.json();
+                    if (data.url) window.location.href = data.url;
+                  }}
+                  className="mt-3 w-full text-xs text-gray-400 hover:text-red-400 transition underline underline-offset-2">
+                  Manage or cancel subscription
+                </button>
+              )}
             </div>
 
             {/* ── Premium Plans OR Analytics (based on plan) ── */}

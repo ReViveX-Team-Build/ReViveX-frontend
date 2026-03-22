@@ -51,12 +51,15 @@ export const registerPatient = async (
     // 1. Create Firebase Auth account
     const userCredential = await createUserWithEmailAndPassword(auth, email, password);
     const user = userCredential.user;
+    console.log("✅ Firebase Auth account created successfully!");
+    console.log("🆔 User UID:", user.uid);
     
     // 2. SEND VERIFICATION EMAIL IMMEDIATELY
     await sendEmailVerification(user);
     
     // 3. Generate patient ID
     const patientId = "p" + user.uid.slice(-6).toLowerCase();
+    console.log("✅ Generated Patient ID:", patientId);
     
     // 4. Create patient profile
     const patientData: PatientData = {
@@ -84,6 +87,9 @@ export const registerPatient = async (
 
     // 5. Save to Firestore
     await setDoc(doc(db, "users", user.uid), patientData);
+    console.log("✅ Firestore document saved successfully!");
+    
+    console.log("🎉 Patient registration completed successfully!");
     
     return { 
       success: true, 
@@ -107,6 +113,7 @@ export const registerPatient = async (
     let errorMessage = "Registration failed";
     if (error.code === "auth/weak-password") {
       errorMessage = "Password should be at least 6 characters";
+      console.error("🚫 Reason: Password too weak");
     } else if (error.code === "auth/invalid-email") {
       errorMessage = "Invalid email address";
     } else if (error.code === "auth/operation-not-allowed") {
@@ -138,23 +145,31 @@ export const signInWithPatientId = async (patientId: string, password: string) =
     const querySnapshot = await getDocs(q);
 
     if (querySnapshot.empty) {
+      console.error("❌ Patient ID not found in database");
       return { success: false, error: "Patient ID not found" };
     }
     
     const patientData = querySnapshot.docs[0].data();
     const userCredential = await signInWithEmailAndPassword(auth, patientData.email, password);
+    console.log("✅ Signed in successfully");
     
     if (patientData.role !== "patient") {
+      console.error("❌ Account is not a patient account, role:", patientData.role);
       await signOut(auth);
       return { success: false, error: "This account is not a patient account" };
     }
     
     return { success: true, user: patientData, uid: userCredential.user.uid };
   } catch (error: any) {
+    console.error("❌ Sign in error:", error);
+    
     let errorMessage = "Sign in failed";
     if (error.code === "auth/wrong-password" || error.code === "auth/invalid-credential") {
       errorMessage = "Invalid Patient ID or password";
+    } else if (error.code === "auth/too-many-requests") {
+      errorMessage = "Too many failed attempts. Please try again later.";
     }
+    
     return { success: false, error: errorMessage };
   }
 };
@@ -166,22 +181,31 @@ export const signInWithEmail = async (email: string, password: string) => {
     const userDoc = await getDoc(doc(db, "users", userCredential.user.uid));
 
     if (!userDoc.exists()) {
+      console.error("❌ User profile not found in Firestore");
       await signOut(auth);
       return { success: false, error: "User profile not found" };
     }
 
     const userData = userDoc.data();
     if (userData.role !== "patient") {
+      console.error("❌ Account is not a patient account");
       await signOut(auth);
       return { success: false, error: "This account is not a patient account" };
     }
     
     return { success: true, user: userData, uid: userCredential.user.uid };
   } catch (error: any) {
+    console.error("❌ Sign in error:", error);
+    
     let errorMessage = "Sign in failed";
     if (error.code === "auth/invalid-credential") {
       errorMessage = "Invalid email or password";
+    } else if (error.code === "auth/user-not-found") {
+      errorMessage = "No account found with this email";
+    } else if (error.code === "auth/wrong-password") {
+      errorMessage = "Incorrect password";
     }
+    
     return { success: false, error: errorMessage };
   }
 };
@@ -190,8 +214,10 @@ export const signInWithEmail = async (email: string, password: string) => {
 export const signOutPatient = async () => {
   try {
     await signOut(auth);
+    console.log("✅ Patient signed out successfully");
     return { success: true };
   } catch (error: any) {
+    console.error("❌ Sign out error:", error);
     return { success: false, error: error.message };
   }
 };
