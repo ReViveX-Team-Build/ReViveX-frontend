@@ -109,6 +109,13 @@ export default function DoctorSettingsPage() {
     }
   };
 
+  // ─── 3. Handle Unauthenticated Users ───
+  useEffect(() => {
+    if (!loading && !user) {
+      router.push("/auth/doctor/signin");
+    }
+  }, [user, loading, router]);
+
   if (loading) {
     return (
       <div className="p-8 flex justify-center items-center h-64">
@@ -118,8 +125,7 @@ export default function DoctorSettingsPage() {
   }
 
   if (!user) {
-    router.push("/auth/doctor/signin");
-    return null;
+    return null; 
   }
 
   return (

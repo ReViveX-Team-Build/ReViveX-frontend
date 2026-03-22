@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuthState } from "react-firebase-hooks/auth";
 import { auth, db } from "@/app/lib/firebase";
-import { getDoctorAdherenceSummary } from "@/app/lib/db/schedule";
 import { collection, query, where, getDocs } from "firebase/firestore";
 import { ChevronRight, FileText, Loader2, Users } from "lucide-react";
 
@@ -39,14 +38,8 @@ export default function DoctorReportsPage() {
 
       try {
         setError(null);
-        // 1. Fetch KPIs
-        const summary = await getDoctorAdherenceSummary(user.uid);
-        setAdherenceRate(summary.adherenceRate);
-        setCompletedSessions(summary.completedSessions);
-        setMissedSessions(summary.missedSessions);
-        setSessionsThisWeek(summary.sessionsThisWeek);
 
-        // 2. Fetch Doctor's Patients for the Directory
+        // 1. Fetch Doctor's Patients for the Directory
         const q = query(
           collection(db, "users"),
           where("role", "==", "patient"),
@@ -54,7 +47,57 @@ export default function DoctorReportsPage() {
           where("connectionStatus", "==", "accepted")
         );
         const snap = await getDocs(q);
-        setPatients(snap.docs.map((doc) => ({ id: doc.id, ...doc.data() })));
+        setPatients(snap.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+
+        // 2. Fetch ALL Sessions & Appointments to calculate strict time-checked KPIs
+        const schedSnap = await getDocs(query(collection(db, "scheduled_sessions"), where("doctorId", "==", user.uid)));
+        const apptSnap = await getDocs(query(collection(db, "appointments"), where("doctorId", "==", user.uid)));
+
+        const rawEvents = [
+          ...schedSnap.docs.map(d => d.data()),
+          ...apptSnap.docs.map(d => d.data())
+        ];
+
+        const now = new Date();
+        let rCompleted = 0;
+        let rMissed = 0;
+        let rThisWeek = 0;
+
+        // Calculate week boundaries (Sunday to Saturday)
+        const startOfWeek = new Date(now);
+        startOfWeek.setDate(now.getDate() - now.getDay());
+        startOfWeek.setHours(0, 0, 0, 0);
+        const endOfWeek = new Date(startOfWeek);
+        endOfWeek.setDate(startOfWeek.getDate() + 6);
+        endOfWeek.setHours(23, 59, 59, 999);
+
+        // 🔴 STRICT FRONT-END TIME CHECK
+        rawEvents.forEach((e: any) => {
+          let finalStatus = e.status;
+          const eventTime = new Date(`${e.scheduledDate}T${e.scheduledTime || "00:00"}:00`);
+
+          if (finalStatus !== "completed" && finalStatus !== "cancelled" && finalStatus !== "missed") {
+            if (eventTime < now) {
+              finalStatus = "missed"; // Force missed if time has passed
+            }
+          }
+
+          if (finalStatus === "completed") rCompleted++;
+          if (finalStatus === "missed") rMissed++;
+
+          // Check if event falls in this week
+          if (eventTime >= startOfWeek && eventTime <= endOfWeek) {
+            rThisWeek++;
+          }
+        });
+
+        const rAdh = (rCompleted + rMissed) > 0 ? Math.round((rCompleted / (rCompleted + rMissed)) * 100) : 0;
+
+        setCompletedSessions(rCompleted);
+        setMissedSessions(rMissed);
+        setSessionsThisWeek(rThisWeek);
+        setAdherenceRate(rAdh);
+
       } catch (e) {
         console.error("Failed to load metrics:", e);
         setError("Could not load adherence metrics.");

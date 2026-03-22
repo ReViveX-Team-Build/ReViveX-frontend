@@ -4,28 +4,32 @@ import React, { useRef, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Play, RotateCcw, Zap, Hand, Wifi, WifiOff } from "lucide-react";
 import { useAuthState } from "react-firebase-hooks/auth";
+import { Timestamp } from "firebase/firestore";
+
+
 import { auth } from "@/app/lib/firebase";
-import { saveGameSession } from "../../app/lib/db/sessions";
+import { saveGameSession } from "@/app/lib/db/sessions";
 import { useHardware } from "@/app/lib/context/HardwareContext";
-import { updateSessionStatus } from "../../app/lib/db/schedule";
+import { updateSessionStatus } from "@/app/lib/db/schedule";
 import {
   getActiveProtocol,
   addXpToPatient,
   updateHardwareStatus,
-} from "../../app/lib/db/users";
+} from "@/app/lib/db/users";
+import { TherapyProtocol } from "@/app/lib/db/types";
+
+
 import {
   calculateCognitiveAccuracy,
   calculateEnduranceDrop,
   getPeakGripForce,
-} from "../../util/game-core/MetricsCalculator";
-import { Timestamp } from "firebase/firestore";
-import { Player } from "../../util/game-core/SynapsePlayer";
-import { SynapseBackground } from "../../util/game-core/SynapseBackground";
-import { SeaGrass } from "../../util/game-core/SynapseSeaGrass";
-import { Particle } from "../../util/game-core/SynapseParticles";
-import { SynapseCorals } from "../../util/game-core/SynapseCorals";
-import { Pearl, CognitiveTask } from "../../util/game-core/SynapseCognitive";
-import { TherapyProtocol } from "@/app/lib/db/types";
+} from "../../../util/game-core/MetricsCalculator";
+import { Player } from "../../../util/game-core/SynapsePlayer";
+import { SynapseBackground } from "../../../util/game-core/SynapseBackground";
+import { SeaGrass } from "../../../util/game-core/SynapseSeaGrass";
+import { Particle } from "../../../util/game-core/SynapseParticles";
+import { SynapseCorals } from "../../../util/game-core/SynapseCorals";
+import { Pearl, CognitiveTask } from "../../../util/game-core/SynapseCognitive";
 
 // ── WEB SERIAL TYPES ──────────────────────────────────────────────────────────
 interface SerialPort {
@@ -123,7 +127,7 @@ const pressureColor = (v: number) => {
 };
 
 // ── COMPONENT ─────────────────────────────────────────────────────────────────
-const GameCanvas: React.FC = () => {
+const Level2Canvas: React.FC = () => { // <--- RENAMED TO Level2Canvas
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const rafRef = useRef<number | null>(null);
   const router = useRouter();
@@ -131,12 +135,15 @@ const GameCanvas: React.FC = () => {
   const scheduledSessionId = searchParams.get("sessionId");
 
   // ── Auth + protocol — load silently in background, never block the game ──
-  // useAuthState is called unconditionally at top level (React hook rules)
   const [user] = useAuthState(auth);
   const [protocol, setProtocol] = useState<TherapyProtocol | null>(null);
+  const currentLevel = protocol?.level ?? 2; // Default fallback level 2
+  const currentLevelRef = useRef(currentLevel);
 
-  // userRef keeps a stable ref to user.uid so connectSerial / disconnectSerial
-  // can call updateHardwareStatus even though they're defined before the effect
+  useEffect(() => {
+    currentLevelRef.current = currentLevel;
+  }, [currentLevel]);
+
   const userUidRef = useRef<string>("");
   useEffect(() => {
     userUidRef.current = user?.uid ?? "";
@@ -148,7 +155,7 @@ const GameCanvas: React.FC = () => {
       .then((p) => {
         if (p) setProtocol(p);
       })
-      .catch(() => {}); // silent — fallbacks used if no protocol found
+      .catch(() => {});
   }, [user]);
 
   // ── IoT — ORIGINAL INLINE SERIAL CODE (preserved exactly) ────────────────
@@ -176,7 +183,6 @@ const GameCanvas: React.FC = () => {
       const r = td.readable.getReader();
       readerRef.current = r;
       _readLoop(r);
-      // Write hardware status to Firestore (fire-and-forget)
       if (userUidRef.current) {
         updateHardwareStatus(userUidRef.current, "connected").catch(() => {});
       }
@@ -203,14 +209,11 @@ const GameCanvas: React.FC = () => {
         portRef.current = null;
       }
     } catch (_) {}
-    // Write hardware status to Firestore (fire-and-forget)
     if (userUidRef.current) {
       updateHardwareStatus(userUidRef.current, "offline").catch(() => {});
     }
   };
 
-  // _readLoop: parses "V:X.XX\n" lines from serial, writes to pressRef.current
-  // This is the only place pressRef is mutated — no React state, no re-renders
   const _readLoop = async (r: ReadableStreamDefaultReader<string>) => {
     let buf = "";
     try {
@@ -245,7 +248,7 @@ const GameCanvas: React.FC = () => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.code === "Space" || e.code === "ArrowUp") {
         isKeyPressedRef.current = true;
-        e.preventDefault(); // Stop page from scrolling
+        e.preventDefault();
       }
     };
     const handleKeyUp = (e: KeyboardEvent) => {
@@ -261,42 +264,33 @@ const GameCanvas: React.FC = () => {
     };
   }, []);
 
-  // State (dual ref+state for game loop compatibility)
+  // State
   const gsRef = useRef<"MENU" | "PLAYING" | "SOFT_FAIL">("MENU");
   const cdRef = useRef<CountdownValue>(null);
-  const [uiState, setUiState] = useState<"MENU" | "PLAYING" | "SOFT_FAIL">(
-    "MENU",
-  );
+  const [uiState, setUiState] = useState<"MENU" | "PLAYING" | "SOFT_FAIL">("MENU");
   const [uiCd, setUiCd] = useState<CountdownValue>(null);
   const [score, setScore] = useState(0);
   const [streak, setStreak] = useState(0);
-  const [failReason, setFailReason] = useState<
-    "floor" | "ceiling" | "pressure" | null
-  >(null);
+  const [failReason, setFailReason] = useState<"floor" | "ceiling" | "pressure" | null>(null);
   const [showExit, setShowExit] = useState(false);
   const [currentTask] = useState<CognitiveTask>({
     instruction: "Collect BLUE",
     targetColor: "#00BFFF",
   });
-  const [feedback, setFeedback] = useState<{
-    text: string;
-    color: string;
-  } | null>(null);
+  const [feedback, setFeedback] = useState<{ text: string; color: string; } | null>(null);
   const [pressDisp, setPressDisp] = useState(0);
 
-  // Clinical metrics collected during play
+  // Clinical metrics
   const metricsRef = useRef<ClinicalMetrics>({
     accuracy: { correct: 0, total: 0 },
     missed: 0,
     jumpPressures: [],
     currentSqueezePeak: 0,
     isSqueezing: false,
-    reactionTimes: [], // added: ms from pearl spawn → first squeeze
+    reactionTimes: [],
   });
 
-  // lastSpawnTime: set when pearls are spawned, used to compute reaction time
   const lastSpawnTimeRef = useRef(0);
-
   const startRef = useRef(0);
   const lastRef = useRef(0);
   const cdTimerRef = useRef<NodeJS.Timeout | null>(null);
@@ -309,9 +303,8 @@ const GameCanvas: React.FC = () => {
     cdRef.current = v;
     setUiCd(v);
   };
-// ── swimUp: HARDWARE + KEYBOARD FALLBACK ──────────────────────────────────
+
   const swimUp = (): boolean => {
-    // If connected, use real sensor. If not, simulate a good pressure if spacebar is held.
     const p = isConnRef.current 
       ? pressRef.current 
       : (isKeyPressedRef.current ? (IDLE_THRESHOLD + 0.2) : 0);
@@ -329,9 +322,7 @@ const GameCanvas: React.FC = () => {
         metricsRef.current.currentSqueezePeak = p;
       }
     } else if (metricsRef.current.isSqueezing) {
-      metricsRef.current.jumpPressures.push(
-        metricsRef.current.currentSqueezePeak,
-      );
+      metricsRef.current.jumpPressures.push(metricsRef.current.currentSqueezePeak);
       metricsRef.current.currentSqueezePeak = 0;
       metricsRef.current.isSqueezing = false;
     }
@@ -447,18 +438,17 @@ const GameCanvas: React.FC = () => {
     const state = gsRef.current;
     const isCounting = cdRef.current !== null;
     const physics = state === "PLAYING" && !isCounting;
-    const scrollSpeed = physics ? 4.0 : 0.8;
+    const scrollSpeed = physics ? 4.0 : 0.8; // Level 2 speed is faster
 
-    let nf = 0,
-      sandH = 80;
+    let nf = 0, sandH = 80;
     if (bgRef.current) {
       nf = bgRef.current.update(elapsed, delta, scrollSpeed, streak, pressRef.current / DANGER_THRESHOLD);
       bgRef.current.draw(ctx, nf);
       sandH = bgRef.current.sandHeight;
     }
     if (coralsRef.current) {
-      coralsRef.current.update();
-      coralsRef.current.draw(ctx, nf);
+      coralsRef.current.update(scrollSpeed);
+      coralsRef.current.draw(ctx, nf, c.height - sandH);
     }
     if (grassRef.current && playerRef.current) {
       grassRef.current.update(playerRef.current.x, playerRef.current.y, delta);
@@ -466,7 +456,7 @@ const GameCanvas: React.FC = () => {
     }
 
     if (playerRef.current) {
-      // Danger pressure check — uses pressRef.current directly
+      // Danger pressure — hard-fail for Level 2
       if (
         isConnRef.current &&
         pressRef.current >= DANGER_THRESHOLD &&
@@ -488,27 +478,27 @@ const GameCanvas: React.FC = () => {
           spawnPearls(c.width, c.height);
           taskTimerRef.current = 0;
         }
+        
+        // Floor and Ceiling fails for Level 2
         if (playerRef.current.status === "hit_floor") {
           bgRef.current?.triggerSiltCloud(playerRef.current.x, playerRef.current.y);
           setFailReason("floor");
           setGs("SOFT_FAIL");
+        } else {
+          (bgRef.current as any)?.clearSiltCloud?.();
         }
         if (playerRef.current.status === "hit_ceiling") {
           setFailReason("ceiling");
           setGs("SOFT_FAIL");
         }
+
         pearlsRef.current.forEach((pearl) => {
           if (!pearl.collected && !pearl.markedForDeletion) {
-            const dx = playerRef.current!.x - pearl.x,
-              dy = playerRef.current!.y - pearl.y;
-            if (
-              Math.hypot(dx, dy) <
-              playerRef.current!.radius + pearl.radius + 10
-            )
+            const dx = playerRef.current!.x - pearl.x, dy = playerRef.current!.y - pearl.y;
+            if (Math.hypot(dx, dy) < playerRef.current!.radius + pearl.radius + 14)
               collectPearl(pearl);
           }
         });
-        // Pressure display — reads pressRef.current directly
         setPressDisp(parseFloat(pressRef.current.toFixed(2)));
       } else if (state === "MENU" || isCounting) {
         playerRef.current.y = c.height / 2 + Math.sin(elapsed * 0.003) * 20;
@@ -520,7 +510,11 @@ const GameCanvas: React.FC = () => {
 
     for (let i = pearlsRef.current.length - 1; i >= 0; i--) {
       const p = pearlsRef.current[i];
-      if (physics) p.update(4 + scrollSpeed * 0.5);
+      if (physics) p.update(
+        4 + scrollSpeed * 0.5,
+        playerRef.current?.x ?? -999,
+        playerRef.current?.y ?? -999,
+      );
       p.draw(ctx);
       if (p.markedForDeletion) {
         if (!p.collected && p.isTarget) metricsRef.current.missed++;
@@ -539,24 +533,14 @@ const GameCanvas: React.FC = () => {
 
   // ── Helpers ───────────────────────────────────────────────────────────────
   const spawnPearls = (w: number, h: number) => {
+    // Level 2: one target + one decoy at fixed heights
     const top = Math.random() > 0.5;
     pearlsRef.current.push(
-      new Pearl(
-        w + 50,
-        h * 0.3,
-        top ? currentTask.targetColor : "#FF4500",
-        top,
-      ),
+      new Pearl(w + 50, h * 0.3,  top ? currentTask.targetColor : "#FF4500", top),
     );
     pearlsRef.current.push(
-      new Pearl(
-        w + 50,
-        h * 0.72,
-        !top ? currentTask.targetColor : "#FF4500",
-        !top,
-      ),
+      new Pearl(w + 50, h * 0.72, !top ? currentTask.targetColor : "#FF4500", !top),
     );
-    // Record spawn time so swimUp() can compute reaction time
     lastSpawnTimeRef.current = Date.now();
   };
 
@@ -566,7 +550,7 @@ const GameCanvas: React.FC = () => {
   };
 
   const collectPearl = (pearl: Pearl) => {
-    pearl.collected = true;
+    pearl.collect();
     metricsRef.current.accuracy.total++;
     if (pearl.isTarget) {
       metricsRef.current.accuracy.correct++;
@@ -601,6 +585,7 @@ const GameCanvas: React.FC = () => {
       playerRef.current.floorTime = 0;
       playerRef.current.surfaceTime = 0;
     }
+    (bgRef.current as any)?.clearSiltCloud?.();
     setFailReason(null);
     setGs("PLAYING");
   };
@@ -622,7 +607,6 @@ const GameCanvas: React.FC = () => {
         (Date.now() - startRef.current) / 1000,
       );
 
-      // Clinical metric calculations (unchanged from original)
       const accuracy = calculateCognitiveAccuracy(
         m.accuracy.correct,
         m.accuracy.total,
@@ -630,7 +614,6 @@ const GameCanvas: React.FC = () => {
       const peakForce = getPeakGripForce(m.jumpPressures);
       const enduranceDrop = calculateEnduranceDrop(m.jumpPressures);
 
-      // Average reaction time across all recorded squeezes
       const avgReactionTime =
         m.reactionTimes.length > 0
           ? Math.round(
@@ -639,11 +622,10 @@ const GameCanvas: React.FC = () => {
             )
           : 0;
 
-      // Real values from auth + protocol; fallbacks keep this callable during testing
       const uid = user?.uid ?? "dev_test_user";
       const protocolId = protocol?.id ?? "dev_test_protocol";
       const gameId = protocol?.gameId ?? "synapse_racer";
-      const level = protocol?.level ?? 1;
+      const level = protocol?.level ?? 2;
       const targetHand = (
         protocol?.targetHand === "left" ? "left" : "right"
       ) as "left" | "right";
@@ -661,28 +643,18 @@ const GameCanvas: React.FC = () => {
           peakGripForce: peakForce,
           muscleEnduranceDropPercent: enduranceDrop,
           reactionTimeMs: avgReactionTime,
-          rawSensorData: m.jumpPressures, // stored; never sent to Gemini raw
+          rawSensorData: m.jumpPressures,
         },
       });
 
-      // If gameplay started from a scheduled item, mark it completed.
       if (scheduledSessionId) {
         await updateSessionStatus(scheduledSessionId, "completed");
       }
 
-      // Award XP only to real logged-in users with meaningful sessions
       if (user?.uid && durationSeconds > 30) {
-        const xp = 30 + level * 10; // L1=40 … L5=80
+        const xp = 30 + level * 10;
         await addXpToPatient(user.uid, xp);
       }
-
-      console.log(
-        `✅ Session saved — uid:${uid} | protocol:${protocolId} | level:${level} | duration:${durationSeconds}s`,
-      );
-      console.log(
-        `   accuracy:${accuracy}% | peakForce:${peakForce} | endurance:${enduranceDrop}% | avgReaction:${avgReactionTime}ms`,
-      );
-      console.log(`   rawSensorData: [${m.jumpPressures.join(", ")}]`);
 
       router.push("/patients/home");
     } catch (error) {
@@ -850,7 +822,7 @@ const GameCanvas: React.FC = () => {
                 textTransform: "uppercase",
                 margin: "0 0 26px",
               }}>
-              Protocol A · Motor &amp; Cognitive
+              Level 2: Motor & Cognitive
             </p>
 
             <div
@@ -961,43 +933,13 @@ const GameCanvas: React.FC = () => {
                     GOAL
                   </span>
                 </div>
-                <div
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 7,
-                    marginBottom: 6,
-                  }}>
-                  <div
-                    style={{
-                      width: 9,
-                      height: 9,
-                      borderRadius: "50%",
-                      background: "#00BFFF",
-                      boxShadow: "0 0 7px #00BFFF",
-                      flexShrink: 0,
-                    }}
-                  />
-                  <span
-                    style={{ color: "rgba(255,255,255,0.58)", fontSize: 11.5 }}>
-                    Collect Blue (+100)
-                  </span>
+                <div style={{ display: "flex", alignItems: "center", gap: 7, marginBottom: 6 }}>
+                  <div style={{ width: 9, height: 9, borderRadius: "50%", background: "#00BFFF", boxShadow: "0 0 7px #00BFFF", flexShrink: 0 }} />
+                  <span style={{ color: "rgba(255,255,255,0.58)", fontSize: 11.5 }}>Collect Blue (+100)</span>
                 </div>
                 <div style={{ display: "flex", alignItems: "center", gap: 7 }}>
-                  <div
-                    style={{
-                      width: 9,
-                      height: 9,
-                      borderRadius: "50%",
-                      background: "#FF4500",
-                      boxShadow: "0 0 7px #FF4500",
-                      flexShrink: 0,
-                    }}
-                  />
-                  <span
-                    style={{ color: "rgba(255,255,255,0.58)", fontSize: 11.5 }}>
-                    Avoid Red (−50)
-                  </span>
+                  <div style={{ width: 9, height: 9, borderRadius: "50%", background: "#FF4500", boxShadow: "0 0 7px #FF4500", flexShrink: 0 }} />
+                  <span style={{ color: "rgba(255,255,255,0.58)", fontSize: 11.5 }}>Avoid Red (−50)</span>
                 </div>
               </div>
             </div>
@@ -1413,4 +1355,4 @@ const GameCanvas: React.FC = () => {
   );
 };
 
-export default GameCanvas;
+export default Level2Canvas;
