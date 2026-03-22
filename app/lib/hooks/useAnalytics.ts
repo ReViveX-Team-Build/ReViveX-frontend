@@ -1,8 +1,7 @@
 // app/lib/hooks/useAnalytics.ts
 import { useEffect, useState } from "react";
-import { getRecentSessions, getLast30DaySessions, getSessionsForBothHands } from "@/app/lib/db/sessions";
+import { getLast30DaySessions, getSessionsForBothHands } from "@/app/lib/db/sessions";
 import { getActiveProtocol } from "@/app/lib/db/users";
-import { GameSession } from "@/app/lib/db/types";
 
 export interface AnalyticsData {
     // Grip trend — 30 days, for the chart
@@ -24,6 +23,9 @@ export interface AnalyticsData {
 
     // 30-day improvement
     gripImprovementPct: number;
+
+    // Week-over-week grip trend (no Gemini)
+    weekOverWeekGripPct: number | null; // null = not enough data
 }
 
 export function useAnalytics(uid: string | undefined) {
@@ -34,7 +36,7 @@ export function useAnalytics(uid: string | undefined) {
     useEffect(() => {
         if (!uid) { setLoading(false); return; }
 
-        async function fetch() {
+        async function load() {
             try {
                 const [sessions30, bilateral, protocol] = await Promise.all([
                     getLast30DaySessions(uid!),
@@ -42,16 +44,25 @@ export function useAnalytics(uid: string | undefined) {
                     getActiveProtocol(uid!),
                 ]);
 
-                const last7 = sessions30.slice(0, 7);
-
-                // Safe average helper
                 const avg = (nums: (number | undefined)[]): number => {
                     const valid = nums.filter((n): n is number => n !== undefined && !isNaN(n));
                     if (!valid.length) return 0;
                     return Math.round((valid.reduce((a, b) => a + b, 0) / valid.length) * 10) / 10;
                 };
 
-                // Grip trend for chart — one point per session, last 30 days
+                // Split into this week vs last week
+                const thisWeek = sessions30.slice(0, 7);
+                const lastWeek = sessions30.slice(7, 14);
+
+                // Week-over-week grip trend
+                const thisWeekGrip = avg(thisWeek.map((s) => s.metrics.peakGripForce));
+                const lastWeekGrip = avg(lastWeek.map((s) => s.metrics.peakGripForce));
+                const weekOverWeekGripPct =
+                    lastWeekGrip > 0 && thisWeekGrip > 0
+                        ? Math.round(((thisWeekGrip - lastWeekGrip) / lastWeekGrip) * 100)
+                        : null;
+
+                // Grip trend for chart
                 const gripTrend = sessions30
                     .slice()
                     .reverse()
@@ -60,8 +71,8 @@ export function useAnalytics(uid: string | undefined) {
                         grip: s.metrics.peakGripForce ?? 0,
                     }));
 
-                // 30-day grip improvement
-                const gripValues = sessions30.map((s) => s.metrics.peakGripForce).filter((v): v is number => v != null);
+                // 30-day improvement
+                const gripValues  = sessions30.map((s) => s.metrics.peakGripForce).filter((v): v is number => v != null);
                 const gripStart   = gripValues.at(-1) ?? 0;
                 const gripCurrent = gripValues.at(0) ?? 0;
                 const gripImprovementPct = gripStart > 0
@@ -69,13 +80,13 @@ export function useAnalytics(uid: string | undefined) {
                     : 0;
 
                 // Adherence
-                const prescribed       = protocol?.sessionsPerWeek ?? 5;
-                const completedThisWeek = last7.filter((s) => s.durationSeconds > 60).length;
-                const adherencePct     = Math.round((completedThisWeek / prescribed) * 100);
+                const prescribed        = protocol?.sessionsPerWeek ?? 5;
+                const completedThisWeek = thisWeek.filter((s) => s.durationSeconds > 60).length;
+                const adherencePct      = Math.round((completedThisWeek / prescribed) * 100);
 
                 // Bilateral
-                const rightAvg = avg(bilateral.right.map((s) => s.metrics.peakGripForce));
-                const leftAvg  = avg(bilateral.left.map((s) => s.metrics.peakGripForce));
+                const rightAvg      = avg(bilateral.right.map((s) => s.metrics.peakGripForce));
+                const leftAvg       = avg(bilateral.left.map((s) => s.metrics.peakGripForce));
                 const symmetryRatio = leftAvg > 0 ? Math.round((rightAvg / leftAvg) * 100) : 0;
 
                 setData({
@@ -83,14 +94,15 @@ export function useAnalytics(uid: string | undefined) {
                     adherencePct,
                     completedThisWeek,
                     prescribed,
-                    avgGrip:             avg(last7.map((s) => s.metrics.peakGripForce)),
-                    peakGrip:            Math.max(0, ...last7.map((s) => s.metrics.peakGripForce ?? 0)),
-                    avgReactionMs:       avg(last7.map((s) => s.metrics.reactionTimeMs)),
-                    avgCognitiveAccuracy: avg(last7.map((s) => s.metrics.cognitiveAccuracyPercent)),
-                    rightHandAvg:        rightAvg,
-                    leftHandAvg:         leftAvg,
+                    avgGrip:              avg(thisWeek.map((s) => s.metrics.peakGripForce)),
+                    peakGrip:             Math.max(0, ...thisWeek.map((s) => s.metrics.peakGripForce ?? 0)),
+                    avgReactionMs:        avg(thisWeek.map((s) => s.metrics.reactionTimeMs)),
+                    avgCognitiveAccuracy: avg(thisWeek.map((s) => s.metrics.cognitiveAccuracyPercent)),
+                    rightHandAvg:         rightAvg,
+                    leftHandAvg:          leftAvg,
                     symmetryRatio,
                     gripImprovementPct,
+                    weekOverWeekGripPct,
                 });
             } catch (err: any) {
                 setError(err.message ?? "Failed to load analytics");
@@ -99,7 +111,7 @@ export function useAnalytics(uid: string | undefined) {
             }
         }
 
-        fetch();
+        load();
     }, [uid]);
 
     return { data, loading, error };

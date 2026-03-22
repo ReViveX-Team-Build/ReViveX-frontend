@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./global.css";
 import SeedButton from "../components/DevTools/seedButton";
+import { HardwareProvider } from "@/app/lib/context/HardwareContext";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -42,10 +43,12 @@ export default function RootLayout({
         <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
       </head>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-        suppressHydrationWarning={true}>
-        {children}
-        {process.env.NODE_ENV === "development" && <SeedButton />}
+          className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+          suppressHydrationWarning={true}>
+          <HardwareProvider>
+              {children}
+              {process.env.NODE_ENV === "development" && <SeedButton />}
+          </HardwareProvider>
       </body>
     </html>
   );
