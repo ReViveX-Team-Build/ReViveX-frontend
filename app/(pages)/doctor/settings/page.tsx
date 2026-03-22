@@ -1,31 +1,38 @@
-'use client';
+"use client";
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuthState } from "react-firebase-hooks/auth";
 import { auth, db } from "@/app/lib/firebase";
 import { doc, getDoc, updateDoc, setDoc } from "firebase/firestore";
-import { signOut } from "firebase/auth";
+import { signOut, updateProfile } from "firebase/auth";
 import { User, Bell, Shield, LogOut, Moon, Loader2 } from "lucide-react";
 
 export default function DoctorSettingsPage() {
   const router = useRouter();
   const [user, loading] = useAuthState(auth);
-  
+
   // Local preferences
   const [darkMode, setDarkMode] = useState(false);
-  
+
   // Database preferences
   const [emailNotifs, setEmailNotifs] = useState(true);
   const [sessionReminders, setSessionReminders] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
-  
+  const [isProfileSaving, setIsProfileSaving] = useState(false);
+  const [profileError, setProfileError] = useState("");
+  const [profileSuccess, setProfileSuccess] = useState("");
+
   // Profile Data
   const [profile, setProfile] = useState({
     name: "Loading...",
     email: "Loading...",
     specialization: "Neuro Rehabilitation", // Can be made dynamic later
-    clinic: "ReViveX Medical Center"        // Can be made dynamic later
+    clinic: "ReViveX Medical Center", // Can be made dynamic later
+  });
+  const [initialProfile, setInitialProfile] = useState({
+    name: "Loading...",
+    clinic: "ReViveX Medical Center",
   });
 
   // ─── 1. Load Dark Mode from LocalStorage (Device Preference) ───
@@ -39,31 +46,106 @@ export default function DoctorSettingsPage() {
   useEffect(() => {
     const fetchUserData = async () => {
       if (user) {
+        let resolvedName = user.displayName || "Doctor";
+        let resolvedEmail = user.email || "";
+        let resolvedClinic = "ReViveX Medical Center";
+
         // Set basic auth data first
-        setProfile(prev => ({ 
-          ...prev, 
-          name: user.displayName || "Doctor", 
-          email: user.email || "" 
+        setProfile((prev) => ({
+          ...prev,
+          name: resolvedName,
+          email: resolvedEmail,
         }));
 
         // Fetch detailed profile and settings from Firestore
         const docRef = doc(db, "users", user.uid);
         const docSnap = await getDoc(docRef);
-        
+
         if (docSnap.exists()) {
           const data = docSnap.data();
-          if (data.name) setProfile(prev => ({ ...prev, name: data.name }));
-          
+          if (typeof data.name === "string" && data.name.trim()) {
+            resolvedName = data.name;
+          }
+          if (typeof data.clinic === "string") {
+            resolvedClinic = data.clinic;
+          }
+
           // Load settings if they exist
           if (data.settings) {
-            if (typeof data.settings.emailNotifications === 'boolean') setEmailNotifs(data.settings.emailNotifications);
-            if (typeof data.settings.sessionReminders === 'boolean') setSessionReminders(data.settings.sessionReminders);
+            if (typeof data.settings.emailNotifications === "boolean")
+              setEmailNotifs(data.settings.emailNotifications);
+            if (typeof data.settings.sessionReminders === "boolean")
+              setSessionReminders(data.settings.sessionReminders);
           }
         }
+
+        setProfile((prev) => ({
+          ...prev,
+          name: resolvedName,
+          email: resolvedEmail,
+          clinic: resolvedClinic,
+        }));
+        setInitialProfile({
+          name: resolvedName.trim(),
+          clinic: resolvedClinic.trim(),
+        });
       }
     };
     fetchUserData();
   }, [user]);
+
+  const isProfileDirty =
+    profile.name.trim() !== initialProfile.name ||
+    profile.clinic.trim() !== initialProfile.clinic;
+
+  const handleSaveProfile = async () => {
+    if (!user) return;
+
+    const trimmedName = profile.name.trim();
+    const trimmedClinic = profile.clinic.trim();
+
+    if (!trimmedName) {
+      setProfileError("Full name is required.");
+      setProfileSuccess("");
+      return;
+    }
+
+    setIsProfileSaving(true);
+    setProfileError("");
+    setProfileSuccess("");
+
+    try {
+      const docRef = doc(db, "users", user.uid);
+      await setDoc(
+        docRef,
+        {
+          name: trimmedName,
+          clinic: trimmedClinic,
+        },
+        { merge: true },
+      );
+
+      if (auth.currentUser && auth.currentUser.displayName !== trimmedName) {
+        await updateProfile(auth.currentUser, { displayName: trimmedName });
+      }
+
+      setProfile((prev) => ({
+        ...prev,
+        name: trimmedName,
+        clinic: trimmedClinic,
+      }));
+      setInitialProfile({
+        name: trimmedName,
+        clinic: trimmedClinic,
+      });
+      setProfileSuccess("Profile updated successfully.");
+    } catch (error) {
+      console.error("Failed to save profile:", error);
+      setProfileError("Failed to save profile. Please try again.");
+    } finally {
+      setIsProfileSaving(false);
+    }
+  };
 
   // ─── Handlers ───
   function handleDarkModeToggle() {
@@ -73,28 +155,35 @@ export default function DoctorSettingsPage() {
     document.documentElement.classList.toggle("dark", next);
   }
 
-  const handleCloudSettingToggle = async (settingType: 'emailNotifications' | 'sessionReminders', currentValue: boolean) => {
+  const handleCloudSettingToggle = async (
+    settingType: "emailNotifications" | "sessionReminders",
+    currentValue: boolean,
+  ) => {
     if (!user) return;
     setIsSaving(true);
     const newValue = !currentValue;
-    
+
     // Optimistic UI update
-    if (settingType === 'emailNotifications') setEmailNotifs(newValue);
-    if (settingType === 'sessionReminders') setSessionReminders(newValue);
+    if (settingType === "emailNotifications") setEmailNotifs(newValue);
+    if (settingType === "sessionReminders") setSessionReminders(newValue);
 
     try {
       const docRef = doc(db, "users", user.uid);
       // Use setDoc with merge: true to avoid overwriting other user data
-      await setDoc(docRef, {
-        settings: {
-          [settingType]: newValue
-        }
-      }, { merge: true });
+      await setDoc(
+        docRef,
+        {
+          settings: {
+            [settingType]: newValue,
+          },
+        },
+        { merge: true },
+      );
     } catch (error) {
       console.error("Failed to save settings:", error);
       // Revert UI on failure
-      if (settingType === 'emailNotifications') setEmailNotifs(currentValue);
-      if (settingType === 'sessionReminders') setSessionReminders(currentValue);
+      if (settingType === "emailNotifications") setEmailNotifs(currentValue);
+      if (settingType === "sessionReminders") setSessionReminders(currentValue);
     } finally {
       setIsSaving(false);
     }
@@ -125,12 +214,11 @@ export default function DoctorSettingsPage() {
   }
 
   if (!user) {
-    return null; 
+    return null;
   }
 
   return (
     <div className="p-8 max-w-4xl transition-colors duration-200">
-
       {/* Header */}
       <header className="mb-8">
         <h1 className="text-3xl font-extrabold text-[#0B1E33] dark:text-slate-100 tracking-tight">
@@ -142,7 +230,6 @@ export default function DoctorSettingsPage() {
       </header>
 
       <div className="space-y-8">
-
         {/* Profile Section */}
         <section className="bg-white dark:bg-slate-800 rounded-2xl p-7 shadow-sm border border-gray-100 dark:border-slate-700 transition-colors">
           <div className="flex items-center gap-3 mb-6">
@@ -155,14 +242,57 @@ export default function DoctorSettingsPage() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <SettingField label="Full Name" value={profile.name} />
+            <EditableSettingField
+              label="Full Name"
+              value={profile.name}
+              onChange={(value) =>
+                setProfile((prev) => ({ ...prev, name: value }))
+              }
+              placeholder="Enter your full name"
+            />
             <SettingField label="Email Address" value={profile.email} />
-            <SettingField label="Specialization" value={profile.specialization} />
-            <SettingField label="Hospital / Clinic" value={profile.clinic} />
+            <SettingField
+              label="Specialization"
+              value={profile.specialization}
+            />
+            <EditableSettingField
+              label="Hospital / Clinic"
+              value={profile.clinic}
+              onChange={(value) =>
+                setProfile((prev) => ({ ...prev, clinic: value }))
+              }
+              placeholder="Enter your hospital or clinic"
+            />
+          </div>
+
+          {profileError && (
+            <div className="mt-4 rounded-xl border border-red-200 dark:border-red-900/50 bg-red-50 dark:bg-red-900/20 px-4 py-3 text-sm text-red-700 dark:text-red-400 font-medium">
+              {profileError}
+            </div>
+          )}
+
+          {profileSuccess && (
+            <div className="mt-4 rounded-xl border border-emerald-200 dark:border-emerald-900/50 bg-emerald-50 dark:bg-emerald-900/20 px-4 py-3 text-sm text-emerald-700 dark:text-emerald-400 font-medium">
+              {profileSuccess}
+            </div>
+          )}
+
+          <div className="mt-5 flex justify-end">
+            <button
+              onClick={handleSaveProfile}
+              disabled={isProfileSaving || !isProfileDirty}
+              className="bg-teal-500 hover:bg-teal-400 dark:bg-teal-600 dark:hover:bg-teal-500 text-white px-6 py-2.5 rounded-xl font-semibold transition shadow-sm disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center min-w-[140px]">
+              {isProfileSaving ? (
+                <Loader2 size={18} className="animate-spin" />
+              ) : (
+                "Save Profile"
+              )}
+            </button>
           </div>
 
           <p className="text-xs text-gray-500 dark:text-slate-400 mt-5 flex items-center gap-1.5">
-            <Shield size={12} /> Profile details are synced securely with your ReViveX account.
+            <Shield size={12} /> Profile details are synced securely with your
+            ReViveX account.
           </p>
         </section>
 
@@ -189,16 +319,20 @@ export default function DoctorSettingsPage() {
               title="Email Notifications"
               description="Receive weekly summaries and urgent patient alerts directly to your inbox."
               checked={emailNotifs}
-              onChange={() => handleCloudSettingToggle('emailNotifications', emailNotifs)}
+              onChange={() =>
+                handleCloudSettingToggle("emailNotifications", emailNotifs)
+              }
             />
-            
+
             <hr className="border-gray-100 dark:border-slate-700" />
 
             <ToggleSetting
               title="Session Reminders"
               description="Show in-app banner alerts for upcoming patient telehealth and game sessions."
               checked={sessionReminders}
-              onChange={() => handleCloudSettingToggle('sessionReminders', sessionReminders)}
+              onChange={() =>
+                handleCloudSettingToggle("sessionReminders", sessionReminders)
+              }
             />
 
             <hr className="border-gray-100 dark:border-slate-700" />
@@ -208,7 +342,12 @@ export default function DoctorSettingsPage() {
               description="Switch to a dark theme to reduce eye strain in low-light environments."
               checked={darkMode}
               onChange={handleDarkModeToggle}
-              icon={<Moon size={18} className={darkMode ? "text-teal-500" : "text-gray-400"} />}
+              icon={
+                <Moon
+                  size={18}
+                  className={darkMode ? "text-teal-500" : "text-gray-400"}
+                />
+              }
             />
           </div>
         </section>
@@ -240,14 +379,12 @@ export default function DoctorSettingsPage() {
           <h2 className="font-bold text-red-900 dark:text-red-400 mb-4">
             Danger Zone
           </h2>
-          <button 
+          <button
             onClick={handleLogout}
-            className="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white px-6 py-2.5 rounded-xl font-bold transition-all shadow-sm hover:shadow-md hover:-translate-y-0.5"
-          >
+            className="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white px-6 py-2.5 rounded-xl font-bold transition-all shadow-sm hover:shadow-md hover:-translate-y-0.5">
             <LogOut size={18} /> Secure Log Out
           </button>
         </section>
-
       </div>
     </div>
   );
@@ -255,13 +392,7 @@ export default function DoctorSettingsPage() {
 
 /* ---------- Components ---------- */
 
-function SettingField({
-  label,
-  value,
-}: {
-  label: string;
-  value: string;
-}) {
+function SettingField({ label, value }: { label: string; value: string }) {
   return (
     <div>
       <p className="text-sm font-semibold text-gray-500 dark:text-slate-400 mb-1.5">
@@ -270,6 +401,32 @@ function SettingField({
       <div className="px-4 py-3 rounded-xl bg-gray-50 dark:bg-slate-700/50 text-gray-900 dark:text-slate-100 border border-gray-200 dark:border-slate-600 font-medium">
         {value}
       </div>
+    </div>
+  );
+}
+
+function EditableSettingField({
+  label,
+  value,
+  onChange,
+  placeholder,
+}: {
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+  placeholder?: string;
+}) {
+  return (
+    <div>
+      <p className="text-sm font-semibold text-gray-500 dark:text-slate-400 mb-1.5">
+        {label}
+      </p>
+      <input
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder={placeholder}
+        className="w-full px-4 py-3 rounded-xl bg-white dark:bg-slate-800 text-gray-900 dark:text-slate-100 border border-gray-200 dark:border-slate-600 focus:outline-none focus:ring-2 focus:ring-teal-500/30 dark:focus:ring-teal-400/30 transition-all placeholder:text-gray-400 dark:placeholder:text-slate-500"
+      />
     </div>
   );
 }
@@ -310,14 +467,13 @@ function ToggleSetting({
           disabled
             ? "bg-gray-200 dark:bg-slate-700 cursor-not-allowed opacity-50"
             : checked
-            ? "bg-teal-500 shadow-inner"
-            : "bg-gray-300 dark:bg-slate-600 shadow-inner"
-        }`}
-      >
-        <span 
+              ? "bg-teal-500 shadow-inner"
+              : "bg-gray-300 dark:bg-slate-600 shadow-inner"
+        }`}>
+        <span
           className={`absolute top-1 block w-5 h-5 bg-white rounded-full shadow-sm transition-transform duration-300 ease-bounce ${
             checked ? "translate-x-8" : "translate-x-1"
-          }`} 
+          }`}
         />
       </button>
     </div>
