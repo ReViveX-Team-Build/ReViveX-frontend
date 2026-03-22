@@ -114,7 +114,7 @@ const BASE_LEVELS: Level[] = [
     category: "COGNITIVE",
     desc: "Introduction to dual-tasking. Match sequences while holding sustained grip force.",
     locked: false,
-    path: "/games/memory_gate?level=1",
+    path: "/game/sky-memory?level=3",
     difficulty: "Medium",
     difficultyN: 3,
     accentHex: "#f59e0b",
