@@ -227,7 +227,7 @@ function SidebarContent({
   onClose,
   pathname,
   navItems,
-  initials, 
+  initials,
 }: {
   collapsed: boolean;
   onClose?: () => void;
@@ -539,13 +539,32 @@ export default function DoctorSidebar() {
         setInitials(
           parts.length >= 2
             ? `${parts[0][0]}${parts[parts.length - 1][0]}`.toUpperCase()
-            : d.data().name.slice(0, 2).toUpperCase()
+            : d.data().name.slice(0, 2).toUpperCase(),
         );
       }
     });
   }, [user]);
 
   // Load Schedule Count
+  useEffect(() => {
+    const loadPatientCount = async () => {
+      if (!user) {
+        setPatientCount(null);
+        return;
+      }
+
+      try {
+        const patients = await getPatientsByDoctor(user.uid);
+        setPatientCount(patients.length);
+      } catch (e) {
+        console.error("Failed to load doctor patient count:", e);
+        setPatientCount(null);
+      }
+    };
+
+    void loadPatientCount();
+  }, [user, pathname]);
+
   useEffect(() => {
     const loadUpcomingCount = async () => {
       if (!user) {
@@ -686,7 +705,7 @@ export default function DoctorSidebar() {
           onClose={bp === "mobile" ? () => setMobileOpen(false) : undefined}
           pathname={pathname}
           navItems={navItemsWithCounts}
-          initials={initials} 
+          initials={initials}
         />
       </aside>
 
