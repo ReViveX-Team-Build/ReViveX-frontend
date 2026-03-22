@@ -997,7 +997,7 @@ const SkyMemoryGame: React.FC = () => {
                 textTransform: "uppercase",
                 margin: "0 0 26px",
               }}>
-              Level {gameLevel} · Memory Training
+              Level {gameLevel} · Cognitive Training
             </p>
 
             <div
