@@ -53,7 +53,17 @@ export function useAiCompanion(uid: string, role: AiRole = "patient") {
 
       if (!response.ok) {
         const errData = await response.json().catch(() => ({}));
-        throw new Error(errData.error ?? `HTTP ${response.status}`);
+        const errMsg = errData.error ?? `HTTP ${response.status}`;
+        setMessages((prev) => [
+          ...prev,
+          {
+            userId:    uid,
+            role:      "model",
+            content:   `⚠ ${errMsg}`,
+            timestamp: Timestamp.now(),
+          },
+        ]);
+        return;
       }
 
       const data = await response.json();
