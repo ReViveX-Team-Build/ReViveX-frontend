@@ -35,31 +35,28 @@ const games: Game[] = [
 export default function TherapyGamesPage() {
   return (
     <div className="space-y-8">
-
       {/* Header */}
       <header>
-        <h1 className="text-2xl font-bold text-[#0B1E33]">
+        <h1 className="text-2xl font-bold text-[#0B1E33] dark:text-slate-100">
           Therapy Games
         </h1>
-        <p className="text-gray-500 mt-1">
+        <p className="text-gray-500 dark:text-slate-400 mt-1">
           Select a rehabilitation game to begin your session.
         </p>
       </header>
 
       {/* Games Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-
         {games.map((game) => (
           <div
             key={game.id}
-            className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 flex flex-col justify-between"
-          >
+            className="bg-white dark:bg-slate-900 rounded-2xl p-6 shadow-sm border border-gray-100 dark:border-slate-700 flex flex-col justify-between">
             <div>
-              <h2 className="text-lg font-semibold text-[#0B1E33]">
+              <h2 className="text-lg font-semibold text-[#0B1E33] dark:text-slate-100">
                 {game.title}
               </h2>
 
-              <p className="text-sm text-gray-500 mt-2">
+              <p className="text-sm text-gray-500 dark:text-slate-400 mt-2">
                 {game.description}
               </p>
 
@@ -70,15 +67,12 @@ export default function TherapyGamesPage() {
 
             <Link
               href={game.link}
-              className="mt-6 inline-block bg-teal-500 hover:bg-teal-400 text-[#062E2B] font-semibold py-2 px-4 rounded-xl transition text-center"
-            >
+              className="mt-6 inline-block bg-teal-500 hover:bg-teal-400 text-[#062E2B] font-semibold py-2 px-4 rounded-xl transition text-center">
               Play
             </Link>
           </div>
         ))}
-
       </div>
-
     </div>
   );
 }
