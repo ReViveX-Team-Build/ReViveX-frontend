@@ -322,6 +322,18 @@ const CSS = `
   .dark .pm .pm-chat-input:focus {
     background: #1e293b;
   }
+  .dark .pm .pm-msg-card {
+    background: #0f172a;
+    border-color: rgba(71,85,105,0.75);
+    box-shadow: 0 2px 16px rgba(2,6,23,0.35);
+  }
+  .dark .pm .pm-msg-card.unread {
+    border-color: rgba(45,212,191,0.30);
+    box-shadow: 0 2px 16px rgba(45,212,191,0.12);
+  }
+  .dark .pm .pm-expand-btn:hover {
+    color: #e2e8f0;
+  }
 
   @media (max-width: 640px) {
     .pm main { padding: 16px 14px !important; }
@@ -347,13 +359,13 @@ export default function PatientMessagesPage() {
   const [chatMsgs, setChatMsgs] = useState<ChatBubble[]>([]);
   const [chatInput, setChatInput] = useState("");
   const [doctorId, setDoctorId] = useState<string | null>(null);
-  
+
   // DYNAMIC DOCTOR INFO STATE
   const [doctorInfo, setDoctorInfo] = useState({
     name: "Your Doctor",
     specialty: "Rehabilitation Specialist",
     availability: "Standard Clinic Hours",
-    initials: "MD"
+    initials: "MD",
   });
 
   const [mounted, setMounted] = useState(false);
@@ -385,20 +397,25 @@ export default function PatientMessagesPage() {
           if (docSnap.exists()) {
             const dData = docSnap.data();
             const dName = dData.name || "Assigned Doctor";
-            
+
             // Generate initials safely (e.g. "Dr. John Doe" -> "JD")
             let inits = "DR";
             if (dName) {
-              const parts = dName.replace(/^Dr\.?\s+/i, '').split(' ');
-              inits = parts.map((p: string) => p[0]).slice(0, 2).join('').toUpperCase();
+              const parts = dName.replace(/^Dr\.?\s+/i, "").split(" ");
+              inits = parts
+                .map((p: string) => p[0])
+                .slice(0, 2)
+                .join("")
+                .toUpperCase();
               if (!inits) inits = "DR";
             }
 
             setDoctorInfo({
-              name: dName.startsWith('Dr') ? dName : `Dr. ${dName}`,
+              name: dName.startsWith("Dr") ? dName : `Dr. ${dName}`,
               specialty: dData.specialty || "Neuro-Rehabilitation Specialist",
-              availability: dData.availability || "Mon – Fri, 9:00 AM – 5:00 PM",
-              initials: inits
+              availability:
+                dData.availability || "Mon – Fri, 9:00 AM – 5:00 PM",
+              initials: inits,
             });
           }
         } catch (err) {
@@ -573,11 +590,13 @@ export default function PatientMessagesPage() {
           <div
             style={{
               marginBottom: 18,
-              background: "#fff",
-              border: "1.5px solid rgba(239,68,68,0.20)",
+              background: isDark ? "rgba(127,29,29,0.12)" : "#fff",
+              border: isDark
+                ? "1.5px solid rgba(248,113,113,0.35)"
+                : "1.5px solid rgba(239,68,68,0.20)",
               borderRadius: 16,
               padding: 16,
-              color: "#b91c1c",
+              color: isDark ? "#fca5a5" : "#b91c1c",
               fontSize: 13,
               fontWeight: 600,
             }}>
@@ -1059,7 +1078,7 @@ export default function PatientMessagesPage() {
                       style={{
                         fontSize: 14.5,
                         fontWeight: 800,
-                        color: "#0B1E33",
+                        color: isDark ? "#e2e8f0" : "#0B1E33",
                         margin: 0,
                         lineHeight: 1.3,
                       }}>
@@ -1079,7 +1098,7 @@ export default function PatientMessagesPage() {
                     <span
                       style={{
                         fontSize: 11,
-                        color: "#94a3b8",
+                        color: isDark ? "#cbd5e1" : "#94a3b8",
                         fontWeight: 500,
                       }}>
                       {msg.sentByAI
@@ -1093,7 +1112,9 @@ export default function PatientMessagesPage() {
                     <div
                       style={{
                         height: 1,
-                        background: "rgba(226,232,240,0.8)",
+                        background: isDark
+                          ? "rgba(71,85,105,0.8)"
+                          : "rgba(226,232,240,0.8)",
                         marginBottom: 12,
                       }}
                     />
@@ -1103,7 +1124,7 @@ export default function PatientMessagesPage() {
                   <p
                     style={{
                       fontSize: 13,
-                      color: "#475569",
+                      color: isDark ? "#cbd5e1" : "#475569",
                       lineHeight: 1.72,
                       margin: 0,
                       opacity: msg.isRead ? 0.8 : 1,
@@ -1134,7 +1155,9 @@ export default function PatientMessagesPage() {
                       style={{
                         marginTop: 14,
                         paddingTop: 12,
-                        borderTop: "1px dashed rgba(245,158,11,0.22)",
+                        borderTop: isDark
+                          ? "1px dashed rgba(245,158,11,0.35)"
+                          : "1px dashed rgba(245,158,11,0.22)",
                         display: "flex",
                         alignItems: "center",
                         gap: 10,
@@ -1144,12 +1167,16 @@ export default function PatientMessagesPage() {
                           display: "flex",
                           alignItems: "center",
                           gap: 7,
-                          background: "rgba(245,158,11,0.06)",
-                          border: "1px solid rgba(245,158,11,0.18)",
+                          background: isDark
+                            ? "rgba(245,158,11,0.12)"
+                            : "rgba(245,158,11,0.06)",
+                          border: isDark
+                            ? "1px solid rgba(245,158,11,0.30)"
+                            : "1px solid rgba(245,158,11,0.18)",
                           borderRadius: 10,
                           padding: "7px 12px",
                           fontSize: 11.5,
-                          color: "#92400e",
+                          color: isDark ? "#fcd34d" : "#92400e",
                           fontWeight: 600,
                         }}>
                         <Bell size={12} color="#f59e0b" />
@@ -1160,9 +1187,13 @@ export default function PatientMessagesPage() {
                         style={{
                           padding: "7px 14px",
                           borderRadius: 10,
-                          background: "rgba(245,158,11,0.10)",
-                          border: "1px solid rgba(245,158,11,0.28)",
-                          color: "#b45309",
+                          background: isDark
+                            ? "rgba(245,158,11,0.16)"
+                            : "rgba(245,158,11,0.10)",
+                          border: isDark
+                            ? "1px solid rgba(245,158,11,0.40)"
+                            : "1px solid rgba(245,158,11,0.28)",
+                          color: isDark ? "#fbbf24" : "#b45309",
                           fontSize: 11.5,
                           fontWeight: 800,
                           cursor: "pointer",
@@ -1280,8 +1311,12 @@ export default function PatientMessagesPage() {
             <div
               style={{
                 padding: "16px 20px",
-                borderBottom: "1px solid rgba(226,232,240,0.8)",
-                background: "linear-gradient(135deg,#f8fdfc,#f0fdfb)",
+                borderBottom: isDark
+                  ? "1px solid rgba(71,85,105,0.8)"
+                  : "1px solid rgba(226,232,240,0.8)",
+                background: isDark
+                  ? "linear-gradient(135deg,#0f172a,#111827)"
+                  : "linear-gradient(135deg,#f8fdfc,#f0fdfb)",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "space-between",
@@ -1322,7 +1357,11 @@ export default function PatientMessagesPage() {
                 </div>
                 <div>
                   <div
-                    style={{ fontSize: 14, fontWeight: 800, color: "#0B1E33" }}>
+                    style={{
+                      fontSize: 14,
+                      fontWeight: 800,
+                      color: isDark ? "#e2e8f0" : "#0B1E33",
+                    }}>
                     {doctorInfo.name}
                   </div>
                   <div
@@ -1346,7 +1385,7 @@ export default function PatientMessagesPage() {
                       className="mono"
                       style={{
                         fontSize: 9.5,
-                        color: "#64748b",
+                        color: isDark ? "#94a3b8" : "#64748b",
                         textTransform: "uppercase",
                         letterSpacing: "0.12em",
                         fontWeight: 600,
@@ -1364,13 +1403,17 @@ export default function PatientMessagesPage() {
                   width: 34,
                   height: 34,
                   borderRadius: 11,
-                  background: "rgba(11,30,51,0.06)",
-                  border: "1px solid rgba(226,232,240,0.9)",
+                  background: isDark
+                    ? "rgba(148,163,184,0.08)"
+                    : "rgba(11,30,51,0.06)",
+                  border: isDark
+                    ? "1px solid rgba(71,85,105,0.8)"
+                    : "1px solid rgba(226,232,240,0.9)",
                   cursor: "pointer",
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
-                  color: "#64748b",
+                  color: isDark ? "#cbd5e1" : "#64748b",
                   transition: "all 0.2s ease",
                   flexShrink: 0,
                 }}>
@@ -1398,7 +1441,9 @@ export default function PatientMessagesPage() {
                     color: "#94a3b8",
                     textTransform: "uppercase",
                     letterSpacing: "0.14em",
-                    background: "rgba(240,244,248,0.9)",
+                    background: isDark
+                      ? "rgba(15,23,42,0.85)"
+                      : "rgba(240,244,248,0.9)",
                     padding: "3px 12px",
                     borderRadius: 99,
                   }}>
@@ -1447,14 +1492,24 @@ export default function PatientMessagesPage() {
                           ? "16px 16px 16px 4px"
                           : "16px 16px 4px 16px",
                         background: isDoc
-                          ? "#fff"
+                          ? isDark
+                            ? "#1e293b"
+                            : "#fff"
                           : "linear-gradient(135deg,#2DD4BF,#0891b2)",
                         border: isDoc
-                          ? "1.5px solid rgba(226,232,240,0.9)"
+                          ? isDark
+                            ? "1.5px solid rgba(71,85,105,0.8)"
+                            : "1.5px solid rgba(226,232,240,0.9)"
                           : "none",
-                        color: isDoc ? "#0B1E33" : "#0B1E33",
+                        color: isDoc
+                          ? isDark
+                            ? "#e2e8f0"
+                            : "#0B1E33"
+                          : "#0B1E33",
                         boxShadow: isDoc
-                          ? "0 2px 10px rgba(11,30,51,0.06)"
+                          ? isDark
+                            ? "0 2px 10px rgba(2,6,23,0.35)"
+                            : "0 2px 10px rgba(11,30,51,0.06)"
                           : "0 4px 16px rgba(45,212,191,0.28)",
                         position: "relative",
                         overflow: isDoc ? "visible" : "hidden",
@@ -1488,7 +1543,11 @@ export default function PatientMessagesPage() {
                           marginTop: 5,
                           position: "relative",
                           zIndex: 1,
-                          color: isDoc ? "#94a3b8" : "rgba(11,30,51,0.48)",
+                          color: isDoc
+                            ? isDark
+                              ? "#94a3b8"
+                              : "#94a3b8"
+                            : "rgba(11,30,51,0.48)",
                           textAlign: "right",
                         }}>
                         {msg.time}
@@ -1502,13 +1561,18 @@ export default function PatientMessagesPage() {
                           width: 28,
                           height: 28,
                           borderRadius: 9,
-                          background: "rgba(11,30,51,0.08)",
+                          background: isDark
+                            ? "rgba(148,163,184,0.18)"
+                            : "rgba(11,30,51,0.08)",
                           display: "flex",
                           alignItems: "center",
                           justifyContent: "center",
                           flexShrink: 0,
                         }}>
-                        <User size={14} color="#64748b" />
+                        <User
+                          size={14}
+                          color={isDark ? "#cbd5e1" : "#64748b"}
+                        />
                       </div>
                     )}
                   </div>
@@ -1521,8 +1585,10 @@ export default function PatientMessagesPage() {
             <div
               style={{
                 padding: "12px 16px",
-                borderTop: "1px solid rgba(226,232,240,0.8)",
-                background: "#fafbfd",
+                borderTop: isDark
+                  ? "1px solid rgba(71,85,105,0.8)"
+                  : "1px solid rgba(226,232,240,0.8)",
+                background: isDark ? "#0f172a" : "#fafbfd",
                 display: "flex",
                 alignItems: "center",
                 gap: 9,
@@ -1547,13 +1613,19 @@ export default function PatientMessagesPage() {
                   borderRadius: 12,
                   background: chatInput.trim()
                     ? "linear-gradient(135deg,#2DD4BF,#0891b2)"
-                    : "rgba(226,232,240,0.9)",
+                    : isDark
+                      ? "rgba(51,65,85,0.9)"
+                      : "rgba(226,232,240,0.9)",
                   border: "none",
                   cursor: chatInput.trim() ? "pointer" : "default",
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
-                  color: chatInput.trim() ? "#0B1E33" : "#94a3b8",
+                  color: chatInput.trim()
+                    ? "#0B1E33"
+                    : isDark
+                      ? "#94a3b8"
+                      : "#94a3b8",
                   flexShrink: 0,
                   transition: "all 0.2s ease",
                   boxShadow: chatInput.trim()
@@ -1568,8 +1640,10 @@ export default function PatientMessagesPage() {
             <div
               style={{
                 padding: "8px 16px 12px",
-                background: "#fafbfd",
-                borderTop: "1px solid rgba(226,232,240,0.5)",
+                background: isDark ? "#0f172a" : "#fafbfd",
+                borderTop: isDark
+                  ? "1px solid rgba(71,85,105,0.55)"
+                  : "1px solid rgba(226,232,240,0.5)",
                 flexShrink: 0,
               }}>
               <p
