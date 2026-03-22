@@ -500,14 +500,14 @@ export default function DoctorDashboard() {
       setAiLoading(true);
       setAiSummary("");
       try {
-        const res = await fetch("/api/llm/doctor", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            uid: docId,
-            message: "Give me a concise weekly summary of my patient cohort.",
-            mode: "weekly_summary",
-          }),
+              const res = await fetch("/api/llm/doctor", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          uid: docId,
+          message: `Give me a concise weekly summary of my patient cohort. Use ONLY these exact real numbers in your response: ${total} active patients, ${avg}% average adherence, ${missed} missed sessions this week, ${online} devices online. Do not invent or approximate any figures.`,
+          mode: "weekly_summary",
+        }),
         });
         if (!res.ok) throw new Error(`${res.status}`);
         const data = await res.json();

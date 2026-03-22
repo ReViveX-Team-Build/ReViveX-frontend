@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { useAuthState } from "react-firebase-hooks/auth";
-import { auth } from "@/app/lib/firebase";
+import { auth, db } from "@/app/lib/firebase";
 import {
   sendDirectMessage,
   subscribeToDirect,
@@ -13,7 +13,7 @@ import {
 import { getPatientData } from "@/app/lib/db/users";
 import { Communication } from "@/app/lib/db/types";
 import { useDarkMode } from "@/app/lib/hooks/useDarkMode";
-import { Timestamp } from "firebase/firestore";
+import { Timestamp, doc, getDoc } from "firebase/firestore";
 import {
   ArrowLeft,
   MessageCircle,
@@ -27,19 +27,15 @@ import {
   AlertCircle,
   Sparkles,
   Activity,
-  Shield,
-  Bell,
   User,
   ChevronDown,
   ChevronUp,
+  Bell,
   Zap,
 } from "lucide-react";
 
 /* ══════════════════════════════════════════════════════════
    TYPES
-   Mirrors lib/db/types.ts Communication interface.
-   NOTE: Add `title: string` and `isImportant?: boolean`
-         to your Communication interface in lib/db/types.ts
 ══════════════════════════════════════════════════════════ */
 type MsgCategory = "all" | "feedback" | "instruction" | "direct_message";
 
@@ -93,98 +89,6 @@ function commToInboxMessage(c: Communication): PatientMessage {
   };
 }
 
-/* ══════════════════════════════════════════════════════════
-   MOCK DATA
-   gotta replace with: import { getMessagesByReceiver, getDirectChat,
-   markAsRead, sendCommunication } from '@/lib/db/communications'
-   Patient ID comes from the auth context (e.g. useAuth hook)
-══════════════════════════════════════════════════════════ */
-const DOCTOR = {
-  name: "Dr. Sarah Johnson",
-  specialty: "Neuro-Rehabilitation Specialist",
-  availability: "Mon – Fri, 9:00 AM – 5:00 PM",
-  initials: "SJ",
-  doctorId: "doctor_001",
-};
-
-const INITIAL_MESSAGES: PatientMessage[] = [
-  {
-    id: "1",
-    type: "feedback",
-    title: "Excellent Progress This Week",
-    content:
-      "John, I reviewed your session data from this week and I'm very impressed with your consistency. Your grip strength has improved significantly, and your adherence score is outstanding. Keep up the great work! Continue with the current protocol — Right hand, Medium difficulty.",
-    date: "Nov 15, 2025",
-    isRead: false,
-    isImportant: false,
-    sentByAI: false,
-  },
-  {
-    id: "2",
-    type: "instruction",
-    title: "Protocol Adjustment",
-    content:
-      "Based on your progress, I'm adjusting your therapy protocol starting next week. We'll increase the difficulty level to \"High\" for your right hand exercises. This will help continue your improvement trajectory. If you experience any discomfort, please let me know immediately.",
-    date: "Nov 14, 2025",
-    isRead: false,
-    isImportant: true,
-    sentByAI: false,
-  },
-  {
-    id: "3",
-    type: "direct_message",
-    title: "Reminder: Hydration",
-    content:
-      "Remember to stay well-hydrated before and after your therapy sessions. Proper hydration helps with muscle recovery and overall performance during rehabilitation exercises.",
-    date: "Nov 12, 2025",
-    isRead: true,
-    isImportant: false,
-    sentByAI: false,
-  },
-  {
-    id: "4",
-    type: "ai_insight",
-    title: "Memory Game Performance",
-    content:
-      "Your cognitive exercise performance is excellent with an 85% success rate. The dual-task therapy approach is working well for you. The combination of motor and cognitive tasks is showing positive results in your recovery.",
-    date: "Nov 10, 2025",
-    isRead: true,
-    isImportant: false,
-    sentByAI: true,
-  },
-  {
-    id: "5",
-    type: "instruction",
-    title: "Next Appointment Scheduled",
-    content:
-      "Your next in-person evaluation is scheduled for Nov 25, 2025 at 2:00 PM. We'll assess your overall progress and discuss any adjustments to your treatment plan. Please complete all scheduled sessions before this appointment.",
-    date: "Nov 8, 2025",
-    isRead: true,
-    isImportant: true,
-    sentByAI: false,
-  },
-];
-
-const INITIAL_CHAT: ChatBubble[] = [
-  {
-    id: "c1",
-    sender: "doctor",
-    text: "Hello John! How are you feeling after yesterday's session?",
-    time: "09:10",
-  },
-  {
-    id: "c2",
-    sender: "patient",
-    text: "Feeling good, Doctor! Grip feels much stronger than last week.",
-    time: "09:14",
-  },
-  {
-    id: "c3",
-    sender: "doctor",
-    text: "That's wonderful to hear! Your metrics confirm it. Keep up the great work!",
-    time: "09:16",
-  },
-];
 /* ══════════════════════════════════════════════════════════
    HELPERS
 ══════════════════════════════════════════════════════════ */
@@ -440,9 +344,18 @@ export default function PatientMessagesPage() {
   const [filter, setFilter] = useState<MsgCategory>("all");
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
   const [chatOpen, setChatOpen] = useState(false);
-  const [chatMsgs, setChatMsgs] = useState<ChatBubble[]>(INITIAL_CHAT);
+  const [chatMsgs, setChatMsgs] = useState<ChatBubble[]>([]);
   const [chatInput, setChatInput] = useState("");
   const [doctorId, setDoctorId] = useState<string | null>(null);
+  
+  // DYNAMIC DOCTOR INFO STATE
+  const [doctorInfo, setDoctorInfo] = useState({
+    name: "Your Doctor",
+    specialty: "Rehabilitation Specialist",
+    availability: "Standard Clinic Hours",
+    initials: "MD"
+  });
+
   const [mounted, setMounted] = useState(false);
   const chatEndRef = useRef<HTMLDivElement>(null);
   const chatInputRef = useRef<HTMLInputElement>(null);
@@ -457,11 +370,41 @@ export default function PatientMessagesPage() {
     }
   }, [chatOpen, chatMsgs]);
 
+  // ── DYNAMICALLY FETCH DOCTOR INFO ───────────────────────────────────
   useEffect(() => {
     async function loadDoctor() {
       if (!patientId) return;
       const patient = await getPatientData(patientId);
-      setDoctorId(patient?.assignedDoctorId ?? null);
+      const aId = patient?.assignedDoctorId ?? null;
+      setDoctorId(aId);
+
+      if (aId) {
+        try {
+          const docRef = doc(db, "users", aId);
+          const docSnap = await getDoc(docRef);
+          if (docSnap.exists()) {
+            const dData = docSnap.data();
+            const dName = dData.name || "Assigned Doctor";
+            
+            // Generate initials safely (e.g. "Dr. John Doe" -> "JD")
+            let inits = "DR";
+            if (dName) {
+              const parts = dName.replace(/^Dr\.?\s+/i, '').split(' ');
+              inits = parts.map((p: string) => p[0]).slice(0, 2).join('').toUpperCase();
+              if (!inits) inits = "DR";
+            }
+
+            setDoctorInfo({
+              name: dName.startsWith('Dr') ? dName : `Dr. ${dName}`,
+              specialty: dData.specialty || "Neuro-Rehabilitation Specialist",
+              availability: dData.availability || "Mon – Fri, 9:00 AM – 5:00 PM",
+              initials: inits
+            });
+          }
+        } catch (err) {
+          console.error("Failed to load doctor info:", err);
+        }
+      }
     }
 
     loadDoctor().catch((err) => {
@@ -470,6 +413,7 @@ export default function PatientMessagesPage() {
     });
   }, [patientId]);
 
+  // ── FETCH MESSAGES ───────────────────────────────────────────────────
   useEffect(() => {
     if (!patientId) return;
 
@@ -478,7 +422,6 @@ export default function PatientMessagesPage() {
         const msgs = await getInboxMessages(patientId);
         const mapped = msgs.map((m) => commToInboxMessage(m as Communication));
         setInbox(mapped);
-        console.log("Inbox:", msgs);
       } catch (err) {
         console.error("Failed to load inbox:", err);
       }
@@ -491,7 +434,6 @@ export default function PatientMessagesPage() {
     if (!patientId || !doctorId) return;
 
     const unsubscribe = subscribeToDirect(patientId, doctorId, (msgs) => {
-      console.log("Patient realtime:", msgs);
       setChatMsgs(msgs.map((m) => commToBubble(m, patientId)));
     });
 
@@ -722,7 +664,7 @@ export default function PatientMessagesPage() {
                       "0 0 0 3px rgba(45,212,191,0.25), 0 6px 22px rgba(45,212,191,0.28)",
                     animation: "pmGlow 3s ease-in-out infinite",
                   }}>
-                  {DOCTOR.initials}
+                  {doctorInfo.initials}
                 </div>
                 {/* Online dot */}
                 <div
@@ -762,7 +704,7 @@ export default function PatientMessagesPage() {
                     margin: 0,
                     lineHeight: 1.2,
                   }}>
-                  {DOCTOR.name}
+                  {doctorInfo.name}
                 </h1>
                 <p
                   style={{
@@ -771,7 +713,7 @@ export default function PatientMessagesPage() {
                     marginTop: 3,
                     fontWeight: 500,
                   }}>
-                  {DOCTOR.specialty}
+                  {doctorInfo.specialty}
                 </p>
               </div>
             </div>
@@ -803,7 +745,7 @@ export default function PatientMessagesPage() {
                     color: "rgba(255,255,255,0.50)",
                     fontWeight: 500,
                   }}>
-                  {DOCTOR.availability}
+                  {doctorInfo.availability}
                 </span>
               </div>
 
@@ -1141,8 +1083,8 @@ export default function PatientMessagesPage() {
                         fontWeight: 500,
                       }}>
                       {msg.sentByAI
-                        ? `AI Insight · Reviewed by ${DOCTOR.name}`
-                        : DOCTOR.name}
+                        ? `AI Insight · Reviewed by ${doctorInfo.name}`
+                        : doctorInfo.name}
                     </span>
                   </div>
 
@@ -1290,7 +1232,7 @@ export default function PatientMessagesPage() {
             <span style={{ color: "#2DD4BF", fontWeight: 700 }}>
               chat button
             </span>{" "}
-            below to send a direct message to Dr. Johnson.
+            below to send a direct message to {doctorInfo.name}.
           </p>
         </div>
       </main>
@@ -1363,7 +1305,7 @@ export default function PatientMessagesPage() {
                       boxShadow: "0 0 0 2px rgba(45,212,191,0.22)",
                       animation: "pmGlow 3s ease-in-out infinite",
                     }}>
-                    {DOCTOR.initials}
+                    {doctorInfo.initials}
                   </div>
                   <div
                     style={{
@@ -1381,7 +1323,7 @@ export default function PatientMessagesPage() {
                 <div>
                   <div
                     style={{ fontSize: 14, fontWeight: 800, color: "#0B1E33" }}>
-                    {DOCTOR.name}
+                    {doctorInfo.name}
                   </div>
                   <div
                     style={{
@@ -1492,7 +1434,7 @@ export default function PatientMessagesPage() {
                           color: "#0B1E33",
                           flexShrink: 0,
                         }}>
-                        {DOCTOR.initials}
+                        {doctorInfo.initials}
                       </div>
                     )}
 
@@ -1593,7 +1535,7 @@ export default function PatientMessagesPage() {
                 value={chatInput}
                 onChange={(e) => setChatInput(e.target.value)}
                 onKeyDown={handleChatKey}
-                placeholder={`Message ${DOCTOR.name.split(" ")[0]}...`}
+                placeholder={`Message ${doctorInfo.name.split(" ")[0]}...`}
                 disabled={!doctorId}
               />
               <button
@@ -1641,7 +1583,7 @@ export default function PatientMessagesPage() {
                   letterSpacing: "0.10em",
                 }}>
                 Direct channel · Replies during clinic hours ·{" "}
-                {DOCTOR.availability}
+                {doctorInfo.availability}
               </p>
             </div>
           </div>
