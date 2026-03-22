@@ -367,7 +367,7 @@ export default function PatientAICompanion() {
                   onKeyDown={(e) => {
                     if (e.key === "Enter" && !e.shiftKey) {
                       e.preventDefault();
-                      handleSend();
+                      void handleSend();
                     }
                   }}
                   placeholder="Ask about your progress, sessions, or recovery..."
