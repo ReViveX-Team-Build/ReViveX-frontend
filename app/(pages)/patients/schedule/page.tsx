@@ -22,7 +22,6 @@ const gameEmoji: Record<string, string> = {
   precision_hold: "🎯", stability_core: "⚖️",
 };
 
-// ─── CSS ───
 const STYLES = `
   @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap');
   .sc * { font-family:'Plus Jakarta Sans',system-ui,sans-serif; box-sizing:border-box; }
@@ -36,7 +35,7 @@ const STYLES = `
   .sc-card {
     border-radius:20px; border:1px solid rgba(226,232,240,0.9);
     box-shadow:0 2px 18px rgba(11,30,51,0.055); padding:28px;
-    transition:box-shadow .28s ease; background: #fff;
+    transition:box-shadow .28s ease; background: #f8fafc;
   }
   .sc-card:hover { box-shadow:0 8px 36px rgba(11,30,51,0.09); }
   
@@ -53,7 +52,7 @@ const STYLES = `
   .sc-btn-ghost {
     display:inline-flex; align-items:center; gap:6px;
     padding:8px 16px; border-radius:10px; cursor:pointer;
-    background:#fff; border:1.5px solid rgba(226,232,240,.9);
+    background:#f1f5f9; border:1.5px solid rgba(203, 213, 225, 0.9);
     font-size:12px; font-weight:700; color:#64748b; transition:all .2s;
   }
   .sc-btn-ghost:hover { border-color:#2DD4BF; color:#0f766e; background:rgba(45,212,191,.05); }
@@ -91,12 +90,38 @@ const STYLES = `
 
   .sc-day-btn {
     flex:1; min-width:60px; padding:10px 8px; border-radius:14px;
-    border:1.5px solid rgba(226,232,240,.9); cursor:pointer;
-    transition:all .2s; background:#fff; text-align:center;
+    border:1.5px solid rgba(203, 213, 225, 0.9); cursor:pointer;
+    transition:all .2s; background:#f8fafc; text-align:center;
   }
   .sc-day-btn.selected { background:rgba(45,212,191,.10); border-color:#2DD4BF; color:#0f766e; transform:translateY(-2px); box-shadow:0 4px 12px rgba(45,212,191,.15); }
   .sc-day-btn.has-session { border-color:rgba(99,102,241,.35); }
   .sc-day-btn:hover:not(.selected) { border-color:#2DD4BF; }
+
+  .sc-input {
+    background: #f1f5f9;
+    border: 1.5px solid rgba(203, 213, 225, 0.9);
+    border-radius: 10px;
+    padding: 6px 12px;
+    font-size: 13px;
+    font-weight: 600;
+    color: #0B1E33;
+    transition: all 0.2s;
+  }
+  .sc-input:focus {
+    outline: none;
+    border-color: #2DD4BF;
+    background: #fff;
+    box-shadow: 0 0 0 3px rgba(45, 212, 191, 0.1);
+  }
+  .dark .sc-input {
+    background: #1e293b;
+    border-color: #334155;
+    color: #f1f5f9;
+  }
+  .dark .sc-input:focus {
+    border-color: #2DD4BF;
+    background: #0f172a;
+  }
 
   .sc-section-title { display:flex; align-items:center; gap:10px; font-size:16px; font-weight:800; color:#0B1E33; margin-bottom:20px; }
   .sc-section-title .iw { width:32px; height:32px; border-radius:10px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }

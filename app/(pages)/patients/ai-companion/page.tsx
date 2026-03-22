@@ -421,6 +421,22 @@ export default function PatientAICompanion() {
                   ))}
                 </div>
               </div>
+              {currentPlan !== "free" && (
+                  <button
+                      onClick={async () => {
+                        const res = await fetch("/api/stripe/create-portal", {
+                          method: "POST",
+                          headers: { "Content-Type": "application/json" },
+                          body: JSON.stringify({ uid: user.uid }),
+                        });
+                        const data = await res.json();
+                        if (data.url) window.location.href = data.url;
+                      }}
+                      className="mt-3 w-full text-xs text-gray-400 hover:text-red-400 transition underline underline-offset-2">
+                    Manage or cancel subscription
+                  </button>
+              )}
+
             </div>
 
             {/* ── Premium Plans OR Analytics (based on plan) ── */}

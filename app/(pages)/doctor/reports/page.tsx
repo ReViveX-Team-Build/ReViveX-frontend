@@ -1,11 +1,5 @@
 "use client";
 
-import ReportKPICard from "@/components/DoctorPortal/ReportKPICard";
-import PatientOutcomesChart from "@/components/DoctorPortal/PatientOutcomesChart";
-import AdherenceRateChart from "@/components/DoctorPortal/AdherenceRateChart";
-import DeviceStatusChart from "@/components/DoctorPortal/DeviceStatusChart";
-import ProgressTrendChart from "@/components/DoctorPortal/ProgressTrendChart";
-
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuthState } from "react-firebase-hooks/auth";
@@ -13,12 +7,18 @@ import { auth, db } from "@/app/lib/firebase";
 import { collection, query, where, getDocs } from "firebase/firestore";
 import { ChevronRight, FileText, Loader2, Users } from "lucide-react";
 
+// Existing Component Imports
+import ReportKPICard from "@/components/DoctorPortal/ReportKPICard";
+import PatientOutcomesChart from "@/components/DoctorPortal/PatientOutcomesChart";
+import AdherenceRateChart from "@/components/DoctorPortal/AdherenceRateChart";
+import DeviceStatusChart from "@/components/DoctorPortal/DeviceStatusChart";
+
 export default function DoctorReportsPage() {
   const router = useRouter();
   const [user, authLoading] = useAuthState(auth);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  
+
   // KPIs
   const [adherenceRate, setAdherenceRate] = useState(0);
   const [completedSessions, setCompletedSessions] = useState(0);
@@ -32,8 +32,7 @@ export default function DoctorReportsPage() {
     const load = async () => {
       if (authLoading) return;
       if (!user) {
-        setLoading(false);
-        setError("Please sign in to load report metrics.");
+        router.push("/auth/doctor/signin");
         return;
       }
 
@@ -42,8 +41,8 @@ export default function DoctorReportsPage() {
 
         // 1. Fetch Doctor's Patients for the Directory
         const q = query(
-          collection(db, "users"), 
-          where("role", "==", "patient"), 
+          collection(db, "users"),
+          where("role", "==", "patient"),
           where("assignedDoctorId", "==", user.uid),
           where("connectionStatus", "==", "accepted")
         );
@@ -108,7 +107,7 @@ export default function DoctorReportsPage() {
     };
 
     void load();
-  }, [user, authLoading]);
+  }, [user, authLoading, router]);
 
   return (
     <div className="p-8 max-w-7xl mx-auto space-y-8">
@@ -159,13 +158,9 @@ export default function DoctorReportsPage() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <PatientOutcomesChart />
         <AdherenceRateChart />
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2">
-          <ProgressTrendChart />
+          <DeviceStatusChart />
         </div>
-        <DeviceStatusChart />
       </div>
 
       {/* Patient Reports Directory */}
@@ -179,7 +174,7 @@ export default function DoctorReportsPage() {
             <p className="text-xs text-slate-500 dark:text-slate-400">Select a patient to view detailed analytics and clinical notes.</p>
           </div>
         </div>
-        
+
         {loading ? (
           <div className="p-10 flex justify-center"><Loader2 className="animate-spin text-teal-500" /></div>
         ) : patients.length === 0 ? (
@@ -187,8 +182,8 @@ export default function DoctorReportsPage() {
         ) : (
           <div className="divide-y divide-gray-50 dark:divide-slate-700/50">
             {patients.map((p) => (
-              <div 
-                key={p.id} 
+              <div
+                key={p.id}
                 onClick={() => router.push(`/doctor/reports/${p.id}`)}
                 className="flex items-center justify-between p-4 hover:bg-teal-50 dark:hover:bg-slate-700/50 cursor-pointer transition-colors group"
               >
@@ -198,7 +193,7 @@ export default function DoctorReportsPage() {
                   </div>
                   <div>
                     <div className="font-bold text-slate-800 dark:text-slate-200 group-hover:text-teal-600 dark:group-hover:text-teal-400 transition-colors">{p.name || "Unknown Patient"}</div>
-                    <div className="text-xs text-slate-500 font-mono">ID: {p.patientId || p.id.slice(0,8)} | {p.condition || "Neurological Rehab"}</div>
+                    <div className="text-xs text-slate-500 font-mono">ID: {p.patientId || p.id.slice(0, 8)} | {p.condition || "Neurological Rehab"}</div>
                   </div>
                 </div>
                 <ChevronRight className="text-slate-300 group-hover:text-teal-500 transition-colors" />
