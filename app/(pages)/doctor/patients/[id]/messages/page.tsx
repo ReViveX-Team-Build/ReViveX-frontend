@@ -314,7 +314,7 @@ function getMockChat(uid: string) {
 }
 // ──────────────────────────────────────────────────────────────────────────────
 
-type ActivePanel = "chat" | "instruction" | "feedback" | "ai_generate";
+type ActivePanel = "chat" | "instruction" | "feedback";
 interface ChatMessage {
   sender: "doctor" | "patient";
   text: string;
@@ -731,51 +731,79 @@ export default function DoctorMessagingHub() {
   };
 
   // FIXED: real patients → {patientUid, type}; mock → inline prompt
-  const generateAI = useCallback(async () => {
-    if (!canUseAI || !patient) return;
-    setAiLoading(true);
-    setAiDraft("");
-    setAiTitle("");
-    try {
-      let text = "";
-      if (USE_MOCK) {
-        // Mock: build prompt inline
-        const res = await fetch("/api/llm/generate", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            prompt: `You are a clinical AI assistant for the ReViveX neuro-rehabilitation platform.\nGenerate a professional ${aiMode} from a rehabilitation doctor to their patient.\nPatient: ${patient.name}, Condition: ${patient.condition}, Adherence: ${patient.adherence}%, Status: ${patient.status}.\n${aiMode === "feedback" ? "Write a warm clinical feedback message (2-3 paragraphs) covering session performance, measurable progress, and encouragement." : "Write a clear protocol instruction (2-3 paragraphs) with specific therapy directives and measurable targets."}\nBe specific, empathetic, professional. No placeholder text.`,
-          }),
+  const generateAI = useCallback(
+    async (modeOverride?: "feedback" | "instruction") => {
+      if (!canUseAI || !patient) return;
+      const mode = modeOverride ?? aiMode;
+      setAiLoading(true);
+      setAiDraft("");
+      setAiTitle("");
+      try {
+        let text = "";
+        if (USE_MOCK) {
+          const firstName = patient.name.split(" ")[0] ?? "Patient";
+          text =
+            mode === "feedback"
+              ? `${firstName}, your current adherence is ${patient.adherence}% with ${patient.status.toLowerCase()} engagement risk this week. You are maintaining meaningful effort. Keep your session frequency stable and focus on controlled movement quality for stronger carryover into daily hand function.`
+              : `${firstName}, continue your scheduled sessions this week with emphasis on consistent pacing and controlled grip release. Reduce intensity by 10% if fatigue rises early, but complete all planned sets. This adjustment is based on your current adherence and condition profile.`;
+        } else {
+          // Real: route fetches Firestore data internally
+          const res = await fetch("/api/llm/generate", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ patientUid: selectedId, type: mode }),
+          });
+          const data = await res.json();
+
+          if (!res.ok) {
+            throw new Error(data?.error ?? "Failed to generate AI message.");
+          }
+
+          text =
+            data?.generated ??
+            data?.response ??
+            data?.reply ??
+            data?.content?.[0]?.text ??
+            "";
+        }
+
+        if (!text.trim()) {
+          throw new Error("No content generated. Please try again.");
+        }
+
+        const today = new Date().toLocaleDateString("en-GB", {
+          day: "numeric",
+          month: "short",
         });
-        const data = await res.json();
-        text = data.response ?? data.content?.[0]?.text ?? "";
-      } else {
-        // Real: route fetches Firestore data internally
-        const res = await fetch("/api/llm/generate", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ patientUid: selectedId, type: aiMode }),
-        });
-        const data = await res.json();
-        text = data.response ?? data.content?.[0]?.text ?? "";
+
+        const generatedTitle =
+          mode === "feedback"
+            ? `Progress Feedback — ${patient.name.split(" ")[0]} (${today})`
+            : `Protocol Instruction — ${patient.name.split(" ")[0]} (${today})`;
+
+        setAiDraft(text);
+        setAiTitle(generatedTitle);
+
+        if (mode === "instruction") {
+          setInstrTitle(generatedTitle);
+          setInstrContent(text);
+          setInstrImportant(true);
+          setPanel("instruction");
+        } else {
+          setFbTitle(generatedTitle);
+          setFbContent(text);
+          setFbImportant(false);
+          setPanel("feedback");
+        }
+      } catch (e: any) {
+        console.error(e);
+        setAiDraft(e?.message || "Failed to generate. Please try again.");
+      } finally {
+        setAiLoading(false);
       }
-      const today = new Date().toLocaleDateString("en-GB", {
-        day: "numeric",
-        month: "short",
-      });
-      setAiDraft(text);
-      setAiTitle(
-        aiMode === "feedback"
-          ? `AI Feedback — ${patient.name.split(" ")[0]} (${today})`
-          : `AI Protocol Note — ${patient.name.split(" ")[0]}`,
-      );
-    } catch (e) {
-      console.error(e);
-      setAiDraft("Failed to generate. Please try again.");
-    } finally {
-      setAiLoading(false);
-    }
-  }, [canUseAI, patient, aiMode, selectedId]);
+    },
+    [canUseAI, patient, aiMode, selectedId],
+  );
 
   const sendAiDraft = async () => {
     if (!aiDraft.trim() || !aiTitle.trim()) return;
@@ -1007,6 +1035,9 @@ export default function DoctorMessagingHub() {
     important,
     setImportant,
     onSend,
+    onGenerate,
+    isGenerating,
+    generateLabel,
     sentItems,
     hint,
   }: {
@@ -1019,6 +1050,9 @@ export default function DoctorMessagingHub() {
     important: boolean;
     setImportant: (v: boolean) => void;
     onSend: () => void;
+    onGenerate: () => void;
+    isGenerating: boolean;
+    generateLabel: string;
     sentItems: SentItem[];
     hint: string;
   }) => (
@@ -1146,6 +1180,24 @@ export default function DoctorMessagingHub() {
               IMPORTANT
             </span>
           )}
+        </button>
+        <button
+          className="dm-ai-btn"
+          onClick={onGenerate}
+          disabled={isGenerating || !canUseAI}
+          style={{
+            opacity: canUseAI ? 1 : 0.45,
+            padding: "11px 14px",
+          }}>
+          {isGenerating ? (
+            <Loader2
+              size={14}
+              style={{ animation: "dmSpin 1s linear infinite" }}
+            />
+          ) : (
+            <Sparkles size={14} />
+          )}
+          {isGenerating ? "Generating..." : generateLabel}
         </button>
         <button
           className="dm-compose-btn"
@@ -1492,7 +1544,7 @@ export default function DoctorMessagingHub() {
       </div>
       <button
         className="dm-ai-btn"
-        onClick={generateAI}
+        onClick={() => generateAI(aiMode)}
         disabled={aiLoading || !canUseAI}
         style={{ width: "100%", opacity: !canUseAI ? 0.45 : 1 }}>
         {aiLoading ? (
@@ -2293,18 +2345,6 @@ export default function DoctorMessagingHub() {
                       text: "#0891b2",
                     },
                   },
-                  {
-                    id: "ai_generate" as ActivePanel,
-                    icon: <Sparkles size={16} />,
-                    label: "AI Generate",
-                    color: {
-                      active:
-                        "linear-gradient(135deg,rgba(99,102,241,.10),rgba(139,92,246,.07))",
-                      border: "rgba(99,102,241,.28)",
-                      text: "#6366f1",
-                    },
-                    ai: true,
-                  },
                 ].map((tab) => (
                   <button
                     key={tab.id}
@@ -2328,44 +2368,6 @@ export default function DoctorMessagingHub() {
                       }}>
                       {tab.label}
                     </span>
-                    {tab.ai && (
-                      <>
-                        <div
-                          style={{
-                            position: "absolute",
-                            top: 4,
-                            right: 4,
-                            width: 14,
-                            height: 14,
-                            borderRadius: "50%",
-                            background:
-                              "linear-gradient(135deg,#6366f1,#8b5cf6)",
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            boxShadow: "0 2px 6px rgba(99,102,241,.45)",
-                          }}>
-                          <Crown size={7} color="#fff" />
-                        </div>
-                        {!canUseAI && (
-                          <div
-                            style={{
-                              position: "absolute",
-                              top: 4,
-                              left: 4,
-                              width: 12,
-                              height: 12,
-                              borderRadius: "50%",
-                              background: "#ef4444",
-                              display: "flex",
-                              alignItems: "center",
-                              justifyContent: "center",
-                            }}>
-                            <Lock size={7} color="#fff" />
-                          </div>
-                        )}
-                      </>
-                    )}
                   </button>
                 ))}
               </div>
@@ -2382,6 +2384,9 @@ export default function DoctorMessagingHub() {
                   important: instrImportant,
                   setImportant: setInstrImportant,
                   onSend: sendInstruction,
+                  onGenerate: () => generateAI("instruction"),
+                  isGenerating: aiLoading,
+                  generateLabel: "Generate Instruction",
                   sentItems: instrSent[selectedId] ?? [],
                   hint: `Write a clinical instruction for ${patient.name.split(" ")[0]}. Instructions are highlighted and require acknowledgment.`,
                 })}
@@ -2396,10 +2401,12 @@ export default function DoctorMessagingHub() {
                   important: fbImportant,
                   setImportant: setFbImportant,
                   onSend: sendFeedback,
+                  onGenerate: () => generateAI("feedback"),
+                  isGenerating: aiLoading,
+                  generateLabel: "Generate Insight",
                   sentItems: fbSent[selectedId] ?? [],
                   hint: `Send clinical feedback to ${patient.name.split(" ")[0]} based on their recent session performance.`,
                 })}
-              {panel === "ai_generate" && AiPanel()}
             </>
           ) : (
             <div
