@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./global.css";
-import SeedButton from "../components/DevTools/seedButton";
 import { HardwareProvider } from "@/app/lib/context/HardwareContext";
 
 const geistSans = Geist({
@@ -47,7 +46,6 @@ export default function RootLayout({
           suppressHydrationWarning={true}>
           <HardwareProvider>
               {children}
-              {process.env.NODE_ENV === "development" && <SeedButton />}
           </HardwareProvider>
       </body>
     </html>
