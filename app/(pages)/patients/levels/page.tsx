@@ -110,7 +110,7 @@ const BASE_LEVELS: Level[] = [
   },
   {
     id: 3,
-    title: "Memory Gate: Novice",
+    title: "Sky Bird: Novice",
     category: "COGNITIVE",
     desc: "Introduction to dual-tasking. Match sequences while holding sustained grip force.",
     locked: false,
