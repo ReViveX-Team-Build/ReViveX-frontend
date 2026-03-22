@@ -131,7 +131,7 @@ const BASE_LEVELS: Level[] = [
     category: "COGNITIVE",
     desc: "Complex sequencing under time pressure. Strains working memory alongside muscle endurance.",
     locked: false,
-    path: "/games/memory_gate?level=2",
+    path: "/game/sky-memory?level=4",
     difficulty: "Hard",
     difficultyN: 4,
     accentHex: "#22c55e",
