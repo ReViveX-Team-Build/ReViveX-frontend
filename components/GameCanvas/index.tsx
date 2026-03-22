@@ -456,8 +456,8 @@ const GameCanvas: React.FC = () => {
       sandH = bgRef.current.sandHeight;
     }
     if (coralsRef.current) {
-      coralsRef.current.update();
-      coralsRef.current.draw(ctx, nf);
+      coralsRef.current.update(scrollSpeed);
+      coralsRef.current.draw(ctx, nf, c.height - sandH);
     }
     if (grassRef.current && playerRef.current) {
       grassRef.current.update(playerRef.current.x, playerRef.current.y, delta);
@@ -491,6 +491,8 @@ const GameCanvas: React.FC = () => {
           bgRef.current?.triggerSiltCloud(playerRef.current.x, playerRef.current.y);
           setFailReason("floor");
           setGs("SOFT_FAIL");
+        } else {
+          (bgRef.current as any)?.clearSiltCloud?.();
         }
         if (playerRef.current.status === "hit_ceiling") {
           setFailReason("ceiling");
@@ -502,7 +504,7 @@ const GameCanvas: React.FC = () => {
               dy = playerRef.current!.y - pearl.y;
             if (
               Math.hypot(dx, dy) <
-              playerRef.current!.radius + pearl.radius + 10
+              playerRef.current!.radius + pearl.radius + 14
             )
               collectPearl(pearl);
           }
@@ -519,7 +521,11 @@ const GameCanvas: React.FC = () => {
 
     for (let i = pearlsRef.current.length - 1; i >= 0; i--) {
       const p = pearlsRef.current[i];
-      if (physics) p.update(4 + scrollSpeed * 0.5);
+      if (physics) p.update(
+        4 + scrollSpeed * 0.5,
+        playerRef.current?.x ?? -999,
+        playerRef.current?.y ?? -999,
+      );
       p.draw(ctx);
       if (p.markedForDeletion) {
         if (!p.collected && p.isTarget) metricsRef.current.missed++;
@@ -565,7 +571,7 @@ const GameCanvas: React.FC = () => {
   };
 
   const collectPearl = (pearl: Pearl) => {
-    pearl.collected = true;
+    pearl.collect();
     metricsRef.current.accuracy.total++;
     if (pearl.isTarget) {
       metricsRef.current.accuracy.correct++;
@@ -600,6 +606,7 @@ const GameCanvas: React.FC = () => {
       playerRef.current.floorTime = 0;
       playerRef.current.surfaceTime = 0;
     }
+    (bgRef.current as any)?.clearSiltCloud?.();
     setFailReason(null);
     setGs("PLAYING");
   };
