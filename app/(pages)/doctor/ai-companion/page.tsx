@@ -13,7 +13,7 @@ import {
   BarChart3,
   Shield,
 } from "lucide-react";
-import { useAiCompanion } from "../../../lib/ai/useAiCompanion";
+import { useAiCompanion } from "@/app/lib/ai/useAiCompanion";
 import AIMessageRenderer from "@/components/ai/AIMessageRenderer";
 import { useAuthState } from "react-firebase-hooks/auth";
 import { auth } from "@/app/lib/firebase";
