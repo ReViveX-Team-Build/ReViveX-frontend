@@ -12,11 +12,20 @@ import {
   Sparkles,
   BarChart3,
   Shield,
+  Loader2,
 } from "lucide-react";
 import { useAiCompanion } from "../../../lib/ai/useAiCompanion";
 import AIMessageRenderer from "@/components/ai/AIMessageRenderer";
 import { useAuthState } from "react-firebase-hooks/auth";
-import { auth } from "@/app/lib/firebase";
+import { auth, db } from "@/app/lib/firebase";
+import {
+  collection,
+  query,
+  where,
+  getDocs,
+  Timestamp,
+  orderBy,
+} from "firebase/firestore";
 
 const QUICK_ACTIONS = [
   {
@@ -63,12 +72,12 @@ const QUICK_ACTIONS = [
   },
 ];
 
-const COHORT = {
-  total: 12,
-  avgAdherence: 74,
-  devicesOffline: 1,
-  missedThisWeek: 3,
-};
+function daysAgo(n: number): Date {
+  const d = new Date();
+  d.setDate(d.getDate() - n);
+  d.setHours(0, 0, 0, 0);
+  return d;
+}
 
 export default function DoctorAICompanion() {
   const [user, authLoading] = useAuthState(auth);
@@ -79,6 +88,116 @@ export default function DoctorAICompanion() {
   );
   const [inputValue, setInputValue] = useState("");
   const scrollRef = useRef<HTMLDivElement>(null);
+
+  const [cohortData, setCohortData] = useState({
+    total: 0,
+    avgAdherence: 0,
+    devicesOffline: 0,
+    missedThisWeek: 0,
+    isFetching: true,
+  });
+
+  // ── FIXED: Use same calculation as doctor home page ───────────────────────
+  // Numerator:   game_sessions (actual plays) in the past 7 days
+  // Denominator: protocols.sessionsPerWeek per patient
+  // This is the exact same formula the home dashboard uses → numbers match.
+  useEffect(() => {
+    const fetchRealData = async () => {
+      if (!user) return;
+      try {
+        // 1. Fetch all patients assigned to this doctor
+        const pSnap = await getDocs(
+          query(
+            collection(db, "users"),
+            where("role", "==", "patient"),
+            where("assignedDoctorId", "==", user.uid),
+          ),
+        );
+        const patients = pSnap.docs.map((d) => ({ uid: d.id, ...d.data() })) as any[];
+        const totalPatients = patients.length;
+        const pIds = patients.map((p: any) => p.uid);
+
+        let offlineCount = 0;
+        patients.forEach((p: any) => {
+          if (p.hardwareStatus?.status !== "connected") offlineCount++;
+        });
+
+        if (totalPatients === 0) {
+          setCohortData({ total: 0, avgAdherence: 0, devicesOffline: 0, missedThisWeek: 0, isFetching: false });
+          return;
+        }
+
+        // 2. Fetch prescribed sessions/week from protocols (same as home page)
+        const protoMap: Record<string, number> = {};
+        const protoSnap = await getDocs(
+          query(collection(db, "protocols"), where("patientId", "in", pIds)),
+        );
+        protoSnap.docs.forEach((d) => {
+          const x = d.data();
+          protoMap[x.patientId] = x.sessionsPerWeek ?? 5;
+        });
+
+        // 3. Fetch actual game_sessions in last 7 days (same as home page)
+        const sevenAgo = Timestamp.fromDate(daysAgo(7));
+        const sSnap = await getDocs(
+          query(
+            collection(db, "game_sessions"),
+            where("userId", "in", pIds),
+            where("timestamp", ">=", sevenAgo),
+            orderBy("timestamp", "desc"),
+          ),
+        );
+        const sessionsPerPatient: Record<string, number> = {};
+        sSnap.docs.forEach((d) => {
+          const s = d.data() as any;
+          sessionsPerPatient[s.userId] = (sessionsPerPatient[s.userId] || 0) + 1;
+        });
+
+        // 4. Calc adherence per patient, then average — exactly like home page
+        let totalAdh = 0;
+        patients.forEach((p: any) => {
+          const prescribed = protoMap[p.uid] || 5;
+          const done = sessionsPerPatient[p.uid] || 0;
+          const adh = Math.min(100, Math.round((done / prescribed) * 100));
+          totalAdh += adh;
+        });
+        const avgAdherence = totalPatients > 0 ? Math.round(totalAdh / totalPatients) : 0;
+
+        // 5. Missed sessions — scheduled_sessions that are past due and not completed
+        const now = new Date();
+        const sevenDaysAgoDate = daysAgo(7);
+
+        const [schedSnap, apptSnap] = await Promise.all([
+          getDocs(query(collection(db, "scheduled_sessions"), where("doctorId", "==", user.uid))),
+          getDocs(query(collection(db, "appointments"),        where("doctorId", "==", user.uid))),
+        ]);
+
+        let missedWeek = 0;
+        [...schedSnap.docs, ...apptSnap.docs].forEach((doc) => {
+          const e = doc.data() as any;
+          if (e.status === "cancelled") return;
+          const eDate = new Date(`${e.scheduledDate}T${e.scheduledTime || "00:00"}:00`);
+          const isPast = eDate <= now;
+          const isInWindow = eDate >= sevenDaysAgoDate;
+          const isNotDone = e.status !== "completed";
+          if (isPast && isInWindow && isNotDone) missedWeek++;
+        });
+
+        setCohortData({
+          total: totalPatients,
+          avgAdherence,
+          devicesOffline: offlineCount,
+          missedThisWeek: missedWeek,
+          isFetching: false,
+        });
+      } catch (error) {
+        console.error("Error fetching cohort data for AI:", error);
+        setCohortData((prev) => ({ ...prev, isFetching: false }));
+      }
+    };
+
+    fetchRealData();
+  }, [user]);
 
   useEffect(() => {
     if (scrollRef.current)
@@ -149,18 +268,19 @@ export default function DoctorAICompanion() {
                 <p className="text-white font-semibold text-sm leading-none">
                   ReViveX Clinical AI
                 </p>
-                <p className="text-teal-300 text-xs mt-0.5">
-                  Analysing {COHORT.total} patients · {COHORT.avgAdherence}% avg
-                  adherence
+                <p className="text-teal-300 text-xs mt-0.5 flex items-center gap-1">
+                  {cohortData.isFetching ? (
+                    <><Loader2 size={10} className="animate-spin" /> Syncing live data...</>
+                  ) : (
+                    `Analysing ${cohortData.total} patients · ${cohortData.avgAdherence}% avg adherence`
+                  )}
                 </p>
               </div>
               <Sparkles className="h-4 w-4 text-teal-300" />
             </div>
 
             {/* Messages */}
-            <div
-              ref={scrollRef}
-              className="flex-1 p-5 space-y-4 overflow-y-auto">
+            <div ref={scrollRef} className="flex-1 p-5 space-y-4 overflow-y-auto">
               {messages.length === 0 && !isLoading && (
                 <div className="flex flex-col items-center justify-center h-full gap-4">
                   <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-[#0A2E4C]/10 to-[#2DD4BF]/20 dark:from-[#2DD4BF]/10 dark:to-[#2DD4BF]/5 flex items-center justify-center">
@@ -180,7 +300,7 @@ export default function DoctorAICompanion() {
                       <button
                         key={a.label}
                         onClick={() => handleSend(a.label, a.mode)}
-                        disabled={isLoading}
+                        disabled={isLoading || cohortData.isFetching}
                         className={`flex items-center gap-1.5 px-3 py-2 rounded-xl border text-xs font-medium transition disabled:opacity-50 ${a.color}`}>
                         <a.icon className="h-3 w-3" />
                         {a.label}
@@ -200,19 +320,13 @@ export default function DoctorAICompanion() {
                         <Bot className="h-3.5 w-3.5 text-white" />
                       </div>
                       <div className="bg-slate-50 dark:bg-slate-700 border border-slate-100 dark:border-slate-600 rounded-2xl rounded-tl-sm px-4 py-3 shadow-sm min-w-0 overflow-hidden">
-                        <AIMessageRenderer
-                          content={message.content}
-                          variant="doctor"
-                        />
+                        <AIMessageRenderer content={message.content} variant="doctor" />
                       </div>
                     </div>
                   )}
-
                   {message.role === "user" && (
                     <div className="bg-gradient-to-br from-[#0A2E4C] to-[#0d3a5c] text-white rounded-2xl rounded-tr-sm px-4 py-3 max-w-[82%] shadow-sm">
-                      <p className="text-sm leading-relaxed">
-                        {message.content}
-                      </p>
+                      <p className="text-sm leading-relaxed">{message.content}</p>
                     </div>
                   )}
                 </div>
@@ -225,18 +339,9 @@ export default function DoctorAICompanion() {
                   </div>
                   <div className="bg-slate-50 dark:bg-slate-700 border border-slate-100 dark:border-slate-600 rounded-2xl rounded-tl-sm px-4 py-3.5 shadow-sm">
                     <div className="flex gap-1.5 items-center">
-                      <span
-                        className="w-2 h-2 rounded-full bg-teal-400 animate-bounce"
-                        style={{ animationDelay: "0ms" }}
-                      />
-                      <span
-                        className="w-2 h-2 rounded-full bg-teal-400 animate-bounce"
-                        style={{ animationDelay: "150ms" }}
-                      />
-                      <span
-                        className="w-2 h-2 rounded-full bg-teal-400 animate-bounce"
-                        style={{ animationDelay: "300ms" }}
-                      />
+                      <span className="w-2 h-2 rounded-full bg-teal-400 animate-bounce" style={{ animationDelay: "0ms" }} />
+                      <span className="w-2 h-2 rounded-full bg-teal-400 animate-bounce" style={{ animationDelay: "150ms" }} />
+                      <span className="w-2 h-2 rounded-full bg-teal-400 animate-bounce" style={{ animationDelay: "300ms" }} />
                     </div>
                   </div>
                 </div>
@@ -249,7 +354,7 @@ export default function DoctorAICompanion() {
                 <button
                   key={a.label}
                   onClick={() => handleSend(a.label, a.mode)}
-                  disabled={isLoading}
+                  disabled={isLoading || cohortData.isFetching}
                   className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs font-medium transition disabled:opacity-40 whitespace-nowrap ${a.color}`}>
                   <a.icon className="h-3 w-3 flex-shrink-0" />
                   {a.label}
@@ -263,23 +368,20 @@ export default function DoctorAICompanion() {
                 <input
                   value={inputValue}
                   onChange={(e) => setInputValue(e.target.value)}
-                  onKeyDown={(e) =>
-                    e.key === "Enter" && !e.shiftKey && handleSend()
-                  }
+                  onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && handleSend()}
                   placeholder="Ask about patients, adherence, protocols, or trends..."
-                  disabled={isLoading}
+                  disabled={isLoading || cohortData.isFetching}
                   className="flex-1 bg-transparent text-sm text-[#0A2E4C] dark:text-slate-100 placeholder:text-gray-400 dark:placeholder:text-slate-400 outline-none"
                 />
                 <button
                   onClick={() => handleSend()}
-                  disabled={!inputValue.trim() || isLoading}
+                  disabled={!inputValue.trim() || isLoading || cohortData.isFetching}
                   className="w-8 h-8 rounded-lg bg-[#0A2E4C] hover:bg-[#0d3a5c] text-white flex items-center justify-center transition disabled:opacity-40 disabled:cursor-not-allowed flex-shrink-0">
                   <Send className="h-3.5 w-3.5" />
                 </button>
               </div>
               <p className="text-center text-gray-300 dark:text-slate-600 text-xs mt-2">
-                Clinical support tool · Not a substitute for professional
-                medical judgment.
+                Clinical support tool · Not a substitute for professional medical judgment.
               </p>
             </div>
           </div>
@@ -294,33 +396,13 @@ export default function DoctorAICompanion() {
               </div>
               <div className="grid grid-cols-2 gap-3">
                 {[
-                  {
-                    label: "Patients",
-                    value: COHORT.total,
-                    color: "text-white",
-                  },
-                  {
-                    label: "Avg Adherence",
-                    value: `${COHORT.avgAdherence}%`,
-                    color: "text-[#2DD4BF]",
-                  },
-                  {
-                    label: "Missed / Week",
-                    value: COHORT.missedThisWeek,
-                    color: "text-amber-400",
-                  },
-                  {
-                    label: "Offline Devices",
-                    value: COHORT.devicesOffline,
-                    color: "text-red-400",
-                  },
+                  { label: "Patients",      value: cohortData.isFetching ? "-" : cohortData.total,                    color: "text-white" },
+                  { label: "Avg Adherence", value: cohortData.isFetching ? "-" : `${cohortData.avgAdherence}%`,       color: "text-[#2DD4BF]" },
+                  { label: "Missed / Week", value: cohortData.isFetching ? "-" : cohortData.missedThisWeek,           color: "text-amber-400" },
+                  { label: "Offline Devices", value: cohortData.isFetching ? "-" : cohortData.devicesOffline,         color: "text-red-400" },
                 ].map((stat) => (
-                  <div
-                    key={stat.label}
-                    className="bg-white/5 rounded-xl p-3 border border-white/10">
-                    <p className={`text-xl font-bold ${stat.color}`}>
-                      {stat.value}
-                    </p>
+                  <div key={stat.label} className="bg-white/5 rounded-xl p-3 border border-white/10">
+                    <p className={`text-xl font-bold ${stat.color}`}>{stat.value}</p>
                     <p className="text-gray-400 text-xs mt-0.5">{stat.label}</p>
                   </div>
                 ))}
@@ -355,10 +437,9 @@ export default function DoctorAICompanion() {
               <div className="flex items-start gap-2">
                 <Shield className="h-4 w-4 text-[#2DD4BF] flex-shrink-0 mt-0.5" />
                 <p className="text-xs text-slate-300 leading-relaxed">
-                  Clinical AI outputs are decision support only. All patient
-                  data is processed in compliance with applicable healthcare
-                  data regulations. Final clinical decisions remain with the
-                  treating physician.
+                  Clinical AI outputs are decision support only. All patient data is processed
+                  in compliance with applicable healthcare data regulations. Final clinical
+                  decisions remain with the treating physician.
                 </p>
               </div>
             </div>
