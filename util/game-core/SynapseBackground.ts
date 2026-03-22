@@ -695,10 +695,11 @@ class Aurora {
     if (nf < 0.62) return;
     if (typeof document === 'undefined') return;
     const a = (nf - 0.62) * 0.13;
-    if (!this._off) {
+    const offH = Math.max(1, Math.round((surfY > 10 ? surfY : this.W * 0.35) * 0.45));
+    if (!this._off || this._off.height !== offH) {
       this._off    = document.createElement('canvas');
-      this._off.width  = this.W;
-      this._off.height = Math.round(surfY * 0.45);
+      this._off.width  = Math.max(1, this.W);
+      this._off.height = offH;
       this._offCtx = this._off.getContext('2d');
     }
     // Redraw every 4th frame — aurora moves slowly, nobody notices
@@ -726,7 +727,7 @@ class Aurora {
       }
       oc.restore();
     }
-    if (this._off) ctx.drawImage(this._off, 0, 0);
+    if (this._off && this._off.width > 0 && this._off.height > 0) ctx.drawImage(this._off, 0, 0);
   }
 }
 
