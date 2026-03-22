@@ -10,11 +10,18 @@ interface Game {
 
 const games: Game[] = [
   {
-    id: "synapse-racer",
-    title: "Synapse Racer",
-    description: "Reaction-based grip strength training.",
+    id: "synapse-racer-1",
+    title: "Synapse Racer: Base (Level 1)",
+    description: "Pure motor baseline. Forgiving pressure limits.",
+    difficulty: "Beginner",
+    link: "/patients/game?level=1", // 🟢 FIXED TO A REAL URL
+  },
+  {
+    id: "synapse-racer-2",
+    title: "Synapse Racer: Pro (Level 2)",
+    description: "Cognitive dual-tasking with strict grip constraints.",
     difficulty: "Moderate",
-    link: "/patients/game",
+    link: "/patients/game?level=2", // 🟢 FIXED TO A REAL URL
   },
   {
     id: "grip-challenge",
@@ -35,7 +42,6 @@ const games: Game[] = [
 export default function TherapyGamesPage() {
   return (
     <div className="space-y-8">
-      {/* Header */}
       <header>
         <h1 className="text-2xl font-bold text-[#0B1E33] dark:text-slate-100">
           Therapy Games
@@ -45,7 +51,6 @@ export default function TherapyGamesPage() {
         </p>
       </header>
 
-      {/* Games Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {games.map((game) => (
           <div
@@ -55,11 +60,9 @@ export default function TherapyGamesPage() {
               <h2 className="text-lg font-semibold text-[#0B1E33] dark:text-slate-100">
                 {game.title}
               </h2>
-
               <p className="text-sm text-gray-500 dark:text-slate-400 mt-2">
                 {game.description}
               </p>
-
               <p className="text-xs mt-4 font-medium text-teal-600">
                 Difficulty: {game.difficulty}
               </p>
