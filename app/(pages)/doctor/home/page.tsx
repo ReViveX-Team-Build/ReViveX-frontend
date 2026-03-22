@@ -505,7 +505,7 @@ export default function DoctorDashboard() {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             uid: docId,
-            message: "Give me a concise weekly summary of my patient cohort.",
+            message: `Give me a concise weekly summary of my patient cohort. Use ONLY these exact real numbers in your response: ${total} active patients, ${avg}% average adherence, ${missed} missed sessions this week, ${online} devices online. Do not invent or approximate any figures.`,
             mode: "weekly_summary",
           }),
         });
@@ -616,7 +616,6 @@ export default function DoctorDashboard() {
       });
 
       const sevenAgo = Timestamp.fromDate(daysAgo(7));
-      const todayTs = Timestamp.fromDate(daysAgo(0));
       const sSnap = await getDocs(
         query(
           collection(db, "game_sessions"),
@@ -625,41 +624,103 @@ export default function DoctorDashboard() {
           orderBy("timestamp", "desc"),
         ),
       );
-      const allSessions = sSnap.docs.map(
+      const allCompletedSessions = sSnap.docs.map(
         (d) => ({ id: d.id, ...d.data() }) as any,
       );
 
       const sessionsPerPatient: Record<string, number> = {};
       const lastSeen: Record<string, Timestamp> = {};
-      let completedToday = 0;
-      allSessions.forEach((s: any) => {
+
+      allCompletedSessions.forEach((s: any) => {
         const uid = s.userId;
         sessionsPerPatient[uid] = (sessionsPerPatient[uid] || 0) + 1;
         if (!lastSeen[uid] || s.timestamp.seconds > lastSeen[uid].seconds)
           lastSeen[uid] = s.timestamp;
-        if (s.timestamp.seconds >= todayTs.seconds) completedToday++;
       });
 
+      // Fetch real data from the appointments and scheduled_sessions tables!
+      const schedSnap = await getDocs(
+        query(
+          collection(db, "scheduled_sessions"),
+          where("doctorId", "==", user.uid),
+        ),
+      );
+      const apptSnap = await getDocs(
+        query(
+          collection(db, "appointments"),
+          where("doctorId", "==", user.uid),
+        ),
+      );
+
+      const rawEvents = [
+        ...schedSnap.docs.map((d) => d.data()),
+        ...apptSnap.docs.map((d) => d.data()),
+      ];
+
+      // 🔴 STRICT FRONT-END TIME CHECK
+      const now = new Date();
+      const localMonth = String(now.getMonth() + 1).padStart(2, "0");
+      const localDay = String(now.getDate()).padStart(2, "0");
+      const todayStr = `${now.getFullYear()}-${localMonth}-${localDay}`;
+
+      const allEvents = rawEvents.map((e: any) => {
+        if (
+          e.status === "completed" ||
+          e.status === "cancelled" ||
+          e.status === "missed"
+        ) {
+          return e;
+        }
+        const eventTime = new Date(
+          `${e.scheduledDate}T${e.scheduledTime || "00:00"}:00`,
+        );
+        if (eventTime < now) {
+          return { ...e, status: "missed" };
+        }
+        return e;
+      });
+
+      let realCompletedToday = 0;
+      let realMissedToday = 0;
+      let realUpcomingToday = 0;
+
+      // Map today's stats based on the PROCESSED status
+      allEvents
+        .filter((e: any) => e.scheduledDate === todayStr)
+        .forEach((e: any) => {
+          if (e.status === "completed") realCompletedToday++;
+          else if (e.status === "missed") realMissedToday++;
+          else if (["scheduled", "pending", "confirmed"].includes(e.status))
+            realUpcomingToday++;
+        });
+
+      // Calculate weekly missed sessions
+      const sevenDaysAgoDate = new Date();
+      sevenDaysAgoDate.setDate(sevenDaysAgoDate.getDate() - 7);
+      const realTotalMissed = allEvents.filter((e: any) => {
+        if (e.status !== "missed") return false;
+        const eDate = new Date(e.scheduledDate);
+        return eDate >= sevenDaysAgoDate;
+      }).length;
+
       let totalAdh = 0,
-        totalMissed = 0,
         devOnline = 0;
       const rows: PatientRow[] = [];
       patients.forEach((p: any) => {
         const prescribed = protoMap[p.uid] || 5;
         const done = sessionsPerPatient[p.uid] || 0;
         const adh = Math.min(100, Math.round((done / prescribed) * 100));
-        const missed = Math.max(0, prescribed - done);
+
         totalAdh += adh;
-        totalMissed += missed;
         if (p.hardwareStatus?.status === "connected") devOnline++;
         const urgency: "critical" | "warning" | "mild" =
           adh < 40 ? "critical" : adh < 70 ? "warning" : "mild";
-        const recent = allSessions.filter(
+        const recent = allCompletedSessions.filter(
           (s: any) =>
             s.userId === p.uid &&
             s.timestamp.toMillis() > Date.now() - 3 * 86400000,
         ).length;
-        const older = allSessions.filter(
+        const older = allCompletedSessions.filter(
           (s: any) =>
             s.userId === p.uid &&
             s.timestamp.toMillis() > Date.now() - 6 * 86400000 &&
@@ -681,25 +742,30 @@ export default function DoctorDashboard() {
 
       const avg =
         patients.length > 0 ? Math.round(totalAdh / patients.length) : 0;
-      const expToday = Math.ceil(patients.length * 0.7);
-      const missedTd = Math.max(0, expToday - completedToday);
 
       setKpis({
         totalPatients: patients.length,
         avgAdherence: avg,
-        missedSessions: totalMissed,
+        missedSessions: realTotalMissed,
         devicesOnline: devOnline,
       });
       setTriage(
         [...rows].sort((a, b) => a.adherence - b.adherence).slice(0, 3),
       );
       setSessions({
-        completed: completedToday,
-        missed: missedTd,
-        upcoming: Math.max(0, patients.length - completedToday - missedTd),
+        completed: realCompletedToday,
+        missed: realMissedToday,
+        upcoming: realUpcomingToday,
       });
       setDataLoading(false);
-      fetchAI(user.uid, patients.length, avg, totalMissed, devOnline, false);
+      fetchAI(
+        user.uid,
+        patients.length,
+        avg,
+        realTotalMissed,
+        devOnline,
+        false,
+      );
     } catch (err: any) {
       console.error(err);
       if (USE_MOCK_FALLBACK) {
@@ -1022,7 +1088,11 @@ export default function DoctorDashboard() {
                   margin: 0,
                 }}>
                 Welcome Back,{" "}
-                <span style={{ color: "#2DD4BF" }}>Dr. {doctorName}</span>
+                <span style={{ color: "#2DD4BF" }}>
+                  {doctorName.toLowerCase().startsWith("dr")
+                    ? doctorName
+                    : `Dr. ${doctorName}`}
+                </span>
               </h1>
               <p
                 style={{
@@ -1466,7 +1536,10 @@ export default function DoctorDashboard() {
                           </div>
                         </div>
                         <Link
-                          href={`/doctor/patients/${p.uid}`}
+                          href={{
+                            pathname: "/doctor/patients",
+                            query: { openPatient: p.uid },
+                          }}
                           className="view-btn shimmer-btn"
                           style={{
                             position: "relative",

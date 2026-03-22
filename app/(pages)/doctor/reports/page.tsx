@@ -1,924 +1,552 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useAuthState } from "react-firebase-hooks/auth";
-import { auth } from "@/app/lib/firebase";
-import { getDoctorReportMetrics, DoctorReportMetrics } from "@/app/lib/db/schedule";
-import { 
-  Activity, 
-  Brain, 
-  Clock, 
-  Gauge, 
-  Target, 
-  TrendingUp,
-  TrendingDown,
-  Calendar,
-  Zap,
-  Loader2,
-  BarChart3,
-  Users,
-  CheckCircle2,
-  AlertCircle
-} from "lucide-react";
+import { auth, db } from "@/app/lib/firebase";
 import {
-  LineChart, Line, BarChart, Bar,
-  XAxis, YAxis, CartesianGrid, Tooltip,
-  ResponsiveContainer, Area, AreaChart,
-} from 'recharts';
+  collection, query, where, getDocs, Timestamp, orderBy,
+} from "firebase/firestore";
+import {
+  ChevronRight, FileText, Loader2, Users, TrendingUp,
+  CheckCircle2, AlertTriangle, CalendarDays, Activity,
+  ArrowUpRight, Download, RefreshCw,
+} from "lucide-react";
 
-// Custom Chart Tooltip
-const ChartTooltip = ({ active, payload, label }: any) => {
-  if (!active || !payload?.length) return null;
-  return (
-    <div style={{ 
-      background: '#0B1E33', 
-      border: '1px solid rgba(45,212,191,0.25)', 
-      borderRadius: 12, 
-      padding: '10px 16px', 
-      boxShadow: '0 8px 28px rgba(11,30,51,0.35)' 
-    }}>
-      <p style={{ 
-        fontFamily: "'JetBrains Mono',monospace", 
-        fontSize: 9, 
-        color: 'rgba(45,212,191,0.60)', 
-        textTransform: 'uppercase', 
-        letterSpacing: '0.18em', 
-        marginBottom: 7 
-      }}>{label}</p>
-      {payload.map((p: any) => (
-        <div key={p.dataKey} style={{ 
-          display: 'flex', 
-          alignItems: 'center', 
-          gap: 8, 
-          marginBottom: 4 
-        }}>
-          <div style={{ 
-            width: 8, 
-            height: 8, 
-            borderRadius: '50%', 
-            background: p.color 
-          }} />
-          <span style={{ 
-            fontFamily: "'Plus Jakarta Sans',sans-serif", 
-            fontSize: 12, 
-            fontWeight: 700, 
-            color: '#fff' 
-          }}>
-            {p.name}
-          </span>
-          <span style={{ 
-            fontFamily: "'JetBrains Mono',monospace", 
-            fontSize: 13, 
-            fontWeight: 700, 
-            color: p.color, 
-            marginLeft: 'auto' 
-          }}>
-            {p.value}
-          </span>
-        </div>
-      ))}
-    </div>
-  );
-};
+import ReportKPICard from "@/components/DoctorPortal/ReportKPICard";
+import PatientOutcomesChart from "@/components/DoctorPortal/PatientOutcomesChart";
+import AdherenceRateChart from "@/components/DoctorPortal/AdherenceRateChart";
+import DeviceStatusChart from "@/components/DoctorPortal/DeviceStatusChart";
 
-// Animated counter hook
-function useCounter(target: number, duration = 1400, delay = 0, decimals = 0) {
-  const [val, setVal] = useState(0);
-  useEffect(() => {
-    const t0 = setTimeout(() => {
-      const start = performance.now();
-      const tick = (now: number) => {
-        const p = Math.min((now - start) / duration, 1);
-        const ease = 1 - Math.pow(1 - p, 3);
-        setVal(parseFloat((ease * target).toFixed(decimals)));
-        if (p < 1) requestAnimationFrame(tick);
-      };
-      requestAnimationFrame(tick);
-    }, delay);
-    return () => clearTimeout(t0);
-  }, [target, duration, delay, decimals]);
-  return val;
+// ─── CSS ──────────────────────────────────────────────────────────────────────
+const CSS = `
+  @import url('https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,300;12..96,400;12..96,500;12..96,600;12..96,700;12..96,800&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
+
+  :root {
+    --ink:   #03080f;
+    --deep:  #060d1a;
+    --navy:  #0B1E33;
+    --mid:   #0d2640;
+    --teal:  #2DD4BF;
+    --teal2: #0891b2;
+    --dim:   rgba(45,212,191,.12);
+    --mu:    rgba(255,255,255,.28);
+  }
+
+  .rp * { box-sizing: border-box; }
+  .rp { font-family: 'Bricolage Grotesque', system-ui, sans-serif; }
+  .rp-display { font-family: 'Bricolage Grotesque', system-ui, sans-serif; }
+  .rp-mono    { font-family: 'JetBrains Mono', monospace; }
+
+  @keyframes rp-fade-up    { from { opacity:0; transform:translateY(28px); } to { opacity:1; transform:translateY(0); } }
+  @keyframes rp-fade-in    { from { opacity:0; } to { opacity:1; } }
+  @keyframes rp-slide-r    { from { opacity:0; transform:translateX(-20px); } to { opacity:1; transform:translateX(0); } }
+  @keyframes rp-pop        { 0%{opacity:0;transform:scale(.88) translateY(14px)} 100%{opacity:1;transform:scale(1) translateY(0)} }
+  @keyframes rp-scan       { 0%{top:-3%;opacity:0} 6%{opacity:.7} 93%{opacity:.4} 100%{top:108%;opacity:0} }
+  @keyframes rp-scan2      { 0%{top:-3%;opacity:0} 6%{opacity:.4} 93%{opacity:.2} 100%{top:108%;opacity:0} }
+  @keyframes rp-pulse      { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.45;transform:scale(1.2)} }
+  @keyframes rp-pulse-ring { 0%{transform:scale(.85);opacity:.7} 100%{transform:scale(2.4);opacity:0} }
+  @keyframes rp-shimmer    { 0%{transform:translateX(-200%) skewX(-15deg)} 100%{transform:translateX(400%) skewX(-15deg)} }
+  @keyframes rp-glow-beat  { 0%,100%{box-shadow:0 0 20px rgba(45,212,191,.2);} 50%{box-shadow:0 0 50px rgba(45,212,191,.5), 0 0 100px rgba(45,212,191,.12);} }
+  @keyframes rp-arc        { from{stroke-dashoffset:var(--arc-total)} to{stroke-dashoffset:var(--arc-offset)} }
+  @keyframes rp-count      { from{opacity:0;transform:scale(.6) translateY(10px)} to{opacity:1;transform:scale(1) translateY(0)} }
+  @keyframes rp-blink      { 0%,100%{opacity:1} 49%{opacity:1} 50%{opacity:0} 99%{opacity:0} }
+  @keyframes rp-float      { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-6px)} }
+  @keyframes rp-spin       { to{transform:rotate(360deg)} }
+  @keyframes rp-ticker     { from{transform:translateX(0)} to{transform:translateX(-50%)} }
+  @keyframes rp-row-enter  { from{opacity:0;transform:translateX(-16px)} to{opacity:1;transform:translateX(0)} }
+  @keyframes rp-chart-in   { from{opacity:0;transform:translateY(20px) scale(.98)} to{opacity:1;transform:translateY(0) scale(1)} }
+
+  .rp-kpi-card {
+    transition: transform .3s ease, box-shadow .3s ease;
+    animation: rp-pop .6s cubic-bezier(.22,1,.36,1) both;
+  }
+  .rp-kpi-card:hover { transform: translateY(-6px) !important; }
+
+  .rp-chart-wrap {
+    animation: rp-chart-in .65s cubic-bezier(.22,1,.36,1) both;
+    transition: transform .3s ease, box-shadow .3s ease;
+  }
+  .rp-chart-wrap:hover { transform: translateY(-4px); }
+
+  .rp-patient-row {
+    transition: all .22s cubic-bezier(.22,1,.36,1);
+    cursor: pointer;
+    position: relative;
+    animation: rp-row-enter .4s cubic-bezier(.22,1,.36,1) both;
+  }
+  .rp-patient-row::after {
+    content: '';
+    position: absolute;
+    left: 0; top: 0; bottom: 0; width: 3px;
+    background: linear-gradient(to bottom, var(--teal), var(--teal2));
+    border-radius: 0 3px 3px 0;
+    transform: scaleY(0);
+    transition: transform .22s ease;
+  }
+  .rp-patient-row:hover::after { transform: scaleY(1); }
+  .rp-patient-row:hover { background: rgba(45,212,191,.05) !important; padding-left: 28px !important; }
+
+  .rp-export-btn {
+    position: relative; overflow: hidden;
+    transition: all .25s ease;
+  }
+  .rp-export-btn::after {
+    content: '';
+    position: absolute; inset: 0;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,.22), transparent);
+    animation: rp-shimmer 2.8s ease-in-out infinite;
+  }
+  .rp-export-btn:hover { transform: translateY(-2px); box-shadow: 0 14px 40px rgba(45,212,191,.45) !important; }
+
+  .rp-ticker-wrap { overflow: hidden; white-space: nowrap; }
+  .rp-ticker-inner { display: inline-flex; gap: 48px; animation: rp-ticker 28s linear infinite; }
+`;
+
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+function daysAgo(n: number): Date {
+  const d = new Date(); d.setDate(d.getDate() - n); d.setHours(0,0,0,0); return d;
 }
 
-// Circular Progress Ring
-function RingProgress({ pct, size = 88, stroke = 7, color = '#2DD4BF', delay = 0 }: {
-  pct: number; size?: number; stroke?: number; color?: string; delay?: number;
-}) {
+// ─── Animated Number ──────────────────────────────────────────────────────────
+function Counter({ to, suffix="", delay=0, size="inherit" }: { to:number; suffix?:string; delay?:number; size?:string }) {
+  const [v, setV] = useState(0);
+  useEffect(() => {
+    const t = setTimeout(() => {
+      let s: number|null = null;
+      const f = (ts: number) => {
+        if (!s) s = ts;
+        const p = Math.min((ts-s)/1100, 1);
+        setV(Math.round((1-Math.pow(1-p,3))*to));
+        if (p<1) requestAnimationFrame(f); else setV(to);
+      };
+      requestAnimationFrame(f);
+    }, delay);
+    return () => clearTimeout(t);
+  }, [to, delay]);
+  return <span style={{ fontSize: size }}>{v}{suffix}</span>;
+}
+
+// ─── Arc Ring ─────────────────────────────────────────────────────────────────
+function ArcRing({ value, size=220, stroke=14, color="#2DD4BF" }: { value:number; size?:number; stroke?:number; color?:string }) {
   const r = (size - stroke) / 2;
   const circ = 2 * Math.PI * r;
-  const [animated, setAnimated] = useState(false);
-  useEffect(() => {
-    const t = setTimeout(() => setAnimated(true), delay);
-    return () => clearTimeout(t);
-  }, [delay]);
-  const offset = circ - (animated ? (pct / 100) * circ : circ);
-
+  const offset = circ - (value / 100) * circ;
   return (
-    <svg width={size} height={size} style={{ flexShrink: 0 }}>
-      <circle cx={size / 2} cy={size / 2} r={r} fill="none"
-        stroke="rgba(226,232,240,0.8)" strokeWidth={stroke} />
-      <circle cx={size / 2} cy={size / 2} r={r} fill="none"
-        stroke={color} strokeWidth={stroke}
-        strokeLinecap="round"
-        strokeDasharray={circ}
-        strokeDashoffset={circ}
-        transform={`rotate(-90 ${size / 2} ${size / 2})`}
-        style={{
-          strokeDashoffset: offset,
-          transition: animated ? `stroke-dashoffset 1.2s cubic-bezier(0.22,1,0.36,1) ${delay * 0.001}s` : 'none',
-          filter: `drop-shadow(0 0 5px ${color}66)`,
-        }}
-      />
-      {animated && (
-        <circle
-          cx={size / 2 + r * Math.cos((2 * Math.PI * pct / 100) - Math.PI / 2)}
-          cy={size / 2 + r * Math.sin((2 * Math.PI * pct / 100) - Math.PI / 2)}
-          r={stroke / 2 + 1}
-          fill={color}
-          style={{ filter: `drop-shadow(0 0 4px ${color})` }}
-        />
-      )}
+    <svg width={size} height={size} style={{ transform:"rotate(-90deg)" }}>
+      <defs>
+        <linearGradient id="arcGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+          <stop offset="0%" stopColor={color} stopOpacity=".3" />
+          <stop offset="100%" stopColor={color} stopOpacity="1" />
+        </linearGradient>
+        <filter id="arcGlow">
+          <feGaussianBlur stdDeviation="3" result="blur" />
+          <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+        </filter>
+      </defs>
+      {/* Track */}
+      <circle cx={size/2} cy={size/2} r={r} fill="none" stroke="rgba(45,212,191,.08)" strokeWidth={stroke} />
+      {/* Secondary glow ring */}
+      <circle cx={size/2} cy={size/2} r={r} fill="none" stroke={color} strokeWidth={stroke+6}
+        strokeDasharray={circ} strokeDashoffset={offset} strokeLinecap="round"
+        style={{ filter:`blur(8px)`, opacity:.25, transition:"stroke-dashoffset 1.4s cubic-bezier(.22,1,.36,1)" }} />
+      {/* Main arc */}
+      <circle cx={size/2} cy={size/2} r={r} fill="none" stroke="url(#arcGrad)" strokeWidth={stroke}
+        strokeDasharray={circ} strokeDashoffset={offset} strokeLinecap="round"
+        filter="url(#arcGlow)"
+        style={{ transition:"stroke-dashoffset 1.4s cubic-bezier(.22,1,.36,1)" }} />
     </svg>
   );
 }
 
+// ─── KPI Card ─────────────────────────────────────────────────────────────────
+interface KpiProps {
+  label: string; value: number; suffix?: string;
+  icon: React.ReactNode; accent: string; accentFaint: string;
+  sub: string; badge?: string; alert?: boolean; delay?: number; loading?: boolean;
+}
+function KpiCard({ label, value, suffix="", icon, accent, accentFaint, sub, badge, alert=false, delay=0, loading=false }: KpiProps) {
+  return (
+    <div className="rp-kpi-card" style={{
+      animationDelay: `${delay}s`,
+      background: "linear-gradient(145deg, #0d1f38 0%, #09172c 100%)",
+      border: `1px solid ${alert ? "rgba(248,113,113,.30)" : "rgba(45,212,191,.12)"}`,
+      borderRadius: 22, padding: "24px 22px",
+      boxShadow: alert
+        ? "0 4px 28px rgba(248,113,113,.10), inset 0 1px 0 rgba(255,255,255,.04)"
+        : "0 4px 24px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.04)",
+      position: "relative", overflow: "hidden",
+    }}>
+      {/* Top alert bar */}
+      {alert && <div style={{ position:"absolute", top:0, left:0, right:0, height:2, background:"linear-gradient(90deg,#f87171,#fbbf24)", borderRadius:"22px 22px 0 0" }} />}
+      {/* Ambient glow */}
+      <div style={{ position:"absolute", top:-40, right:-40, width:140, height:140, borderRadius:"50%", background:`radial-gradient(circle, ${accent}20 0%, transparent 70%)`, pointerEvents:"none" }} />
+      {/* Scan line */}
+      <div style={{ position:"absolute", left:0, right:0, height:"18%", background:`linear-gradient(to bottom, transparent, ${accent}07, transparent)`, animation:`rp-scan ${4+delay}s linear infinite`, pointerEvents:"none" }} />
+
+      <div style={{ display:"flex", alignItems:"flex-start", justifyContent:"space-between", marginBottom:18, position:"relative", zIndex:2 }}>
+        <div style={{ width:42, height:42, borderRadius:13, background:accentFaint, display:"flex", alignItems:"center", justifyContent:"center", color:accent }}>
+          {icon}
+        </div>
+        {badge && (
+          <div className="rp-mono" style={{ fontSize:9, fontWeight:700, color:alert?"#f87171":accent, background:alert?"rgba(248,113,113,.12)":accentFaint, borderRadius:7, padding:"3px 9px", letterSpacing:".08em", textTransform:"uppercase" }}>
+            {badge}
+          </div>
+        )}
+      </div>
+
+      <div style={{ position:"relative", zIndex:2 }}>
+        <div className="rp-display" style={{ fontSize:"clamp(1.9rem,2.8vw,2.4rem)", fontWeight:800, color:"#fff", lineHeight:1, marginBottom:6, letterSpacing:"-0.03em", animation:`rp-count .5s cubic-bezier(.22,1,.36,1) ${delay+.15}s both` }}>
+          {loading
+            ? <Loader2 size={30} color={accent} style={{ animation:"rp-spin 1s linear infinite" }} />
+            : <Counter to={value} suffix={suffix} delay={(delay+.2)*1000} />}
+        </div>
+        <div style={{ fontSize:13.5, fontWeight:600, color:"rgba(255,255,255,.8)", marginBottom:5 }}>{label}</div>
+        <div className="rp-mono" style={{ fontSize:9.5, color:"rgba(255,255,255,.28)", letterSpacing:".06em" }}>{sub}</div>
+      </div>
+
+      {/* Bottom bar */}
+      <div style={{ position:"absolute", bottom:0, left:0, right:0, height:2, background:`linear-gradient(90deg, transparent, ${accent}44, transparent)` }} />
+    </div>
+  );
+}
+
+// ─── Main ─────────────────────────────────────────────────────────────────────
 export default function DoctorReportsPage() {
   const router = useRouter();
   const [user, authLoading] = useAuthState(auth);
-  const [metrics, setMetrics] = useState<DoctorReportMetrics | null>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [activeChart, setActiveChart] = useState<'strength' | 'accuracy'>('strength');
+  const [refreshing, setRefreshing] = useState(false);
+  const [error, setError] = useState<string|null>(null);
 
-  useEffect(() => {
-    const load = async () => {
-      if (authLoading) return;
-      
-      if (!user) {
-        setLoading(false);
-        router.push("/auth/doctor/signin");
-        return;
-      }
+  const [adherenceRate,     setAdherenceRate]     = useState(0);
+  const [completedSessions, setCompletedSessions] = useState(0);
+  const [missedSessions,    setMissedSessions]    = useState(0);
+  const [sessionsThisWeek,  setSessionsThisWeek]  = useState(0);
+  const [patients,          setPatients]          = useState<any[]>([]);
+  const [lastUpdated,       setLastUpdated]       = useState<Date|null>(null);
 
-      try {
-        setError(null);
-        const data = await getDoctorReportMetrics(user.uid);
-        setMetrics(data);
-      } catch (e) {
-        console.error("Failed to load report metrics:", e);
-        setError("Could not load report metrics. Please retry.");
-      } finally {
-        setLoading(false);
-      }
-    };
+  const load = async (isRefresh = false) => {
+    if (!user) return;
+    if (isRefresh) setRefreshing(true); else setLoading(true);
+    setError(null);
+    try {
+      const pSnap = await getDocs(query(collection(db,"users"), where("role","==","patient"), where("assignedDoctorId","==",user.uid), where("connectionStatus","==","accepted")));
+      const patientDocs = pSnap.docs.map(d => ({ id:d.id, ...d.data() }));
+      setPatients(patientDocs);
+      const pIds = patientDocs.map((p:any) => p.id);
 
-    void load();
-  }, [user, authLoading, router]);
+      if (pIds.length === 0) { setLoading(false); setRefreshing(false); return; }
 
-  // Animated counters
-  const adherence = useCounter(metrics?.adherenceRate || 0, 1600, 300);
-  const gripStrength = useCounter(metrics?.averagePeakGripStrength || 0, 1400, 400, 1);
-  const reactionTime = useCounter(metrics?.averageReactionTime || 0, 1200, 500, 0);
-  const cognitiveAcc = useCounter(metrics?.averageCognitiveAccuracy || 0, 1400, 350, 1);
+      // Adherence — same formula as home/AI companion
+      const protoMap: Record<string,number> = {};
+      const protoSnap = await getDocs(query(collection(db,"protocols"), where("patientId","in",pIds)));
+      protoSnap.docs.forEach(d => { const x=d.data(); protoMap[x.patientId]=x.sessionsPerWeek??5; });
 
-  // Mock chart data (replace with real data when available)
-  const strengthData = [
-    { day: 'Week 1', avg: 28 }, { day: 'Week 2', avg: 32 },
-    { day: 'Week 3', avg: 36 }, { day: 'Week 4', avg: 42 },
-  ];
+      const sevenAgo = Timestamp.fromDate(daysAgo(7));
+      const gsSnap = await getDocs(query(collection(db,"game_sessions"), where("userId","in",pIds), where("timestamp",">=",sevenAgo), orderBy("timestamp","desc")));
+      const spp: Record<string,number> = {};
+      gsSnap.docs.forEach(d => { const s=d.data() as any; spp[s.userId]=(spp[s.userId]||0)+1; });
 
-  const accuracyData = [
-    { day: 'Week 1', accuracy: 72 }, { day: 'Week 2', accuracy: 78 },
-    { day: 'Week 3', accuracy: 82 }, { day: 'Week 4', accuracy: 85 },
-  ];
+      let totalAdh=0;
+      patientDocs.forEach((p:any) => { totalAdh += Math.min(100, Math.round(((spp[p.id]||0)/(protoMap[p.id]||5))*100)); });
+      setAdherenceRate(Math.round(totalAdh/patientDocs.length));
+      setCompletedSessions(Object.values(spp).reduce((a,b)=>a+b,0));
 
-  if (authLoading || loading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="flex flex-col items-center gap-4">
-          <Loader2 size={40} className="text-teal-500 animate-spin" />
-          <p className="text-slate-500">Loading report metrics...</p>
-        </div>
-      </div>
-    );
-  }
+      const now = new Date();
+      const sow = new Date(now); sow.setDate(now.getDate()-now.getDay()); sow.setHours(0,0,0,0);
+      const eow = new Date(sow); eow.setDate(sow.getDate()+6); eow.setHours(23,59,59,999);
 
-  if (error || !metrics) {
-    return (
-      <div className="p-8 max-w-7xl mx-auto">
-        <div className="bg-red-50 border border-red-200 rounded-xl p-6">
-          <p className="text-red-800 font-semibold">Error Loading Reports</p>
-          <p className="text-red-600 text-sm mt-2">{error || "No data available"}</p>
-        </div>
-      </div>
-    );
-  }
+      const [schedSnap, apptSnap] = await Promise.all([
+        getDocs(query(collection(db,"scheduled_sessions"), where("doctorId","==",user.uid))),
+        getDocs(query(collection(db,"appointments"),       where("doctorId","==",user.uid))),
+      ]);
+      const raw = [...schedSnap.docs.map(d=>d.data()), ...apptSnap.docs.map(d=>d.data())];
+      let rMissed=0, rWeek=0;
+      raw.forEach((e:any) => {
+        if (e.status==="cancelled") return;
+        const t = new Date(`${e.scheduledDate}T${e.scheduledTime||"00:00"}:00`);
+        if (t<now && e.status!=="completed") rMissed++;
+        if (t>=sow && t<=eow) rWeek++;
+      });
+      setMissedSessions(rMissed);
+      setSessionsThisWeek(rWeek);
+      setLastUpdated(new Date());
+    } catch(e) {
+      console.error(e); setError("Could not load metrics.");
+    } finally {
+      setLoading(false); setRefreshing(false);
+    }
+  };
+
+  useEffect(() => { if (!authLoading && user) load(); else if (!authLoading && !user) router.push("/auth/doctor/signin"); }, [user, authLoading]);
+
+  const adColor = adherenceRate >= 75 ? "#2DD4BF" : adherenceRate >= 50 ? "#fbbf24" : "#f87171";
+  const tickerItems = ["CLINICAL ANALYTICS", "SESSION DATA", "PATIENT OUTCOMES", "DEVICE STATUS", "WEEKLY COHORT", "ADHERENCE METRICS"];
 
   return (
-    <div style={{ minHeight: '100vh', background: '#F0F4F8', paddingBottom: 72 }}>
-      {/* Ambient Background */}
-      <div style={{ position: 'fixed', inset: 0, pointerEvents: 'none', zIndex: 0, overflow: 'hidden' }}>
-        <div style={{ position: 'absolute', top: '-10%', right: '4%', width: 680, height: 680, background: 'radial-gradient(circle,rgba(45,212,191,0.052),transparent 65%)', borderRadius: '50%' }} />
-        <div style={{ position: 'absolute', bottom: '-12%', left: '3%', width: 560, height: 560, background: 'radial-gradient(circle,rgba(99,102,241,0.042),transparent 65%)', borderRadius: '50%' }} />
-        <div style={{ position: 'absolute', inset: 0, backgroundImage: 'linear-gradient(rgba(11,30,51,0.018) 1px,transparent 1px),linear-gradient(90deg,rgba(11,30,51,0.018) 1px,transparent 1px)', backgroundSize: '52px 52px' }} />
+    <div className="rp" style={{ minHeight:"100vh", background:"#060d1a", paddingBottom:80 }}>
+      <style>{CSS}</style>
+
+      {/* ── Fixed ambient orbs ─────────────────────────────────────────── */}
+      <div style={{ position:"fixed", inset:0, pointerEvents:"none", zIndex:0, overflow:"hidden" }}>
+        <div style={{ position:"absolute", top:"-12%", left:"10%", width:900, height:900, borderRadius:"50%", background:"radial-gradient(circle, rgba(45,212,191,.04) 0%, transparent 60%)" }} />
+        <div style={{ position:"absolute", bottom:"-10%", right:"5%", width:700, height:700, borderRadius:"50%", background:"radial-gradient(circle, rgba(8,145,178,.05) 0%, transparent 60%)" }} />
+        {/* Grid */}
+        <div style={{ position:"absolute", inset:0, backgroundImage:"linear-gradient(rgba(45,212,191,.028) 1px, transparent 1px), linear-gradient(90deg, rgba(45,212,191,.028) 1px, transparent 1px)", backgroundSize:"56px 56px" }} />
       </div>
 
-      <div style={{ maxWidth: 1160, margin: '0 auto', padding: '28px 24px', position: 'relative', zIndex: 1 }}>
+      <div style={{ maxWidth:1360, margin:"0 auto", padding:"40px 32px", position:"relative", zIndex:1 }}>
 
-        {/* Hero Header */}
+        {/* ══ HERO ════════════════════════════════════════════════════════ */}
         <div style={{
-          background: '#0B1E33',
-          borderRadius: 24,
-          marginBottom: 24,
-          overflow: 'hidden',
-          position: 'relative',
-          animation: 'fade-in 0.50s ease both',
+          background:"linear-gradient(135deg, #0B1E33 0%, #0d2a44 50%, #061525 100%)",
+          borderRadius:30, padding:"0",
+          marginBottom:28,
+          boxShadow:"0 12px 60px rgba(0,0,0,.5), inset 0 1px 0 rgba(255,255,255,.05)",
+          position:"relative", overflow:"hidden",
+          animation:"rp-fade-up .7s cubic-bezier(.22,1,.36,1) both",
         }}>
-          <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', backgroundImage: 'linear-gradient(rgba(45,212,191,0.038) 1px,transparent 1px),linear-gradient(90deg,rgba(45,212,191,0.038) 1px,transparent 1px)', backgroundSize: '32px 32px' }} />
-          
-          <div style={{ position: 'relative', zIndex: 2, padding: '28px 32px 22px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 24, flexWrap: 'wrap' }}>
-              <div>
-                <p style={{ 
-                  fontFamily: "'JetBrains Mono',monospace", 
-                  fontSize: 9, 
-                  color: 'rgba(45,212,191,0.60)', 
-                  textTransform: 'uppercase', 
-                  letterSpacing: '0.24em', 
-                  marginBottom: 8, 
-                  fontWeight: 600 
-                }}>
-                  ReViveX · Clinical Dashboard
-                </p>
-                <h1 style={{ 
-                  fontSize: 'clamp(1.55rem,2.8vw,2.1rem)', 
-                  fontWeight: 800, 
-                  color: '#fff', 
-                  margin: 0, 
-                  lineHeight: 1.12 
-                }}>
-                  Reports & Analytics
-                </h1>
-                <p style={{ 
-                  fontSize: 13.5, 
-                  color: 'rgba(255,255,255,0.40)', 
-                  marginTop: 6, 
-                  fontWeight: 500 
-                }}>
-                  Comprehensive patient performance metrics and clinical outcomes
-                </p>
+          {/* Left accent stripe */}
+          <div style={{ position:"absolute", left:0, top:0, bottom:0, width:4, background:"linear-gradient(to bottom, #2DD4BF, #0891b2, transparent)", borderRadius:"30px 0 0 30px" }} />
+          {/* Scan lines */}
+          <div style={{ position:"absolute", left:0, right:0, height:"12%", background:"linear-gradient(to bottom, transparent, rgba(45,212,191,.04), transparent)", animation:"rp-scan 5s linear infinite", pointerEvents:"none" }} />
+          <div style={{ position:"absolute", left:0, right:0, height:"8%", background:"linear-gradient(to bottom, transparent, rgba(45,212,191,.02), transparent)", animation:"rp-scan2 7s linear infinite 2.5s", pointerEvents:"none" }} />
+          {/* Corner glows */}
+          <div style={{ position:"absolute", top:-80, right:-80, width:360, height:360, borderRadius:"50%", background:"radial-gradient(circle, rgba(45,212,191,.07) 0%, transparent 70%)", animation:"rp-glow-beat 5s ease-in-out infinite" }} />
+          <div style={{ position:"absolute", bottom:-60, left:"35%", width:300, height:200, borderRadius:"50%", background:"radial-gradient(circle, rgba(8,145,178,.05) 0%, transparent 70%)" }} />
+
+          <div style={{ display:"flex", alignItems:"stretch", position:"relative", zIndex:2 }}>
+            {/* Left text */}
+            <div style={{ flex:1, padding:"36px 44px" }}>
+              <div className="rp-mono" style={{ fontSize:9, color:"rgba(45,212,191,.55)", textTransform:"uppercase", letterSpacing:".28em", marginBottom:10 }}>
+                ReViveX · Clinical Intelligence
+              </div>
+              <h1 className="rp-display" style={{ fontSize:"clamp(1.6rem,2.6vw,2.2rem)", fontWeight:800, color:"#fff", margin:0, lineHeight:1.1, letterSpacing:"-0.02em" }}>
+                Reports &<br /><span style={{ color:"#2DD4BF", textShadow:"0 0 40px rgba(45,212,191,.45)" }}>Analytics</span>
+              </h1>
+              <p style={{ fontSize:14, color:"rgba(255,255,255,.38)", marginTop:12, lineHeight:1.6, maxWidth:360 }}>
+                Comprehensive clinical performance metrics, patient outcomes, and real-time therapy intelligence.
+              </p>
+
+              <div style={{ display:"flex", alignItems:"center", gap:12, marginTop:28 }}>
+                <button className="rp-export-btn" style={{ display:"flex", alignItems:"center", gap:9, background:"linear-gradient(135deg, #2DD4BF 0%, #0891b2 100%)", color:"#061525", border:"none", borderRadius:14, padding:"13px 24px", fontSize:13, fontWeight:800, cursor:"pointer", letterSpacing:".02em", boxShadow:"0 6px 28px rgba(45,212,191,.35)" }}>
+                  <Download size={15} /> Export Report
+                </button>
+                <button
+                  onClick={() => load(true)}
+                  disabled={refreshing}
+                  style={{ display:"flex", alignItems:"center", gap:7, background:"rgba(45,212,191,.08)", border:"1px solid rgba(45,212,191,.20)", borderRadius:14, padding:"13px 20px", color:"#2DD4BF", fontSize:13, fontWeight:700, cursor:"pointer", transition:"all .2s" }}>
+                  <RefreshCw size={14} style={{ animation: refreshing?"rp-spin 1s linear infinite":"none" }} />
+                  Refresh
+                </button>
               </div>
 
-              <button
-                onClick={() => window.print()}
-                style={{
-                  padding: '10px 18px',
-                  borderRadius: 14,
-                  background: 'linear-gradient(135deg,rgba(45,212,191,0.22),rgba(20,184,166,0.12))',
-                  border: '1.5px solid rgba(45,212,191,0.30)',
-                  color: '#2DD4BF',
-                  fontSize: 12,
-                  fontWeight: 700,
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 8,
-                  transition: 'all 0.3s ease',
-                }}
-                onMouseEnter={(e) => e.currentTarget.style.transform = 'translateY(-2px)'}
-                onMouseLeave={(e) => e.currentTarget.style.transform = 'translateY(0)'}
-              >
-                <TrendingUp size={16} />
-                Export Report
-              </button>
+              {lastUpdated && (
+                <div className="rp-mono" style={{ fontSize:9, color:"rgba(255,255,255,.18)", marginTop:14, letterSpacing:".10em" }}>
+                  LAST UPDATED · {lastUpdated.toLocaleTimeString("en-US", { hour:"2-digit", minute:"2-digit", second:"2-digit" })}
+                </div>
+              )}
             </div>
-          </div>
-        </div>
 
-        {/* Hero Stats Grid */}
-        <div style={{ 
-          display: 'grid', 
-          gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', 
-          gap: 14, 
-          marginBottom: 22 
-        }}>
-          {/* Adherence Rate */}
-          <div style={{
-            padding: '24px 22px',
-            borderRadius: 20,
-            border: '1.5px solid rgba(226,232,240,0.85)',
-            background: '#fff',
-            position: 'relative',
-            overflow: 'hidden',
-            animation: 'fade-in 0.48s cubic-bezier(0.22,1,0.36,1) 0.08s both',
-          }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
-              <div>
-                <p style={{ 
-                  fontFamily: "'JetBrains Mono',monospace", 
-                  fontSize: 9, 
-                  color: '#94a3b8', 
-                  textTransform: 'uppercase', 
-                  letterSpacing: '0.16em', 
-                  marginBottom: 6, 
-                  fontWeight: 700 
-                }}>
-                  Adherence Rate
-                </p>
-                <div style={{ display: 'flex', alignItems: 'baseline', gap: 3 }}>
-                  <span style={{ 
-                    fontSize: 34, 
-                    fontWeight: 900, 
-                    color: '#0B1E33', 
-                    lineHeight: 1, 
-                    fontFamily: "'JetBrains Mono',monospace" 
-                  }}>
-                    {Math.round(adherence)}
-                  </span>
-                  <span style={{ 
-                    fontFamily: "'JetBrains Mono',monospace", 
-                    fontSize: 16, 
-                    fontWeight: 700, 
-                    color: '#2DD4BF' 
-                  }}>
-                    %
-                  </span>
-                </div>
-                <p style={{ fontSize: 12, color: '#64748b', marginTop: 5, fontWeight: 500 }}>
-                  Completed / Total
-                </p>
-              </div>
-              <RingProgress pct={metrics.adherenceRate} size={72} stroke={6} color="#2DD4BF" delay={300} />
-            </div>
-          </div>
-
-          {/* Completed Sessions */}
-          <div style={{
-            padding: '24px 22px',
-            borderRadius: 20,
-            border: '1.5px solid rgba(34,197,94,0.25)',
-            background: '#fff',
-            animation: 'fade-in 0.48s cubic-bezier(0.22,1,0.36,1) 0.14s both',
-          }}>
-            <p style={{ 
-              fontFamily: "'JetBrains Mono',monospace", 
-              fontSize: 9, 
-              color: '#94a3b8', 
-              textTransform: 'uppercase', 
-              letterSpacing: '0.16em', 
-              marginBottom: 10, 
-              fontWeight: 700 
-            }}>
-              Completed Sessions
-            </p>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-              <div style={{
-                width: 54,
-                height: 54,
-                borderRadius: 16,
-                background: 'rgba(34,197,94,0.10)',
-                border: '1.5px solid rgba(34,197,94,0.25)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-              }}>
-                <CheckCircle2 size={24} color="#22c55e" />
-              </div>
-              <div>
-                <div style={{ fontSize: 34, fontWeight: 900, color: '#16a34a', lineHeight: 1, fontFamily: "'JetBrains Mono',monospace" }}>
-                  {metrics.completedSessions}
-                </div>
-                <p style={{ fontSize: 12, color: '#64748b', marginTop: 3, fontWeight: 500 }}>
-                  Successfully finished
-                </p>
-              </div>
-            </div>
-          </div>
-
-          {/* Missed Sessions */}
-          <div style={{
-            padding: '24px 22px',
-            borderRadius: 20,
-            border: '1.5px solid rgba(245,158,11,0.25)',
-            background: '#fff',
-            animation: 'fade-in 0.48s cubic-bezier(0.22,1,0.36,1) 0.20s both',
-          }}>
-            <p style={{ 
-              fontFamily: "'JetBrains Mono',monospace", 
-              fontSize: 9, 
-              color: '#94a3b8', 
-              textTransform: 'uppercase', 
-              letterSpacing: '0.16em', 
-              marginBottom: 10, 
-              fontWeight: 700 
-            }}>
-              Missed Sessions
-            </p>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-              <div style={{
-                width: 54,
-                height: 54,
-                borderRadius: 16,
-                background: 'rgba(245,158,11,0.10)',
-                border: '1.5px solid rgba(245,158,11,0.25)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-              }}>
-                <AlertCircle size={24} color="#f59e0b" />
-              </div>
-              <div>
-                <div style={{ fontSize: 34, fontWeight: 900, color: '#d97706', lineHeight: 1, fontFamily: "'JetBrains Mono',monospace" }}>
-                  {metrics.missedSessions}
-                </div>
-                <p style={{ fontSize: 12, color: '#64748b', marginTop: 3, fontWeight: 500 }}>
-                  Auto-marked
-                </p>
-              </div>
-            </div>
-          </div>
-
-          {/* Sessions This Week */}
-          <div style={{
-            padding: '24px 22px',
-            borderRadius: 20,
-            border: '1.5px solid rgba(99,102,241,0.22)',
-            background: '#fff',
-            animation: 'fade-in 0.48s cubic-bezier(0.22,1,0.36,1) 0.26s both',
-          }}>
-            <p style={{ 
-              fontFamily: "'JetBrains Mono',monospace", 
-              fontSize: 9, 
-              color: '#94a3b8', 
-              textTransform: 'uppercase', 
-              letterSpacing: '0.16em', 
-              marginBottom: 10, 
-              fontWeight: 700 
-            }}>
-              This Week
-            </p>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-              <div style={{
-                width: 54,
-                height: 54,
-                borderRadius: 16,
-                background: 'rgba(99,102,241,0.10)',
-                border: '1.5px solid rgba(99,102,241,0.25)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-              }}>
-                <Calendar size={24} color="#6366f1" />
-              </div>
-              <div>
-                <div style={{ fontSize: 34, fontWeight: 900, color: '#6366f1', lineHeight: 1, fontFamily: "'JetBrains Mono',monospace" }}>
-                  {metrics.sessionsThisWeek}
-                </div>
-                <p style={{ fontSize: 12, color: '#64748b', marginTop: 3, fontWeight: 500 }}>
-                  Current week
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Clinical Performance Metrics */}
-        <div style={{
-          background: '#fff',
-          borderRadius: 20,
-          border: '1px solid rgba(226,232,240,0.9)',
-          boxShadow: '0 2px 18px rgba(11,30,51,0.055)',
-          overflow: 'hidden',
-          marginBottom: 22,
-          animation: 'fade-in 0.48s cubic-bezier(0.22,1,0.36,1) 0.28s both',
-        }}>
-          <div style={{ background: 'linear-gradient(135deg,#2DD4BF 0%,#0891b2 100%)', padding: '16px 24px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-              <Activity size={24} color="#fff" />
-              <div>
-                <div style={{ fontSize: 15, fontWeight: 800, color: '#fff' }}>
-                  Clinical Performance Metrics
-                </div>
-                <div style={{ 
-                  fontFamily: "'JetBrains Mono',monospace", 
-                  fontSize: 9, 
-                  color: 'rgba(255,255,255,0.70)', 
-                  textTransform: 'uppercase', 
-                  letterSpacing: '0.12em', 
-                  marginTop: 1 
-                }}>
-                  Last 30 Days — Aggregated Patient Data
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div style={{ padding: '22px 24px' }}>
-            <div style={{ 
-              display: 'grid', 
-              gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', 
-              gap: 18 
-            }}>
-              {/* Peak Grip Strength */}
-              <div style={{
-                background: 'linear-gradient(to bottom right,#fff,rgba(248,250,252,0.6))',
-                border: '1px solid rgba(226,232,240,0.8)',
-                borderRadius: 16,
-                padding: 20,
-              }}>
-                <div style={{ display: 'flex', alignItems: 'start', justifyContent: 'space-between', marginBottom: 12 }}>
-                  <Gauge size={28} color="#ef4444" />
-                  {metrics.gripStrengthTrend !== 0 && (
-                    <div style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: 4,
-                      padding: '4px 10px',
-                      borderRadius: 99,
-                      background: metrics.gripStrengthTrend > 0 ? 'rgba(34,197,94,0.08)' : 'rgba(239,68,68,0.08)',
-                      border: `1px solid ${metrics.gripStrengthTrend > 0 ? 'rgba(34,197,94,0.22)' : 'rgba(239,68,68,0.22)'}`,
-                    }}>
-                      {metrics.gripStrengthTrend > 0 ? <TrendingUp size={12} color="#22c55e" /> : <TrendingDown size={12} color="#ef4444" />}
-                      <span style={{ 
-                        fontFamily: "'JetBrains Mono',monospace", 
-                        fontSize: 10, 
-                        fontWeight: 700, 
-                        color: metrics.gripStrengthTrend > 0 ? '#16a34a' : '#dc2626' 
-                      }}>
-                        {Math.abs(metrics.gripStrengthTrend)}%
-                      </span>
-                    </div>
-                  )}
-                </div>
-                <h3 style={{ fontSize: 13, fontWeight: 700, color: '#64748b', marginBottom: 8 }}>
-                  Peak Grip Strength
-                </h3>
-                <div style={{ display: 'flex', alignItems: 'baseline', gap: 6 }}>
-                  <span style={{ fontSize: 32, fontWeight: 900, color: '#0B1E33', fontFamily: "'JetBrains Mono',monospace" }}>
-                    {gripStrength.toFixed(1)}
-                  </span>
-                  <span style={{ fontSize: 16, color: '#94a3b8', fontWeight: 600 }}>N</span>
-                </div>
-                <p style={{ fontSize: 11, color: '#94a3b8', marginTop: 4 }}>
-                  Maximum force during squeeze
-                </p>
-              </div>
-
-              {/* Reaction Time */}
-              <div style={{
-                background: 'linear-gradient(to bottom right,#fff,rgba(248,250,252,0.6))',
-                border: '1px solid rgba(226,232,240,0.8)',
-                borderRadius: 16,
-                padding: 20,
-              }}>
-                <div style={{ display: 'flex', alignItems: 'start', justifyContent: 'space-between', marginBottom: 12 }}>
-                  <Clock size={28} color="#3b82f6" />
-                  {metrics.reactionTimeTrend !== 0 && (
-                    <div style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: 4,
-                      padding: '4px 10px',
-                      borderRadius: 99,
-                      background: metrics.reactionTimeTrend < 0 ? 'rgba(34,197,94,0.08)' : 'rgba(239,68,68,0.08)',
-                      border: `1px solid ${metrics.reactionTimeTrend < 0 ? 'rgba(34,197,94,0.22)' : 'rgba(239,68,68,0.22)'}`,
-                    }}>
-                      {metrics.reactionTimeTrend < 0 ? <TrendingUp size={12} color="#22c55e" /> : <TrendingDown size={12} color="#ef4444" />}
-                      <span style={{ 
-                        fontFamily: "'JetBrains Mono',monospace", 
-                        fontSize: 10, 
-                        fontWeight: 700, 
-                        color: metrics.reactionTimeTrend < 0 ? '#16a34a' : '#dc2626' 
-                      }}>
-                        {Math.abs(metrics.reactionTimeTrend)}%
-                      </span>
-                    </div>
-                  )}
-                </div>
-                <h3 style={{ fontSize: 13, fontWeight: 700, color: '#64748b', marginBottom: 8 }}>
-                  Reaction Time
-                </h3>
-                <div style={{ display: 'flex', alignItems: 'baseline', gap: 6 }}>
-                  <span style={{ fontSize: 32, fontWeight: 900, color: '#0B1E33', fontFamily: "'JetBrains Mono',monospace" }}>
-                    {Math.round(reactionTime)}
-                  </span>
-                  <span style={{ fontSize: 16, color: '#94a3b8', fontWeight: 600 }}>ms</span>
-                </div>
-                <p style={{ fontSize: 11, color: '#94a3b8', marginTop: 4 }}>
-                  Motor-cognitive response
-                </p>
-              </div>
-
-              {/* Cognitive Accuracy */}
-              <div style={{
-                background: 'linear-gradient(to bottom right,#fff,rgba(248,250,252,0.6))',
-                border: '1px solid rgba(226,232,240,0.8)',
-                borderRadius: 16,
-                padding: 20,
-              }}>
-                <div style={{ display: 'flex', alignItems: 'start', justifyContent: 'space-between', marginBottom: 12 }}>
-                  <Brain size={28} color="#8b5cf6" />
-                  {metrics.cognitiveAccuracyTrend !== 0 && (
-                    <div style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: 4,
-                      padding: '4px 10px',
-                      borderRadius: 99,
-                      background: metrics.cognitiveAccuracyTrend > 0 ? 'rgba(34,197,94,0.08)' : 'rgba(239,68,68,0.08)',
-                      border: `1px solid ${metrics.cognitiveAccuracyTrend > 0 ? 'rgba(34,197,94,0.22)' : 'rgba(239,68,68,0.22)'}`,
-                    }}>
-                      {metrics.cognitiveAccuracyTrend > 0 ? <TrendingUp size={12} color="#22c55e" /> : <TrendingDown size={12} color="#ef4444" />}
-                      <span style={{ 
-                        fontFamily: "'JetBrains Mono',monospace", 
-                        fontSize: 10, 
-                        fontWeight: 700, 
-                        color: metrics.cognitiveAccuracyTrend > 0 ? '#16a34a' : '#dc2626' 
-                      }}>
-                        {Math.abs(metrics.cognitiveAccuracyTrend)}%
-                      </span>
-                    </div>
-                  )}
-                </div>
-                <h3 style={{ fontSize: 13, fontWeight: 700, color: '#64748b', marginBottom: 8 }}>
-                  Cognitive Accuracy
-                </h3>
-                <div style={{ display: 'flex', alignItems: 'baseline', gap: 6 }}>
-                  <span style={{ fontSize: 32, fontWeight: 900, color: '#0B1E33', fontFamily: "'JetBrains Mono',monospace" }}>
-                    {cognitiveAcc.toFixed(1)}
-                  </span>
-                  <span style={{ fontSize: 16, color: '#94a3b8', fontWeight: 600 }}>%</span>
-                </div>
-                <p style={{ fontSize: 11, color: '#94a3b8', marginTop: 4 }}>
-                  Correct decisions ratio
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Charts Section */}
-        <div style={{
-          background: '#fff',
-          borderRadius: 20,
-          border: '1px solid rgba(226,232,240,0.9)',
-          overflow: 'hidden',
-          marginBottom: 22,
-          animation: 'fade-in 0.48s cubic-bezier(0.22,1,0.36,1) 0.32s both',
-        }}>
-          <div style={{ padding: '22px 24px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20, flexWrap: 'wrap', gap: 12 }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                <div style={{ 
-                  width: 34, 
-                  height: 34, 
-                  borderRadius: 10, 
-                  background: 'rgba(45,212,191,0.10)', 
-                  border: '1px solid rgba(45,212,191,0.22)', 
-                  display: 'flex', 
-                  alignItems: 'center', 
-                  justifyContent: 'center' 
-                }}>
-                  <BarChart3 size={16} color="#2DD4BF" />
-                </div>
-                <div>
-                  <div style={{ fontSize: 15, fontWeight: 800, color: '#0B1E33' }}>
-                    {activeChart === 'strength' ? 'Average Grip Strength Trend' : 'Cognitive Accuracy Progress'}
+            {/* Right arc ring */}
+            <div style={{ width:300, display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", padding:"36px 40px", borderLeft:"1px solid rgba(45,212,191,.08)", position:"relative" }}>
+              <div className="rp-mono" style={{ fontSize:9, color:"rgba(45,212,191,.5)", textTransform:"uppercase", letterSpacing:".20em", marginBottom:16 }}>Cohort Adherence</div>
+              <div style={{ position:"relative", width:200, height:200 }}>
+                <ArcRing value={loading ? 0 : adherenceRate} color={adColor} />
+                {/* Pulse ring */}
+                {!loading && (
+                  <div style={{ position:"absolute", inset:0, borderRadius:"50%", border:`2px solid ${adColor}`, opacity:.3, animation:"rp-pulse-ring 2.4s ease-out infinite" }} />
+                )}
+                {/* Center text */}
+                <div style={{ position:"absolute", inset:0, display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center" }}>
+                  <div className="rp-display" style={{ fontSize:"2.4rem", fontWeight:800, color:"#fff", lineHeight:1, letterSpacing:"-0.04em", textShadow:`0 0 30px ${adColor}60`, animation:"rp-count .8s cubic-bezier(.22,1,.36,1) .4s both" }}>
+                    {loading ? "--" : <Counter to={adherenceRate} suffix="%" delay={600} />}
                   </div>
-                  <div style={{ 
-                    fontFamily: "'JetBrains Mono',monospace", 
-                    fontSize: 9, 
-                    color: '#94a3b8', 
-                    marginTop: 2, 
-                    textTransform: 'uppercase', 
-                    letterSpacing: '0.12em' 
-                  }}>
-                    {activeChart === 'strength' ? 'Weekly average force (N)' : 'Weekly accuracy percentage'}
-                  </div>
+                  <div className="rp-mono" style={{ fontSize:9, color:"rgba(255,255,255,.30)", textTransform:"uppercase", letterSpacing:".14em", marginTop:4 }}>Weekly avg</div>
                 </div>
               </div>
-              <div style={{ display: 'flex', gap: 6 }}>
-                {(['strength', 'accuracy'] as const).map(tab => (
-                  <button 
-                    key={tab} 
-                    onClick={() => setActiveChart(tab)} 
-                    style={{
-                      padding: '7px 16px',
-                      borderRadius: 10,
-                      border: 'none',
-                      cursor: 'pointer',
-                      background: activeChart === tab ? '#0B1E33' : '#f1f5f9',
-                      color: activeChart === tab ? '#fff' : '#64748b',
-                      fontSize: 12.5,
-                      fontWeight: 700,
-                      transition: 'all 0.2s ease',
-                      boxShadow: activeChart === tab ? '0 4px 14px rgba(11,30,51,0.22)' : 'none',
-                    }}
-                  >
-                    {tab === 'strength' ? 'Strength' : 'Accuracy'}
-                  </button>
+              {/* Live indicator */}
+              <div style={{ display:"flex", alignItems:"center", gap:7, marginTop:14 }}>
+                <div style={{ width:7, height:7, borderRadius:"50%", background:"#2DD4BF", boxShadow:"0 0 10px #2DD4BF", animation:"rp-pulse 2s ease-in-out infinite" }} />
+                <span className="rp-mono" style={{ fontSize:9, color:"rgba(45,212,191,.6)", letterSpacing:".16em", textTransform:"uppercase" }}>Live Signal</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Bottom ticker */}
+          <div style={{ borderTop:"1px solid rgba(45,212,191,.07)", padding:"10px 44px", display:"flex", alignItems:"center", gap:14, position:"relative", zIndex:2 }}>
+            <div className="rp-mono" style={{ fontSize:8.5, color:"rgba(45,212,191,.5)", letterSpacing:".22em", textTransform:"uppercase", flexShrink:0 }}>LIVE ▶</div>
+            <div className="rp-ticker-wrap" style={{ flex:1 }}>
+              <div className="rp-ticker-inner">
+                {[...tickerItems, ...tickerItems].map((t, i) => (
+                  <span key={i} className="rp-mono" style={{ fontSize:8.5, color:"rgba(255,255,255,.18)", letterSpacing:".18em", textTransform:"uppercase" }}>
+                    {t} <span style={{ color:"rgba(45,212,191,.35)", margin:"0 16px" }}>·</span>
+                  </span>
                 ))}
               </div>
             </div>
-
-            {activeChart === 'strength' ? (
-              <ResponsiveContainer width="100%" height={250}>
-                <AreaChart data={strengthData} margin={{ top: 4, right: 8, bottom: 0, left: -12 }}>
-                  <defs>
-                    <linearGradient id="strengthGrad" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#2DD4BF" stopOpacity={0.18} />
-                      <stop offset="95%" stopColor="#2DD4BF" stopOpacity={0} />
-                    </linearGradient>
-                  </defs>
-                  <CartesianGrid strokeDasharray="4 4" stroke="rgba(226,232,240,0.6)" vertical={false} />
-                  <XAxis 
-                    dataKey="day" 
-                    tick={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 9, fill: '#94a3b8' }} 
-                    tickLine={false} 
-                    axisLine={false} 
-                  />
-                  <YAxis 
-                    tick={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 9, fill: '#94a3b8' }} 
-                    tickLine={false} 
-                    axisLine={false} 
-                    unit=" N" 
-                  />
-                  <Tooltip content={<ChartTooltip />} />
-                  <Area 
-                    type="monotone" 
-                    dataKey="avg" 
-                    stroke="#2DD4BF" 
-                    strokeWidth={2.5} 
-                    fill="url(#strengthGrad)" 
-                    dot={false} 
-                    activeDot={{ r: 5, fill: '#2DD4BF', strokeWidth: 0 }} 
-                    name="Avg Strength"
-                  />
-                </AreaChart>
-              </ResponsiveContainer>
-            ) : (
-              <ResponsiveContainer width="100%" height={220}>
-                <BarChart data={accuracyData} margin={{ top: 4, right: 8, bottom: 0, left: -12 }}>
-                  <CartesianGrid strokeDasharray="4 4" stroke="rgba(226,232,240,0.6)" vertical={false} />
-                  <XAxis 
-                    dataKey="day" 
-                    tick={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 10, fill: '#94a3b8' }} 
-                    tickLine={false} 
-                    axisLine={false} 
-                  />
-                  <YAxis 
-                    tick={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 9, fill: '#94a3b8' }} 
-                    tickLine={false} 
-                    axisLine={false} 
-                  />
-                  <Tooltip content={<ChartTooltip />} />
-                  <Bar 
-                    dataKey="accuracy" 
-                    fill="#8b5cf6" 
-                    radius={[8, 8, 0, 0]} 
-                    maxBarSize={52}
-                    background={{ fill: 'rgba(226,232,240,0.3)' }}
-                    name="Accuracy"
-                  />
-                </BarChart>
-              </ResponsiveContainer>
-            )}
           </div>
         </div>
 
-        {/* Session Analytics */}
-        <div style={{
-          background: '#fff',
-          borderRadius: 20,
-          border: '1px solid rgba(226,232,240,0.9)',
-          overflow: 'hidden',
-          animation: 'fade-in 0.48s cubic-bezier(0.22,1,0.36,1) 0.36s both',
-        }}>
-          <div style={{ background: 'linear-gradient(135deg,#64748b 0%,#475569 100%)', padding: '16px 24px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-              <Clock size={24} color="#fff" />
-              <div>
-                <div style={{ fontSize: 15, fontWeight: 800, color: '#fff' }}>
-                  Session Frequency & Duration
-                </div>
-                <div style={{ 
-                  fontFamily: "'JetBrains Mono',monospace", 
-                  fontSize: 9, 
-                  color: 'rgba(255,255,255,0.70)', 
-                  textTransform: 'uppercase', 
-                  letterSpacing: '0.12em', 
-                  marginTop: 1 
-                }}>
-                  Activity Overview
-                </div>
-              </div>
-            </div>
-          </div>
+        {/* ══ KPI GRID ════════════════════════════════════════════════════ */}
+        <div style={{ display:"grid", gridTemplateColumns:"repeat(4, 1fr)", gap:16, marginBottom:26 }}>
+          <KpiCard label="Adherence Rate"      value={adherenceRate}    suffix="%" icon={<TrendingUp size={20}/>}   accent="#2DD4BF" accentFaint="rgba(45,212,191,.12)"  sub="Plays vs. prescribed / week"  badge={adherenceRate>=70?"On Track":"Review"} delay={0.10} loading={loading} />
+          <KpiCard label="Completed Sessions"  value={completedSessions}           icon={<CheckCircle2 size={20}/>} accent="#10b981" accentFaint="rgba(16,185,129,.12)"  sub="Game sessions this week"      badge={`${completedSessions} plays`}          delay={0.18} loading={loading} />
+          <KpiCard label="Missed Sessions"     value={missedSessions}              icon={<AlertTriangle size={20}/>}accent="#f87171" accentFaint="rgba(248,113,113,.12)" sub="Past-due, not completed"       badge={missedSessions===0?"None ✓":"Follow-up"} alert={missedSessions>0} delay={0.26} loading={loading} />
+          <KpiCard label="Sessions This Week"  value={sessionsThisWeek}            icon={<CalendarDays size={20}/>} accent="#a78bfa" accentFaint="rgba(167,139,250,.12)"  sub="Current calendar week"        delay={0.34} loading={loading} />
+        </div>
 
-          <div style={{ padding: '22px 24px' }}>
-            <div style={{ 
-              display: 'grid', 
-              gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', 
-              gap: 16 
+        {/* ══ CHARTS ══════════════════════════════════════════════════════ */}
+        <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:18, marginBottom:26 }}>
+          {[
+            { label:"Patient Outcomes", sub:"Therapy performance over time", accent:"#2DD4BF", accentFaint:"rgba(45,212,191,.10)", Chart:PatientOutcomesChart, delay:.40 },
+            { label:"Adherence Trend",  sub:"Weekly completion rates",       accent:"#a78bfa", accentFaint:"rgba(167,139,250,.10)", Chart:AdherenceRateChart,   delay:.48 },
+          ].map(({ label, sub, accent, accentFaint, Chart, delay }) => (
+            <div key={label} className="rp-chart-wrap" style={{
+              animationDelay:`${delay}s`,
+              background:"linear-gradient(145deg, #0d1f38 0%, #09172c 100%)",
+              border:"1px solid rgba(45,212,191,.10)",
+              borderRadius:24, overflow:"hidden",
+              boxShadow:"0 4px 32px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.04)",
             }}>
-              <div style={{ 
-                padding: '16px', 
-                background: 'rgba(240,244,248,0.7)', 
-                borderRadius: 12, 
-                border: '1px solid rgba(226,232,240,0.8)' 
-              }}>
-                <p style={{ 
-                  fontFamily: "'JetBrains Mono',monospace", 
-                  fontSize: 9, 
-                  color: '#94a3b8', 
-                  textTransform: 'uppercase', 
-                  letterSpacing: '0.12em', 
-                  marginBottom: 8 
-                }}>
-                  Last 30 Days
-                </p>
-                <div style={{ fontSize: 28, fontWeight: 900, color: '#0B1E33', fontFamily: "'JetBrains Mono',monospace" }}>
-                  {metrics.sessionsLast30Days}
+              {/* Chart header */}
+              <div style={{ display:"flex", alignItems:"center", gap:10, padding:"20px 24px 16px", borderBottom:"1px solid rgba(45,212,191,.07)", position:"relative", overflow:"hidden" }}>
+                <div style={{ position:"absolute", left:0, right:0, height:"100%", background:`linear-gradient(to bottom, transparent, ${accent}04, transparent)`, animation:`rp-scan2 6s linear infinite`, pointerEvents:"none" }} />
+                <div style={{ width:34, height:34, borderRadius:10, background:accentFaint, display:"flex", alignItems:"center", justifyContent:"center", color:accent, flexShrink:0 }}>
+                  <Activity size={16} />
                 </div>
-                <p style={{ fontSize: 11, color: '#64748b', marginTop: 4 }}>sessions completed</p>
+                <div>
+                  <div className="rp-display" style={{ fontSize:15, fontWeight:700, color:"#fff" }}>{label}</div>
+                  <div className="rp-mono" style={{ fontSize:9, color:"rgba(255,255,255,.28)", letterSpacing:".08em" }}>{sub}</div>
+                </div>
+                <div style={{ marginLeft:"auto", display:"flex", alignItems:"center", gap:5 }}>
+                  <div style={{ width:5, height:5, borderRadius:"50%", background:accent, animation:"rp-pulse 2s ease-in-out infinite" }} />
+                  <span className="rp-mono" style={{ fontSize:8.5, color:accent, letterSpacing:".12em", textTransform:"uppercase" }}>Live</span>
+                </div>
               </div>
+              <div style={{ padding:"20px 24px 24px" }}><Chart /></div>
+            </div>
+          ))}
 
-              <div style={{ 
-                padding: '16px', 
-                background: 'rgba(240,244,248,0.7)', 
-                borderRadius: 12, 
-                border: '1px solid rgba(226,232,240,0.8)' 
-              }}>
-                <p style={{ 
-                  fontFamily: "'JetBrains Mono',monospace", 
-                  fontSize: 9, 
-                  color: '#94a3b8', 
-                  textTransform: 'uppercase', 
-                  letterSpacing: '0.12em', 
-                  marginBottom: 8 
-                }}>
-                  Last 7 Days
-                </p>
-                <div style={{ fontSize: 28, fontWeight: 900, color: '#0B1E33', fontFamily: "'JetBrains Mono',monospace" }}>
-                  {metrics.sessionsLast7Days}
-                </div>
-                <p style={{ fontSize: 11, color: '#64748b', marginTop: 4 }}>sessions completed</p>
+          {/* Device status — full width */}
+          <div className="rp-chart-wrap" style={{
+            animationDelay:".56s",
+            gridColumn:"1 / -1",
+            background:"linear-gradient(145deg, #0d1f38 0%, #09172c 100%)",
+            border:"1px solid rgba(45,212,191,.10)",
+            borderRadius:24, overflow:"hidden",
+            boxShadow:"0 4px 32px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.04)",
+          }}>
+            <div style={{ display:"flex", alignItems:"center", gap:10, padding:"20px 24px 16px", borderBottom:"1px solid rgba(45,212,191,.07)", position:"relative", overflow:"hidden" }}>
+              <div style={{ position:"absolute", left:0, right:0, height:"100%", background:"linear-gradient(to bottom, transparent, rgba(16,185,129,.03), transparent)", animation:"rp-scan2 6s linear infinite 1s", pointerEvents:"none" }} />
+              <div style={{ width:34, height:34, borderRadius:10, background:"rgba(16,185,129,.12)", display:"flex", alignItems:"center", justifyContent:"center", color:"#10b981", flexShrink:0 }}>
+                <Activity size={16} />
               </div>
-
-              <div style={{ 
-                padding: '16px', 
-                background: 'rgba(240,244,248,0.7)', 
-                borderRadius: 12, 
-                border: '1px solid rgba(226,232,240,0.8)' 
-              }}>
-                <p style={{ 
-                  fontFamily: "'JetBrains Mono',monospace", 
-                  fontSize: 9, 
-                  color: '#94a3b8', 
-                  textTransform: 'uppercase', 
-                  letterSpacing: '0.12em', 
-                  marginBottom: 8 
-                }}>
-                  Total Duration
-                </p>
-                <div style={{ display: 'flex', alignItems: 'baseline', gap: 4 }}>
-                  <span style={{ fontSize: 28, fontWeight: 900, color: '#0B1E33', fontFamily: "'JetBrains Mono',monospace" }}>
-                    {metrics.totalSessionDuration.toFixed(0)}
-                  </span>
-                  <span style={{ fontSize: 14, color: '#94a3b8', fontWeight: 600 }}>min</span>
-                </div>
-                <p style={{ fontSize: 11, color: '#64748b', marginTop: 4 }}>last 30 days</p>
+              <div>
+                <div className="rp-display" style={{ fontSize:15, fontWeight:700, color:"#fff" }}>Device Status Overview</div>
+                <div className="rp-mono" style={{ fontSize:9, color:"rgba(255,255,255,.28)", letterSpacing:".08em" }}>Hardware connectivity across all patients</div>
               </div>
-
-              <div style={{ 
-                padding: '16px', 
-                background: 'rgba(240,244,248,0.7)', 
-                borderRadius: 12, 
-                border: '1px solid rgba(226,232,240,0.8)' 
-              }}>
-                <p style={{ 
-                  fontFamily: "'JetBrains Mono',monospace", 
-                  fontSize: 9, 
-                  color: '#94a3b8', 
-                  textTransform: 'uppercase', 
-                  letterSpacing: '0.12em', 
-                  marginBottom: 8 
-                }}>
-                  Avg Duration
-                </p>
-                <div style={{ display: 'flex', alignItems: 'baseline', gap: 4 }}>
-                  <span style={{ fontSize: 28, fontWeight: 900, color: '#0B1E33', fontFamily: "'JetBrains Mono',monospace" }}>
-                    {metrics.averageSessionDuration.toFixed(1)}
-                  </span>
-                  <span style={{ fontSize: 14, color: '#94a3b8', fontWeight: 600 }}>min</span>
-                </div>
-                <p style={{ fontSize: 11, color: '#64748b', marginTop: 4 }}>per session</p>
+              <div style={{ marginLeft:"auto", display:"flex", alignItems:"center", gap:5 }}>
+                <div style={{ width:5, height:5, borderRadius:"50%", background:"#10b981", animation:"rp-pulse 2s ease-in-out infinite" }} />
+                <span className="rp-mono" style={{ fontSize:8.5, color:"#10b981", letterSpacing:".12em", textTransform:"uppercase" }}>Monitoring</span>
               </div>
             </div>
+            <div style={{ padding:"20px 24px 24px" }}><DeviceStatusChart /></div>
           </div>
         </div>
 
+        {/* ══ PATIENT DIRECTORY ═══════════════════════════════════════════ */}
+        <div style={{
+          background:"linear-gradient(145deg, #0d1f38 0%, #09172c 100%)",
+          border:"1px solid rgba(45,212,191,.10)",
+          borderRadius:26, overflow:"hidden",
+          boxShadow:"0 4px 40px rgba(0,0,0,.40), inset 0 1px 0 rgba(255,255,255,.04)",
+          animation:"rp-fade-up .7s cubic-bezier(.22,1,.36,1) .62s both",
+        }}>
+          {/* Directory header */}
+          <div style={{ padding:"24px 32px", borderBottom:"1px solid rgba(45,212,191,.07)", display:"flex", alignItems:"center", justifyContent:"space-between", position:"relative", overflow:"hidden" }}>
+            <div style={{ position:"absolute", left:0, right:0, height:"100%", background:"linear-gradient(to bottom, transparent, rgba(45,212,191,.025), transparent)", animation:"rp-scan 5s linear infinite", pointerEvents:"none" }} />
+            <div style={{ display:"flex", alignItems:"center", gap:14, position:"relative", zIndex:2 }}>
+              <div style={{ width:42, height:42, borderRadius:13, background:"rgba(45,212,191,.10)", border:"1px solid rgba(45,212,191,.18)", display:"flex", alignItems:"center", justifyContent:"center", color:"#2DD4BF", animation:"rp-float 4s ease-in-out infinite" }}>
+                <Users size={19} />
+              </div>
+              <div>
+                <div className="rp-display" style={{ fontSize:17, fontWeight:700, color:"#fff", lineHeight:1.2 }}>Patient Reports Directory</div>
+                <div className="rp-mono" style={{ fontSize:9, color:"rgba(255,255,255,.28)", textTransform:"uppercase", letterSpacing:".14em", marginTop:3 }}>Select a patient for detailed analytics &amp; clinical notes</div>
+              </div>
+            </div>
+            <div style={{ display:"flex", alignItems:"center", gap:8, position:"relative", zIndex:2 }}>
+              <div style={{ width:7, height:7, borderRadius:"50%", background:"#2DD4BF", boxShadow:"0 0 10px #2DD4BF", animation:"rp-pulse 2s ease-in-out infinite" }} />
+              <span className="rp-mono" style={{ fontSize:9, color:"rgba(45,212,191,.65)", letterSpacing:".14em", textTransform:"uppercase" }}>
+                {loading ? "Loading…" : `${patients.length} Active Patients`}
+              </span>
+            </div>
+          </div>
+
+          {/* Column labels */}
+          {!loading && patients.length > 0 && (
+            <div className="rp-mono" style={{ display:"grid", gridTemplateColumns:"1fr auto", fontSize:9, color:"rgba(255,255,255,.22)", textTransform:"uppercase", letterSpacing:".16em", padding:"10px 32px", borderBottom:"1px solid rgba(45,212,191,.05)", background:"rgba(0,0,0,.12)" }}>
+              <span>Patient / Condition</span>
+              <span style={{ marginRight:36 }}>ID</span>
+            </div>
+          )}
+
+          {/* Body */}
+          {loading ? (
+            <div style={{ padding:"56px 0", display:"flex", flexDirection:"column", alignItems:"center", gap:14 }}>
+              <Loader2 size={32} color="#2DD4BF" style={{ animation:"rp-spin 1s linear infinite" }} />
+              <span className="rp-mono" style={{ fontSize:10, color:"rgba(45,212,191,.45)", letterSpacing:".14em" }}>LOADING PATIENT DATA…</span>
+            </div>
+          ) : patients.length === 0 ? (
+            <div style={{ padding:"56px 0", textAlign:"center" }}>
+              <div style={{ width:60, height:60, borderRadius:"50%", background:"rgba(45,212,191,.07)", border:"1px solid rgba(45,212,191,.12)", display:"flex", alignItems:"center", justifyContent:"center", margin:"0 auto 16px", color:"#2DD4BF" }}>
+                <Users size={26} />
+              </div>
+              <p className="rp-display" style={{ fontSize:15, fontWeight:700, color:"rgba(255,255,255,.7)", marginBottom:5 }}>No active patients found</p>
+              <p className="rp-mono" style={{ fontSize:10, color:"rgba(255,255,255,.25)", letterSpacing:".08em" }}>Patients will appear once connected to your profile.</p>
+            </div>
+          ) : (
+            patients.map((p, i) => (
+              <div
+                key={p.id}
+                className="rp-patient-row"
+                onClick={() => router.push(`/doctor/reports/${p.id}`)}
+                style={{
+                  display:"flex", alignItems:"center", justifyContent:"space-between",
+                  padding:"16px 32px",
+                  borderBottom: i < patients.length-1 ? "1px solid rgba(45,212,191,.05)" : "none",
+                  animationDelay:`${.68 + i*.06}s`,
+                }}>
+                <div style={{ display:"flex", alignItems:"center", gap:16 }}>
+                  {/* Avatar */}
+                  <div style={{ width:44, height:44, borderRadius:14, background:`linear-gradient(135deg, rgba(45,212,191,.18) 0%, rgba(8,145,178,.10) 100%)`, border:"1px solid rgba(45,212,191,.18)", display:"flex", alignItems:"center", justifyContent:"center", fontSize:17, fontWeight:800, color:"#2DD4BF", flexShrink:0 }}>
+                    {p.name ? p.name.charAt(0).toUpperCase() : "P"}
+                  </div>
+                  <div>
+                    <div className="rp-display" style={{ fontSize:14.5, fontWeight:700, color:"rgba(255,255,255,.88)", marginBottom:3 }}>{p.name || "Unknown Patient"}</div>
+                    <div className="rp-mono" style={{ fontSize:9.5, color:"rgba(255,255,255,.28)", letterSpacing:".06em" }}>{p.condition || "Neurological Rehabilitation"}</div>
+                  </div>
+                </div>
+                <div style={{ display:"flex", alignItems:"center", gap:14 }}>
+                  <div className="rp-mono" style={{ fontSize:10, color:"rgba(45,212,191,.55)", background:"rgba(45,212,191,.07)", border:"1px solid rgba(45,212,191,.12)", borderRadius:8, padding:"4px 11px", letterSpacing:".10em" }}>
+                    {(p.patientId || p.id.slice(0,8)).toUpperCase()}
+                  </div>
+                  <div style={{ width:30, height:30, borderRadius:"50%", background:"rgba(45,212,191,.08)", border:"1px solid rgba(45,212,191,.15)", display:"flex", alignItems:"center", justifyContent:"center", color:"rgba(45,212,191,.7)", transition:"all .2s ease" }}>
+                    <ChevronRight size={15} />
+                  </div>
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+
+        {/* Error */}
+        {error && (
+          <div style={{ marginTop:16, background:"rgba(248,113,113,.07)", border:"1px solid rgba(248,113,113,.20)", borderRadius:14, padding:"13px 18px", color:"#f87171", fontSize:13, display:"flex", alignItems:"center", gap:8 }}>
+            <AlertTriangle size={15} /> {error}
+          </div>
+        )}
       </div>
     </div>
   );

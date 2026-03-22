@@ -620,6 +620,14 @@ const CSS = `
   }
   .hc-accordion-trigger:hover { background:rgba(240,244,248,0.6); }
   .hc-accordion-trigger.open  { background:rgba(240,244,248,0.5); }
+  .hc-accordion-head {
+    display:flex; align-items:flex-start; gap:14px;
+    flex:1; min-width:0;
+  }
+  .hc-accordion-index,
+  .hc-accordion-chevron {
+    flex-shrink:0;
+  }
   .hc-accordion-content {
     padding:0 24px 22px;
     animation:hcAccordionOpen 0.28s cubic-bezier(0.22,1,0.36,1) both;
@@ -733,67 +741,100 @@ const CSS = `
   .hc::-webkit-scrollbar-thumb { background:rgba(45,212,191,0.25); border-radius:99px; }
 
   /* ── Dark Mode Surface Overrides ─────────────────────── */
-  .dark .hc [style*="background:#fff"],
-  .dark .hc [style*="background: #fff"],
-  .dark .hc [style*="background:rgba(255,255,255,0.95)"],
-  .dark .hc [style*="background: rgba(255,255,255,0.95)"],
-  .dark .hc [style*="background:rgba(240,244,248"],
-  .dark .hc [style*="background: rgba(240,244,248"],
-  .dark .hc [style*="background:'#F0F4F8'"],
-  .dark .hc [style*="background: '#F0F4F8'"] {
-    background:#0f172a !important;
+  .hc.hc-dark {
+    color:#cbd5e1;
   }
 
-  .dark .hc [style*="color:#0B1E33"],
-  .dark .hc [style*="color: #0B1E33"],
-  .dark .hc [style*="color:#1e293b"],
-  .dark .hc [style*="color: #1e293b"] {
-    color:#e2e8f0 !important;
-  }
-
-  .dark .hc [style*="color:#64748b"],
-  .dark .hc [style*="color: #64748b"],
-  .dark .hc [style*="color:#94a3b8"],
-  .dark .hc [style*="color: #94a3b8"] {
-    color:#94a3b8 !important;
-  }
-
-  .dark .hc .hc-search,
-  .dark .hc .hc-accordion-item,
-  .dark .hc .hc-contact-card,
-  .dark .hc .hc-compare-box {
+  .hc.hc-dark .hc-search,
+  .hc.hc-dark .hc-accordion-item,
+  .hc.hc-dark .hc-contact-card,
+  .hc.hc-dark .hc-compare-box,
+  .hc.hc-dark .hc-empty-state,
+  .hc.hc-dark .hc-ticket-shell {
     background:#0f172a !important;
     border-color:rgba(51,65,85,0.9) !important;
     color:#e2e8f0 !important;
   }
 
-  .dark .hc .hc-accordion-trigger:hover,
-  .dark .hc .hc-accordion-trigger.open {
+  .hc.hc-dark .hc-quick-card {
+    border-color:rgba(71,85,105,0.85) !important;
+    box-shadow:0 2px 16px rgba(2,6,23,0.45);
+  }
+
+  .hc.hc-dark .hc-quick-title,
+  .hc.hc-dark .hc-section-title,
+  .hc.hc-dark .hc-category-title,
+  .hc.hc-dark .hc-question-text,
+  .hc.hc-dark .hc-contact-title {
+    color:#e2e8f0 !important;
+  }
+
+  .hc.hc-dark .hc-quick-desc,
+  .hc.hc-dark .hc-section-subtitle,
+  .hc.hc-dark .hc-contact-sub,
+  .hc.hc-dark .hc-muted {
+    color:#94a3b8 !important;
+  }
+
+  .hc.hc-dark .hc-accordion-trigger:hover,
+  .hc.hc-dark .hc-accordion-trigger.open {
     background:rgba(30,41,59,0.8) !important;
   }
 
-  .dark .hc .hc-accordion-content,
-  .dark .hc .hc-accordion-content p,
-  .dark .hc .hc-accordion-content li,
-  .dark .hc .hc-accordion-content em,
-  .dark .hc .hc-compare-title {
+  .hc.hc-dark .hc-accordion-index,
+  .hc.hc-dark .hc-accordion-chevron {
+    background:rgba(30,41,59,0.9) !important;
+    border-color:rgba(71,85,105,0.9) !important;
+    color:#94a3b8 !important;
+  }
+
+  .hc.hc-dark .hc-category-line {
+    background:rgba(51,65,85,0.85) !important;
+  }
+
+  .hc.hc-dark .hc-accordion-content {
+    border-top-color:rgba(51,65,85,0.85) !important;
+  }
+
+  .hc.hc-dark .hc-accordion-content,
+  .hc.hc-dark .hc-accordion-content p,
+  .hc.hc-dark .hc-accordion-content li,
+  .hc.hc-dark .hc-accordion-content em,
+  .hc.hc-dark .hc-compare-title {
     color:#cbd5e1 !important;
   }
 
-  .dark .hc .hc-code,
-  .dark .hc .hc-formula,
-  .dark .hc .hc-formula p {
+  .hc.hc-dark .hc-code,
+  .hc.hc-dark .hc-formula,
+  .hc.hc-dark .hc-formula p {
     background:rgba(30,41,59,0.85) !important;
     border-color:rgba(71,85,105,0.8) !important;
     color:#e2e8f0 !important;
   }
 
-  .dark .hc .hc-formula-label {
+  .hc.hc-dark .hc-formula-label {
     color:#94a3b8 !important;
   }
 
-  .dark .hc .hc-filter-tab {
+  .hc.hc-dark .hc-compare-box-indigo {
+    background:rgba(79,70,229,0.12) !important;
+    border-color:rgba(99,102,241,0.35) !important;
+  }
+
+  .hc.hc-dark .hc-filter-tab {
     border:1px solid rgba(71,85,105,0.8);
+  }
+
+  .hc.hc-dark .hc-input,
+  .hc.hc-dark .hc-textarea {
+    background:rgba(15,23,42,0.82) !important;
+    border-color:rgba(71,85,105,0.9) !important;
+    color:#e2e8f0 !important;
+  }
+
+  .hc.hc-dark .hc-input::placeholder,
+  .hc.hc-dark .hc-textarea::placeholder {
+    color:#64748b;
   }
 
   /* ── Responsive ───────────────────────────────────────── */
@@ -807,7 +848,18 @@ const CSS = `
     .hc-quick-grid { grid-template-columns:1fr; }
     .hc-contact-grid { grid-template-columns:1fr; }
     .hc .hc-pad { padding:18px 14px !important; }
-    .hc-accordion-trigger { padding:16px 18px !important; }
+    .hc-accordion-trigger { padding:14px 14px !important; gap:10px !important; }
+    .hc-accordion-head { gap:10px !important; }
+    .hc-question-text { font-size:13px !important; line-height:1.4 !important; }
+    .hc-accordion-index,
+    .hc-accordion-chevron {
+      width:26px !important;
+      height:26px !important;
+      border-radius:8px !important;
+    }
+    .hc-category-head { align-items:flex-start !important; gap:10px !important; }
+    .hc-category-line { display:none !important; }
+    .hc-ticket-grid { grid-template-columns:1fr !important; }
     .hc-accordion-content { padding:0 18px 18px !important; }
   }
 `;
@@ -843,8 +895,9 @@ function AccordionItem({
         onClick={onToggle}
         aria-expanded={isOpen}>
         {/* Number + question */}
-        <div style={{ display: "flex", alignItems: "flex-start", gap: 14 }}>
+        <div className="hc-accordion-head">
           <div
+            className="hc-accordion-index"
             style={{
               width: 28,
               height: 28,
@@ -865,6 +918,7 @@ function AccordionItem({
             {String(index + 1).padStart(2, "0")}
           </div>
           <span
+            className="hc-question-text"
             style={{
               fontSize: 14.5,
               fontWeight: 700,
@@ -878,6 +932,7 @@ function AccordionItem({
 
         {/* Chevron icon */}
         <div
+          className="hc-accordion-chevron"
           style={{
             width: 30,
             height: 30,
@@ -923,6 +978,7 @@ function CategorySection({
     <div id={cat.id} style={{ scrollMarginTop: 24 }}>
       {/* Category header */}
       <div
+        className="hc-category-head"
         style={{
           display: "flex",
           alignItems: "center",
@@ -946,6 +1002,7 @@ function CategorySection({
         </div>
         <div>
           <h2
+            className="hc-category-title"
             style={{
               fontSize: 15,
               fontWeight: 800,
@@ -975,6 +1032,7 @@ function CategorySection({
           </div>
         </div>
         <div
+          className="hc-category-line"
           style={{
             flex: 1,
             height: 1,
@@ -1056,7 +1114,7 @@ export default function DoctorHelpPage() {
 
   return (
     <div
-      className="hc"
+      className={`hc ${isDark ? "hc-dark" : ""}`.trim()}
       style={{
         minHeight: "100vh",
         background: isDark ? "#0b1220" : "#F0F4F8",
@@ -1386,18 +1444,32 @@ export default function DoctorHelpPage() {
           ].map((tab) => (
             <button
               key={tab.id}
-              className="hc-filter-tab"
+              className={`hc-filter-tab ${activeFilter === tab.id ? "hc-filter-active" : ""}`}
               onClick={() => {
                 setFilter(tab.id);
                 setSearch("");
               }}
               style={{
-                background: activeFilter === tab.id ? "#0B1E33" : "#fff",
-                color: activeFilter === tab.id ? "#fff" : "#64748b",
-                border: `1.5px solid ${activeFilter === tab.id ? "transparent" : "rgba(226,232,240,0.9)"}`,
+                background:
+                  activeFilter === tab.id
+                    ? isDark
+                      ? "#1e293b"
+                      : "#0B1E33"
+                    : isDark
+                      ? "#0f172a"
+                      : "#fff",
+                color:
+                  activeFilter === tab.id
+                    ? "#fff"
+                    : isDark
+                      ? "#cbd5e1"
+                      : "#64748b",
+                border: `1.5px solid ${activeFilter === tab.id ? (isDark ? "rgba(45,212,191,0.35)" : "transparent") : isDark ? "rgba(71,85,105,0.8)" : "rgba(226,232,240,0.9)"}`,
                 boxShadow:
                   activeFilter === tab.id
-                    ? "0 4px 14px rgba(11,30,51,0.20)"
+                    ? isDark
+                      ? "0 6px 18px rgba(2,6,23,0.45)"
+                      : "0 4px 14px rgba(11,30,51,0.20)"
                     : "none",
               }}>
               {tab.icon}
@@ -1425,12 +1497,15 @@ export default function DoctorHelpPage() {
         ══════════════════════════════════════════════════ */}
         {visibleCategories.length === 0 ? (
           <div
+            className="hc-empty-state"
             style={{
               textAlign: "center",
               padding: "60px 24px",
-              background: "#fff",
+              background: isDark ? "#0f172a" : "#fff",
               borderRadius: 18,
-              border: "1px solid rgba(226,232,240,0.9)",
+              border: isDark
+                ? "1px solid rgba(51,65,85,0.9)"
+                : "1px solid rgba(226,232,240,0.9)",
               animation: "hcFadeUp 0.4s ease both",
             }}>
             <HelpCircle
@@ -1523,6 +1598,7 @@ export default function DoctorHelpPage() {
               </span>
             </div>
             <h2
+              className="hc-section-title"
               style={{
                 fontSize: 22,
                 fontWeight: 800,
@@ -1532,6 +1608,7 @@ export default function DoctorHelpPage() {
               Still need help?
             </h2>
             <p
+              className="hc-section-subtitle"
               style={{
                 fontSize: 13.5,
                 color: "#64748b",
@@ -1554,9 +1631,9 @@ export default function DoctorHelpPage() {
                 bg: "rgba(45,212,191,0.10)",
                 border: "rgba(45,212,191,0.25)",
                 title: "Email Support",
-                detail: "support@revivex.com",
+                detail: "revivex13@gmail.com",
                 sub: "Response within 4 business hours",
-                href: "mailto:support@revivex.com",
+                href: "mailto:revivex13@gmail.com",
               },
               {
                 icon: <Phone size={20} />,
@@ -1564,9 +1641,9 @@ export default function DoctorHelpPage() {
                 bg: "rgba(99,102,241,0.10)",
                 border: "rgba(99,102,241,0.25)",
                 title: "Phone Hotline",
-                detail: "+94 11 234 5678",
+                detail: "+94 77 38 47510",
                 sub: "Mon–Fri 8 AM – 6 PM (IST)",
-                href: "tel:+94112345678",
+                href: "tel:+94773847510",
               },
               {
                 icon: <Settings2 size={20} />,
@@ -1574,9 +1651,9 @@ export default function DoctorHelpPage() {
                 bg: "rgba(245,158,11,0.10)",
                 border: "rgba(245,158,11,0.25)",
                 title: "System Admin",
-                detail: "admin@revivex.com",
+                detail: "revivex13@gmail.com",
                 sub: "Compliance, access & security",
-                href: "mailto:admin@revivex.com",
+                href: "mailto:revivex13@gmail.com",
               },
             ].map((c, i) => (
               <a
@@ -1603,6 +1680,7 @@ export default function DoctorHelpPage() {
                 </div>
                 <div>
                   <div
+                    className="hc-contact-title"
                     style={{
                       fontSize: 13.5,
                       fontWeight: 800,
@@ -1616,6 +1694,7 @@ export default function DoctorHelpPage() {
                     {c.detail}
                   </div>
                   <div
+                    className="hc-contact-sub"
                     style={{ fontSize: 11.5, color: "#94a3b8", marginTop: 2 }}>
                     {c.sub}
                   </div>
@@ -1631,10 +1710,13 @@ export default function DoctorHelpPage() {
 
           {/* Submit a ticket */}
           <div
+            className="hc-ticket-shell"
             style={{
-              background: "#fff",
+              background: isDark ? "#0f172a" : "#fff",
               borderRadius: 20,
-              border: "1.5px solid rgba(226,232,240,0.9)",
+              border: isDark
+                ? "1.5px solid rgba(51,65,85,0.9)"
+                : "1.5px solid rgba(226,232,240,0.9)",
               boxShadow: "0 2px 20px rgba(11,30,51,0.06)",
               overflow: "hidden",
               animation:
@@ -1735,6 +1817,7 @@ export default function DoctorHelpPage() {
                 <div
                   style={{ display: "flex", flexDirection: "column", gap: 14 }}>
                   <div
+                    className="hc-ticket-grid"
                     style={{
                       display: "grid",
                       gridTemplateColumns: "1fr 1fr",
@@ -1765,16 +1848,21 @@ export default function DoctorHelpPage() {
                           {field.label}
                         </label>
                         <input
+                          className="hc-input"
                           placeholder={field.placeholder}
                           style={{
                             width: "100%",
                             padding: "10px 14px",
-                            background: "rgba(240,244,248,0.75)",
-                            border: "1.5px solid rgba(226,232,240,0.9)",
+                            background: isDark
+                              ? "rgba(15,23,42,0.82)"
+                              : "rgba(240,244,248,0.75)",
+                            border: isDark
+                              ? "1.5px solid rgba(71,85,105,0.9)"
+                              : "1.5px solid rgba(226,232,240,0.9)",
                             borderRadius: 11,
                             fontSize: 13,
                             fontWeight: 500,
-                            color: "#0B1E33",
+                            color: isDark ? "#e2e8f0" : "#0B1E33",
                             outline: "none",
                             fontFamily: "'Plus Jakarta Sans',sans-serif",
                             transition: "all 0.2s ease",
@@ -1782,15 +1870,19 @@ export default function DoctorHelpPage() {
                           onFocus={(e) => {
                             e.target.style.borderColor =
                               "rgba(45,212,191,0.50)";
-                            e.target.style.background = "#fff";
+                            e.target.style.background = isDark
+                              ? "rgba(15,23,42,0.95)"
+                              : "#fff";
                             e.target.style.boxShadow =
                               "0 0 0 3px rgba(45,212,191,0.10)";
                           }}
                           onBlur={(e) => {
-                            e.target.style.borderColor =
-                              "rgba(226,232,240,0.9)";
-                            e.target.style.background =
-                              "rgba(240,244,248,0.75)";
+                            e.target.style.borderColor = isDark
+                              ? "rgba(71,85,105,0.9)"
+                              : "rgba(226,232,240,0.9)";
+                            e.target.style.background = isDark
+                              ? "rgba(15,23,42,0.82)"
+                              : "rgba(240,244,248,0.75)";
                             e.target.style.boxShadow = "none";
                           }}
                         />
@@ -1813,6 +1905,7 @@ export default function DoctorHelpPage() {
                       Describe the issue
                     </label>
                     <textarea
+                      className="hc-textarea"
                       rows={4}
                       value={ticketMsg}
                       onChange={(e) => setTicketMsg(e.target.value)}
@@ -1820,12 +1913,16 @@ export default function DoctorHelpPage() {
                       style={{
                         width: "100%",
                         padding: "12px 14px",
-                        background: "rgba(240,244,248,0.75)",
-                        border: "1.5px solid rgba(226,232,240,0.9)",
+                        background: isDark
+                          ? "rgba(15,23,42,0.82)"
+                          : "rgba(240,244,248,0.75)",
+                        border: isDark
+                          ? "1.5px solid rgba(71,85,105,0.9)"
+                          : "1.5px solid rgba(226,232,240,0.9)",
                         borderRadius: 13,
                         fontSize: 13,
                         fontWeight: 500,
-                        color: "#0B1E33",
+                        color: isDark ? "#e2e8f0" : "#0B1E33",
                         outline: "none",
                         resize: "none",
                         lineHeight: 1.7,
@@ -1834,13 +1931,19 @@ export default function DoctorHelpPage() {
                       }}
                       onFocus={(e) => {
                         e.target.style.borderColor = "rgba(45,212,191,0.50)";
-                        e.target.style.background = "#fff";
+                        e.target.style.background = isDark
+                          ? "rgba(15,23,42,0.95)"
+                          : "#fff";
                         e.target.style.boxShadow =
                           "0 0 0 3px rgba(45,212,191,0.10)";
                       }}
                       onBlur={(e) => {
-                        e.target.style.borderColor = "rgba(226,232,240,0.9)";
-                        e.target.style.background = "rgba(240,244,248,0.75)";
+                        e.target.style.borderColor = isDark
+                          ? "rgba(71,85,105,0.9)"
+                          : "rgba(226,232,240,0.9)";
+                        e.target.style.background = isDark
+                          ? "rgba(15,23,42,0.82)"
+                          : "rgba(240,244,248,0.75)";
                         e.target.style.boxShadow = "none";
                       }}
                     />
@@ -1913,14 +2016,24 @@ export default function DoctorHelpPage() {
                         gap: 8,
                         padding: "12px 24px",
                         borderRadius: 13,
-                        border: "none",
+                        border: ticketMsg.trim()
+                          ? "1px solid rgba(45,212,191,0.18)"
+                          : isDark
+                            ? "1px solid rgba(71,85,105,0.95)"
+                            : "1px solid rgba(203,213,225,0.95)",
                         background: ticketMsg.trim()
                           ? "linear-gradient(135deg,#2DD4BF,#0891b2)"
-                          : "rgba(226,232,240,0.9)",
-                        color: ticketMsg.trim() ? "#0B1E33" : "#94a3b8",
+                          : isDark
+                            ? "rgba(51,65,85,0.65)"
+                            : "rgba(226,232,240,0.9)",
+                        color: ticketMsg.trim()
+                          ? "#0B1E33"
+                          : isDark
+                            ? "#94a3b8"
+                            : "#94a3b8",
                         fontSize: 13,
                         fontWeight: 800,
-                        cursor: ticketMsg.trim() ? "pointer" : "default",
+                        cursor: ticketMsg.trim() ? "pointer" : "not-allowed",
                         boxShadow: ticketMsg.trim()
                           ? "0 6px 20px rgba(45,212,191,0.30)"
                           : "none",

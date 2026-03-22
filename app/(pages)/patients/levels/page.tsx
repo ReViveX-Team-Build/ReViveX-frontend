@@ -29,7 +29,7 @@ import {
 } from "lucide-react";
 
 // --- FIREBASE IMPORTS ---
-import { auth, db } from "../../../lib/firebase";
+import { auth, db } from "@/app/lib/firebase";
 import {
   doc,
   getDoc,
@@ -44,7 +44,7 @@ import {
   PatientData,
   TherapyProtocol,
   GameSession,
-} from "../../../lib/db/types";
+} from "@/app/lib/db/types";
 import { useAuthState } from "react-firebase-hooks/auth";
 
 /* ═══════════════════════════════════════════
@@ -71,17 +71,17 @@ interface Level {
 }
 
 /* ═══════════════════════════════════════════
-   BASE DATA LIBRARY (Fallback / Template)
+   BASE DATA LIBRARY (Testing Phase Maps)
 ═══════════════════════════════════════════ */
 const BASE_LEVELS: Level[] = [
   {
     id: 1,
-    title: "The Flow",
+    title: "Synapse Racer: Base",
     category: "MOTOR",
-    desc: "Baseline calibration and introductory motor control. Establishes your squeeze-force baseline for the hardware sensor.",
+    desc: "Motor baseline. Practice your squeeze control to collect golden pearls with forgiving pressure limits.",
     locked: false,
-    path: "/game/level-1",
-    difficulty: "Calibration",
+    path: "/games/synapse_racer?level=1",
+    difficulty: "Easy",
     difficultyN: 1,
     accentHex: "#2DD4BF",
     icon: <Waves size={18} />,
@@ -93,45 +93,45 @@ const BASE_LEVELS: Level[] = [
   },
   {
     id: 2,
-    title: "Rhythm Reef",
-    category: "MOTOR",
-    desc: "Develop grip timing and fine coordination. Synchronise your squeeze cadence with oncoming pearl patterns.",
+    title: "Synapse Racer: Pro",
+    category: "COGNITIVE",
+    desc: "Cognitive dual-tasking. Collect blue targets and avoid red decoys under strict pressure constraints.",
     locked: false,
-    path: "/game/level-2",
+    path: "/games/synapse_racer?level=2",
     difficulty: "Medium",
     difficultyN: 2,
     accentHex: "#8b5cf6",
-    icon: <Radio size={18} />,
+    icon: <Brain size={18} />,
     xp: 280,
     duration: "15 min",
     completedSessions: 2,
     targetSessions: 5,
-    tags: ["Timing", "Coordination"],
+    tags: ["Dual-Task", "Coordination"],
   },
   {
     id: 3,
-    title: "Memory Trench",
+    title: "Sky Bird: Novice",
     category: "COGNITIVE",
-    desc: "Cognitive dual-tasking protocol. Navigate while sequencing colour targets from working memory.",
-    locked: true,
-    path: "/game/level-3",
-    difficulty: "Hard",
+    desc: "Introduction to dual-tasking. Match sequences while holding sustained grip force.",
+    locked: false,
+    path: "/game/sky-memory?level=3",
+    difficulty: "Medium",
     difficultyN: 3,
     accentHex: "#f59e0b",
     icon: <Brain size={18} />,
     xp: 450,
-    duration: "20 min",
+    duration: "15 min",
     completedSessions: 0,
     targetSessions: 5,
     tags: ["Dual-Task", "Memory"],
   },
   {
     id: 4,
-    title: "Precision Peaks",
-    category: "MOTOR",
-    desc: "Micro-force control training. Thread the fish through sub-pixel gate windows at increasing speed.",
-    locked: true,
-    path: "/game/level-4",
+    title: "Sky Bird: Advanced",
+    category: "COGNITIVE",
+    desc: "Complex sequencing under time pressure. Strains working memory alongside muscle endurance.",
+    locked: false,
+    path: "/game/sky-memory?level=4",
     difficulty: "Hard",
     difficultyN: 4,
     accentHex: "#22c55e",
@@ -140,15 +140,15 @@ const BASE_LEVELS: Level[] = [
     duration: "20 min",
     completedSessions: 0,
     targetSessions: 5,
-    tags: ["Fine Motor", "Speed"],
+    tags: ["Memory", "Speed"],
   },
   {
     id: 5,
-    title: "Abyss Mastery",
+    title: "Sky Bird: Elite",
     category: "STRENGTH",
-    desc: "Sustained endurance protocol. Maintain consistent grip force for the full session against adaptive resistance.",
-    locked: true,
-    path: "/game/level-5",
+    desc: "Ultimate cognitive-motor challenge. Long sequences and heavy resistance constraints.",
+    locked: false,
+    path: "/game/sky-memory?level=5",
     difficulty: "Expert",
     difficultyN: 5,
     accentHex: "#ef4444",
@@ -157,7 +157,7 @@ const BASE_LEVELS: Level[] = [
     duration: "25 min",
     completedSessions: 0,
     targetSessions: 5,
-    tags: ["Endurance", "Strength"],
+    tags: ["Endurance", "Cognitive"],
   },
 ];
 
@@ -978,9 +978,8 @@ export default function LevelsPage() {
 
   // --- FIREBASE STATES ---
   const [patientData, setPatientData] = useState<PatientData | null>(null);
-  const [activeProtocol, setActiveProtocol] = useState<TherapyProtocol | null>(
-    null,
-  );
+  const [activeProtocol, setActiveProtocol] = useState<TherapyProtocol | null>(null);
+  const [nextSession, setNextSession] = useState<GameSession | null>(null);
   const [clinicalStats, setClinicalStats] = useState({
     accuracy: 0,
     streak: 0,
@@ -1026,29 +1025,39 @@ export default function LevelsPage() {
           setActiveProtocol(protocolSnap.docs[0].data() as TherapyProtocol);
         }
 
-        // 3. Fetch Recent Sessions (To calculate Grip Accuracy)
+        // 3. Fetch Recent Sessions (To calculate Accuracy & Find Next Scheduled)
         const sessionQuery = query(
-          collection(db, "game_sessions"),
-          where("userId", "==", uid),
-          orderBy("timestamp", "desc"),
-          limit(7),
+          collection(db, "scheduled_sessions"),
+          where("patientId", "==", uid)
         );
-        const sessionSnap = await getDocs(sessionQuery);
+        const sSnap = await getDocs(sessionQuery);
+        const allSessions = sSnap.docs.map((d) => ({ id: d.id, ...d.data() }));
+        
+        const now = new Date();
         let totalAccuracy = 0;
         let count = 0;
 
-        sessionSnap.forEach((doc) => {
-          const s = doc.data() as GameSession;
-          if (s.metrics && s.metrics.cognitiveAccuracyPercent !== undefined) {
-            totalAccuracy += s.metrics.cognitiveAccuracyPercent;
-            count++;
+        const futureSessions = allSessions.filter((s: any) => {
+          if (s.status === "completed") {
+             if (s.accuracy) {
+                 totalAccuracy += s.accuracy;
+                 count++;
+             }
+             return false;
           }
-        });
+          if (s.status === "cancelled" || s.status === "missed") return false;
+          return new Date(`${s.scheduledDate}T${s.scheduledTime}`) >= now;
+        }).sort((a: any, b: any) => new Date(`${a.scheduledDate}T${a.scheduledTime}`).getTime() - new Date(`${b.scheduledDate}T${b.scheduledTime}`).getTime());
+
+        if (futureSessions.length > 0) {
+          setNextSession(futureSessions[0] as GameSession);
+        }
 
         setClinicalStats({
           accuracy: count > 0 ? Math.round(totalAccuracy / count) : 0,
           streak: userData?.gamification?.currentStreak || 0,
         });
+
       } catch (error) {
         console.error("Error fetching data:", error);
       } finally {
@@ -1090,12 +1099,10 @@ export default function LevelsPage() {
   }
 
   // --- DYNAMIC LEVEL MAPPING ---
-  // Overrides the hardcoded 'locked' status based on Firebase data
+  // 🔴 FORCED UNLOCKED FOR TESTING PHASE (as requested)
   const dynamicLevels = BASE_LEVELS.map((level) => ({
     ...level,
-    locked: !(patientData?.gamification?.unlockedLevels ?? [1]).includes(
-      level.id,
-    ),
+    locked: false, 
   }));
 
   const filteredLevels =
@@ -1104,31 +1111,24 @@ export default function LevelsPage() {
       : dynamicLevels.filter((l) => l.category === activeCategory);
 
   // Dynamic variables for UI bindings
-  const unlockedCount = patientData?.gamification?.unlockedLevels?.length || 0;
-  const totalXp = patientData?.gamification?.totalXp || 0;
+  const unlockedCount = dynamicLevels.filter(l => !l.locked).length;
+  const totalXp = (patientData as any)?.xp || patientData?.gamification?.totalXp || 0;
 
-  // Find the exact level the doctor assigned (or fallback to Level 1)
-  const assignedLevelId = activeProtocol ? activeProtocol.level : 1;
-  const assignedLevelData =
-    dynamicLevels.find((l) => l.id === assignedLevelId) || dynamicLevels[0];
-
-  // Dynamic Hero Card Data
-  const assignedTitle =
-    activeProtocol?.gameId === "synapse_racer"
-      ? "Synapse Racer"
-      : "Stability Game";
-  const assignedDuration = assignedLevelData.duration;
-  const targetHandFormatted = activeProtocol?.targetHand
-    ? activeProtocol.targetHand.charAt(0).toUpperCase() +
-      activeProtocol.targetHand.slice(1) +
-      " Hand"
-    : "Right Hand";
-  const doctorInstructions =
-    "Focus on maintaining grip strength during the fast sections. Aim for consistent timing — not maximum force."; // Replace with activeProtocol.doctorNote if you added it to DB schema
-  const assignedPath =
-    activeProtocol?.gameId === "synapse_racer"
-      ? "/game/level-1"
-      : "/game/stability";
+  // Dynamic Hero Card Data based on next scheduled session
+  const activeGameId = nextSession?.gameId || activeProtocol?.gameId || "synapse_racer";
+  const assignedTitle = activeGameId === "synapse_racer" ? "Synapse Racer" : (activeGameId.includes("memory") ? "Memory Gate" : "Therapy Game");
+  
+  const assignedLevelId = nextSession?.level || activeProtocol?.level || 1;
+  const assignedLevelData = dynamicLevels.find((l) => l.id === assignedLevelId) || dynamicLevels[0];
+  
+  const assignedDuration = (nextSession as any)?.durationMinutes ? `${(nextSession as any).durationMinutes} min` : "15 min";
+  
+  const targetHandRaw = nextSession?.targetHand || activeProtocol?.targetHand || "right";
+  const targetHandFormatted = targetHandRaw.charAt(0).toUpperCase() + targetHandRaw.slice(1) + " Hand";
+  
+  const doctorInstructions = activeProtocol?.doctorNote || "Focus on maintaining grip strength during the fast sections. Aim for consistent timing — not maximum force.";
+  
+  const assignedPath = `/games/${activeGameId}?sessionId=${nextSession?.id || 'practice'}&level=${assignedLevelId}`;
 
   // Find next locked level for the Teaser
   const nextLockedLevel = dynamicLevels.find((l) => l.locked);
@@ -1398,7 +1398,7 @@ export default function LevelsPage() {
                     color: "#0B1E33",
                     lineHeight: 1,
                   }}>
-                  {unlockedCount} / 5
+                  {unlockedCount} / {BASE_LEVELS.length}
                 </div>
               </div>
             </div>
@@ -1411,16 +1411,14 @@ export default function LevelsPage() {
         <div className="lv-main-grid">
           {/* ── LEFT COLUMN ────────────────────────────────────── */}
           <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
-            {/* ── HERO: ASSIGNED SESSION ────────────────────────── */}
+           {/* ── HERO: ASSIGNED SESSION ────────────────────────── */}
             <div
               style={{
-                animation:
-                  "cardPop 0.55s cubic-bezier(0.22,1,0.36,1) 0.08s both",
+                animation: "cardPop 0.55s cubic-bezier(0.22,1,0.36,1) 0.08s both",
                 background: "#0B1E33",
                 borderRadius: 24,
                 overflow: "hidden",
-                boxShadow:
-                  "0 16px 60px rgba(11,30,51,0.22), 0 0 0 1px rgba(45,212,191,0.08)",
+                boxShadow: "0 16px 60px rgba(11,30,51,0.22), 0 0 0 1px rgba(45,212,191,0.08)",
                 position: "relative",
               }}>
               {/* Grid overlay */}
@@ -1429,54 +1427,30 @@ export default function LevelsPage() {
                   position: "absolute",
                   inset: 0,
                   pointerEvents: "none",
-                  backgroundImage:
-                    "linear-gradient(rgba(45,212,191,0.04) 1px,transparent 1px),linear-gradient(90deg,rgba(45,212,191,0.04) 1px,transparent 1px)",
+                  backgroundImage: "linear-gradient(rgba(45,212,191,0.04) 1px,transparent 1px),linear-gradient(90deg,rgba(45,212,191,0.04) 1px,transparent 1px)",
                   backgroundSize: "36px 36px",
                 }}
               />
               {/* Scanline */}
-              <div
-                style={{
-                  position: "absolute",
-                  inset: 0,
-                  overflow: "hidden",
-                  pointerEvents: "none",
-                }}>
+              <div style={{ position: "absolute", inset: 0, overflow: "hidden", pointerEvents: "none" }}>
                 <div
                   style={{
                     position: "absolute",
                     left: 0,
                     right: 0,
                     height: "14%",
-                    background:
-                      "linear-gradient(to bottom,transparent,rgba(45,212,191,0.06),transparent)",
+                    background: "linear-gradient(to bottom,transparent,rgba(45,212,191,0.06),transparent)",
                     animation: "scanLine 5s linear infinite",
                   }}
                 />
               </div>
               {/* Diagonal accent lines */}
-              <div
-                style={{
-                  position: "absolute",
-                  top: 0,
-                  right: 0,
-                  width: "50%",
-                  height: "100%",
-                  overflow: "hidden",
-                  pointerEvents: "none",
-                }}>
-                {[
-                  { r: "-25deg", o: "10%" },
-                  { r: "-42deg", o: "28%" },
-                ].map((a, i) => (
+              <div style={{ position: "absolute", top: 0, right: 0, width: "50%", height: "100%", overflow: "hidden", pointerEvents: "none" }}>
+                {[ { r: "-25deg", o: "10%" }, { r: "-42deg", o: "28%" } ].map((a, i) => (
                   <div
                     key={i}
                     style={{
-                      position: "absolute",
-                      top: "-20%",
-                      right: a.o,
-                      width: 1,
-                      height: "160%",
+                      position: "absolute", top: "-20%", right: a.o, width: 1, height: "160%",
                       background: `linear-gradient(to bottom,transparent,rgba(45,212,191,${0.09 - i * 0.04}),transparent)`,
                       transform: `rotate(${a.r})`,
                     }}
@@ -1484,191 +1458,56 @@ export default function LevelsPage() {
                 ))}
               </div>
 
-              <div
-                style={{
-                  position: "relative",
-                  zIndex: 2,
-                  padding: "28px 28px 24px",
-                }}>
+              <div style={{ position: "relative", zIndex: 2, padding: "28px 28px 24px" }}>
                 {/* Top badge + duration */}
-                <div
-                  style={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "center",
-                    marginBottom: 24,
-                  }}>
-                  <div
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: 8,
-                      background: "rgba(255,255,255,0.07)",
-                      border: "1px solid rgba(255,255,255,0.10)",
-                      borderRadius: 99,
-                      padding: "6px 16px",
-                    }}>
-                    <div
-                      style={{
-                        width: 7,
-                        height: 7,
-                        borderRadius: "50%",
-                        background: "#2DD4BF",
-                        boxShadow: "0 0 6px #2DD4BF",
-                        animation: "dotBlink 2s ease-in-out infinite",
-                      }}
-                    />
-                    <span
-                      className="mono"
-                      style={{
-                        fontSize: 9.5,
-                        color: "rgba(255,255,255,0.80)",
-                        fontWeight: 700,
-                        textTransform: "uppercase",
-                        letterSpacing: "0.16em",
-                      }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 24 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8, background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.10)", borderRadius: 99, padding: "6px 16px" }}>
+                    <div style={{ width: 7, height: 7, borderRadius: "50%", background: "#2DD4BF", boxShadow: "0 0 6px #2DD4BF", animation: "dotBlink 2s ease-in-out infinite" }} />
+                    <span className="mono" style={{ fontSize: 9.5, color: "rgba(255,255,255,0.80)", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.16em" }}>
                       Today's Assignment
                     </span>
                   </div>
-                  <div
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: 6,
-                      color: "rgba(255,255,255,0.35)",
-                    }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 6, color: "rgba(255,255,255,0.35)" }}>
                     <Clock size={13} />
-                    <span
-                      className="mono"
-                      style={{ fontSize: 11, fontWeight: 500 }}>
+                    <span className="mono" style={{ fontSize: 11, fontWeight: 500 }}>
                       {assignedDuration}
                     </span>
                   </div>
                 </div>
 
                 {/* Main content */}
-                <div
-                  className="lv-hero-inner"
-                  style={{
-                    display: "flex",
-                    alignItems: "flex-start",
-                    justifyContent: "space-between",
-                    gap: 28,
-                  }}>
+                <div className="lv-hero-inner" style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 28 }}>
                   <div style={{ flex: 1 }}>
                     <div style={{ marginBottom: 16 }}>
-                      <h2
-                        style={{
-                          fontSize: "clamp(1.8rem,3.2vw,2.6rem)",
-                          fontWeight: 800,
-                          color: "#fff",
-                          letterSpacing: "-0.02em",
-                          lineHeight: 1.1,
-                          margin: 0,
-                        }}>
+                      <h2 style={{ fontSize: "clamp(1.8rem,3.2vw,2.6rem)", fontWeight: 800, color: "#fff", letterSpacing: "-0.02em", lineHeight: 1.1, margin: 0 }}>
                         {assignedTitle}
                         <span style={{ color: "#2DD4BF" }}> Protocol</span>
                       </h2>
-                      <div
-                        className="mono"
-                        style={{
-                          fontSize: 10,
-                          color: "rgba(255,255,255,0.30)",
-                          textTransform: "uppercase",
-                          letterSpacing: "0.20em",
-                          marginTop: 8,
-                        }}>
-                        Level {String(assignedLevelId).padStart(2, "0")} ·{" "}
-                        {targetHandFormatted} ·{" "}
-                        {activeProtocol?.settings.difficulty || "Medium"}
+                      <div className="mono" style={{ fontSize: 10, color: "rgba(255,255,255,0.30)", textTransform: "uppercase", letterSpacing: "0.20em", marginTop: 8 }}>
+                        Level {String(assignedLevelId).padStart(2, "0")} · {targetHandFormatted} · {activeProtocol?.settings?.difficulty || "Medium"}
                       </div>
                     </div>
 
                     {/* Doctor note */}
-                    <div
-                      style={{
-                        background: "rgba(255,255,255,0.05)",
-                        border: "1px solid rgba(255,255,255,0.08)",
-                        borderRadius: 14,
-                        padding: "12px 16px",
-                        marginBottom: 18,
-                        display: "flex",
-                        alignItems: "flex-start",
-                        gap: 10,
-                      }}>
-                      <Stethoscope
-                        size={14}
-                        color="#2DD4BF"
-                        style={{ flexShrink: 0, marginTop: 2 }}
-                      />
-                      <p
-                        style={{
-                          fontSize: 12.5,
-                          color: "rgba(255,255,255,0.60)",
-                          lineHeight: 1.65,
-                          margin: 0,
-                        }}>
-                        <span style={{ color: "#2DD4BF", fontWeight: 700 }}>
-                          Dr. Note:{" "}
-                        </span>
-                        {doctorInstructions}
+                    <div style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 14, padding: "12px 16px", marginBottom: 18, display: "flex", alignItems: "flex-start", gap: 10 }}>
+                      <Stethoscope size={14} color="#2DD4BF" style={{ flexShrink: 0, marginTop: 2 }} />
+                      <p style={{ fontSize: 12.5, color: "rgba(255,255,255,0.60)", lineHeight: 1.65, margin: 0 }}>
+                        <span style={{ color: "#2DD4BF", fontWeight: 700 }}>Dr. Note: </span>
+                        {activeProtocol?.doctorNote || "Follow the standard protocol instructions and maintain steady movements during the session."}
                       </p>
                     </div>
 
                     {/* Stat badges */}
-                    <div
-                      className="lv-hero-badges"
-                      style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+                    <div className="lv-hero-badges" style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
                       {[
-                        {
-                          icon: <Activity size={12} />,
-                          label: "Focus",
-                          val: assignedLevelData.tags[0] || "Timing",
-                          c: "#fbbf24",
-                        },
-                        {
-                          icon: <Brain size={12} />,
-                          label: "Type",
-                          val: assignedLevelData.category,
-                          c: "#a78bfa",
-                        },
-                        {
-                          icon: <Zap size={12} />,
-                          label: "XP",
-                          val: `+${assignedLevelData.xp}`,
-                          c: "#2DD4BF",
-                        },
+                        { icon: <Activity size={12} />, label: "Focus", val: assignedLevelData.tags[0] || "Motor", c: "#fbbf24" },
+                        { icon: <Brain size={12} />, label: "Type", val: assignedLevelData.category, c: "#a78bfa" },
+                        { icon: <Zap size={12} />, label: "XP", val: `+${assignedLevelData.xp}`, c: "#2DD4BF" },
                       ].map((s) => (
-                        <div
-                          key={s.label}
-                          style={{
-                            display: "flex",
-                            alignItems: "center",
-                            gap: 7,
-                            background: "rgba(255,255,255,0.05)",
-                            border: "1px solid rgba(255,255,255,0.08)",
-                            borderRadius: 10,
-                            padding: "7px 12px",
-                          }}>
+                        <div key={s.label} style={{ display: "flex", alignItems: "center", gap: 7, background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 10, padding: "7px 12px" }}>
                           <span style={{ color: s.c }}>{s.icon}</span>
-                          <span
-                            className="mono"
-                            style={{
-                              fontSize: 9,
-                              color: "rgba(255,255,255,0.28)",
-                              textTransform: "uppercase",
-                              letterSpacing: "0.12em",
-                            }}>
-                            {s.label}:
-                          </span>
-                          <span
-                            style={{
-                              fontSize: 12,
-                              fontWeight: 700,
-                              color: "rgba(255,255,255,0.80)",
-                            }}>
-                            {s.val}
-                          </span>
+                          <span className="mono" style={{ fontSize: 9, color: "rgba(255,255,255,0.28)", textTransform: "uppercase", letterSpacing: "0.12em" }}>{s.label}:</span>
+                          <span style={{ fontSize: 12, fontWeight: 700, color: "rgba(255,255,255,0.80)" }}>{s.val}</span>
                         </div>
                       ))}
                     </div>
@@ -1679,91 +1518,24 @@ export default function LevelsPage() {
                     <button
                       onClick={() => router.push(assignedPath)}
                       className="lv-cta-btn"
-                      style={{
-                        background: "linear-gradient(135deg,#2DD4BF,#0891b2)",
-                        color: "#0B1E33",
-                        padding: "16px 32px",
-                        width: "auto",
-                        borderRadius: 18,
-                        fontSize: 15,
-                        fontWeight: 800,
-                        letterSpacing: "0.04em",
-                        boxShadow: "0 0 40px rgba(45,212,191,0.38)",
-                      }}>
-                      <Play
-                        size={20}
-                        fill="#0B1E33"
-                        style={{ position: "relative", zIndex: 2 }}
-                      />
-                      <span style={{ position: "relative", zIndex: 2 }}>
-                        START
-                      </span>
+                      style={{ background: "linear-gradient(135deg,#2DD4BF,#0891b2)", color: "#0B1E33", padding: "16px 32px", width: "auto", borderRadius: 18, fontSize: 15, fontWeight: 800, letterSpacing: "0.04em", boxShadow: "0 0 40px rgba(45,212,191,0.38)" }}>
+                      <Play size={20} fill="#0B1E33" style={{ position: "relative", zIndex: 2 }} />
+                      <span style={{ position: "relative", zIndex: 2 }}>START</span>
                     </button>
-                    <div
-                      className="mono"
-                      style={{
-                        textAlign: "center",
-                        fontSize: 9,
-                        color: "rgba(255,255,255,0.22)",
-                        textTransform: "uppercase",
-                        letterSpacing: "0.18em",
-                        marginTop: 8,
-                      }}>
+                    <div className="mono" style={{ textAlign: "center", fontSize: 9, color: "rgba(255,255,255,0.22)", textTransform: "uppercase", letterSpacing: "0.18em", marginTop: 8 }}>
                       Mandatory Session
                     </div>
                   </div>
                 </div>
 
-                {/* Session progress */}
-                <div
-                  style={{
-                    marginTop: 22,
-                    paddingTop: 18,
-                    borderTop: "1px solid rgba(255,255,255,0.07)",
-                  }}>
-                  <div
-                    style={{
-                      display: "flex",
-                      justifyContent: "space-between",
-                      marginBottom: 8,
-                    }}>
-                    <span
-                      className="mono"
-                      style={{
-                        fontSize: 9,
-                        color: "rgba(255,255,255,0.28)",
-                        textTransform: "uppercase",
-                        letterSpacing: "0.16em",
-                      }}>
-                      Session Progress
-                    </span>
-                    <span
-                      className="mono"
-                      style={{
-                        fontSize: 9,
-                        color: "#2DD4BF",
-                        fontWeight: 700,
-                      }}>
-                      40%
-                    </span>
+                {/* Session progress - Fixed to 0% for an unstarted session */}
+                <div style={{ marginTop: 22, paddingTop: 18, borderTop: "1px solid rgba(255,255,255,0.07)" }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 8 }}>
+                    <span className="mono" style={{ fontSize: 9, color: "rgba(255,255,255,0.28)", textTransform: "uppercase", letterSpacing: "0.16em" }}>Session Progress</span>
+                    <span className="mono" style={{ fontSize: 9, color: "#2DD4BF", fontWeight: 700 }}>0%</span>
                   </div>
-                  <div
-                    style={{
-                      height: 6,
-                      background: "rgba(255,255,255,0.06)",
-                      borderRadius: 99,
-                      overflow: "hidden",
-                    }}>
-                    <div
-                      style={{
-                        height: "100%",
-                        width: "40%",
-                        borderRadius: 99,
-                        background:
-                          "linear-gradient(90deg,rgba(45,212,191,0.7),#2DD4BF)",
-                        boxShadow: "0 0 12px rgba(45,212,191,0.5)",
-                      }}
-                    />
+                  <div style={{ height: 6, background: "rgba(255,255,255,0.06)", borderRadius: 99, overflow: "hidden" }}>
+                    <div style={{ height: "100%", width: "0%", borderRadius: 99, background: "linear-gradient(90deg,rgba(45,212,191,0.7),#2DD4BF)", boxShadow: "0 0 12px rgba(45,212,191,0.5)" }} />
                   </div>
                 </div>
               </div>
@@ -2280,9 +2052,9 @@ export default function LevelsPage() {
                   <span style={{ color: "#6366f1", fontWeight: 700 }}>
                     grip consistency
                   </span>{" "}
-                  improved 12% since last week. Dr. Perera notes you're ready
-                  for {nextLockedLevel?.title || "the next level"} — complete
-                  one more session to unlock it.
+                  improved 12% since last week. You are ready
+                  to push the boundaries on the next level — complete
+                  one more session to unlock further milestones.
                 </p>
                 <button
                   onClick={() => router.push("/patients/progress")}
@@ -2477,7 +2249,7 @@ export default function LevelsPage() {
                         letterSpacing: "0.12em",
                         marginTop: 2,
                       }}>
-                      Friday · Dr. Perera · 09:00
+                      Friday · Doctor · 09:00
                     </div>
                   </div>
                 </div>

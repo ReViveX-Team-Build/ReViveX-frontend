@@ -15,11 +15,11 @@ export interface UserProfile {
 }
 
 export interface PatientData extends UserProfile {
-  role: "patient";               
+  role: "patient";
 
   patientId: string;
   condition: "Stroke" | "Parkinson's" | "TBI" | "Post-Surgery" | "Other";
-  assignedDoctorId: string | null;          // null = not yet assigned
+  assignedDoctorId: string | null; // null = not yet assigned
   connectionStatus: "none" | "pending" | "accepted" | "rejected";
   subscriptionPlan: "standard" | "ai_companion";
   profilePictureUrl?: string;
@@ -36,7 +36,7 @@ export interface PatientData extends UserProfile {
 }
 
 export interface DoctorData extends UserProfile {
-  role: "doctor";                           // discriminant
+  role: "doctor"; // discriminant
   doctorId: string;
   specialization: string;
   licenseNumber?: string;
@@ -48,9 +48,9 @@ export interface DoctorData extends UserProfile {
 // THERAPY PROTOCOLS
 // ─────────────────────────────────────────────────────────────────────────────
 
-
 export type GameId =
   | "synapse_racer"
+  | "sky_memory"
   | "rhythm_reef"
   | "grip_surge"
   | "precision_hold"
@@ -85,12 +85,12 @@ export interface SessionMetrics {
   peakGripForce?: number;
   muscleEnduranceDropPercent?: number;
   cognitiveAccuracyPercent?: number;
-  rawSensorData?: number[];               // never sent to LLM — processed only
+  rawSensorData?: number[]; // never sent to LLM — processed only
 
   // MPU6050 motion sensor (Stability Core — not yet assembled)
-  tremorAmplitude?: number;               // √(SDx²+SDy²+SDz²)
-  driftDistance?: number;                 // avg Euclidean distance from target
-  movementSmoothness?: number;            // jerk: (Accel_cur − Accel_prev) / Time
+  tremorAmplitude?: number; // √(SDx²+SDy²+SDz²)
+  driftDistance?: number; // avg Euclidean distance from target
+  movementSmoothness?: number; // jerk: (Accel_cur − Accel_prev) / Time
 }
 
 export interface GameSession {
@@ -98,7 +98,7 @@ export interface GameSession {
   userId: string;
   protocolId: string;
   gameId: GameId;
-  level: number;                          
+  level: number;
   timestamp: Timestamp;
   durationSeconds: number;
   targetHand: "left" | "right";
@@ -116,10 +116,10 @@ export interface Assignment {
   id?: string;
   doctorId: string;
   patientId: string;
-  gameType: string;                       // display name e.g. "Rhythm Reef"
+  gameType: string; // display name e.g. "Rhythm Reef"
   gameId: GameId;
   note: string;
-  targetDuration: number;                 // minutes
+  targetDuration: number; // minutes
   status: AssignmentStatus;
   assignedDate: Timestamp;
   completedDate?: Timestamp;
@@ -138,29 +138,49 @@ export interface Communication {
     | "feedback"
     | "direct_message"
     | "ai_insight"
-    | "connection_request"  // patient → doctor during onboarding
-    | "session_alert";      // system-generated low-adherence alert (to be built)
+    | "connection_request" // patient → doctor during onboarding
+    | "session_alert"; // system-generated low-adherence alert (to be built)
   content: string;
   title: string;
   timestamp: Timestamp;
   isRead: boolean;
   isImportant?: boolean;
-  sessionId?: string;      
+  sessionId?: string;
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// SCHEDULED SESSIONS — 
-// ─────────────────────────────────────────────────────────────────────────────
 
+// ─────────────────────────────────────────────────────────────────────────────
+// SCHEDULED SESSIONS & APPOINTMENTS
+// ─────────────────────────────────────────────────────────────────────────────
 export interface ScheduledSession {
   id?: string;
   doctorId: string;
   patientId: string;
-  gameId: GameId;
-  level: number;
+  gameId: string;        
+  level: number;         
+  scheduledDate: string; 
+  scheduledTime: string; 
+  exactTimestamp?: any;  
+  durationMinutes: number;
+  status: "scheduled" | "completed" | "missed" | "cancelled";
+  patientJoined?: boolean; 
+  createdAt?: any;
+}
+
+export interface Appointment {
+  id?: string;
+  doctorId: string;
+  patientId: string;
+  patientName: string;
+  patientCode: string;
+  date: any;
   scheduledDate: string;
   scheduledTime: string;
   durationMinutes: number;
-  status: "scheduled" | "completed" | "missed" | "cancelled";
-  createdAt: Timestamp;
+  title: string;
+  mode: "telehealth" | "in-person";
+  status: "pending" | "confirmed" | "completed" | "missed" | "cancelled";
+  patientJoined?: boolean; 
+  doctorJoined?: boolean;  
+  createdAt?: any;
 }

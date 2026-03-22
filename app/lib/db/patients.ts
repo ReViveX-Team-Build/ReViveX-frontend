@@ -102,7 +102,6 @@ export async function getCohortStats(
 
   const adherenceRates: number[] = [];
   const gripImprovements: number[] = [];
-  let missedTotal = 0;
   const decliningPatients: CohortStats["decliningPatients"] = [];
 
   for (const patient of patients) {
@@ -111,7 +110,6 @@ export async function getCohortStats(
     const adherence = Math.min(100, Math.round((completed / prescribedSessionsPerWeek) * 100));
 
     adherenceRates.push(adherence);
-    missedTotal += Math.max(0, prescribedSessionsPerWeek - completed);
 
     // Grip improvement: first vs last session this week
     const withGrip = patientSessions
@@ -137,6 +135,37 @@ export async function getCohortStats(
 
   decliningPatients.sort((a, b) => a.adherencePercent - b.adherencePercent);
 
+  // 🟢 NEW: Fetch REAL missed sessions directly from the schedule/appointments collections
+  let actualMissedTotal = 0;
+  try {
+    if (patientUids.length > 0) {
+      // Firestore 'in' queries support a maximum of 10 elements per chunk
+      for (let i = 0; i < patientUids.length; i += 10) {
+        const chunk = patientUids.slice(i, i + 10);
+        
+        // Count missed game sessions
+        const qGames = query(
+          collection(db, "scheduled_sessions"),
+          where("patientId", "in", chunk),
+          where("status", "==", "missed")
+        );
+        const snapGames = await getDocs(qGames);
+        actualMissedTotal += snapGames.size;
+
+        // Count missed telehealth meetings
+        const qAppts = query(
+          collection(db, "appointments"),
+          where("patientId", "in", chunk),
+          where("status", "==", "missed")
+        );
+        const snapAppts = await getDocs(qAppts);
+        actualMissedTotal += snapAppts.size;
+      }
+    }
+  } catch (err) {
+    console.error("Failed to fetch real missed sessions for cohort:", err);
+  }
+
   const avg = (arr: number[]) =>
     arr.length ? Math.round(arr.reduce((a, b) => a + b, 0) / arr.length) : 0;
 
@@ -147,7 +176,7 @@ export async function getCohortStats(
     lowAdherence:    adherenceRates.filter((r) => r < 50).length,
     avgAdherencePercent: avg(adherenceRates),
     avgGripImprovement:  avg(gripImprovements),
-    missedSessionsTotal: missedTotal,
+    missedSessionsTotal: actualMissedTotal,
     devicesOffline: patients.filter((p) => p.hardwareStatus?.status === "offline").length,
     decliningPatients: decliningPatients.slice(0, 5),
   };

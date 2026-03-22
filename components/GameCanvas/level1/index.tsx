@@ -1,0 +1,514 @@
+"use client";
+
+import React, { useRef, useEffect, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { Play, RotateCcw, Zap, Hand, Wifi, WifiOff, Waves } from "lucide-react";
+import { useAuthState } from "react-firebase-hooks/auth";
+import { auth } from "@/app/lib/firebase";
+import { saveGameSession } from "../../../app/lib/db/sessions";
+import { updateSessionStatus } from "../../../app/lib/db/schedule";
+import {
+  getActiveProtocol,
+  addXpToPatient,
+  updateHardwareStatus,
+} from "../../../app/lib/db/users";
+import {
+  calculateEnduranceDrop,
+  getPeakGripForce,
+} from "../../../util/game-core/MetricsCalculator";
+import { Timestamp } from "firebase/firestore";
+import { Player } from "../../../util/game-core/SynapsePlayer";
+import { SynapseBackground } from "../../../util/game-core/SynapseBackground";
+import { SeaGrass } from "../../../util/game-core/SynapseSeaGrass";
+import { Particle } from "../../../util/game-core/SynapseParticles";
+import { SynapseCorals } from "../../../util/game-core/SynapseCorals";
+import { TherapyProtocol } from "@/app/lib/db/types";
+
+// ── WEB SERIAL TYPES ──────────────────────────────────────────────────────────
+interface SerialPort {
+  readonly readable: ReadableStream | null;
+  readonly writable: WritableStream | null;
+  open(opts: { baudRate: number }): Promise<void>;
+  close(): Promise<void>;
+}
+interface Serial extends EventTarget {
+  requestPort(): Promise<SerialPort>;
+  getPorts(): Promise<SerialPort[]>;
+}
+declare global {
+  interface Navigator {
+    serial?: Serial;
+  }
+}
+
+// ── CONSTANTS ─────────────────────────────────────────────────────────────────
+const IDLE_THRESHOLD = 0.5;
+const DANGER_THRESHOLD = 2.0;
+
+// ── TYPES ─────────────────────────────────────────────────────────────────────
+interface ClinicalMetrics {
+  jumpPressures: number[]; // peak pressure of every completed squeeze
+  currentSqueezePeak: number;
+  isSqueezing: boolean;
+}
+
+type CountdownValue = number | "GO!" | null;
+
+// ── GLOBAL CSS ────────────────────────────────────────────────────────────────
+const GAME_CSS = `
+  body:has(#synapse-game-root) aside,
+  body:has(#synapse-game-root) nav,
+  body:has(#synapse-game-root) header { display: none !important; }
+
+  #synapse-game-root {
+    position: fixed !important; inset: 0 !important;
+    z-index: 9999 !important;
+    width: 100vw !important; height: 100vh !important;
+    overflow: hidden !important; background: #020c1b;
+  }
+  #synapse-game-root canvas {
+    display: block; width: 100% !important; height: 100% !important;
+  }
+
+  @keyframes cdpop {
+    0%  { transform:translate(-50%,-50%) scale(0.3); opacity:0 }
+    45% { transform:translate(-50%,-50%) scale(1.20); opacity:1 }
+    72% { transform:translate(-50%,-50%) scale(0.94) }
+    100%{ transform:translate(-50%,-50%) scale(1);   opacity:1 }
+  }
+  @keyframes goburst {
+    0%  { transform:translate(-50%,-50%) scale(0.5); opacity:0 }
+    35% { transform:translate(-50%,-50%) scale(1.32); opacity:1 }
+    68% { transform:translate(-50%,-50%) scale(1.02) }
+    100%{ transform:translate(-50%,-50%) scale(1.12); opacity:0 }
+  }
+  @keyframes menuin {
+    from { opacity:0; transform:translateY(22px) }
+    to   { opacity:1; transform:translateY(0) }
+  }
+  @keyframes scanline {
+    0%  { top:-12%; opacity:0 }
+    8%  { opacity:.6 }
+    92% { opacity:.6 }
+    100%{ top:112%;  opacity:0 }
+  }
+`;
+
+// ── PRESSURE COLOUR ───────────────────────────────────────────────────────────
+const pressureColor = (v: number) => {
+  if (v < IDLE_THRESHOLD) return { hex: "#64748b", label: "IDLE" };
+  if (v < DANGER_THRESHOLD * 0.6) return { hex: "#2DD4BF", label: "GOOD" };
+  if (v < DANGER_THRESHOLD * 0.85) return { hex: "#FACC15", label: "HIGH" };
+  return { hex: "#EF4444", label: "DANGER" };
+};
+
+// ── COMPONENT ─────────────────────────────────────────────────────────────────
+const Level1Canvas: React.FC = () => {
+  const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const rafRef = useRef<number | null>(null);
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const scheduledSessionId = searchParams.get("sessionId");
+
+  // ── Auth + protocol
+  const [user] = useAuthState(auth);
+  const [protocol, setProtocol] = useState<TherapyProtocol | null>(null);
+
+  // 🔴 FORCE THIS TO BE LEVEL 1 FOREVER
+  const currentLevelRef = useRef(1);
+
+  const userUidRef = useRef<string>("");
+  useEffect(() => {
+    userUidRef.current = user?.uid ?? "";
+  }, [user]);
+
+  useEffect(() => {
+    if (!user) return;
+    getActiveProtocol(user.uid).then((p) => { if (p) setProtocol(p); }).catch(() => {});
+  }, [user]);
+
+  // ── IoT
+  const [isConnected, setIsConnected] = useState(false);
+  const isConnRef = useRef(false);
+  const pressRef = useRef(0);
+  const portRef = useRef<SerialPort | null>(null);
+  const readerRef = useRef<ReadableStreamDefaultReader<string> | null>(null);
+
+  const connectSerial = async () => {
+    try {
+      if (!navigator.serial) { alert("Web Serial not supported."); return; }
+      const port = await navigator.serial.requestPort();
+      if (!port.readable) await port.open({ baudRate: 115200 });
+      portRef.current = port;
+      setIsConnected(true);
+      isConnRef.current = true;
+      const td = new TextDecoderStream();
+      port.readable!.pipeTo(td.writable).catch(() => {});
+      const r = td.readable.getReader();
+      readerRef.current = r;
+      _readLoop(r);
+      if (userUidRef.current) updateHardwareStatus(userUidRef.current, "connected").catch(() => {});
+    } catch (e: unknown) {
+      if (e instanceof Error && e.name === "NotFoundError") return;
+      alert("Could not connect. Make sure device is plugged in.");
+    }
+  };
+
+  const disconnectSerial = async () => {
+    setIsConnected(false);
+    isConnRef.current = false;
+    pressRef.current = 0;
+    try {
+      if (readerRef.current) {
+        await readerRef.current.cancel();
+        readerRef.current.releaseLock();
+        readerRef.current = null;
+      }
+    } catch (_) {}
+    try {
+      if (portRef.current) { await portRef.current.close(); portRef.current = null; }
+    } catch (_) {}
+    if (userUidRef.current) updateHardwareStatus(userUidRef.current, "offline").catch(() => {});
+  };
+
+  const _readLoop = async (r: ReadableStreamDefaultReader<string>) => {
+    let buf = "";
+    try {
+      while (true) {
+        const { value, done } = await r.read();
+        if (done) break;
+        buf += value;
+        const lines = buf.split("\n");
+        buf = lines.pop() || "";
+        for (const line of lines) {
+          const m = line.match(/V:([\d.]+)/);
+          if (m) pressRef.current = parseFloat(m[1]);
+        }
+      }
+    } catch (_) {
+      setIsConnected(false);
+      isConnRef.current = false;
+    }
+  };
+
+  const playerRef = useRef<Player | null>(null);
+  const bgRef = useRef<SynapseBackground | null>(null);
+  const grassRef = useRef<SeaGrass | null>(null);
+  const coralsRef = useRef<SynapseCorals | null>(null);
+  const particlesRef = useRef<Particle[]>([]);
+
+  const isKeyPressedRef = useRef(false);
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.code === "Space" || e.code === "ArrowUp") { isKeyPressedRef.current = true; e.preventDefault(); }
+    };
+    const handleKeyUp = (e: KeyboardEvent) => {
+      if (e.code === "Space" || e.code === "ArrowUp") isKeyPressedRef.current = false;
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    window.addEventListener("keyup", handleKeyUp);
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+      window.removeEventListener("keyup", handleKeyUp);
+    };
+  }, []);
+
+  const gsRef = useRef<"MENU" | "PLAYING">("MENU");
+  const cdRef = useRef<CountdownValue>(null);
+  const [uiState, setUiState] = useState<"MENU" | "PLAYING">("MENU");
+  const [uiCd, setUiCd] = useState<CountdownValue>(null);
+  const [showExit, setShowExit] = useState(false);
+  const [pressDisp, setPressDisp] = useState(0);
+
+  const metricsRef = useRef<ClinicalMetrics>({
+    jumpPressures: [],
+    currentSqueezePeak: 0,
+    isSqueezing: false,
+  });
+
+  const startRef = useRef(0);
+  const lastRef = useRef(0);
+  const cdTimerRef = useRef<NodeJS.Timeout | null>(null);
+
+  const setGs = (s: "MENU" | "PLAYING") => { gsRef.current = s; setUiState(s); };
+  const setCd = (v: CountdownValue) => { cdRef.current = v; setUiCd(v); };
+
+  const swimUp = (): boolean => {
+    const p = isConnRef.current ? pressRef.current : (isKeyPressedRef.current ? (IDLE_THRESHOLD + 0.2) : 0);
+    const isSwimming = p > IDLE_THRESHOLD && p < DANGER_THRESHOLD;
+
+    if (isSwimming) {
+      metricsRef.current.isSqueezing = true;
+      if (p > metricsRef.current.currentSqueezePeak) metricsRef.current.currentSqueezePeak = p;
+    } else if (metricsRef.current.isSqueezing) {
+      metricsRef.current.jumpPressures.push(metricsRef.current.currentSqueezePeak);
+      metricsRef.current.currentSqueezePeak = 0;
+      metricsRef.current.isSqueezing = false;
+    }
+    return isSwimming;
+  };
+
+  useEffect(() => {
+    const onResize = () => {
+      const c = canvasRef.current;
+      if (!c) return;
+      c.width = window.innerWidth;
+      c.height = window.innerHeight;
+      bgRef.current = new SynapseBackground(c.width, c.height);
+      grassRef.current = new SeaGrass(c.width, c.height);
+      coralsRef.current = new SynapseCorals(c.width, c.height);
+      if (playerRef.current) playerRef.current = new Player(c.width, c.height);
+    };
+    onResize();
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
+  }, []);
+
+  useEffect(() => {
+    const c = canvasRef.current;
+    if (!c) return;
+    c.width = window.innerWidth;
+    c.height = window.innerHeight;
+    playerRef.current = new Player(c.width, c.height);
+    bgRef.current = new SynapseBackground(c.width, c.height);
+    grassRef.current = new SeaGrass(c.width, c.height);
+    coralsRef.current = new SynapseCorals(c.width, c.height);
+    startRef.current = Date.now();
+    lastRef.current = performance.now();
+    rafRef.current = requestAnimationFrame(loop);
+    return () => {
+      if (rafRef.current) cancelAnimationFrame(rafRef.current);
+      if (cdTimerRef.current) clearInterval(cdTimerRef.current);
+      const cleanup = async () => {
+        try { if (readerRef.current) { await readerRef.current.cancel(); readerRef.current.releaseLock(); readerRef.current = null; } } catch (_) {}
+        try { if (portRef.current) { await portRef.current.close(); portRef.current = null; } } catch (_) {}
+      };
+      cleanup();
+    };
+  }, []);
+
+  const startSession = () => {
+    const c = canvasRef.current;
+    if (!c) return;
+    if (playerRef.current) {
+      playerRef.current.y = c.height / 2;
+      playerRef.current.velocity = 0;
+      playerRef.current.status = "swimming";
+    }
+    particlesRef.current = [];
+    metricsRef.current = { jumpPressures: [], currentSqueezePeak: 0, isSqueezing: false };
+    
+    setGs("PLAYING");
+    setCd(3);
+    let count = 3;
+    if (cdTimerRef.current) clearInterval(cdTimerRef.current);
+    cdTimerRef.current = setInterval(() => {
+      count--;
+      if (count > 0) setCd(count);
+      else if (count === 0) setCd("GO!");
+      else { setCd(null); if (cdTimerRef.current) clearInterval(cdTimerRef.current); }
+    }, 900);
+  };
+
+  const loop = (now: number) => {
+    const c = canvasRef.current;
+    if (!c) return;
+    const ctx = c.getContext("2d");
+    if (!ctx) return;
+
+    const delta = Math.min(32, now - lastRef.current);
+    lastRef.current = now;
+    const elapsed = Date.now() - startRef.current;
+
+    ctx.clearRect(0, 0, c.width, c.height);
+
+    const state = gsRef.current;
+    const isCounting = cdRef.current !== null;
+    const physics = state === "PLAYING" && !isCounting;
+    const scrollSpeed = physics ? 2.5 : 0.8; // Level 1 is always slow and easy
+
+    let nf = 0, sandH = 80;
+    if (bgRef.current) {
+      nf = bgRef.current.update(elapsed, delta, scrollSpeed, 0, pressRef.current / DANGER_THRESHOLD);
+      bgRef.current.draw(ctx, nf);
+      sandH = bgRef.current.sandHeight;
+    }
+    if (coralsRef.current) { coralsRef.current.update(scrollSpeed); coralsRef.current.draw(ctx, nf, c.height - sandH); }
+    if (grassRef.current && playerRef.current) { grassRef.current.update(playerRef.current.x, playerRef.current.y, delta); grassRef.current.draw(ctx); }
+
+    if (playerRef.current) {
+      if (physics) {
+        playerRef.current.update(swimUp(), delta, sandH, particlesRef.current, nf);
+        
+        if (playerRef.current.status === "hit_floor") {
+          bgRef.current?.triggerSiltCloud(playerRef.current.x, playerRef.current.y);
+        } else {
+          (bgRef.current as any)?.clearSiltCloud?.();
+        }
+        
+        setPressDisp(parseFloat(pressRef.current.toFixed(2)));
+      } else if (state === "MENU" || isCounting) {
+        playerRef.current.y = c.height / 2 + Math.sin(elapsed * 0.003) * 20;
+        playerRef.current.velocity = 0;
+        playerRef.current.rotation = 0;
+      }
+      playerRef.current.draw(ctx, nf);
+    }
+
+    for (let i = particlesRef.current.length - 1; i >= 0; i--) {
+      const p = particlesRef.current[i];
+      if (physics) p.update();
+      p.draw(ctx);
+      if (p.markedForDeletion) particlesRef.current.splice(i, 1);
+    }
+
+    rafRef.current = requestAnimationFrame(loop);
+  };
+
+  const handleExit = () => { setShowExit(true); };
+  const cancelExit = () => { setShowExit(false); if (gsRef.current !== "PLAYING") setGs("PLAYING"); };
+
+  const handleSaveAndExit = async () => {
+    try {
+      const m = metricsRef.current;
+      const durationSeconds = Math.floor((Date.now() - startRef.current) / 1000);
+      
+      // Pure motor baseline — perfect accuracy, no reaction times needed
+      const accuracy = 100; 
+      const peakForce = getPeakGripForce(m.jumpPressures);
+      const enduranceDrop = calculateEnduranceDrop(m.jumpPressures);
+      const avgReactionTime = 0;
+
+      const uid = user?.uid ?? "dev_test_user";
+      const protocolId = protocol?.id ?? "dev_test_protocol";
+      const gameId = protocol?.gameId ?? "synapse_racer";
+      
+      const level = 1; 
+      const targetHand = (protocol?.targetHand === "left" ? "left" : "right") as "left" | "right";
+
+      await saveGameSession({
+        userId: uid, protocolId: protocolId, gameId: gameId, level: level,
+        timestamp: Timestamp.now(), durationSeconds: durationSeconds, targetHand: targetHand,
+        metrics: { cognitiveAccuracyPercent: accuracy, peakGripForce: peakForce, muscleEnduranceDropPercent: enduranceDrop, reactionTimeMs: avgReactionTime, rawSensorData: m.jumpPressures },
+      });
+
+      if (scheduledSessionId) await updateSessionStatus(scheduledSessionId, "completed");
+      if (user?.uid && durationSeconds > 30) await addXpToPatient(user.uid, 30 + level * 10);
+      router.push("/patients/home");
+    } catch (error) {
+      console.error("Failed to save session:", error);
+      router.push("/patients/home");
+    }
+  };
+
+  const pInfo = pressureColor(pressDisp);
+  const pctBar = Math.min(100, (pressDisp / DANGER_THRESHOLD) * 100);
+
+  return (
+    <div id="synapse-game-root">
+      <style>{GAME_CSS}</style>
+      <canvas ref={canvasRef} />
+
+      <div style={{ position: "absolute", top: 14, right: 14, zIndex: 60 }}>
+        {isConnected ? (
+          <button onClick={disconnectSerial} style={{ display: "flex", alignItems: "center", gap: 7, background: "rgba(16,200,128,0.13)", border: "1px solid rgba(52,211,153,0.40)", padding: "7px 15px", borderRadius: 999, cursor: "pointer", backdropFilter: "blur(10px)" }}>
+            <Wifi size={13} style={{ color: "#34d399" }} />
+            <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.13em", textTransform: "uppercase", color: "#34d399" }}>Connected</span>
+          </button>
+        ) : (
+          <button onClick={connectSerial} style={{ display: "flex", alignItems: "center", gap: 7, background: "rgba(239,68,68,0.13)", border: "1px solid rgba(248,113,113,0.40)", padding: "7px 15px", borderRadius: 999, cursor: "pointer", backdropFilter: "blur(10px)" }}>
+            <WifiOff size={13} style={{ color: "#f87171" }} />
+            <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.13em", textTransform: "uppercase", color: "#f87171" }}>Connect Device</span>
+          </button>
+        )}
+      </div>
+
+      <button onClick={handleExit} style={{ position: "absolute", top: 14, left: 14, zIndex: 60, display: "flex", alignItems: "center", gap: 7, background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.14)", padding: "8px 16px", borderRadius: 999, color: "#fff", fontSize: 11, fontWeight: 700, letterSpacing: "0.11em", textTransform: "uppercase", cursor: "pointer", backdropFilter: "blur(10px)", transition: "background .2s" }} onMouseEnter={(e) => (e.currentTarget.style.background = "rgba(255,255,255,0.14)")} onMouseLeave={(e) => (e.currentTarget.style.background = "rgba(255,255,255,0.07)")}>
+        <RotateCcw size={13} /> EXIT
+      </button>
+
+      {uiState === "MENU" && (
+        <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(2,8,20,0.62)", backdropFilter: "blur(3px)", zIndex: 20 }}>
+          <div style={{ animation: "menuin 0.48s cubic-bezier(0.22,1,0.36,1) both", background: "rgba(4,12,28,0.94)", border: "1.5px solid rgba(45,212,191,0.30)", borderRadius: 26, padding: "38px 42px", maxWidth: 490, width: "90%", textAlign: "center", backdropFilter: "blur(22px)", boxShadow: "0 0 70px rgba(45,212,191,0.10),0 32px 80px rgba(0,0,0,0.60)", position: "relative", overflow: "hidden" }}>
+            <div style={{ position: "absolute", left: 0, right: 0, height: "32%", background: "linear-gradient(to bottom,transparent,rgba(45,212,191,0.04),transparent)", animation: "scanline 7s linear infinite", pointerEvents: "none" }} />
+            <h1 style={{ fontSize: 33, fontWeight: 900, color: "#00FFFF", letterSpacing: "0.07em", margin: "0 0 5px", textShadow: "0 0 28px rgba(0,255,255,0.40)" }}>SYNAPSE RACER</h1>
+            <p style={{ color: "rgba(255,255,255,0.28)", fontSize: 10, letterSpacing: "0.25em", textTransform: "uppercase", margin: "0 0 26px" }}>Level 1: Motor Baseline</p>
+
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 11, marginBottom: 26, textAlign: "left" }}>
+              <div style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 14, padding: "14px 16px" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 9, marginBottom: 10 }}>
+                  <Hand size={17} style={{ color: "#2DD4BF" }} />
+                  <span style={{ color: "#fff", fontWeight: 700, fontSize: 12 }}>CONTROLS</span>
+                </div>
+                {isConnected ? (
+                  <>
+                    <p style={{ color: "rgba(255,255,255,0.58)", fontSize: 11.5, lineHeight: 1.65, margin: 0 }}>Squeeze to swim up.</p>
+                    <p style={{ color: "rgba(255,255,255,0.58)", fontSize: 11.5, lineHeight: 1.65, margin: 0 }}>Release to dive.</p>
+                    <p style={{ color: "#FACC15", fontSize: 10.5, marginTop: 5 }}>Don't over-squeeze!</p>
+                  </>
+                ) : (
+                  <>
+                    <p style={{ color: "rgba(255,255,255,0.58)", fontSize: 11.5, lineHeight: 1.65, margin: 0 }}>Connect the sensor</p>
+                    <p style={{ color: "rgba(255,255,255,0.58)", fontSize: 11.5, lineHeight: 1.65, margin: 0 }}>to begin therapy.</p>
+                    <p style={{ color: "rgba(255,100,100,0.70)", fontSize: 10.5, marginTop: 5 }}>Hardware required.</p>
+                  </>
+                )}
+              </div>
+              <div style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 14, padding: "14px 16px" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 9, marginBottom: 10 }}>
+                  <Zap size={17} style={{ color: "#FFD700" }} />
+                  <span style={{ color: "#fff", fontWeight: 700, fontSize: 12 }}>GOAL</span>
+                </div>
+                <div style={{ display: "flex", alignItems: "center", gap: 7 }}>
+                  <Waves size={15} color="#2DD4BF" style={{ flexShrink: 0 }} />
+                  <span style={{ color: "rgba(255,255,255,0.58)", fontSize: 11.5, lineHeight: 1.4 }}>Maintain safe grip pressure.</span>
+                </div>
+              </div>
+            </div>
+
+            <button onClick={startSession} disabled={false} style={{ position: "relative", overflow: "hidden", background: isConnected ? "#2DD4BF" : "rgba(99,102,241,0.8)", color: isConnected ? "#061422" : "#fff", border: "none", borderRadius: 999, padding: "15px 50px", fontSize: 17, fontWeight: 900, letterSpacing: "0.07em", cursor: "pointer", boxShadow: isConnected ? "0 0 38px rgba(45,212,191,0.50)" : "0 0 38px rgba(99,102,241,0.50)", display: "inline-flex", alignItems: "center", gap: 11, transition: "transform .14s" }} onMouseEnter={(e) => (e.currentTarget.style.transform = "scale(1.05)")} onMouseLeave={(e) => (e.currentTarget.style.transform = "scale(1)")}>
+              <Play size={20} fill={isConnected ? "#061422" : "#fff"} style={{ position: "relative", zIndex: 1 }} />
+              <span style={{ position: "relative", zIndex: 1 }}>{isConnected ? "START MISSION" : "TEST (KEYBOARD MODE)"}</span>
+            </button>
+          </div>
+        </div>
+      )}
+
+      {uiState === "PLAYING" && (
+        <>
+          <div style={{ position: "absolute", bottom: 18, left: "50%", transform: "translateX(-50%)", zIndex: 30, display: "flex", flexDirection: "column", alignItems: "center", gap: 4, pointerEvents: "none" }}>
+            <span style={{ fontSize: 8.5, color: "rgba(255,255,255,0.30)", fontWeight: 700, letterSpacing: "0.25em", textTransform: "uppercase" }}>Grip Pressure</span>
+            <div style={{ width: 190, height: 9, background: "rgba(255,255,255,0.07)", borderRadius: 999, overflow: "hidden", border: "1px solid rgba(255,255,255,0.10)" }}>
+              <div style={{ height: "100%", width: `${pctBar}%`, background: pInfo.hex, borderRadius: 999, transition: "width .08s,background .18s", boxShadow: `0 0 9px ${pInfo.hex}` }} />
+            </div>
+            <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
+              <span style={{ fontSize: 9.5, fontFamily: "monospace", color: pInfo.hex, fontWeight: 700 }}>{pressDisp.toFixed(2)} V</span>
+              <span style={{ fontSize: 7.5, color: pInfo.hex, fontWeight: 700, letterSpacing: "0.14em", background: `${pInfo.hex}1a`, border: `1px solid ${pInfo.hex}38`, borderRadius: 4, padding: "1px 5px" }}>{pInfo.label}</span>
+            </div>
+          </div>
+        </>
+      )}
+
+      {uiCd !== null && (
+        <div style={{ position: "absolute", top: "50%", left: "50%", zIndex: 50, fontSize: uiCd === "GO!" ? "6.5rem" : "9.5rem", fontWeight: 900, color: uiCd === "GO!" ? "#2DD4BF" : "#00FFFF", textShadow: `0 0 55px ${uiCd === "GO!" ? "rgba(45,212,191,0.80)" : "rgba(0,255,255,0.80)"}`, animation: uiCd === "GO!" ? "goburst 0.92s ease-out both" : "cdpop 0.48s cubic-bezier(0.34,1.56,0.64,1) both", userSelect: "none", pointerEvents: "none" }}>
+          {uiCd}
+        </div>
+      )}
+
+      {showExit && (
+        <div style={{ position: "absolute", inset: 0, background: "rgba(1,5,14,0.90)", backdropFilter: "blur(12px)", display: "flex", justifyContent: "center", alignItems: "center", zIndex: 100 }}>
+          <div style={{ background: "rgba(6,16,32,0.98)", padding: "34px 46px", borderRadius: 22, border: "1px solid rgba(255,255,255,0.09)", textAlign: "center", boxShadow: "0 30px 80px rgba(0,0,0,0.70)", animation: "menuin 0.28s ease both" }}>
+            <h3 style={{ color: "#fff", marginTop: 0, fontSize: 21, fontWeight: 700 }}>Pause Session?</h3>
+            <p style={{ color: "rgba(255,255,255,0.36)", fontSize: 12.5, marginBottom: 26 }}>Progress this session will be saved.</p>
+            <div style={{ display: "flex", gap: 12, justifyContent: "center" }}>
+              <button onClick={cancelExit} style={{ padding: "11px 30px", background: "transparent", border: "1px solid rgba(255,255,255,0.18)", color: "#fff", borderRadius: 999, fontSize: 13.5, fontWeight: 700, cursor: "pointer" }}>Resume</button>
+              <button onClick={handleSaveAndExit} style={{ padding: "11px 30px", background: "#EF4444", border: "none", color: "#fff", borderRadius: 999, fontSize: 13.5, fontWeight: 700, cursor: "pointer", boxShadow: "0 0 20px rgba(239,68,68,0.40)" }}>Save & Exit</button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default Level1Canvas;
