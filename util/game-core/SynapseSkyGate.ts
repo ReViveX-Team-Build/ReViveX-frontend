@@ -451,7 +451,7 @@ export class SkyGate {
         ctx.fillStyle = '#93C5FD';
         ctx.font = 'bold 10px sans-serif';
         ctx.textAlign = 'center';
-        ctx.fillText('MEMORIZE!', this.x, indicatorY - 12);
+        ctx.fillText('!', this.x, indicatorY - 12);
         
         // Show sequence colors
         this.sequence.forEach((color, index) => {
