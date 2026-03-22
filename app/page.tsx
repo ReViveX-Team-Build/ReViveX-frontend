@@ -2239,12 +2239,12 @@ function CinematicHero() {
               Clinical rehabilitation powered by immersive computing. We transform static routines into <span style={{ color:"rgba(255,255,255,.90)",fontWeight:500 }}>engaging digital experiences</span>.
             </p>
             <div style={{ display:"flex",gap:12 }}>
-              <button onClick={()=>router.push("/patients/home?dev=true")} className="fB sweep-btn sweep-teal">
+              <button onClick={()=>router.push("/auth/patient/signin")} className="fB sweep-btn sweep-teal">
                 <span className="sweep-bar" style={{ background:"rgba(45,212,191,.6)", boxShadow:"0 0 10px 10px rgba(45,212,191,.25)" }} />
                 <Play size={13} style={{ fill:"#2DD4BF", flexShrink:0, position:"relative", zIndex:1 }} />
                 <span style={{ position:"relative", zIndex:1 }}>Patient Sign In</span>
               </button>
-              <button onClick={()=>router.push("/doctor/home?dev=true")} className="fB sweep-btn sweep-slate">
+              <button onClick={()=>router.push("/auth/doctor/signin")} className="fB sweep-btn sweep-slate">
                 <span className="sweep-bar" style={{ background:"rgba(255,255,255,.35)", boxShadow:"0 0 10px 10px rgba(255,255,255,.10)" }} />
                 <Stethoscope size={13} style={{ flexShrink:0, position:"relative", zIndex:1 }} />
                 <span style={{ position:"relative", zIndex:1 }}>Doctor Sign In</span>
@@ -4224,7 +4224,7 @@ export default function LandingPage() {
             <ProblemSection />
             <SectionSep color="#2DD4BF" dim />
             
-            {/* 🔴 UPDATED: Using the section wrapper to hold the dev buttons */}
+           
             <NeuralBridgeSection />
             
             <SectionSep color="#2DD4BF" />
@@ -4242,55 +4242,11 @@ export default function LandingPage() {
   );
 }
 
-// ─── NEURAL BRIDGE SECTION (WITH DEV BACKDOOR BUTTONS) ───────────────────────
+// ─── NEURAL BRIDGE SECTION ────────────────────────────────────────────────────
 function NeuralBridgeSection() {
-  const router = useRouter();
-
   return (
     <section style={{ position: "relative" }}>
       <NeuralBridge />
-
-      {/* Developer access overlay — bottom of the 3D scene */}
-      <div style={{
-        position: "absolute",
-        inset: 0,
-        zIndex: 20,
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        justifyContent: "flex-end",
-        paddingBottom: "10vh",
-        pointerEvents: "none",
-      }}>
-        {/* Dev label */}
-        <div className="fM" style={{
-          fontSize: 9, letterSpacing: ".22em", textTransform: "uppercase",
-          color: "rgba(255,255,255,.28)", marginBottom: 12, pointerEvents: "none",
-        }}>── Developer Access ──</div>
-
-        <div style={{ display: "flex", gap: 14, flexWrap: "wrap", justifyContent: "center", pointerEvents: "auto" }}>
-          {/* Patient Interface */}
-          <button
-            onClick={() => router.push("/patients/home?dev=true")}
-            className="fB sweep-btn sweep-teal"
-          >
-            <span className="sweep-bar" style={{ background: "rgba(45,212,191,.6)", boxShadow: "0 0 18px rgba(45,212,191,.8)" }} />
-            <Play size={14} style={{ fill: "#2DD4BF", flexShrink: 0, position: "relative", zIndex: 1 }} />
-            <span style={{ position: "relative", zIndex: 1 }}>Patient Interface</span>
-          </button>
-
-          {/* NeuralBridge Doctor Interface */}
-          <button
-            onClick={() => router.push("/doctor/home?dev=true")}
-            className="fB sweep-btn sweep-slate"
-          >
-            <span className="sweep-bar" style={{ background: "rgba(167,139,250,.45)", boxShadow: "0 0 18px rgba(167,139,250,.7)" }} />
-            <Stethoscope size={14} style={{ flexShrink: 0, position: "relative", zIndex: 1, color: "#a78bfa" }} />
-            <span style={{ position: "relative", zIndex: 1 }}>NeuralBridge Portal</span>
-            <ArrowRight size={11} style={{ opacity: .5, position: "relative", zIndex: 1 }} />
-          </button>
-        </div>
-      </div>
     </section>
   );
 }
