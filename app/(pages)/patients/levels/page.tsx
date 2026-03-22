@@ -144,7 +144,7 @@ const BASE_LEVELS: Level[] = [
   },
   {
     id: 5,
-    title: "Memory Gate: Elite",
+    title: "Sky Bird: Elite",
     category: "STRENGTH",
     desc: "Ultimate cognitive-motor challenge. Long sequences and heavy resistance constraints.",
     locked: false,
