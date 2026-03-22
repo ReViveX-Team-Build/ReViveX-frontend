@@ -1,4 +1,3 @@
-// util/game-core/SynapsePlayer.ts
 import { Particle } from "./SynapseParticles";
 
 type PlayerStatus = "swimming" | "hit_ceiling" | "hit_floor";
@@ -16,6 +15,7 @@ export class Player {
   targetRotation: number;
   tailPhase:      number;
   eyeBlinkTimer:  number;
+  private shimmerGrad: CanvasGradient | null = null; // OPTIMIZATION: Cache static gradient
 
   // PHYSICS
   velocity:       number;
@@ -138,8 +138,6 @@ export class Player {
     const isBlinking= this.eyeBlinkTimer > 4000;
 
     // ── Body color ──────────────────────────────────────────────────────────
-    // Day:  medium purple  rgb(138,92,208)  → Night: teal rgb(45,212,191)
-    // Smooth continuous lerp — no hard threshold snap
     const nf  = nightFactor;
     const lerp = (a: number, b: number) => Math.round(a + (b - a) * nf);
     const bR  = lerp(138, 45);
@@ -148,21 +146,15 @@ export class Player {
     const b2R = lerp(175, 94);
     const b2G = lerp(130,234);
     const b2B = lerp(235,212);
+    
     const bodyColor  = isRedPhase ? "#ef4444" : `rgb(${bR},${bG},${bB})`;
     const bodyColor2 = isRedPhase ? "#fca5a5" : `rgb(${b2R},${b2G},${b2B})`;
     const finColor   = isRedPhase ? "rgba(239,100,60,0.72)" : `rgba(${bR},${bG},${bB},0.75)`;
     const finColor2  = isRedPhase ? "rgba(239,100,60,0.40)" : `rgba(${bR},${bG},${bB},0.38)`;
 
-    // ════════════════════════════════════════════════════════════════════════
-    // DRAW ORDER: tail → far pectoral → body → dorsal → anal → near pectoral → eye
-    // This gives correct depth layering
-    // ════════════════════════════════════════════════════════════════════════
-
     // ── 1. TAIL FIN ─────────────────────────────────────────────────────────
-    // Pivots at the wrist of the tail, wags with wagOffset
     ctx.save();
     ctx.translate(-r * 0.85, 0);
-    // Rotate tail so it fans around the wrist point
     const tailAngle = Math.sin(this.tailPhase) * 0.38;
     ctx.rotate(tailAngle);
 
@@ -173,16 +165,13 @@ export class Player {
     ctx.fillStyle = tailGrad;
     ctx.beginPath();
     ctx.moveTo(0, 0);
-    // Top lobe
     ctx.bezierCurveTo(-r * 0.3, -r * 0.3, -r * 1.1, -r * 0.8, -r * 1.4, -r * 0.85);
     ctx.bezierCurveTo(-r * 1.3, -r * 0.5, -r * 1.1, -r * 0.25, -r * 0.7, 0);
-    // Bottom lobe (mirror)
     ctx.bezierCurveTo(-r * 1.1, r * 0.25, -r * 1.3, r * 0.5, -r * 1.4, r * 0.85);
     ctx.bezierCurveTo(-r * 1.1, r * 0.8, -r * 0.3, r * 0.3, 0, 0);
     ctx.closePath();
     ctx.fill();
 
-    // Fin rays
     ctx.strokeStyle = finColor2;
     ctx.lineWidth   = 0.8;
     for (let i = 1; i <= 3; i++) {
@@ -198,8 +187,7 @@ export class Player {
     }
     ctx.restore();
 
-    // ── 2. FAR PECTORAL FIN (below body, behind head — other side) ──────────
-    // Small transparent ellipse angled downward — looks like the far-side fin
+    // ── 2. FAR PECTORAL FIN ─────────────────────────────────────────────────
     ctx.save();
     ctx.translate(r * 0.15, r * 0.35);
     ctx.rotate(0.55);
@@ -212,35 +200,46 @@ export class Player {
     ctx.fill();
     ctx.restore();
 
-    // ── 3. MAIN BODY ────────────────────────────────────────────────────────
+    // ── 3. MAIN BODY (OPTIMIZED WITH FAKE SHADOW GLOW) ──────────────────────
+    // The expensive shadowBlur is replaced with a fast radial gradient underlay
+    const blurRadiusX = r + 4 + (isDangerPhase ? 18 : 8);
+    const blurRadiusY = (r * 0.78) + (isDangerPhase ? 18 : 8);
+    const glowColor = isRedPhase ? "239,68,68" : `${bR},${bG},${bB}`;
+    
+    const glow = ctx.createRadialGradient(0, 0, r * 0.4, 0, 0, Math.max(blurRadiusX, blurRadiusY));
+    glow.addColorStop(0, `rgba(${glowColor}, 0.55)`);
+    glow.addColorStop(1, `rgba(${glowColor}, 0)`);
+    
+    ctx.fillStyle = glow;
+    ctx.beginPath();
+    ctx.ellipse(0, 0, blurRadiusX, blurRadiusY, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Actual Body
     ctx.beginPath();
     ctx.ellipse(0, 0, r + 4, r * 0.78, 0, 0, Math.PI * 2);
-
     const bodyGrad = ctx.createLinearGradient(-r, -r * 0.78, r, r * 0.78);
     bodyGrad.addColorStop(0,    bodyColor);
     bodyGrad.addColorStop(0.45, bodyColor2);
     bodyGrad.addColorStop(1,    bodyColor);
     ctx.fillStyle   = bodyGrad;
-    ctx.shadowColor = isRedPhase ? "#ef4444" : `rgb(${bR},${bG},${bB})`;
-    ctx.shadowBlur  = isDangerPhase ? 30 : 14;
     ctx.fill();
-    ctx.shadowBlur = 0;
 
-    // Belly shimmer
-    const shimmer = ctx.createRadialGradient(r * 0.2, -r * 0.3, r * 0.05, r * 0.1, -r * 0.25, r * 0.7);
-    shimmer.addColorStop(0, "rgba(255,255,255,0.28)");
-    shimmer.addColorStop(1, "rgba(255,255,255,0)");
-    ctx.fillStyle = shimmer;
-    ctx.fill();
+    // Belly shimmer (Cached for performance)
+    if (!this.shimmerGrad) {
+      this.shimmerGrad = ctx.createRadialGradient(r * 0.2, -r * 0.3, r * 0.05, r * 0.1, -r * 0.25, r * 0.7);
+      this.shimmerGrad.addColorStop(0, "rgba(255,255,255,0.28)");
+      this.shimmerGrad.addColorStop(1, "rgba(255,255,255,0)");
+    }
+    ctx.fillStyle = this.shimmerGrad;
+    ctx.fill(); // Fills the existing body path
 
     ctx.strokeStyle = "rgba(255,255,255,0.40)";
     ctx.lineWidth   = 1.5;
     ctx.stroke();
 
-    // ── 4. DORSAL FIN (top, swept backward like a sail) ─────────────────────
-    // Anchored at two points on top of the body — rear anchor moves with wag
-    // This gives the fin a subtle flex as the tail moves
-    const dorsalFlex = Math.sin(this.tailPhase) * 1.8; // subtle
+    // ── 4. DORSAL FIN ───────────────────────────────────────────────────────
+    const dorsalFlex = Math.sin(this.tailPhase) * 1.8; 
     ctx.save();
     const dgFin = ctx.createLinearGradient(-r * 0.2, -r * 0.78, -r * 0.8, -r * 1.55);
     dgFin.addColorStop(0, finColor);
@@ -248,15 +247,12 @@ export class Player {
     dgFin.addColorStop(1, "rgba(180,240,235,0.55)");
 
     ctx.beginPath();
-    // Front anchor on body top (near middle)
     ctx.moveTo(r * 0.12, -r * 0.72);
-    // Sweep up and back to tip
     ctx.bezierCurveTo(
       r * 0.0,  -r * 1.45 + dorsalFlex,
       -r * 0.5, -r * 1.60 + dorsalFlex,
       -r * 0.82,-r * 1.30 + dorsalFlex * 0.5,
     );
-    // Curve back down to rear anchor
     ctx.bezierCurveTo(
       -r * 0.7, -r * 0.95,
       -r * 0.4, -r * 0.82,
@@ -266,7 +262,6 @@ export class Player {
     ctx.fillStyle = dgFin;
     ctx.fill();
 
-    // Inner shadow on leading edge
     ctx.save();
     ctx.beginPath();
     ctx.moveTo(r * 0.12, -r * 0.72);
@@ -284,7 +279,6 @@ export class Player {
     ctx.lineWidth   = 0.85;
     ctx.stroke();
 
-    // Fin rays (3 — sweep from base toward tip)
     ctx.strokeStyle = finColor2.replace(/[\d.]+\)$/, "0.45)");
     ctx.lineWidth   = 0.65;
     ctx.beginPath(); ctx.moveTo(r*0.10,-r*0.74); ctx.bezierCurveTo(r*0.05,-r*1.10,-r*0.08,-r*1.38,-r*0.22,-r*1.50+dorsalFlex); ctx.stroke();
@@ -293,8 +287,8 @@ export class Player {
 
     ctx.restore();
 
-    // ── 5. ANAL FIN (bottom belly — small, swept backward) ──────────────────
-    const analFlex = -Math.sin(this.tailPhase) * 1.4; // opposite phase to dorsal
+    // ── 5. ANAL FIN ─────────────────────────────────────────────────────────
+    const analFlex = -Math.sin(this.tailPhase) * 1.4; 
     ctx.save();
     const agFin = ctx.createLinearGradient(0, r * 0.72, -r * 0.55, r * 1.35);
     agFin.addColorStop(0, finColor);
@@ -317,7 +311,6 @@ export class Player {
     ctx.lineWidth   = 0.8;
     ctx.stroke();
 
-    // 2 rays
     ctx.strokeStyle = finColor2.replace(/[\d.]+\)$/, "0.40)");
     ctx.lineWidth   = 0.60;
     ctx.beginPath(); ctx.moveTo(r*0.02,r*0.76); ctx.bezierCurveTo(-r*0.12,r*1.05,-r*0.28,r*1.22,-r*0.42,r*1.18+analFlex*0.7); ctx.stroke();
@@ -325,9 +318,8 @@ export class Player {
 
     ctx.restore();
 
-    // ── 6. NEAR PECTORAL FIN (side fin near head — clearly visible) ─────────
-    // Fans out from body side, slightly animated
-    const pecFlex = Math.sin(this.tailPhase * 0.7) * 0.12; // gentle wave
+    // ── 6. NEAR PECTORAL FIN ────────────────────────────────────────────────
+    const pecFlex = Math.sin(this.tailPhase * 0.7) * 0.12; 
     ctx.save();
     ctx.translate(r * 0.18, r * 0.12);
     ctx.rotate(-0.30 + pecFlex);
@@ -345,7 +337,6 @@ export class Player {
     ctx.fillStyle = pfg;
     ctx.fill();
 
-    // Inner shadow on leading edge
     ctx.save();
     ctx.beginPath();
     ctx.moveTo(0,0); ctx.bezierCurveTo(r*0.10,r*0.35,r*0.25,r*0.70,r*0.18,r*0.85);
@@ -361,7 +352,6 @@ export class Player {
     ctx.lineWidth   = 0.7;
     ctx.stroke();
 
-    // 2 rays
     ctx.strokeStyle = finColor2.replace(/[\d.]+\)$/, "0.45)");
     ctx.lineWidth   = 0.60;
     ctx.beginPath(); ctx.moveTo(0,0); ctx.bezierCurveTo(r*0.08,r*0.28,r*0.18,r*0.55,r*0.16,r*0.80); ctx.stroke();
@@ -376,47 +366,37 @@ export class Player {
     ctx.fill();
 
     if (!isBlinking) {
-      // Pupil
       ctx.beginPath();
       ctx.arc(r * 0.38 + 2, -r * 0.24, 3.5, 0, Math.PI * 2);
       ctx.fillStyle = "#0B1E33";
       ctx.fill();
-      // Iris ring
       ctx.beginPath();
       ctx.arc(r * 0.38 + 1.5, -r * 0.24, 3, 0, Math.PI * 2);
       ctx.strokeStyle = nightFactor > 0.5 ? "#2DD4BF" : "#0891b2";
       ctx.lineWidth = 1.1;
       ctx.stroke();
-      // Specular highlight
       ctx.beginPath();
       ctx.arc(r * 0.38 - 1.5, -r * 0.24 - 2.2, 1.8, 0, Math.PI * 2);
       ctx.fillStyle = "rgba(255,255,255,0.95)";
       ctx.fill();
     }
 
-    // Eye outline
     ctx.beginPath();
     ctx.ellipse(r * 0.38, -r * 0.24, 7.5, isBlinking ? 1.2 : 7.5, 0, 0, Math.PI * 2);
     ctx.strokeStyle = "rgba(8,60,55,0.70)";
     ctx.lineWidth   = 1;
     ctx.stroke();
 
-    // ── 8. MOUTH — subtle upward curve, like a gentle smile ─────────────────
-    // Positioned ahead of the eye, front of the face
+    // ── 8. MOUTH ────────────────────────────────────────────────────────────
     ctx.save();
     ctx.beginPath();
-    // Small arc: starts left, curves gently up then right — looks like a soft smile
     ctx.moveTo(r * 0.52, r * 0.06);
-    ctx.bezierCurveTo(
-      r * 0.60,  r * 0.18,   // control 1 — dips down in middle
-      r * 0.74,  r * 0.20,   // control 2
-      r * 0.80,  r * 0.08,   // end point
-    );
+    ctx.bezierCurveTo(r * 0.60, r * 0.18, r * 0.74, r * 0.20, r * 0.80, r * 0.08);
     ctx.strokeStyle = `rgba(${Math.round(bR*0.45)},${Math.round(bG*0.35)},${Math.round(bB*0.55)},0.75)`;
     ctx.lineWidth   = 1.6;
     ctx.lineCap     = "round";
     ctx.stroke();
-    // Tiny lower lip highlight — a fainter shorter arc just below
+    
     ctx.beginPath();
     ctx.moveTo(r * 0.55, r * 0.13);
     ctx.bezierCurveTo(r * 0.63, r * 0.22, r * 0.72, r * 0.22, r * 0.78, r * 0.14);
@@ -444,8 +424,12 @@ export class Player {
   }
 
   drawNightVision(ctx: CanvasRenderingContext2D) {
+    // OPTIMIZATION: Replaced shadowBlur with fast layered glow
+    ctx.fillStyle = "rgba(0,255,0,0.3)";
+    ctx.beginPath(); ctx.arc(12, -7, 13, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.arc(26, -7, 13, 0, Math.PI * 2); ctx.fill();
+
     ctx.fillStyle = "#00FF00";
-    ctx.shadowBlur = 10; ctx.shadowColor = "#00FF00";
     ctx.beginPath(); ctx.arc(12, -7, 7, 0, Math.PI * 2); ctx.fill();
     ctx.beginPath(); ctx.arc(26, -7, 7, 0, Math.PI * 2); ctx.fill();
     ctx.fillStyle = "rgba(0,50,0,0.5)";
