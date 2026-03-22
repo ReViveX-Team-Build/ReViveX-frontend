@@ -1117,7 +1117,7 @@ const SkyMemoryGame: React.FC = () => {
                     margin: 0,
                     marginBottom: 6,
                   }}>
-                  Watch the color sequence on each gate.
+                  Play the game for the prescribed time period.
                 </p>
                 <p
                   style={{
