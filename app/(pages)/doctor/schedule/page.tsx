@@ -191,6 +191,9 @@ function AgendaRow({ item, patientName, onCancel, onDelete, disabled, isDark }: 
   item: any; patientName: string; onCancel:(id:string, type:string)=>void; onDelete:(id:string, type:string)=>void; disabled:boolean; isDark: boolean;
 }) {
   const isGame = item.type === "game";
+  
+  // 🟢 NEW: Check if the button should be available
+  const isActionable = item.status === "scheduled" || item.status === "pending" || item.status === "confirmed";
 
   return (
     <div className="sc-session-row">
@@ -229,8 +232,8 @@ function AgendaRow({ item, patientName, onCancel, onDelete, disabled, isDark }: 
       {/* Actions */}
       <div style={{ display:"flex", alignItems:"center", gap:8, flexShrink:0 }}>
         
-        {/* JITSI INTEGRATION: Join Call Button for Telehealth */}
-        {!isGame && item.mode === "telehealth" && (
+        {/* 🟢 JITSI INTEGRATION: Wrapped in isActionable to hide when time passes */}
+        {!isGame && item.mode === "telehealth" && isActionable && (
           <button 
             onClick={() => window.open(`/doctor/meeting/${item.id}`, "_blank")}
             style={{ 
@@ -248,7 +251,7 @@ function AgendaRow({ item, patientName, onCancel, onDelete, disabled, isDark }: 
 
         <StatusBadge status={item.status}/>
         
-        {(item.status === "scheduled" || item.status === "pending" || item.status === "confirmed") && (
+        {isActionable && (
           <button className="sc-btn-cancel" onClick={() => onCancel(item.id, item.type)} disabled={disabled}>
             <XCircle size={11}/> Cancel
           </button>
@@ -353,30 +356,57 @@ export default function SchedulePage() {
         getDoctorAppointments(uid)
       ]);
 
-      // 🔴 STRICT FRONT-END TIME CHECK
-      // Compares the scheduled time against your computer's local time.
       const now = new Date();
-      const processStatus = (item: any) => {
-        if (item.status === "completed" || item.status === "cancelled" || item.status === "missed") {
-          return item; // Keep explicit statuses
+
+      // 🟢 THE SMART AUTO-TRACKER FOR DOCTOR
+      const processEvents = async (items: any[], type: "game" | "meeting") => {
+        const processed = [];
+        for (const item of items) {
+          let status = item.status;
+          
+          let eventTime = new Date(`${item.scheduledDate}T${item.scheduledTime}:00`);
+          if (isNaN(eventTime.getTime())) {
+            eventTime = new Date(`${item.scheduledDate} ${item.scheduledTime}`);
+          }
+
+          if (!isNaN(eventTime.getTime()) && ["scheduled", "pending", "confirmed"].includes(status)) {
+            const duration = item.durationMinutes || 30;
+            const endTime = new Date(eventTime.getTime() + duration * 60000);
+
+            // If the session time has fully elapsed...
+            if (now > endTime) {
+              let meetsCompletionCriteria = false;
+              
+              if (type === "meeting" && item.mode === "telehealth") {
+                // For Telehealth: Mark Completed ONLY if BOTH Patient & Doctor Joined!
+                meetsCompletionCriteria = !!(item.patientJoined && item.doctorJoined);
+              } else if (type === "game") {
+                // For Games: Mark completed if the patient joined
+                meetsCompletionCriteria = !!item.patientJoined;
+              }
+
+              // Update the status
+              status = meetsCompletionCriteria ? "completed" : "missed";
+              
+              // Save to Firebase permanently
+              if (type === "game") {
+                await updateSessionStatus(item.id, status);
+              } else {
+                await updateAppointmentStatus(item.id, status);
+              }
+            }
+          }
+          processed.push({ ...item, status, type });
         }
-        
-        // Construct a proper Date object for the event
-        const eventTime = new Date(`${item.scheduledDate}T${item.scheduledTime}:00`);
-        
-        // If the event time is in the past, override the status to "missed" for the UI
-        if (eventTime < now) {
-          return { ...item, status: "missed" };
-        }
-        return item;
+        return processed;
       };
 
-      const processedSessions = sched.map(processStatus) as ScheduledSession[];
-      const processedAppointments = appts.map(processStatus) as Appointment[];
+      const processedSessions = await processEvents(sched, "game");
+      const processedAppointments = await processEvents(appts, "meeting");
       
       setPatients(pts); 
-      setSessions(processedSessions);
-      setAppointments(processedAppointments);
+      setSessions(processedSessions as ScheduledSession[]);
+      setAppointments(processedAppointments as Appointment[]);
       
       if (!sessionForm.patientId && pts.length > 0) {
         setSessionForm(prev => ({...prev, patientId: pts[0].uid}));
@@ -464,7 +494,6 @@ export default function SchedulePage() {
   };
 
   const handleSaveReminderPreference = () => {
-    // Note: We will wire this up to Firestore when building the Patient side!
     setShowReminderConfig(false);
     alert(`Preferences saved! Patients will now be notified ${reminderMinutes} minutes prior.`);
   };
