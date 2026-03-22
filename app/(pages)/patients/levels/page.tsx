@@ -127,7 +127,7 @@ const BASE_LEVELS: Level[] = [
   },
   {
     id: 4,
-    title: "Memory Gate: Advanced",
+    title: "Sky Bird: Advanced",
     category: "COGNITIVE",
     desc: "Complex sequencing under time pressure. Strains working memory alongside muscle endurance.",
     locked: false,
@@ -144,7 +144,7 @@ const BASE_LEVELS: Level[] = [
   },
   {
     id: 5,
-    title: "Memory Gate: Elite",
+    title: "Sky Bird: Elite",
     category: "STRENGTH",
     desc: "Ultimate cognitive-motor challenge. Long sequences and heavy resistance constraints.",
     locked: false,
