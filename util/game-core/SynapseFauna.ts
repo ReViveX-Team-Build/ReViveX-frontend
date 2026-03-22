@@ -379,9 +379,10 @@ export class AmbientFishSystem {
     const swimH     = Math.max(40, swimFloor - swimTop);
 
     for (const e of this.entities) {
-      const lc  = LAYER_CFG[e.layer];
-      const spd = e.speed * scrollSpeed * lc.speedMult;
-      e.x += e.direction * spd;
+      const lc             = LAYER_CFG[e.layer];
+      const parallaxScroll = scrollSpeed * lc.speedMult;   // environment scrolling past camera
+      const independentSwim = e.direction * e.speed;       // fish's own swimming
+      e.x += independentSwim - parallaxScroll;
 
       // Clamp baseY to sand
       e.baseY = Math.min(e.baseY, swimFloor);
@@ -438,7 +439,7 @@ export class AmbientFishSystem {
       ctx.save();
       ctx.globalAlpha = alpha * (0.72 + Math.random() * 0.28);
       ctx.translate(ox, oy);
-      ctx.scale(e.direction * wiggle, 1);
+      ctx.scale(-e.direction * wiggle, 1);
       ctx.drawImage(sprite, -sw / 2, -sh / 2, sw, sh);
       ctx.restore();
     }
@@ -466,7 +467,7 @@ export class AmbientFishSystem {
     if (night) ctx.globalCompositeOperation = 'screen';
     ctx.globalAlpha = alpha;
     ctx.translate(e.x, e.baseY + bob);
-    ctx.scale(e.direction * wiggle, 1);
+    ctx.scale(-e.direction * wiggle, 1);
     ctx.drawImage(sprite, -sw / 2, -sh / 2, sw, sh);
     ctx.restore();
   }
