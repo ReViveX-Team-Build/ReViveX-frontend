@@ -59,7 +59,7 @@ const DIFFICULTY_SETTINGS = {
     colors: 2,
     showTime: 3000,
     holdTime: 4000,
-    name: "Memory Trench",
+    name: "Sky Bird: Novice",
   },
   4: {
     sequenceLength: 3,
@@ -67,7 +67,7 @@ const DIFFICULTY_SETTINGS = {
     colors: 3,
     showTime: 3500,
     holdTime: 4500,
-    name: "Precision Peaks",
+    name: "Sky Bird: Advanced",
   },
   5: {
     sequenceLength: 3,
@@ -75,7 +75,7 @@ const DIFFICULTY_SETTINGS = {
     colors: 4,
     showTime: 3500,
     holdTime: 4500,
-    name: "Abyss Mastery",
+    name: "Sky Bird: Elite",
   },
 };
 
@@ -997,7 +997,7 @@ const SkyMemoryGame: React.FC = () => {
                 textTransform: "uppercase",
                 margin: "0 0 26px",
               }}>
-              Level {gameLevel} · Memory Training
+              Level {gameLevel} · Cognitive Training
             </p>
 
             <div
@@ -1117,7 +1117,7 @@ const SkyMemoryGame: React.FC = () => {
                     margin: 0,
                     marginBottom: 6,
                   }}>
-                  Watch the color sequence on each gate.
+                  Play the game for the prescribed time period.
                 </p>
                 <p
                   style={{

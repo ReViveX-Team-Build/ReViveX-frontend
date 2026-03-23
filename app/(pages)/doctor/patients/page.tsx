@@ -1,7 +1,8 @@
 "use client";
 
-import React, { useState, useMemo, useEffect, useCallback } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import {
   Search,
   Bot,
@@ -194,6 +195,7 @@ const CSS = `
   @keyframes mppPing    { 0%,100%{box-shadow:0 0 0 0 rgba(99,102,241,.45)} 50%{box-shadow:0 0 0 6px rgba(99,102,241,0)} }
   @keyframes mppCountUp { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
   @keyframes spin        { from{transform:rotate(0deg)} to{transform:rotate(360deg)} }
+  @keyframes mppModalIn  { from{opacity:0;transform:translateY(10px) scale(.98)} to{opacity:1;transform:translateY(0) scale(1)} }
   .mpp-search { width:100%;padding:10px 14px 10px 40px;background:#f8fafc;border:1.5px solid #e2e8f0;border-radius:12px;font-size:13.5px;font-weight:500;color:#0B1E33;outline:none;transition:all .2s;font-family:'Plus Jakarta Sans',sans-serif; }
   .mpp-search::placeholder{color:#94a3b8}
   .mpp-search:focus{background:#fff;border-color:rgba(45,212,191,.65);box-shadow:0 0 0 3px rgba(45,212,191,.10)}
@@ -210,6 +212,17 @@ const CSS = `
   .mpp-proto-set{position:absolute;top:-5px;right:-5px;width:12px;height:12px;border-radius:50%;background:#22c55e;border:2px solid #fff;box-shadow:0 0 5px rgba(34,197,94,.6)}
   .mpp-view-btn{display:inline-flex;align-items:center;padding:7px 16px;border-radius:9px;font-size:12px;font-weight:700;border:1.5px solid #cbd5e1;background:#fff;color:#1e293b;cursor:pointer;transition:all .18s;text-decoration:none;white-space:nowrap}
   .mpp-view-btn:hover{background:#0B1E33;color:#fff;border-color:#0B1E33;box-shadow:0 4px 14px rgba(11,30,51,.20);transform:translateY(-1px)}
+  .mpp-modal-backdrop{position:fixed;inset:0;background:rgba(2,6,23,.56);backdrop-filter:blur(2px);display:flex;align-items:center;justify-content:center;padding:20px;z-index:90}
+  .mpp-modal{width:min(560px,100%);background:#fff;border:1.5px solid #e2e8f0;border-radius:18px;box-shadow:0 24px 80px rgba(2,6,23,.28);overflow:hidden;animation:mppModalIn .2s cubic-bezier(.22,1,.36,1) both}
+  .mpp-modal-head{display:flex;justify-content:space-between;align-items:center;padding:18px 20px;border-bottom:1px solid #e2e8f0}
+  .mpp-modal-close{width:32px;height:32px;border-radius:9px;border:1.5px solid #e2e8f0;background:#fff;color:#64748b;font-size:18px;line-height:1;cursor:pointer}
+  .mpp-modal-close:hover{background:#f8fafc}
+  .mpp-modal-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:18px 20px 20px}
+  .mpp-modal-item{border:1px solid #e2e8f0;border-radius:12px;padding:11px 12px;background:#f8fafc}
+  .mpp-modal-item.full{grid-column:1/-1}
+  .mpp-modal-label{font-size:10px;font-weight:700;letter-spacing:.11em;text-transform:uppercase;color:#94a3b8;font-family:'JetBrains Mono',monospace}
+  .mpp-modal-value{margin-top:6px;font-size:14px;font-weight:700;color:#0B1E33}
+  .mpp-modal-foot{padding:0 20px 20px;display:flex;justify-content:flex-end}
   .mpp-condition{display:inline-flex;align-items:center;padding:3px 10px;border-radius:99px;font-size:11px;font-weight:600;background:rgba(11,30,51,.05);color:#475569;white-space:nowrap;border:1px solid rgba(11,30,51,.08)}
   .mpp-scroll::-webkit-scrollbar{height:4px}
   .mpp-scroll::-webkit-scrollbar-thumb{background:rgba(45,212,191,.28);border-radius:99px}
@@ -226,6 +239,12 @@ const CSS = `
   .dark .mpp-stat { background: #1e293b !important; border-color: #334155 !important; box-shadow: 0 2px 14px rgba(0,0,0,.18) !important; }
   .dark .mpp-view-btn { background: #1e293b; color: #f1f5f9; border-color: #475569; }
   .dark .mpp-view-btn:hover { background: #f1f5f9; color: #0B1E33; border-color: #f1f5f9; }
+  .dark .mpp-modal { background: #1e293b; border-color: #334155; box-shadow: 0 24px 80px rgba(0,0,0,.45); }
+  .dark .mpp-modal-head { border-bottom-color: #334155; }
+  .dark .mpp-modal-close { background: #334155; border-color: #475569; color: #94a3b8; }
+  .dark .mpp-modal-close:hover { background: #475569; }
+  .dark .mpp-modal-item { background: #0f172a; border-color: #334155; }
+  .dark .mpp-modal-value { color: #f1f5f9; }
   .dark .mpp-condition { background: rgba(241,245,249,.07); color: #94a3b8; border-color: rgba(241,245,249,.10); }
   .dark .mpp-tr:hover td { background: rgba(45,212,191,.07) !important; }
   .dark .mpp-proto-set { border-color: #1e293b; }
@@ -428,6 +447,7 @@ function StatCard({
 }
 
 export default function DoctorPatientsPage() {
+  const searchParams = useSearchParams();
   const [user, authLoading] = useAuthState(auth);
   const doctorId = user?.uid ?? "";
   const [displayPatients, setDisplayPatients] = useState<DisplayPatient[]>([]);
@@ -436,8 +456,12 @@ export default function DoctorPatientsPage() {
   const [search, setSearch] = useState("");
   const [adherenceFilter, setAdherenceFilter] = useState("all");
   const [conditionFilter, setConditionFilter] = useState("all");
+  const [selectedPatient, setSelectedPatient] = useState<DisplayPatient | null>(
+    null,
+  );
   const [mounted, setMounted] = useState(false);
   const isDark = useDarkMode();
+  const openPatientId = searchParams.get("openPatient");
 
   useEffect(() => {
     setMounted(true);
@@ -544,6 +568,28 @@ export default function DoctorPatientsPage() {
   const highCount = displayPatients.filter((p) => p.status === "High").length;
   const lowCount = displayPatients.filter((p) => p.status === "Low").length;
   const protoCount = displayPatients.filter((p) => p.hasProtocol).length;
+
+  useEffect(() => {
+    if (!selectedPatient) return;
+
+    const onEsc = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setSelectedPatient(null);
+      }
+    };
+
+    window.addEventListener("keydown", onEsc);
+    return () => window.removeEventListener("keydown", onEsc);
+  }, [selectedPatient]);
+
+  useEffect(() => {
+    if (!openPatientId || displayPatients.length === 0) return;
+
+    const patientFromLink = displayPatients.find((p) => p.id === openPatientId);
+    if (patientFromLink) {
+      setSelectedPatient(patientFromLink);
+    }
+  }, [openPatientId, displayPatients]);
 
   if (!mounted) return null;
 
@@ -1011,11 +1057,12 @@ export default function DoctorPatientsPage() {
                                     "1.5px dashed rgba(45,212,191,.22)",
                                   verticalAlign: "middle",
                                 }}>
-                                <Link
-                                  href={`/doctor/patients/${p.id}`}
+                                <button
+                                  type="button"
+                                  onClick={() => setSelectedPatient(p)}
                                   className="mpp-view-btn">
                                   View Profile
-                                </Link>
+                                </button>
                               </td>
                             </tr>
                           );
@@ -1088,6 +1135,102 @@ export default function DoctorPatientsPage() {
                   </span>
                 </div>
               </>
+            )}
+
+            {selectedPatient && (
+              <div
+                className="mpp-modal-backdrop"
+                onClick={() => setSelectedPatient(null)}>
+                <div className="mpp-modal" onClick={(e) => e.stopPropagation()}>
+                  <div className="mpp-modal-head">
+                    <div>
+                      <div
+                        className="mono"
+                        style={{
+                          fontSize: 10,
+                          fontWeight: 700,
+                          letterSpacing: "0.12em",
+                          color: isDark ? "#64748b" : "#94a3b8",
+                          textTransform: "uppercase",
+                        }}>
+                        Patient Snapshot
+                      </div>
+                      <div
+                        style={{
+                          marginTop: 4,
+                          fontSize: 20,
+                          fontWeight: 800,
+                          color: isDark ? "#f1f5f9" : "#0B1E33",
+                        }}>
+                        {selectedPatient.name}
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      className="mpp-modal-close"
+                      onClick={() => setSelectedPatient(null)}
+                      aria-label="Close patient profile popup">
+                      ×
+                    </button>
+                  </div>
+
+                  <div className="mpp-modal-grid">
+                    <div className="mpp-modal-item">
+                      <div className="mpp-modal-label">Patient ID</div>
+                      <div className="mpp-modal-value mono">
+                        {selectedPatient.pid}
+                      </div>
+                    </div>
+                    <div className="mpp-modal-item">
+                      <div className="mpp-modal-label">Condition</div>
+                      <div className="mpp-modal-value">
+                        {selectedPatient.condition || "Not specified"}
+                      </div>
+                    </div>
+                    <div className="mpp-modal-item">
+                      <div className="mpp-modal-label">Adherence</div>
+                      <div className="mpp-modal-value">
+                        {selectedPatient.adherence}%
+                      </div>
+                    </div>
+                    <div className="mpp-modal-item">
+                      <div className="mpp-modal-label">Status</div>
+                      <div className="mpp-modal-value">
+                        {selectedPatient.status}
+                      </div>
+                    </div>
+                    <div className="mpp-modal-item">
+                      <div className="mpp-modal-label">Subscription</div>
+                      <div className="mpp-modal-value">
+                        {selectedPatient.sub}
+                      </div>
+                    </div>
+                    <div className="mpp-modal-item">
+                      <div className="mpp-modal-label">Last Session</div>
+                      <div className="mpp-modal-value mono">
+                        {selectedPatient.lastSession}
+                      </div>
+                    </div>
+                    <div className="mpp-modal-item full">
+                      <div className="mpp-modal-label">Protocol</div>
+                      <div className="mpp-modal-value">
+                        {selectedPatient.hasProtocol
+                          ? "Therapy protocol configured"
+                          : "No therapy protocol configured"}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="mpp-modal-foot">
+                    <button
+                      type="button"
+                      onClick={() => setSelectedPatient(null)}
+                      className="mpp-view-btn">
+                      Close
+                    </button>
+                  </div>
+                </div>
+              </div>
             )}
           </>
         )}

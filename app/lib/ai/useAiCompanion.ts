@@ -4,8 +4,6 @@ import { useState, useEffect } from "react";
 import { Timestamp } from "firebase/firestore";
 import {
   getConversationHistory,
-  saveMessage,
-  pruneOldMessages,
   ChatMessage,
 } from "../db/conversations";
 
@@ -55,18 +53,23 @@ export function useAiCompanion(uid: string, role: AiRole = "patient") {
 
       if (!response.ok) {
         const errData = await response.json().catch(() => ({}));
-        throw new Error(errData.error ?? `HTTP ${response.status}`);
+        const errMsg = errData.error ?? `HTTP ${response.status}`;
+        setMessages((prev) => [
+          ...prev,
+          {
+            userId:    uid,
+            role:      "model",
+            content:   `⚠ ${errMsg}`,
+            timestamp: Timestamp.now(),
+          },
+        ]);
+        return;
       }
 
       const data = await response.json();
 
       if (data.reply) {
         // Persist both turns to Firestore
-        await saveMessage(uid, "user",  content);
-        await saveMessage(uid, "model", data.reply);
-
-        // Prune old messages to keep ai_conversations lean
-        await pruneOldMessages(uid, 50).catch(() => {});
 
         setMessages((prev) => [
           ...prev,
