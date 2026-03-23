@@ -571,7 +571,6 @@ export default function DoctorSidebar() {
     void loadUpcomingCount();
   }, [user, pathname]);
 
-  // 🟢 Load Real Patient Count
   useEffect(() => {
     const loadPatientCount = async () => {
       if (!user) {
@@ -595,7 +594,6 @@ export default function DoctorSidebar() {
     void loadPatientCount();
   }, [user, pathname]);
 
-  // 🟢 Dynamically map badges onto the navigation items
   const navItemsWithCounts = useMemo(
     () =>
       navItems.map((item) => {

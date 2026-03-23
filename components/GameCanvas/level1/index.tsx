@@ -2,7 +2,7 @@
 
 import React, { useRef, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Play, RotateCcw, Zap, Hand, Wifi, WifiOff, Waves } from "lucide-react";
+import { Play, RotateCcw, Zap, Hand, Wifi, WifiOff } from "lucide-react";
 import { useAuthState } from "react-firebase-hooks/auth";
 import { auth } from "@/app/lib/firebase";
 import { saveGameSession } from "../../../app/lib/db/sessions";
@@ -22,9 +22,9 @@ import { SynapseBackground } from "../../../util/game-core/SynapseBackground";
 import { SeaGrass } from "../../../util/game-core/SynapseSeaGrass";
 import { Particle } from "../../../util/game-core/SynapseParticles";
 import { SynapseCorals } from "../../../util/game-core/SynapseCorals";
+import { Pearl } from "../../../util/game-core/SynapseCognitive";
 import { TherapyProtocol } from "@/app/lib/db/types";
 
-// ── WEB SERIAL TYPES ──────────────────────────────────────────────────────────
 interface SerialPort {
   readonly readable: ReadableStream | null;
   readonly writable: WritableStream | null;
@@ -36,25 +36,20 @@ interface Serial extends EventTarget {
   getPorts(): Promise<SerialPort[]>;
 }
 declare global {
-  interface Navigator {
-    serial?: Serial;
-  }
+  interface Navigator { serial?: Serial; }
 }
 
-// ── CONSTANTS ─────────────────────────────────────────────────────────────────
-const IDLE_THRESHOLD = 0.5;
+const IDLE_THRESHOLD   = 0.5;
 const DANGER_THRESHOLD = 2.0;
 
-// ── TYPES ─────────────────────────────────────────────────────────────────────
 interface ClinicalMetrics {
-  jumpPressures: number[]; // peak pressure of every completed squeeze
+  jumpPressures: number[];
   currentSqueezePeak: number;
   isSqueezing: boolean;
 }
 
 type CountdownValue = number | "GO!" | null;
 
-// ── GLOBAL CSS ────────────────────────────────────────────────────────────────
 const GAME_CSS = `
   body:has(#synapse-game-root) aside,
   body:has(#synapse-game-root) nav,
@@ -92,46 +87,47 @@ const GAME_CSS = `
     92% { opacity:.6 }
     100%{ top:112%;  opacity:0 }
   }
+  @keyframes feedin {
+    0%  { opacity:0; transform:translate(-50%,-14px) scale(0.84) }
+    30% { opacity:1; transform:translate(-50%,0)     scale(1.05) }
+    78% { opacity:1; transform:translate(-50%,0)     scale(1) }
+    100%{ opacity:0; transform:translate(-50%,8px)   scale(0.94) }
+  }
+  @keyframes hudin {
+    from { opacity:0; transform:translateY(-10px) }
+    to   { opacity:1; transform:translateY(0) }
+  }
 `;
 
-// ── PRESSURE COLOUR ───────────────────────────────────────────────────────────
 const pressureColor = (v: number) => {
-  if (v < IDLE_THRESHOLD) return { hex: "#64748b", label: "IDLE" };
-  if (v < DANGER_THRESHOLD * 0.6) return { hex: "#2DD4BF", label: "GOOD" };
-  if (v < DANGER_THRESHOLD * 0.85) return { hex: "#FACC15", label: "HIGH" };
-  return { hex: "#EF4444", label: "DANGER" };
+  if (v < IDLE_THRESHOLD)           return { hex: "#64748b", label: "IDLE" };
+  if (v < DANGER_THRESHOLD * 0.6)   return { hex: "#2DD4BF", label: "GOOD" };
+  if (v < DANGER_THRESHOLD * 0.85)  return { hex: "#FACC15", label: "HIGH" };
+  return                                   { hex: "#EF4444", label: "DANGER" };
 };
 
-// ── COMPONENT ─────────────────────────────────────────────────────────────────
 const Level1Canvas: React.FC = () => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
-  const rafRef = useRef<number | null>(null);
-  const router = useRouter();
+  const rafRef    = useRef<number | null>(null);
+  const router    = useRouter();
   const searchParams = useSearchParams();
   const scheduledSessionId = searchParams.get("sessionId");
 
-  // ── Auth + protocol
   const [user] = useAuthState(auth);
   const [protocol, setProtocol] = useState<TherapyProtocol | null>(null);
 
-  // 🔴 FORCE THIS TO BE LEVEL 1 FOREVER
-  const currentLevelRef = useRef(1);
-
   const userUidRef = useRef<string>("");
-  useEffect(() => {
-    userUidRef.current = user?.uid ?? "";
-  }, [user]);
+  useEffect(() => { userUidRef.current = user?.uid ?? ""; }, [user]);
 
   useEffect(() => {
     if (!user) return;
     getActiveProtocol(user.uid).then((p) => { if (p) setProtocol(p); }).catch(() => {});
   }, [user]);
 
-  // ── IoT
   const [isConnected, setIsConnected] = useState(false);
   const isConnRef = useRef(false);
-  const pressRef = useRef(0);
-  const portRef = useRef<SerialPort | null>(null);
+  const pressRef  = useRef(0);
+  const portRef   = useRef<SerialPort | null>(null);
   const readerRef = useRef<ReadableStreamDefaultReader<string> | null>(null);
 
   const connectSerial = async () => {
@@ -159,15 +155,9 @@ const Level1Canvas: React.FC = () => {
     isConnRef.current = false;
     pressRef.current = 0;
     try {
-      if (readerRef.current) {
-        await readerRef.current.cancel();
-        readerRef.current.releaseLock();
-        readerRef.current = null;
-      }
+      if (readerRef.current) { await readerRef.current.cancel(); readerRef.current.releaseLock(); readerRef.current = null; }
     } catch (_) {}
-    try {
-      if (portRef.current) { await portRef.current.close(); portRef.current = null; }
-    } catch (_) {}
+    try { if (portRef.current) { await portRef.current.close(); portRef.current = null; } } catch (_) {}
     if (userUidRef.current) updateHardwareStatus(userUidRef.current, "offline").catch(() => {});
   };
 
@@ -185,61 +175,61 @@ const Level1Canvas: React.FC = () => {
           if (m) pressRef.current = parseFloat(m[1]);
         }
       }
-    } catch (_) {
-      setIsConnected(false);
-      isConnRef.current = false;
-    }
+    } catch (_) { setIsConnected(false); isConnRef.current = false; }
   };
 
-  const playerRef = useRef<Player | null>(null);
-  const bgRef = useRef<SynapseBackground | null>(null);
-  const grassRef = useRef<SeaGrass | null>(null);
-  const coralsRef = useRef<SynapseCorals | null>(null);
+  const playerRef    = useRef<Player | null>(null);
+  const bgRef        = useRef<SynapseBackground | null>(null);
+  const grassRef     = useRef<SeaGrass | null>(null);
+  const coralsRef    = useRef<SynapseCorals | null>(null);
   const particlesRef = useRef<Particle[]>([]);
+  const pearlsRef    = useRef<Pearl[]>([]);
+  const taskTimerRef = useRef(0);
 
   const isKeyPressedRef = useRef(false);
   useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
+    const down = (e: KeyboardEvent) => {
       if (e.code === "Space" || e.code === "ArrowUp") { isKeyPressedRef.current = true; e.preventDefault(); }
     };
-    const handleKeyUp = (e: KeyboardEvent) => {
+    const up = (e: KeyboardEvent) => {
       if (e.code === "Space" || e.code === "ArrowUp") isKeyPressedRef.current = false;
     };
-    window.addEventListener("keydown", handleKeyDown);
-    window.addEventListener("keyup", handleKeyUp);
-    return () => {
-      window.removeEventListener("keydown", handleKeyDown);
-      window.removeEventListener("keyup", handleKeyUp);
-    };
+    window.addEventListener("keydown", down);
+    window.addEventListener("keyup", up);
+    return () => { window.removeEventListener("keydown", down); window.removeEventListener("keyup", up); };
   }, []);
 
-  const gsRef = useRef<"MENU" | "PLAYING">("MENU");
-  const cdRef = useRef<CountdownValue>(null);
-  const [uiState, setUiState] = useState<"MENU" | "PLAYING">("MENU");
-  const [uiCd, setUiCd] = useState<CountdownValue>(null);
+  const gsRef  = useRef<"MENU" | "PLAYING">("MENU");
+  const cdRef  = useRef<CountdownValue>(null);
+  const [uiState,  setUiState]  = useState<"MENU" | "PLAYING">("MENU");
+  const [uiCd,     setUiCd]     = useState<CountdownValue>(null);
   const [showExit, setShowExit] = useState(false);
-  const [pressDisp, setPressDisp] = useState(0);
+  const [score,    setScore]    = useState(0);
+  const scoreRef = useRef(0);
+  const [feedback, setFeedback] = useState<{ text: string; color: string } | null>(null);
+  const [pressDisp,    setPressDisp]    = useState(0);
+  const pressDispIvRef = useRef<NodeJS.Timeout | null>(null);
 
   const metricsRef = useRef<ClinicalMetrics>({
-    jumpPressures: [],
-    currentSqueezePeak: 0,
-    isSqueezing: false,
+    jumpPressures: [], currentSqueezePeak: 0, isSqueezing: false,
   });
 
-  const startRef = useRef(0);
-  const lastRef = useRef(0);
+  const startRef   = useRef(0);
+  const lastRef    = useRef(0);
   const cdTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   const setGs = (s: "MENU" | "PLAYING") => { gsRef.current = s; setUiState(s); };
-  const setCd = (v: CountdownValue) => { cdRef.current = v; setUiCd(v); };
+  const setCd = (v: CountdownValue)      => { cdRef.current  = v; setUiCd(v); };
 
   const swimUp = (): boolean => {
-    const p = isConnRef.current ? pressRef.current : (isKeyPressedRef.current ? (IDLE_THRESHOLD + 0.2) : 0);
+    const p = isConnRef.current
+      ? pressRef.current
+      : (isKeyPressedRef.current ? IDLE_THRESHOLD + 0.2 : 0);
     const isSwimming = p > IDLE_THRESHOLD && p < DANGER_THRESHOLD;
-
     if (isSwimming) {
       metricsRef.current.isSqueezing = true;
-      if (p > metricsRef.current.currentSqueezePeak) metricsRef.current.currentSqueezePeak = p;
+      if (p > metricsRef.current.currentSqueezePeak)
+        metricsRef.current.currentSqueezePeak = p;
     } else if (metricsRef.current.isSqueezing) {
       metricsRef.current.jumpPressures.push(metricsRef.current.currentSqueezePeak);
       metricsRef.current.currentSqueezePeak = 0;
@@ -250,12 +240,11 @@ const Level1Canvas: React.FC = () => {
 
   useEffect(() => {
     const onResize = () => {
-      const c = canvasRef.current;
-      if (!c) return;
-      c.width = window.innerWidth;
+      const c = canvasRef.current; if (!c) return;
+      c.width  = window.innerWidth;
       c.height = window.innerHeight;
-      bgRef.current = new SynapseBackground(c.width, c.height);
-      grassRef.current = new SeaGrass(c.width, c.height);
+      bgRef.current     = new SynapseBackground(c.width, c.height);
+      grassRef.current  = new SeaGrass(c.width, c.height);
       coralsRef.current = new SynapseCorals(c.width, c.height);
       if (playerRef.current) playerRef.current = new Player(c.width, c.height);
     };
@@ -265,103 +254,145 @@ const Level1Canvas: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    const c = canvasRef.current;
-    if (!c) return;
-    c.width = window.innerWidth;
+    const c = canvasRef.current; if (!c) return;
+    c.width  = window.innerWidth;
     c.height = window.innerHeight;
-    playerRef.current = new Player(c.width, c.height);
-    bgRef.current = new SynapseBackground(c.width, c.height);
-    grassRef.current = new SeaGrass(c.width, c.height);
-    coralsRef.current = new SynapseCorals(c.width, c.height);
-    startRef.current = Date.now();
-    lastRef.current = performance.now();
+    playerRef.current   = new Player(c.width, c.height);
+    bgRef.current       = new SynapseBackground(c.width, c.height);
+    grassRef.current    = new SeaGrass(c.width, c.height);
+    coralsRef.current   = new SynapseCorals(c.width, c.height);
+    startRef.current    = Date.now();
+    lastRef.current     = performance.now();
+
+    pressDispIvRef.current = setInterval(() => {
+      setPressDisp(parseFloat(pressRef.current.toFixed(2)));
+    }, 100);
+
     rafRef.current = requestAnimationFrame(loop);
+
     return () => {
-      if (rafRef.current) cancelAnimationFrame(rafRef.current);
-      if (cdTimerRef.current) clearInterval(cdTimerRef.current);
+      if (rafRef.current)         cancelAnimationFrame(rafRef.current);
+      if (cdTimerRef.current)     clearInterval(cdTimerRef.current);
+      if (pressDispIvRef.current) clearInterval(pressDispIvRef.current);
       const cleanup = async () => {
         try { if (readerRef.current) { await readerRef.current.cancel(); readerRef.current.releaseLock(); readerRef.current = null; } } catch (_) {}
         try { if (portRef.current) { await portRef.current.close(); portRef.current = null; } } catch (_) {}
       };
       cleanup();
     };
-  }, []);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const startSession = () => {
-    const c = canvasRef.current;
-    if (!c) return;
+    const c = canvasRef.current; if (!c) return;
     if (playerRef.current) {
-      playerRef.current.y = c.height / 2;
+      playerRef.current.y        = c.height / 2;
       playerRef.current.velocity = 0;
-      playerRef.current.status = "swimming";
+      playerRef.current.status   = "swimming";
     }
     particlesRef.current = [];
-    metricsRef.current = { jumpPressures: [], currentSqueezePeak: 0, isSqueezing: false };
-    
+    pearlsRef.current    = [];
+    taskTimerRef.current = 0;
+    metricsRef.current   = { jumpPressures: [], currentSqueezePeak: 0, isSqueezing: false };
+    setScore(0);
+    scoreRef.current = 0;
     setGs("PLAYING");
     setCd(3);
     let count = 3;
     if (cdTimerRef.current) clearInterval(cdTimerRef.current);
     cdTimerRef.current = setInterval(() => {
       count--;
-      if (count > 0) setCd(count);
+      if (count > 0)        setCd(count);
       else if (count === 0) setCd("GO!");
       else { setCd(null); if (cdTimerRef.current) clearInterval(cdTimerRef.current); }
     }, 900);
   };
 
-  const loop = (now: number) => {
-    const c = canvasRef.current;
-    if (!c) return;
-    const ctx = c.getContext("2d");
-    if (!ctx) return;
+  const spawnPearls = (w: number, h: number) => {
+    const y = h * 0.25 + Math.random() * (h * 0.50);
+    pearlsRef.current.push(new Pearl(w + 50, y, "#FFD700", true));
+  };
 
+  const collectPearl = (pearl: Pearl) => {
+    pearl.collect();
+    const newScore = scoreRef.current + 100;
+    scoreRef.current = newScore;
+    setScore(newScore);
+    for (let i = 0; i < 10; i++) {
+      const p = new Particle(pearl.x, pearl.y, 1.2, true);
+      p.color = `rgba(255,${180 + Math.floor(Math.random() * 60)},0,0.9)`;
+      particlesRef.current.push(p);
+    }
+    const msgs = ["Nice! +100 ✨", "Great! +100 ✨", "Keep going! +100 ✨"];
+    const text = msgs[Math.floor(scoreRef.current / 100) % msgs.length] ?? "Nice! +100 ✨";
+    setFeedback({ text, color: "#FFD700" });
+    setTimeout(() => setFeedback(null), 1800);
+  };
+
+  const loop = (now: number) => {
+    const c = canvasRef.current; if (!c) return;
+    const ctx = c.getContext("2d"); if (!ctx) return;
     const delta = Math.min(32, now - lastRef.current);
     lastRef.current = now;
-    const elapsed = Date.now() - startRef.current;
-
+    const elapsed   = Date.now() - startRef.current;
     ctx.clearRect(0, 0, c.width, c.height);
-
-    const state = gsRef.current;
+    const state      = gsRef.current;
     const isCounting = cdRef.current !== null;
-    const physics = state === "PLAYING" && !isCounting;
-    const scrollSpeed = physics ? 2.5 : 0.8; // Level 1 is always slow and easy
-
+    const physics    = state === "PLAYING" && !isCounting;
+    const scrollSpeed = physics ? 2.5 : 0.8;
     let nf = 0, sandH = 80;
     if (bgRef.current) {
-      nf = bgRef.current.update(elapsed, delta, scrollSpeed, 0, pressRef.current / DANGER_THRESHOLD);
+      nf    = bgRef.current.update(elapsed, delta, scrollSpeed, 0, pressRef.current / DANGER_THRESHOLD);
       bgRef.current.draw(ctx, nf);
       sandH = bgRef.current.sandHeight;
     }
-    if (coralsRef.current) { coralsRef.current.update(scrollSpeed); coralsRef.current.draw(ctx, nf, c.height - sandH); }
-    if (grassRef.current && playerRef.current) { grassRef.current.update(playerRef.current.x, playerRef.current.y, delta); grassRef.current.draw(ctx); }
-
+    if (coralsRef.current) {
+      coralsRef.current.update(scrollSpeed);
+      coralsRef.current.draw(ctx, nf, c.height - sandH);
+    }
+    if (grassRef.current && playerRef.current) {
+      grassRef.current.update(playerRef.current.x, playerRef.current.y, delta);
+      grassRef.current.draw(ctx);
+    }
     if (playerRef.current) {
       if (physics) {
         playerRef.current.update(swimUp(), delta, sandH, particlesRef.current, nf);
-        
         if (playerRef.current.status === "hit_floor") {
           bgRef.current?.triggerSiltCloud(playerRef.current.x, playerRef.current.y);
         } else {
           (bgRef.current as any)?.clearSiltCloud?.();
         }
-        
-        setPressDisp(parseFloat(pressRef.current.toFixed(2)));
+        taskTimerRef.current += delta;
+        if (taskTimerRef.current > 2400) {
+          spawnPearls(c.width, c.height);
+          taskTimerRef.current = 0;
+        }
+        pearlsRef.current.forEach(pearl => {
+          if (!pearl.collected && !pearl.markedForDeletion) {
+            const dx = playerRef.current!.x - pearl.x;
+            const dy = playerRef.current!.y - pearl.y;
+            if (Math.hypot(dx, dy) < playerRef.current!.radius + pearl.radius + 14)
+              collectPearl(pearl);
+          }
+        });
       } else if (state === "MENU" || isCounting) {
-        playerRef.current.y = c.height / 2 + Math.sin(elapsed * 0.003) * 20;
+        playerRef.current.y        = c.height / 2 + Math.sin(elapsed * 0.003) * 20;
         playerRef.current.velocity = 0;
         playerRef.current.rotation = 0;
       }
       playerRef.current.draw(ctx, nf);
     }
-
+    for (let i = pearlsRef.current.length - 1; i >= 0; i--) {
+      const p = pearlsRef.current[i];
+      if (physics) p.update(3 + scrollSpeed * 0.5, playerRef.current?.x ?? -999, playerRef.current?.y ?? -999);
+      p.draw(ctx);
+      if (p.markedForDeletion) pearlsRef.current.splice(i, 1);
+    }
     for (let i = particlesRef.current.length - 1; i >= 0; i--) {
       const p = particlesRef.current[i];
       if (physics) p.update();
       p.draw(ctx);
       if (p.markedForDeletion) particlesRef.current.splice(i, 1);
     }
-
     rafRef.current = requestAnimationFrame(loop);
   };
 
@@ -370,30 +401,28 @@ const Level1Canvas: React.FC = () => {
 
   const handleSaveAndExit = async () => {
     try {
-      const m = metricsRef.current;
+      const m               = metricsRef.current;
       const durationSeconds = Math.floor((Date.now() - startRef.current) / 1000);
-      
-      // Pure motor baseline — perfect accuracy, no reaction times needed
-      const accuracy = 100; 
-      const peakForce = getPeakGripForce(m.jumpPressures);
-      const enduranceDrop = calculateEnduranceDrop(m.jumpPressures);
-      const avgReactionTime = 0;
-
-      const uid = user?.uid ?? "dev_test_user";
+      const peakForce       = getPeakGripForce(m.jumpPressures);
+      const enduranceDrop   = calculateEnduranceDrop(m.jumpPressures);
+      const uid        = user?.uid ?? "dev_test_user";
       const protocolId = protocol?.id ?? "dev_test_protocol";
-      const gameId = protocol?.gameId ?? "synapse_racer";
-      
-      const level = 1; 
+      const gameId     = protocol?.gameId ?? "synapse_racer";
+      const level      = 1;
       const targetHand = (protocol?.targetHand === "left" ? "left" : "right") as "left" | "right";
-
       await saveGameSession({
-        userId: uid, protocolId: protocolId, gameId: gameId, level: level,
-        timestamp: Timestamp.now(), durationSeconds: durationSeconds, targetHand: targetHand,
-        metrics: { cognitiveAccuracyPercent: accuracy, peakGripForce: peakForce, muscleEnduranceDropPercent: enduranceDrop, reactionTimeMs: avgReactionTime, rawSensorData: m.jumpPressures },
+        userId: uid, protocolId, gameId, level,
+        timestamp: Timestamp.now(), durationSeconds, targetHand,
+        metrics: {
+          cognitiveAccuracyPercent: 100,
+          peakGripForce: peakForce,
+          muscleEnduranceDropPercent: enduranceDrop,
+          reactionTimeMs: 0,
+          rawSensorData: m.jumpPressures,
+        },
       });
-
       if (scheduledSessionId) await updateSessionStatus(scheduledSessionId, "completed");
-      if (user?.uid && durationSeconds > 30) await addXpToPatient(user.uid, 30 + level * 10);
+      if (user?.uid && durationSeconds > 30) await addXpToPatient(user.uid, 40);
       router.push("/patients/home");
     } catch (error) {
       console.error("Failed to save session:", error);
@@ -401,7 +430,7 @@ const Level1Canvas: React.FC = () => {
     }
   };
 
-  const pInfo = pressureColor(pressDisp);
+  const pInfo  = pressureColor(pressDisp);
   const pctBar = Math.min(100, (pressDisp / DANGER_THRESHOLD) * 100);
 
   return (
@@ -423,7 +452,11 @@ const Level1Canvas: React.FC = () => {
         )}
       </div>
 
-      <button onClick={handleExit} style={{ position: "absolute", top: 14, left: 14, zIndex: 60, display: "flex", alignItems: "center", gap: 7, background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.14)", padding: "8px 16px", borderRadius: 999, color: "#fff", fontSize: 11, fontWeight: 700, letterSpacing: "0.11em", textTransform: "uppercase", cursor: "pointer", backdropFilter: "blur(10px)", transition: "background .2s" }} onMouseEnter={(e) => (e.currentTarget.style.background = "rgba(255,255,255,0.14)")} onMouseLeave={(e) => (e.currentTarget.style.background = "rgba(255,255,255,0.07)")}>
+      <button
+        onClick={handleExit}
+        style={{ position: "absolute", top: 14, left: 14, zIndex: 60, display: "flex", alignItems: "center", gap: 7, background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.14)", padding: "8px 16px", borderRadius: 999, color: "#fff", fontSize: 11, fontWeight: 700, letterSpacing: "0.11em", textTransform: "uppercase", cursor: "pointer", backdropFilter: "blur(10px)", transition: "background .2s" }}
+        onMouseEnter={(e) => (e.currentTarget.style.background = "rgba(255,255,255,0.14)")}
+        onMouseLeave={(e) => (e.currentTarget.style.background = "rgba(255,255,255,0.07)")}>
         <RotateCcw size={13} /> EXIT
       </button>
 
@@ -460,13 +493,17 @@ const Level1Canvas: React.FC = () => {
                   <span style={{ color: "#fff", fontWeight: 700, fontSize: 12 }}>GOAL</span>
                 </div>
                 <div style={{ display: "flex", alignItems: "center", gap: 7 }}>
-                  <Waves size={15} color="#2DD4BF" style={{ flexShrink: 0 }} />
-                  <span style={{ color: "rgba(255,255,255,0.58)", fontSize: 11.5, lineHeight: 1.4 }}>Maintain safe grip pressure.</span>
+                  <div style={{ width: 9, height: 9, borderRadius: "50%", background: "#328eccff", boxShadow: "0 0 7px #48a1e1ff", flexShrink: 0 }} />
+                  <span style={{ color: "rgba(255,255,255,0.58)", fontSize: 11.5 }}>Collect Blue Pearls (+100)</span>
                 </div>
               </div>
             </div>
 
-            <button onClick={startSession} disabled={false} style={{ position: "relative", overflow: "hidden", background: isConnected ? "#2DD4BF" : "rgba(99,102,241,0.8)", color: isConnected ? "#061422" : "#fff", border: "none", borderRadius: 999, padding: "15px 50px", fontSize: 17, fontWeight: 900, letterSpacing: "0.07em", cursor: "pointer", boxShadow: isConnected ? "0 0 38px rgba(45,212,191,0.50)" : "0 0 38px rgba(99,102,241,0.50)", display: "inline-flex", alignItems: "center", gap: 11, transition: "transform .14s" }} onMouseEnter={(e) => (e.currentTarget.style.transform = "scale(1.05)")} onMouseLeave={(e) => (e.currentTarget.style.transform = "scale(1)")}>
+            <button
+              onClick={startSession}
+              style={{ position: "relative", overflow: "hidden", background: isConnected ? "#2DD4BF" : "rgba(99,102,241,0.8)", color: isConnected ? "#061422" : "#fff", border: "none", borderRadius: 999, padding: "15px 50px", fontSize: 17, fontWeight: 900, letterSpacing: "0.07em", cursor: "pointer", boxShadow: isConnected ? "0 0 38px rgba(45,212,191,0.50)" : "0 0 38px rgba(99,102,241,0.50)", display: "inline-flex", alignItems: "center", gap: 11, transition: "transform .14s" }}
+              onMouseEnter={(e) => (e.currentTarget.style.transform = "scale(1.05)")}
+              onMouseLeave={(e) => (e.currentTarget.style.transform = "scale(1)")}>
               <Play size={20} fill={isConnected ? "#061422" : "#fff"} style={{ position: "relative", zIndex: 1 }} />
               <span style={{ position: "relative", zIndex: 1 }}>{isConnected ? "START MISSION" : "TEST (KEYBOARD MODE)"}</span>
             </button>
@@ -476,16 +513,33 @@ const Level1Canvas: React.FC = () => {
 
       {uiState === "PLAYING" && (
         <>
+          <div style={{ position: "absolute", top: 14, left: "50%", transform: "translateX(-50%)", zIndex: 30, pointerEvents: "none", animation: "hudin 0.38s ease both" }}>
+            <div style={{ background: "rgba(4,12,28,0.74)", backdropFilter: "blur(16px)", border: "1px solid rgba(255,215,0,0.30)", borderRadius: 999, padding: "7px 24px", display: "flex", flexDirection: "column", alignItems: "center", boxShadow: "0 4px 22px rgba(0,0,0,0.38)" }}>
+              <span style={{ fontSize: 8.5, color: "#FFD700", fontWeight: 700, letterSpacing: "0.25em", textTransform: "uppercase" }}>Score</span>
+              <span style={{ fontSize: 24, fontFamily: "monospace", fontWeight: 900, color: "#fff", lineHeight: 1.1 }}>
+                {score.toString().padStart(4, "0")}
+              </span>
+            </div>
+          </div>
+
           <div style={{ position: "absolute", bottom: 18, left: "50%", transform: "translateX(-50%)", zIndex: 30, display: "flex", flexDirection: "column", alignItems: "center", gap: 4, pointerEvents: "none" }}>
             <span style={{ fontSize: 8.5, color: "rgba(255,255,255,0.30)", fontWeight: 700, letterSpacing: "0.25em", textTransform: "uppercase" }}>Grip Pressure</span>
             <div style={{ width: 190, height: 9, background: "rgba(255,255,255,0.07)", borderRadius: 999, overflow: "hidden", border: "1px solid rgba(255,255,255,0.10)" }}>
-              <div style={{ height: "100%", width: `${pctBar}%`, background: pInfo.hex, borderRadius: 999, transition: "width .08s,background .18s", boxShadow: `0 0 9px ${pInfo.hex}` }} />
+              <div style={{ height: "100%", width: `${pctBar}%`, background: pInfo.hex, borderRadius: 999, transition: "width .10s, background .18s", boxShadow: `0 0 9px ${pInfo.hex}` }} />
             </div>
             <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
               <span style={{ fontSize: 9.5, fontFamily: "monospace", color: pInfo.hex, fontWeight: 700 }}>{pressDisp.toFixed(2)} V</span>
               <span style={{ fontSize: 7.5, color: pInfo.hex, fontWeight: 700, letterSpacing: "0.14em", background: `${pInfo.hex}1a`, border: `1px solid ${pInfo.hex}38`, borderRadius: 4, padding: "1px 5px" }}>{pInfo.label}</span>
             </div>
           </div>
+
+          {feedback && (
+            <div style={{ position: "absolute", top: "19%", left: "50%", zIndex: 40, animation: "feedin 1.8s ease-in-out both", pointerEvents: "none" }}>
+              <div style={{ background: "rgba(4,12,28,0.93)", color: feedback.color, border: `1px solid ${feedback.color}48`, borderRadius: 999, padding: "9px 26px", fontWeight: 700, fontSize: 15, backdropFilter: "blur(16px)", boxShadow: `0 0 22px ${feedback.color}38`, whiteSpace: "nowrap" }}>
+                {feedback.text}
+              </div>
+            </div>
+          )}
         </>
       )}
 
