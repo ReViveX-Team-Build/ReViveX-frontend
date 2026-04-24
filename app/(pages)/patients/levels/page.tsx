@@ -159,6 +159,23 @@ const BASE_LEVELS: Level[] = [
     targetSessions: 5,
     tags: ["Endurance", "Cognitive"],
   },
+  {
+    id: 6,
+    title: "Gravity Drift",
+    category: "MOTOR",
+    desc: "Tilt the MPU6050 sensor to guide your ship through asteroid fields. Improves wrist control, posture stability and tremor regulation.",
+    locked: false,
+    path: "/game/gravitydrift",
+    difficulty: "Medium",
+    difficultyN: 2,
+    accentHex: "#06b6d4",
+    icon: <Radio size={18} />,
+    xp: 320,
+    duration: "12 min",
+    completedSessions: 0,
+    targetSessions: 5,
+    tags: ["MPU6050", "Tilt Control"],
+  },
 ];
 
 /* ═══════════════════════════════════════════
@@ -434,22 +451,9 @@ const NeuralNetworkCanvas: React.FC<{ levels: Level[] }> = ({ levels }) => {
 
   const init = useCallback(
     (w: number, h: number) => {
-      const pos = [
-        { x: w * 0.12, y: h * 0.62 },
-        { x: w * 0.32, y: h * 0.27 },
-        { x: w * 0.54, y: h * 0.66 },
-        { x: w * 0.74, y: h * 0.24 },
-        { x: w * 0.9, y: h * 0.6 },
-      ];
-      nodesRef.current = levels.map((lvl, i) => ({
-        x: pos[i].x,
-        y: pos[i].y,
-        homeX: pos[i].x,
-        homeY: pos[i].y,
-        vx: (Math.random() - 0.5) * 0.14,
-        vy: (Math.random() - 0.5) * 0.14,
-        level: lvl,
-        pulsePhase: Math.random() * Math.PI * 2,
+      const pos = levels.map((_, i) => ({
+        x: (w / (levels.length + 1)) * (i + 1),
+        y: h * (0.35 + Math.sin(i * 1.3) * 0.22),
       }));
       edgesRef.current = [
         { from: 0, to: 1, progress: 0, speed: 0.0028 },

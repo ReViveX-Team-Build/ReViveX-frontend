@@ -868,7 +868,7 @@ class MarineSnow {
 //  Edge: organic wavy line with warm highlight on top.
 // ═══════════════════════════════════════════════════════════════════════════
 class SeaFloor {
-  // sandHeight = foreground height — public, read by index.tsx via sandHeight getter
+  // sandHeight = foreground height — public, read by page.tsx via sandHeight getter
   sandHeight   = 80;
   targetHeight = 80;
 
@@ -1231,7 +1231,7 @@ export class SynapseBackground {
 
   get sandHeight(): number { return this.floor.sandHeight; }
 
-  // ── Public API (called from index.tsx) ────────────────────────────────
+  // ── Public API (called from page.tsx) ────────────────────────────────
   /** Trigger Cognitive Shockwave — call when bad pearl collected */
   triggerErrorFlash(): void {
     this.errorFlashT = 500;

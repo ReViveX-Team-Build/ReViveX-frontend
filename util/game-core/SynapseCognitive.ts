@@ -7,7 +7,7 @@
 //  WRONG   → Spine Urchin    : jagged dark-purple spiny ball, implodes with
 //            shockwave + ink cloud on wrong collect.
 //
-//  Public API is backward-compatible with index.tsx:
+//  Public API is backward-compatible with page.tsx:
 //    new Pearl(gameWidth, y, color, isTarget)
 //    pearl.update(speed)
 //    pearl.draw(ctx)
@@ -481,7 +481,7 @@ class SpineUrchin {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
-//  PEARL — public wrapper (keeps index.tsx API identical)
+//  PEARL — public wrapper (keeps page.tsx API identical)
 // ═══════════════════════════════════════════════════════════════════════════
 export class Pearl {
   x:                   number;
@@ -544,7 +544,7 @@ export class Pearl {
     }
   }
 
-  // Called by collectPearl in index.tsx instead of just setting collected = true
+  // Called by collectPearl in page.tsx instead of just setting collected = true
   collect() {
     if (this.collected) return;
     this.collected    = true;
