@@ -126,8 +126,8 @@ export default function GravityDrift({ uid = "" }: GravityDriftProps) {
     // Sensor → target
     useEffect(() => {
         if (!isConnected) return;
-        world.current.target.x = clamp(0.5 + motionData.x, 0.02, 0.98);
-        world.current.target.y = clamp(0.5 + motionData.y, 0.02, 0.98);
+        world.current.target.x = clamp(0.5 + motionData.x, 0.02, 0.98);   // flip: -motionData.x
+        world.current.target.y = clamp(0.5 - motionData.y, 0.02, 0.98);   // flip: -motionData.y
     }, [motionData, isConnected]);
 
     // Mouse / touch fallback
