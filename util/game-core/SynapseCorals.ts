@@ -537,7 +537,7 @@ export class SynapseCorals {
   }
 
   // 🔴 FIX: Draw function now strictly requires sandBaseY to sync beautifully with the floor
-  // sandBaseY defaults to gameHeight-80 so existing 2-arg calls in index.tsx still work
+  // sandBaseY defaults to gameHeight-80 so existing 2-arg calls in page.tsx still work
   draw(ctx: CanvasRenderingContext2D, nf: number, sandBaseY?: number): void {
     const sandY = sandBaseY ?? (this.gameHeight - 80);
     const time = Date.now() * 0.0008;

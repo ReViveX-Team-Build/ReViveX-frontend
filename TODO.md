@@ -5,7 +5,7 @@
 
 ## Steps (4 total)
 - [ ] **Step 1**: Create TODO.md (IN PROGRESS ✓)
-- [ ] **Step 2**: Edit `components/SkyMemoryGame/index.tsx` 
+- [ ] **Step 2**: Edit `components/SkyMemoryGame/page.tsx` 
   - Dynamic `numGates`: level 3=3, 4=4, 5=5 gates
   - Dynamic `gateSpacing`: level 3=650px, 4=500px, 5=450px
 - [x] **Step 3**: Edit `util/game-core/SynapseSkyGate.ts` ✓

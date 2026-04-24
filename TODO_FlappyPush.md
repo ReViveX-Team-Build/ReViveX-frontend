@@ -6,7 +6,7 @@
 - **Project Type**: Next.js 14 with React, TypeScript, Firebase
 - **Game Framework**: HTML5 Canvas with custom game engine in `util/game-core/`
 - **Existing Game**: Synapse Racer at `app/(immersive)/game/level-1/page.tsx`
-- **Game Component**: `components/GameCanvas/index.tsx` - Main game loop and rendering
+- **Game Component**: `components/GameCanvas/page.tsx` - Main game loop and rendering
 - **Player Physics**: `util/game-core/SynapsePlayer.ts` - Fish movement with pressure/squeeze control
 - **Cognitive Elements**: `util/game-core/SynapseCognitive.ts` - Pearls for cognitive tasks
 - **Metrics**: `util/game-core/MetricsCalculator.ts` - Accuracy and endurance calculations

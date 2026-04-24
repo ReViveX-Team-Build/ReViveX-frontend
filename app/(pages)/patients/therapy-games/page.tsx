@@ -24,6 +24,13 @@ const games: Game[] = [
     link: "/patients/game?level=2", // 🟢 FIXED TO A REAL URL
   },
   {
+    id: "gravitydrift",
+    title: "GravityDrift",
+    description: "Tilt the sensor to navigate your ship through asteroid fields. Trains postural stability and tremor control.",
+    difficulty: "Beginner",
+    link: "/game/gravitydrift",
+  },
+  {
     id: "grip-challenge",
     title: "Grip Challenge",
     description: "Sustained pressure control exercise.",

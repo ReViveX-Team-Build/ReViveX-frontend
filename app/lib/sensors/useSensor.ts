@@ -3,24 +3,6 @@
 import { useState, useRef, useCallback } from "react";
 import { updateHardwareStatus } from "../db/users";
 
-// ── Web Serial API type declarations ─────────────────────────────────────────
-interface SerialPort {
-  readonly readable: ReadableStream | null;
-  readonly writable: WritableStream | null;
-  open(opts: { baudRate: number }): Promise<void>;
-  close(): Promise<void>;
-}
-
-interface Serial extends EventTarget {
-  requestPort(): Promise<SerialPort>;
-  getPorts(): Promise<SerialPort[]>;
-}
-
-declare global {
-  interface Navigator {
-    serial?: Serial;
-  }
-}
 
 // ─────────────────────────────────────────────────────────────────────────────
 // useSensor hook
@@ -60,7 +42,7 @@ export function useSensor(uid: string = "") {
         port.readable.pipeTo(textDecoder.writable).catch(() => {});
         const reader = textDecoder.readable.getReader();
         readerRef.current = reader;
-        readLoop(reader);
+        void readLoop(reader);
       }
     } catch (error: any) {
       if (error.name === "NotFoundError") return;
