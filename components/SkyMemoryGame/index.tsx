@@ -29,23 +29,6 @@ import {
 } from "../../util/game-core/SynapseSkyGate";
 import { Particle } from "../../util/game-core/SynapseParticles";
 
-// ── WEB SERIAL TYPES ──────────────────────────────────────────────────────────
-interface SerialPort {
-  readonly readable: ReadableStream | null;
-  readonly writable: WritableStream | null;
-  open(opts: { baudRate: number }): Promise<void>;
-  close(): Promise<void>;
-}
-interface Serial extends EventTarget {
-  requestPort(): Promise<SerialPort>;
-  getPorts(): Promise<SerialPort[]>;
-}
-declare global {
-  interface Navigator {
-    serial?: Serial;
-  }
-}
-
 // ── CONSTANTS ─────────────────────────────────────────────────────────────────
 const IDLE_THRESHOLD = 0.5;
 const DANGER_THRESHOLD = 2.0;

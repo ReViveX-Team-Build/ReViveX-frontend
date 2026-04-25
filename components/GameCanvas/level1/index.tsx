@@ -25,21 +25,7 @@ import { SynapseCorals } from "../../../util/game-core/SynapseCorals";
 import { Pearl } from "../../../util/game-core/SynapseCognitive";
 import { TherapyProtocol } from "@/app/lib/db/types";
 
-interface SerialPort {
-  readonly readable: ReadableStream | null;
-  readonly writable: WritableStream | null;
-  open(opts: { baudRate: number }): Promise<void>;
-  close(): Promise<void>;
-}
-interface Serial extends EventTarget {
-  requestPort(): Promise<SerialPort>;
-  getPorts(): Promise<SerialPort[]>;
-}
-declare global {
-  interface Navigator { serial?: Serial; }
-}
-
-const IDLE_THRESHOLD   = 0.5;
+const IDLE_THRESHOLD = 0.5;
 const DANGER_THRESHOLD = 2.0;
 
 interface ClinicalMetrics {
@@ -100,16 +86,16 @@ const GAME_CSS = `
 `;
 
 const pressureColor = (v: number) => {
-  if (v < IDLE_THRESHOLD)           return { hex: "#64748b", label: "IDLE" };
-  if (v < DANGER_THRESHOLD * 0.6)   return { hex: "#2DD4BF", label: "GOOD" };
-  if (v < DANGER_THRESHOLD * 0.85)  return { hex: "#FACC15", label: "HIGH" };
-  return                                   { hex: "#EF4444", label: "DANGER" };
+  if (v < IDLE_THRESHOLD) return { hex: "#64748b", label: "IDLE" };
+  if (v < DANGER_THRESHOLD * 0.6) return { hex: "#2DD4BF", label: "GOOD" };
+  if (v < DANGER_THRESHOLD * 0.85) return { hex: "#FACC15", label: "HIGH" };
+  return { hex: "#EF4444", label: "DANGER" };
 };
 
 const Level1Canvas: React.FC = () => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
-  const rafRef    = useRef<number | null>(null);
-  const router    = useRouter();
+  const rafRef = useRef<number | null>(null);
+  const router = useRouter();
   const searchParams = useSearchParams();
   const scheduledSessionId = searchParams.get("sessionId");
 
@@ -117,22 +103,31 @@ const Level1Canvas: React.FC = () => {
   const [protocol, setProtocol] = useState<TherapyProtocol | null>(null);
 
   const userUidRef = useRef<string>("");
-  useEffect(() => { userUidRef.current = user?.uid ?? ""; }, [user]);
+  useEffect(() => {
+    userUidRef.current = user?.uid ?? "";
+  }, [user]);
 
   useEffect(() => {
     if (!user) return;
-    getActiveProtocol(user.uid).then((p) => { if (p) setProtocol(p); }).catch(() => {});
+    getActiveProtocol(user.uid)
+      .then((p) => {
+        if (p) setProtocol(p);
+      })
+      .catch(() => {});
   }, [user]);
 
   const [isConnected, setIsConnected] = useState(false);
   const isConnRef = useRef(false);
-  const pressRef  = useRef(0);
-  const portRef   = useRef<SerialPort | null>(null);
+  const pressRef = useRef(0);
+  const portRef = useRef<SerialPort | null>(null);
   const readerRef = useRef<ReadableStreamDefaultReader<string> | null>(null);
 
   const connectSerial = async () => {
     try {
-      if (!navigator.serial) { alert("Web Serial not supported."); return; }
+      if (!navigator.serial) {
+        alert("Web Serial not supported.");
+        return;
+      }
       const port = await navigator.serial.requestPort();
       if (!port.readable) await port.open({ baudRate: 115200 });
       portRef.current = port;
@@ -143,7 +138,8 @@ const Level1Canvas: React.FC = () => {
       const r = td.readable.getReader();
       readerRef.current = r;
       _readLoop(r);
-      if (userUidRef.current) updateHardwareStatus(userUidRef.current, "connected").catch(() => {});
+      if (userUidRef.current)
+        updateHardwareStatus(userUidRef.current, "connected").catch(() => {});
     } catch (e: unknown) {
       if (e instanceof Error && e.name === "NotFoundError") return;
       alert("Could not connect. Make sure device is plugged in.");
@@ -155,10 +151,20 @@ const Level1Canvas: React.FC = () => {
     isConnRef.current = false;
     pressRef.current = 0;
     try {
-      if (readerRef.current) { await readerRef.current.cancel(); readerRef.current.releaseLock(); readerRef.current = null; }
+      if (readerRef.current) {
+        await readerRef.current.cancel();
+        readerRef.current.releaseLock();
+        readerRef.current = null;
+      }
     } catch (_) {}
-    try { if (portRef.current) { await portRef.current.close(); portRef.current = null; } } catch (_) {}
-    if (userUidRef.current) updateHardwareStatus(userUidRef.current, "offline").catch(() => {});
+    try {
+      if (portRef.current) {
+        await portRef.current.close();
+        portRef.current = null;
+      }
+    } catch (_) {}
+    if (userUidRef.current)
+      updateHardwareStatus(userUidRef.current, "offline").catch(() => {});
   };
 
   const _readLoop = async (r: ReadableStreamDefaultReader<string>) => {
@@ -175,63 +181,88 @@ const Level1Canvas: React.FC = () => {
           if (m) pressRef.current = parseFloat(m[1]);
         }
       }
-    } catch (_) { setIsConnected(false); isConnRef.current = false; }
+    } catch (_) {
+      setIsConnected(false);
+      isConnRef.current = false;
+    }
   };
 
-  const playerRef    = useRef<Player | null>(null);
-  const bgRef        = useRef<SynapseBackground | null>(null);
-  const grassRef     = useRef<SeaGrass | null>(null);
-  const coralsRef    = useRef<SynapseCorals | null>(null);
+  const playerRef = useRef<Player | null>(null);
+  const bgRef = useRef<SynapseBackground | null>(null);
+  const grassRef = useRef<SeaGrass | null>(null);
+  const coralsRef = useRef<SynapseCorals | null>(null);
   const particlesRef = useRef<Particle[]>([]);
-  const pearlsRef    = useRef<Pearl[]>([]);
+  const pearlsRef = useRef<Pearl[]>([]);
   const taskTimerRef = useRef(0);
 
   const isKeyPressedRef = useRef(false);
   useEffect(() => {
     const down = (e: KeyboardEvent) => {
-      if (e.code === "Space" || e.code === "ArrowUp") { isKeyPressedRef.current = true; e.preventDefault(); }
+      if (e.code === "Space" || e.code === "ArrowUp") {
+        isKeyPressedRef.current = true;
+        e.preventDefault();
+      }
     };
     const up = (e: KeyboardEvent) => {
-      if (e.code === "Space" || e.code === "ArrowUp") isKeyPressedRef.current = false;
+      if (e.code === "Space" || e.code === "ArrowUp")
+        isKeyPressedRef.current = false;
     };
     window.addEventListener("keydown", down);
     window.addEventListener("keyup", up);
-    return () => { window.removeEventListener("keydown", down); window.removeEventListener("keyup", up); };
+    return () => {
+      window.removeEventListener("keydown", down);
+      window.removeEventListener("keyup", up);
+    };
   }, []);
 
-  const gsRef  = useRef<"MENU" | "PLAYING">("MENU");
-  const cdRef  = useRef<CountdownValue>(null);
-  const [uiState,  setUiState]  = useState<"MENU" | "PLAYING">("MENU");
-  const [uiCd,     setUiCd]     = useState<CountdownValue>(null);
+  const gsRef = useRef<"MENU" | "PLAYING">("MENU");
+  const cdRef = useRef<CountdownValue>(null);
+  const [uiState, setUiState] = useState<"MENU" | "PLAYING">("MENU");
+  const [uiCd, setUiCd] = useState<CountdownValue>(null);
   const [showExit, setShowExit] = useState(false);
-  const [score,    setScore]    = useState(0);
+  const [score, setScore] = useState(0);
   const scoreRef = useRef(0);
-  const [feedback, setFeedback] = useState<{ text: string; color: string } | null>(null);
-  const [pressDisp,    setPressDisp]    = useState(0);
+  const [feedback, setFeedback] = useState<{
+    text: string;
+    color: string;
+  } | null>(null);
+  const [pressDisp, setPressDisp] = useState(0);
   const pressDispIvRef = useRef<NodeJS.Timeout | null>(null);
 
   const metricsRef = useRef<ClinicalMetrics>({
-    jumpPressures: [], currentSqueezePeak: 0, isSqueezing: false,
+    jumpPressures: [],
+    currentSqueezePeak: 0,
+    isSqueezing: false,
   });
 
-  const startRef   = useRef(0);
-  const lastRef    = useRef(0);
+  const startRef = useRef(0);
+  const lastRef = useRef(0);
   const cdTimerRef = useRef<NodeJS.Timeout | null>(null);
 
-  const setGs = (s: "MENU" | "PLAYING") => { gsRef.current = s; setUiState(s); };
-  const setCd = (v: CountdownValue)      => { cdRef.current  = v; setUiCd(v); };
+  const setGs = (s: "MENU" | "PLAYING") => {
+    gsRef.current = s;
+    setUiState(s);
+  };
+  const setCd = (v: CountdownValue) => {
+    cdRef.current = v;
+    setUiCd(v);
+  };
 
   const swimUp = (): boolean => {
     const p = isConnRef.current
       ? pressRef.current
-      : (isKeyPressedRef.current ? IDLE_THRESHOLD + 0.2 : 0);
+      : isKeyPressedRef.current
+        ? IDLE_THRESHOLD + 0.2
+        : 0;
     const isSwimming = p > IDLE_THRESHOLD && p < DANGER_THRESHOLD;
     if (isSwimming) {
       metricsRef.current.isSqueezing = true;
       if (p > metricsRef.current.currentSqueezePeak)
         metricsRef.current.currentSqueezePeak = p;
     } else if (metricsRef.current.isSqueezing) {
-      metricsRef.current.jumpPressures.push(metricsRef.current.currentSqueezePeak);
+      metricsRef.current.jumpPressures.push(
+        metricsRef.current.currentSqueezePeak,
+      );
       metricsRef.current.currentSqueezePeak = 0;
       metricsRef.current.isSqueezing = false;
     }
@@ -240,11 +271,12 @@ const Level1Canvas: React.FC = () => {
 
   useEffect(() => {
     const onResize = () => {
-      const c = canvasRef.current; if (!c) return;
-      c.width  = window.innerWidth;
+      const c = canvasRef.current;
+      if (!c) return;
+      c.width = window.innerWidth;
       c.height = window.innerHeight;
-      bgRef.current     = new SynapseBackground(c.width, c.height);
-      grassRef.current  = new SeaGrass(c.width, c.height);
+      bgRef.current = new SynapseBackground(c.width, c.height);
+      grassRef.current = new SeaGrass(c.width, c.height);
       coralsRef.current = new SynapseCorals(c.width, c.height);
       if (playerRef.current) playerRef.current = new Player(c.width, c.height);
     };
@@ -254,15 +286,16 @@ const Level1Canvas: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    const c = canvasRef.current; if (!c) return;
-    c.width  = window.innerWidth;
+    const c = canvasRef.current;
+    if (!c) return;
+    c.width = window.innerWidth;
     c.height = window.innerHeight;
-    playerRef.current   = new Player(c.width, c.height);
-    bgRef.current       = new SynapseBackground(c.width, c.height);
-    grassRef.current    = new SeaGrass(c.width, c.height);
-    coralsRef.current   = new SynapseCorals(c.width, c.height);
-    startRef.current    = Date.now();
-    lastRef.current     = performance.now();
+    playerRef.current = new Player(c.width, c.height);
+    bgRef.current = new SynapseBackground(c.width, c.height);
+    grassRef.current = new SeaGrass(c.width, c.height);
+    coralsRef.current = new SynapseCorals(c.width, c.height);
+    startRef.current = Date.now();
+    lastRef.current = performance.now();
 
     pressDispIvRef.current = setInterval(() => {
       setPressDisp(parseFloat(pressRef.current.toFixed(2)));
@@ -271,28 +304,44 @@ const Level1Canvas: React.FC = () => {
     rafRef.current = requestAnimationFrame(loop);
 
     return () => {
-      if (rafRef.current)         cancelAnimationFrame(rafRef.current);
-      if (cdTimerRef.current)     clearInterval(cdTimerRef.current);
+      if (rafRef.current) cancelAnimationFrame(rafRef.current);
+      if (cdTimerRef.current) clearInterval(cdTimerRef.current);
       if (pressDispIvRef.current) clearInterval(pressDispIvRef.current);
       const cleanup = async () => {
-        try { if (readerRef.current) { await readerRef.current.cancel(); readerRef.current.releaseLock(); readerRef.current = null; } } catch (_) {}
-        try { if (portRef.current) { await portRef.current.close(); portRef.current = null; } } catch (_) {}
+        try {
+          if (readerRef.current) {
+            await readerRef.current.cancel();
+            readerRef.current.releaseLock();
+            readerRef.current = null;
+          }
+        } catch (_) {}
+        try {
+          if (portRef.current) {
+            await portRef.current.close();
+            portRef.current = null;
+          }
+        } catch (_) {}
       };
       cleanup();
     };
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const startSession = () => {
-    const c = canvasRef.current; if (!c) return;
+    const c = canvasRef.current;
+    if (!c) return;
     if (playerRef.current) {
-      playerRef.current.y        = c.height / 2;
+      playerRef.current.y = c.height / 2;
       playerRef.current.velocity = 0;
-      playerRef.current.status   = "swimming";
+      playerRef.current.status = "swimming";
     }
     particlesRef.current = [];
-    pearlsRef.current    = [];
+    pearlsRef.current = [];
     taskTimerRef.current = 0;
-    metricsRef.current   = { jumpPressures: [], currentSqueezePeak: 0, isSqueezing: false };
+    metricsRef.current = {
+      jumpPressures: [],
+      currentSqueezePeak: 0,
+      isSqueezing: false,
+    };
     setScore(0);
     scoreRef.current = 0;
     setGs("PLAYING");
@@ -301,14 +350,17 @@ const Level1Canvas: React.FC = () => {
     if (cdTimerRef.current) clearInterval(cdTimerRef.current);
     cdTimerRef.current = setInterval(() => {
       count--;
-      if (count > 0)        setCd(count);
+      if (count > 0) setCd(count);
       else if (count === 0) setCd("GO!");
-      else { setCd(null); if (cdTimerRef.current) clearInterval(cdTimerRef.current); }
+      else {
+        setCd(null);
+        if (cdTimerRef.current) clearInterval(cdTimerRef.current);
+      }
     }, 900);
   };
 
   const spawnPearls = (w: number, h: number) => {
-    const y = h * 0.25 + Math.random() * (h * 0.50);
+    const y = h * 0.25 + Math.random() * (h * 0.5);
     pearlsRef.current.push(new Pearl(w + 50, y, "#FFD700", true));
   };
 
@@ -323,25 +375,35 @@ const Level1Canvas: React.FC = () => {
       particlesRef.current.push(p);
     }
     const msgs = ["Nice! +100 ✨", "Great! +100 ✨", "Keep going! +100 ✨"];
-    const text = msgs[Math.floor(scoreRef.current / 100) % msgs.length] ?? "Nice! +100 ✨";
+    const text =
+      msgs[Math.floor(scoreRef.current / 100) % msgs.length] ?? "Nice! +100 ✨";
     setFeedback({ text, color: "#FFD700" });
     setTimeout(() => setFeedback(null), 1800);
   };
 
   const loop = (now: number) => {
-    const c = canvasRef.current; if (!c) return;
-    const ctx = c.getContext("2d"); if (!ctx) return;
+    const c = canvasRef.current;
+    if (!c) return;
+    const ctx = c.getContext("2d");
+    if (!ctx) return;
     const delta = Math.min(32, now - lastRef.current);
     lastRef.current = now;
-    const elapsed   = Date.now() - startRef.current;
+    const elapsed = Date.now() - startRef.current;
     ctx.clearRect(0, 0, c.width, c.height);
-    const state      = gsRef.current;
+    const state = gsRef.current;
     const isCounting = cdRef.current !== null;
-    const physics    = state === "PLAYING" && !isCounting;
+    const physics = state === "PLAYING" && !isCounting;
     const scrollSpeed = physics ? 2.5 : 0.8;
-    let nf = 0, sandH = 80;
+    let nf = 0,
+      sandH = 80;
     if (bgRef.current) {
-      nf    = bgRef.current.update(elapsed, delta, scrollSpeed, 0, pressRef.current / DANGER_THRESHOLD);
+      nf = bgRef.current.update(
+        elapsed,
+        delta,
+        scrollSpeed,
+        0,
+        pressRef.current / DANGER_THRESHOLD,
+      );
       bgRef.current.draw(ctx, nf);
       sandH = bgRef.current.sandHeight;
     }
@@ -355,9 +417,18 @@ const Level1Canvas: React.FC = () => {
     }
     if (playerRef.current) {
       if (physics) {
-        playerRef.current.update(swimUp(), delta, sandH, particlesRef.current, nf);
+        playerRef.current.update(
+          swimUp(),
+          delta,
+          sandH,
+          particlesRef.current,
+          nf,
+        );
         if (playerRef.current.status === "hit_floor") {
-          bgRef.current?.triggerSiltCloud(playerRef.current.x, playerRef.current.y);
+          bgRef.current?.triggerSiltCloud(
+            playerRef.current.x,
+            playerRef.current.y,
+          );
         } else {
           (bgRef.current as any)?.clearSiltCloud?.();
         }
@@ -366,16 +437,19 @@ const Level1Canvas: React.FC = () => {
           spawnPearls(c.width, c.height);
           taskTimerRef.current = 0;
         }
-        pearlsRef.current.forEach(pearl => {
+        pearlsRef.current.forEach((pearl) => {
           if (!pearl.collected && !pearl.markedForDeletion) {
             const dx = playerRef.current!.x - pearl.x;
             const dy = playerRef.current!.y - pearl.y;
-            if (Math.hypot(dx, dy) < playerRef.current!.radius + pearl.radius + 14)
+            if (
+              Math.hypot(dx, dy) <
+              playerRef.current!.radius + pearl.radius + 14
+            )
               collectPearl(pearl);
           }
         });
       } else if (state === "MENU" || isCounting) {
-        playerRef.current.y        = c.height / 2 + Math.sin(elapsed * 0.003) * 20;
+        playerRef.current.y = c.height / 2 + Math.sin(elapsed * 0.003) * 20;
         playerRef.current.velocity = 0;
         playerRef.current.rotation = 0;
       }
@@ -383,7 +457,12 @@ const Level1Canvas: React.FC = () => {
     }
     for (let i = pearlsRef.current.length - 1; i >= 0; i--) {
       const p = pearlsRef.current[i];
-      if (physics) p.update(3 + scrollSpeed * 0.5, playerRef.current?.x ?? -999, playerRef.current?.y ?? -999);
+      if (physics)
+        p.update(
+          3 + scrollSpeed * 0.5,
+          playerRef.current?.x ?? -999,
+          playerRef.current?.y ?? -999,
+        );
       p.draw(ctx);
       if (p.markedForDeletion) pearlsRef.current.splice(i, 1);
     }
@@ -396,23 +475,37 @@ const Level1Canvas: React.FC = () => {
     rafRef.current = requestAnimationFrame(loop);
   };
 
-  const handleExit = () => { setShowExit(true); };
-  const cancelExit = () => { setShowExit(false); if (gsRef.current !== "PLAYING") setGs("PLAYING"); };
+  const handleExit = () => {
+    setShowExit(true);
+  };
+  const cancelExit = () => {
+    setShowExit(false);
+    if (gsRef.current !== "PLAYING") setGs("PLAYING");
+  };
 
   const handleSaveAndExit = async () => {
     try {
-      const m               = metricsRef.current;
-      const durationSeconds = Math.floor((Date.now() - startRef.current) / 1000);
-      const peakForce       = getPeakGripForce(m.jumpPressures);
-      const enduranceDrop   = calculateEnduranceDrop(m.jumpPressures);
-      const uid        = user?.uid ?? "dev_test_user";
+      const m = metricsRef.current;
+      const durationSeconds = Math.floor(
+        (Date.now() - startRef.current) / 1000,
+      );
+      const peakForce = getPeakGripForce(m.jumpPressures);
+      const enduranceDrop = calculateEnduranceDrop(m.jumpPressures);
+      const uid = user?.uid ?? "dev_test_user";
       const protocolId = protocol?.id ?? "dev_test_protocol";
-      const gameId     = protocol?.gameId ?? "synapse_racer";
-      const level      = 1;
-      const targetHand = (protocol?.targetHand === "left" ? "left" : "right") as "left" | "right";
+      const gameId = protocol?.gameId ?? "synapse_racer";
+      const level = 1;
+      const targetHand = (
+        protocol?.targetHand === "left" ? "left" : "right"
+      ) as "left" | "right";
       await saveGameSession({
-        userId: uid, protocolId, gameId, level,
-        timestamp: Timestamp.now(), durationSeconds, targetHand,
+        userId: uid,
+        protocolId,
+        gameId,
+        level,
+        timestamp: Timestamp.now(),
+        durationSeconds,
+        targetHand,
         metrics: {
           cognitiveAccuracyPercent: 100,
           peakGripForce: peakForce,
@@ -421,7 +514,8 @@ const Level1Canvas: React.FC = () => {
           rawSensorData: m.jumpPressures,
         },
       });
-      if (scheduledSessionId) await updateSessionStatus(scheduledSessionId, "completed");
+      if (scheduledSessionId)
+        await updateSessionStatus(scheduledSessionId, "completed");
       if (user?.uid && durationSeconds > 30) await addXpToPatient(user.uid, 40);
       router.push("/patients/home");
     } catch (error) {
@@ -430,7 +524,7 @@ const Level1Canvas: React.FC = () => {
     }
   };
 
-  const pInfo  = pressureColor(pressDisp);
+  const pInfo = pressureColor(pressDisp);
   const pctBar = Math.min(100, (pressDisp / DANGER_THRESHOLD) * 100);
 
   return (
@@ -440,72 +534,317 @@ const Level1Canvas: React.FC = () => {
 
       <div style={{ position: "absolute", top: 14, right: 14, zIndex: 60 }}>
         {isConnected ? (
-          <button onClick={disconnectSerial} style={{ display: "flex", alignItems: "center", gap: 7, background: "rgba(16,200,128,0.13)", border: "1px solid rgba(52,211,153,0.40)", padding: "7px 15px", borderRadius: 999, cursor: "pointer", backdropFilter: "blur(10px)" }}>
+          <button
+            onClick={disconnectSerial}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 7,
+              background: "rgba(16,200,128,0.13)",
+              border: "1px solid rgba(52,211,153,0.40)",
+              padding: "7px 15px",
+              borderRadius: 999,
+              cursor: "pointer",
+              backdropFilter: "blur(10px)",
+            }}>
             <Wifi size={13} style={{ color: "#34d399" }} />
-            <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.13em", textTransform: "uppercase", color: "#34d399" }}>Connected</span>
+            <span
+              style={{
+                fontSize: 10,
+                fontWeight: 700,
+                letterSpacing: "0.13em",
+                textTransform: "uppercase",
+                color: "#34d399",
+              }}>
+              Connected
+            </span>
           </button>
         ) : (
-          <button onClick={connectSerial} style={{ display: "flex", alignItems: "center", gap: 7, background: "rgba(239,68,68,0.13)", border: "1px solid rgba(248,113,113,0.40)", padding: "7px 15px", borderRadius: 999, cursor: "pointer", backdropFilter: "blur(10px)" }}>
+          <button
+            onClick={connectSerial}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 7,
+              background: "rgba(239,68,68,0.13)",
+              border: "1px solid rgba(248,113,113,0.40)",
+              padding: "7px 15px",
+              borderRadius: 999,
+              cursor: "pointer",
+              backdropFilter: "blur(10px)",
+            }}>
             <WifiOff size={13} style={{ color: "#f87171" }} />
-            <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.13em", textTransform: "uppercase", color: "#f87171" }}>Connect Device</span>
+            <span
+              style={{
+                fontSize: 10,
+                fontWeight: 700,
+                letterSpacing: "0.13em",
+                textTransform: "uppercase",
+                color: "#f87171",
+              }}>
+              Connect Device
+            </span>
           </button>
         )}
       </div>
 
       <button
         onClick={handleExit}
-        style={{ position: "absolute", top: 14, left: 14, zIndex: 60, display: "flex", alignItems: "center", gap: 7, background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.14)", padding: "8px 16px", borderRadius: 999, color: "#fff", fontSize: 11, fontWeight: 700, letterSpacing: "0.11em", textTransform: "uppercase", cursor: "pointer", backdropFilter: "blur(10px)", transition: "background .2s" }}
-        onMouseEnter={(e) => (e.currentTarget.style.background = "rgba(255,255,255,0.14)")}
-        onMouseLeave={(e) => (e.currentTarget.style.background = "rgba(255,255,255,0.07)")}>
+        style={{
+          position: "absolute",
+          top: 14,
+          left: 14,
+          zIndex: 60,
+          display: "flex",
+          alignItems: "center",
+          gap: 7,
+          background: "rgba(255,255,255,0.07)",
+          border: "1px solid rgba(255,255,255,0.14)",
+          padding: "8px 16px",
+          borderRadius: 999,
+          color: "#fff",
+          fontSize: 11,
+          fontWeight: 700,
+          letterSpacing: "0.11em",
+          textTransform: "uppercase",
+          cursor: "pointer",
+          backdropFilter: "blur(10px)",
+          transition: "background .2s",
+        }}
+        onMouseEnter={(e) =>
+          (e.currentTarget.style.background = "rgba(255,255,255,0.14)")
+        }
+        onMouseLeave={(e) =>
+          (e.currentTarget.style.background = "rgba(255,255,255,0.07)")
+        }>
         <RotateCcw size={13} /> EXIT
       </button>
 
       {uiState === "MENU" && (
-        <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(2,8,20,0.62)", backdropFilter: "blur(3px)", zIndex: 20 }}>
-          <div style={{ animation: "menuin 0.48s cubic-bezier(0.22,1,0.36,1) both", background: "rgba(4,12,28,0.94)", border: "1.5px solid rgba(45,212,191,0.30)", borderRadius: 26, padding: "38px 42px", maxWidth: 490, width: "90%", textAlign: "center", backdropFilter: "blur(22px)", boxShadow: "0 0 70px rgba(45,212,191,0.10),0 32px 80px rgba(0,0,0,0.60)", position: "relative", overflow: "hidden" }}>
-            <div style={{ position: "absolute", left: 0, right: 0, height: "32%", background: "linear-gradient(to bottom,transparent,rgba(45,212,191,0.04),transparent)", animation: "scanline 7s linear infinite", pointerEvents: "none" }} />
-            <h1 style={{ fontSize: 33, fontWeight: 900, color: "#00FFFF", letterSpacing: "0.07em", margin: "0 0 5px", textShadow: "0 0 28px rgba(0,255,255,0.40)" }}>SYNAPSE RACER</h1>
-            <p style={{ color: "rgba(255,255,255,0.28)", fontSize: 10, letterSpacing: "0.25em", textTransform: "uppercase", margin: "0 0 26px" }}>Level 1: Motor Baseline</p>
+        <div
+          style={{
+            position: "absolute",
+            inset: 0,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            background: "rgba(2,8,20,0.62)",
+            backdropFilter: "blur(3px)",
+            zIndex: 20,
+          }}>
+          <div
+            style={{
+              animation: "menuin 0.48s cubic-bezier(0.22,1,0.36,1) both",
+              background: "rgba(4,12,28,0.94)",
+              border: "1.5px solid rgba(45,212,191,0.30)",
+              borderRadius: 26,
+              padding: "38px 42px",
+              maxWidth: 490,
+              width: "90%",
+              textAlign: "center",
+              backdropFilter: "blur(22px)",
+              boxShadow:
+                "0 0 70px rgba(45,212,191,0.10),0 32px 80px rgba(0,0,0,0.60)",
+              position: "relative",
+              overflow: "hidden",
+            }}>
+            <div
+              style={{
+                position: "absolute",
+                left: 0,
+                right: 0,
+                height: "32%",
+                background:
+                  "linear-gradient(to bottom,transparent,rgba(45,212,191,0.04),transparent)",
+                animation: "scanline 7s linear infinite",
+                pointerEvents: "none",
+              }}
+            />
+            <h1
+              style={{
+                fontSize: 33,
+                fontWeight: 900,
+                color: "#00FFFF",
+                letterSpacing: "0.07em",
+                margin: "0 0 5px",
+                textShadow: "0 0 28px rgba(0,255,255,0.40)",
+              }}>
+              SYNAPSE RACER
+            </h1>
+            <p
+              style={{
+                color: "rgba(255,255,255,0.28)",
+                fontSize: 10,
+                letterSpacing: "0.25em",
+                textTransform: "uppercase",
+                margin: "0 0 26px",
+              }}>
+              Level 1: Motor Baseline
+            </p>
 
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 11, marginBottom: 26, textAlign: "left" }}>
-              <div style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 14, padding: "14px 16px" }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 9, marginBottom: 10 }}>
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "1fr 1fr",
+                gap: 11,
+                marginBottom: 26,
+                textAlign: "left",
+              }}>
+              <div
+                style={{
+                  background: "rgba(255,255,255,0.04)",
+                  border: "1px solid rgba(255,255,255,0.07)",
+                  borderRadius: 14,
+                  padding: "14px 16px",
+                }}>
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 9,
+                    marginBottom: 10,
+                  }}>
                   <Hand size={17} style={{ color: "#2DD4BF" }} />
-                  <span style={{ color: "#fff", fontWeight: 700, fontSize: 12 }}>CONTROLS</span>
+                  <span
+                    style={{ color: "#fff", fontWeight: 700, fontSize: 12 }}>
+                    CONTROLS
+                  </span>
                 </div>
                 {isConnected ? (
                   <>
-                    <p style={{ color: "rgba(255,255,255,0.58)", fontSize: 11.5, lineHeight: 1.65, margin: 0 }}>Squeeze to swim up.</p>
-                    <p style={{ color: "rgba(255,255,255,0.58)", fontSize: 11.5, lineHeight: 1.65, margin: 0 }}>Release to dive.</p>
-                    <p style={{ color: "#FACC15", fontSize: 10.5, marginTop: 5 }}>Don't over-squeeze!</p>
+                    <p
+                      style={{
+                        color: "rgba(255,255,255,0.58)",
+                        fontSize: 11.5,
+                        lineHeight: 1.65,
+                        margin: 0,
+                      }}>
+                      Squeeze to swim up.
+                    </p>
+                    <p
+                      style={{
+                        color: "rgba(255,255,255,0.58)",
+                        fontSize: 11.5,
+                        lineHeight: 1.65,
+                        margin: 0,
+                      }}>
+                      Release to dive.
+                    </p>
+                    <p
+                      style={{
+                        color: "#FACC15",
+                        fontSize: 10.5,
+                        marginTop: 5,
+                      }}>
+                      Don't over-squeeze!
+                    </p>
                   </>
                 ) : (
                   <>
-                    <p style={{ color: "rgba(255,255,255,0.58)", fontSize: 11.5, lineHeight: 1.65, margin: 0 }}>Connect the sensor</p>
-                    <p style={{ color: "rgba(255,255,255,0.58)", fontSize: 11.5, lineHeight: 1.65, margin: 0 }}>to begin therapy.</p>
-                    <p style={{ color: "rgba(255,100,100,0.70)", fontSize: 10.5, marginTop: 5 }}>Hardware required.</p>
+                    <p
+                      style={{
+                        color: "rgba(255,255,255,0.58)",
+                        fontSize: 11.5,
+                        lineHeight: 1.65,
+                        margin: 0,
+                      }}>
+                      Connect the sensor
+                    </p>
+                    <p
+                      style={{
+                        color: "rgba(255,255,255,0.58)",
+                        fontSize: 11.5,
+                        lineHeight: 1.65,
+                        margin: 0,
+                      }}>
+                      to begin therapy.
+                    </p>
+                    <p
+                      style={{
+                        color: "rgba(255,100,100,0.70)",
+                        fontSize: 10.5,
+                        marginTop: 5,
+                      }}>
+                      Hardware required.
+                    </p>
                   </>
                 )}
               </div>
-              <div style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 14, padding: "14px 16px" }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 9, marginBottom: 10 }}>
+              <div
+                style={{
+                  background: "rgba(255,255,255,0.04)",
+                  border: "1px solid rgba(255,255,255,0.07)",
+                  borderRadius: 14,
+                  padding: "14px 16px",
+                }}>
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 9,
+                    marginBottom: 10,
+                  }}>
                   <Zap size={17} style={{ color: "#FFD700" }} />
-                  <span style={{ color: "#fff", fontWeight: 700, fontSize: 12 }}>GOAL</span>
+                  <span
+                    style={{ color: "#fff", fontWeight: 700, fontSize: 12 }}>
+                    GOAL
+                  </span>
                 </div>
                 <div style={{ display: "flex", alignItems: "center", gap: 7 }}>
-                  <div style={{ width: 9, height: 9, borderRadius: "50%", background: "#328eccff", boxShadow: "0 0 7px #48a1e1ff", flexShrink: 0 }} />
-                  <span style={{ color: "rgba(255,255,255,0.58)", fontSize: 11.5 }}>Collect Blue Pearls (+100)</span>
+                  <div
+                    style={{
+                      width: 9,
+                      height: 9,
+                      borderRadius: "50%",
+                      background: "#328eccff",
+                      boxShadow: "0 0 7px #48a1e1ff",
+                      flexShrink: 0,
+                    }}
+                  />
+                  <span
+                    style={{ color: "rgba(255,255,255,0.58)", fontSize: 11.5 }}>
+                    Collect Blue Pearls (+100)
+                  </span>
                 </div>
               </div>
             </div>
 
             <button
               onClick={startSession}
-              style={{ position: "relative", overflow: "hidden", background: isConnected ? "#2DD4BF" : "rgba(99,102,241,0.8)", color: isConnected ? "#061422" : "#fff", border: "none", borderRadius: 999, padding: "15px 50px", fontSize: 17, fontWeight: 900, letterSpacing: "0.07em", cursor: "pointer", boxShadow: isConnected ? "0 0 38px rgba(45,212,191,0.50)" : "0 0 38px rgba(99,102,241,0.50)", display: "inline-flex", alignItems: "center", gap: 11, transition: "transform .14s" }}
-              onMouseEnter={(e) => (e.currentTarget.style.transform = "scale(1.05)")}
-              onMouseLeave={(e) => (e.currentTarget.style.transform = "scale(1)")}>
-              <Play size={20} fill={isConnected ? "#061422" : "#fff"} style={{ position: "relative", zIndex: 1 }} />
-              <span style={{ position: "relative", zIndex: 1 }}>{isConnected ? "START MISSION" : "TEST (KEYBOARD MODE)"}</span>
+              style={{
+                position: "relative",
+                overflow: "hidden",
+                background: isConnected ? "#2DD4BF" : "rgba(99,102,241,0.8)",
+                color: isConnected ? "#061422" : "#fff",
+                border: "none",
+                borderRadius: 999,
+                padding: "15px 50px",
+                fontSize: 17,
+                fontWeight: 900,
+                letterSpacing: "0.07em",
+                cursor: "pointer",
+                boxShadow: isConnected
+                  ? "0 0 38px rgba(45,212,191,0.50)"
+                  : "0 0 38px rgba(99,102,241,0.50)",
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 11,
+                transition: "transform .14s",
+              }}
+              onMouseEnter={(e) =>
+                (e.currentTarget.style.transform = "scale(1.05)")
+              }
+              onMouseLeave={(e) =>
+                (e.currentTarget.style.transform = "scale(1)")
+              }>
+              <Play
+                size={20}
+                fill={isConnected ? "#061422" : "#fff"}
+                style={{ position: "relative", zIndex: 1 }}
+              />
+              <span style={{ position: "relative", zIndex: 1 }}>
+                {isConnected ? "START MISSION" : "TEST (KEYBOARD MODE)"}
+              </span>
             </button>
           </div>
         </div>
@@ -513,29 +852,143 @@ const Level1Canvas: React.FC = () => {
 
       {uiState === "PLAYING" && (
         <>
-          <div style={{ position: "absolute", top: 14, left: "50%", transform: "translateX(-50%)", zIndex: 30, pointerEvents: "none", animation: "hudin 0.38s ease both" }}>
-            <div style={{ background: "rgba(4,12,28,0.74)", backdropFilter: "blur(16px)", border: "1px solid rgba(255,215,0,0.30)", borderRadius: 999, padding: "7px 24px", display: "flex", flexDirection: "column", alignItems: "center", boxShadow: "0 4px 22px rgba(0,0,0,0.38)" }}>
-              <span style={{ fontSize: 8.5, color: "#FFD700", fontWeight: 700, letterSpacing: "0.25em", textTransform: "uppercase" }}>Score</span>
-              <span style={{ fontSize: 24, fontFamily: "monospace", fontWeight: 900, color: "#fff", lineHeight: 1.1 }}>
+          <div
+            style={{
+              position: "absolute",
+              top: 14,
+              left: "50%",
+              transform: "translateX(-50%)",
+              zIndex: 30,
+              pointerEvents: "none",
+              animation: "hudin 0.38s ease both",
+            }}>
+            <div
+              style={{
+                background: "rgba(4,12,28,0.74)",
+                backdropFilter: "blur(16px)",
+                border: "1px solid rgba(255,215,0,0.30)",
+                borderRadius: 999,
+                padding: "7px 24px",
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                boxShadow: "0 4px 22px rgba(0,0,0,0.38)",
+              }}>
+              <span
+                style={{
+                  fontSize: 8.5,
+                  color: "#FFD700",
+                  fontWeight: 700,
+                  letterSpacing: "0.25em",
+                  textTransform: "uppercase",
+                }}>
+                Score
+              </span>
+              <span
+                style={{
+                  fontSize: 24,
+                  fontFamily: "monospace",
+                  fontWeight: 900,
+                  color: "#fff",
+                  lineHeight: 1.1,
+                }}>
                 {score.toString().padStart(4, "0")}
               </span>
             </div>
           </div>
 
-          <div style={{ position: "absolute", bottom: 18, left: "50%", transform: "translateX(-50%)", zIndex: 30, display: "flex", flexDirection: "column", alignItems: "center", gap: 4, pointerEvents: "none" }}>
-            <span style={{ fontSize: 8.5, color: "rgba(255,255,255,0.30)", fontWeight: 700, letterSpacing: "0.25em", textTransform: "uppercase" }}>Grip Pressure</span>
-            <div style={{ width: 190, height: 9, background: "rgba(255,255,255,0.07)", borderRadius: 999, overflow: "hidden", border: "1px solid rgba(255,255,255,0.10)" }}>
-              <div style={{ height: "100%", width: `${pctBar}%`, background: pInfo.hex, borderRadius: 999, transition: "width .10s, background .18s", boxShadow: `0 0 9px ${pInfo.hex}` }} />
+          <div
+            style={{
+              position: "absolute",
+              bottom: 18,
+              left: "50%",
+              transform: "translateX(-50%)",
+              zIndex: 30,
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              gap: 4,
+              pointerEvents: "none",
+            }}>
+            <span
+              style={{
+                fontSize: 8.5,
+                color: "rgba(255,255,255,0.30)",
+                fontWeight: 700,
+                letterSpacing: "0.25em",
+                textTransform: "uppercase",
+              }}>
+              Grip Pressure
+            </span>
+            <div
+              style={{
+                width: 190,
+                height: 9,
+                background: "rgba(255,255,255,0.07)",
+                borderRadius: 999,
+                overflow: "hidden",
+                border: "1px solid rgba(255,255,255,0.10)",
+              }}>
+              <div
+                style={{
+                  height: "100%",
+                  width: `${pctBar}%`,
+                  background: pInfo.hex,
+                  borderRadius: 999,
+                  transition: "width .10s, background .18s",
+                  boxShadow: `0 0 9px ${pInfo.hex}`,
+                }}
+              />
             </div>
             <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
-              <span style={{ fontSize: 9.5, fontFamily: "monospace", color: pInfo.hex, fontWeight: 700 }}>{pressDisp.toFixed(2)} V</span>
-              <span style={{ fontSize: 7.5, color: pInfo.hex, fontWeight: 700, letterSpacing: "0.14em", background: `${pInfo.hex}1a`, border: `1px solid ${pInfo.hex}38`, borderRadius: 4, padding: "1px 5px" }}>{pInfo.label}</span>
+              <span
+                style={{
+                  fontSize: 9.5,
+                  fontFamily: "monospace",
+                  color: pInfo.hex,
+                  fontWeight: 700,
+                }}>
+                {pressDisp.toFixed(2)} V
+              </span>
+              <span
+                style={{
+                  fontSize: 7.5,
+                  color: pInfo.hex,
+                  fontWeight: 700,
+                  letterSpacing: "0.14em",
+                  background: `${pInfo.hex}1a`,
+                  border: `1px solid ${pInfo.hex}38`,
+                  borderRadius: 4,
+                  padding: "1px 5px",
+                }}>
+                {pInfo.label}
+              </span>
             </div>
           </div>
 
           {feedback && (
-            <div style={{ position: "absolute", top: "19%", left: "50%", zIndex: 40, animation: "feedin 1.8s ease-in-out both", pointerEvents: "none" }}>
-              <div style={{ background: "rgba(4,12,28,0.93)", color: feedback.color, border: `1px solid ${feedback.color}48`, borderRadius: 999, padding: "9px 26px", fontWeight: 700, fontSize: 15, backdropFilter: "blur(16px)", boxShadow: `0 0 22px ${feedback.color}38`, whiteSpace: "nowrap" }}>
+            <div
+              style={{
+                position: "absolute",
+                top: "19%",
+                left: "50%",
+                zIndex: 40,
+                animation: "feedin 1.8s ease-in-out both",
+                pointerEvents: "none",
+              }}>
+              <div
+                style={{
+                  background: "rgba(4,12,28,0.93)",
+                  color: feedback.color,
+                  border: `1px solid ${feedback.color}48`,
+                  borderRadius: 999,
+                  padding: "9px 26px",
+                  fontWeight: 700,
+                  fontSize: 15,
+                  backdropFilter: "blur(16px)",
+                  boxShadow: `0 0 22px ${feedback.color}38`,
+                  whiteSpace: "nowrap",
+                }}>
                 {feedback.text}
               </div>
             </div>
@@ -544,19 +997,96 @@ const Level1Canvas: React.FC = () => {
       )}
 
       {uiCd !== null && (
-        <div style={{ position: "absolute", top: "50%", left: "50%", zIndex: 50, fontSize: uiCd === "GO!" ? "6.5rem" : "9.5rem", fontWeight: 900, color: uiCd === "GO!" ? "#2DD4BF" : "#00FFFF", textShadow: `0 0 55px ${uiCd === "GO!" ? "rgba(45,212,191,0.80)" : "rgba(0,255,255,0.80)"}`, animation: uiCd === "GO!" ? "goburst 0.92s ease-out both" : "cdpop 0.48s cubic-bezier(0.34,1.56,0.64,1) both", userSelect: "none", pointerEvents: "none" }}>
+        <div
+          style={{
+            position: "absolute",
+            top: "50%",
+            left: "50%",
+            zIndex: 50,
+            fontSize: uiCd === "GO!" ? "6.5rem" : "9.5rem",
+            fontWeight: 900,
+            color: uiCd === "GO!" ? "#2DD4BF" : "#00FFFF",
+            textShadow: `0 0 55px ${uiCd === "GO!" ? "rgba(45,212,191,0.80)" : "rgba(0,255,255,0.80)"}`,
+            animation:
+              uiCd === "GO!"
+                ? "goburst 0.92s ease-out both"
+                : "cdpop 0.48s cubic-bezier(0.34,1.56,0.64,1) both",
+            userSelect: "none",
+            pointerEvents: "none",
+          }}>
           {uiCd}
         </div>
       )}
 
       {showExit && (
-        <div style={{ position: "absolute", inset: 0, background: "rgba(1,5,14,0.90)", backdropFilter: "blur(12px)", display: "flex", justifyContent: "center", alignItems: "center", zIndex: 100 }}>
-          <div style={{ background: "rgba(6,16,32,0.98)", padding: "34px 46px", borderRadius: 22, border: "1px solid rgba(255,255,255,0.09)", textAlign: "center", boxShadow: "0 30px 80px rgba(0,0,0,0.70)", animation: "menuin 0.28s ease both" }}>
-            <h3 style={{ color: "#fff", marginTop: 0, fontSize: 21, fontWeight: 700 }}>Pause Session?</h3>
-            <p style={{ color: "rgba(255,255,255,0.36)", fontSize: 12.5, marginBottom: 26 }}>Progress this session will be saved.</p>
+        <div
+          style={{
+            position: "absolute",
+            inset: 0,
+            background: "rgba(1,5,14,0.90)",
+            backdropFilter: "blur(12px)",
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            zIndex: 100,
+          }}>
+          <div
+            style={{
+              background: "rgba(6,16,32,0.98)",
+              padding: "34px 46px",
+              borderRadius: 22,
+              border: "1px solid rgba(255,255,255,0.09)",
+              textAlign: "center",
+              boxShadow: "0 30px 80px rgba(0,0,0,0.70)",
+              animation: "menuin 0.28s ease both",
+            }}>
+            <h3
+              style={{
+                color: "#fff",
+                marginTop: 0,
+                fontSize: 21,
+                fontWeight: 700,
+              }}>
+              Pause Session?
+            </h3>
+            <p
+              style={{
+                color: "rgba(255,255,255,0.36)",
+                fontSize: 12.5,
+                marginBottom: 26,
+              }}>
+              Progress this session will be saved.
+            </p>
             <div style={{ display: "flex", gap: 12, justifyContent: "center" }}>
-              <button onClick={cancelExit} style={{ padding: "11px 30px", background: "transparent", border: "1px solid rgba(255,255,255,0.18)", color: "#fff", borderRadius: 999, fontSize: 13.5, fontWeight: 700, cursor: "pointer" }}>Resume</button>
-              <button onClick={handleSaveAndExit} style={{ padding: "11px 30px", background: "#EF4444", border: "none", color: "#fff", borderRadius: 999, fontSize: 13.5, fontWeight: 700, cursor: "pointer", boxShadow: "0 0 20px rgba(239,68,68,0.40)" }}>Save & Exit</button>
+              <button
+                onClick={cancelExit}
+                style={{
+                  padding: "11px 30px",
+                  background: "transparent",
+                  border: "1px solid rgba(255,255,255,0.18)",
+                  color: "#fff",
+                  borderRadius: 999,
+                  fontSize: 13.5,
+                  fontWeight: 700,
+                  cursor: "pointer",
+                }}>
+                Resume
+              </button>
+              <button
+                onClick={handleSaveAndExit}
+                style={{
+                  padding: "11px 30px",
+                  background: "#EF4444",
+                  border: "none",
+                  color: "#fff",
+                  borderRadius: 999,
+                  fontSize: 13.5,
+                  fontWeight: 700,
+                  cursor: "pointer",
+                  boxShadow: "0 0 20px rgba(239,68,68,0.40)",
+                }}>
+                Save & Exit
+              </button>
             </div>
           </div>
         </div>
