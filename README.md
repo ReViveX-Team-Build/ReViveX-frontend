@@ -2,7 +2,7 @@
 
 > A neuro-rehabilitation platform helping patients recover from Parkinson's and stroke-related disabilities through guided therapy sessions, real-time progress tracking, and AI-assisted insights.
 
-🚀 **Live Demo:** [revivex-frontend-prod.vercel.app](https://revivex-frontend-prod.vercel.app)
+ **Live Demo:** [revivex-frontend-prod.vercel.app](https://revivex-frontend-prod.vercel.app)
 
 ---
 
@@ -28,7 +28,7 @@ Built by a team of 6 as a full stack collaborative project using modern web tech
 
 ## Features
 
-### 🩺 Therapist Portal
+### Therapist Portal
 - Dashboard overview of all active patients with adherence rates and triage alerts
 - Real-time monitoring of patient performance and session completion
 - Review and update individual rehabilitation exercise plans
@@ -37,7 +37,7 @@ Built by a team of 6 as a full stack collaborative project using modern web tech
 - Export patient data (PDF/Excel) and view audit trails
 - Receive reminders and notifications for at-risk patients
 
-### 🧑‍⚕️ Patient Portal
+###  Patient Portal
 - View and start assigned therapy sessions
 - Weekly adherence score and streak tracking with XP gamification
 - Progress dashboard with session history
@@ -45,11 +45,11 @@ Built by a team of 6 as a full stack collaborative project using modern web tech
 - Direct messaging with assigned therapist
 - Hardware status monitoring for device-based input
 
-### 👨‍👩‍👧 Caregiver Support
+###  Caregiver Support
 - Receive reminders and notifications about patient sessions
 - Message assigned therapist on behalf of patient
 
-### 🔐 Admin Panel
+###  Admin Panel
 - Manage system roles and permissions
 - Add, edit, or remove therapists
 - User registration and account management
@@ -88,15 +88,15 @@ npm install
 Create a `.env.local` file in the root directory:
 
 ```
-NEXT_PUBLIC_FIREBASE_API_KEY=your_key_here
-NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=your_key_here
-NEXT_PUBLIC_FIREBASE_PROJECT_ID=your_key_here
-NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=your_key_here
-NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=your_key_here
-NEXT_PUBLIC_FIREBASE_APP_ID=your_key_here
+NEXT_PUBLIC_FIREBASE_API_KEY=use_your_key_here
+NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=use_your_key_here
+NEXT_PUBLIC_FIREBASE_PROJECT_ID=use_your_key_here
+NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=use_your_key_here
+NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=use_your_key_here
+NEXT_PUBLIC_FIREBASE_APP_ID=use_your_key_here
 ```
 
-> ⚠️ Never commit your `.env.local` file. Make sure it's listed in `.gitignore`.
+>  Never commit your `.env.local` file. Make sure it's listed in `.gitignore`.
 
 ### Run Locally
 
