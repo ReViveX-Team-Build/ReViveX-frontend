@@ -1,4 +1,4 @@
-# ReViveX 🧠
+# ReViveX 
 
 > A neuro-rehabilitation platform helping patients recover from Parkinson's and stroke-related disabilities through guided therapy sessions, real-time progress tracking, and AI-assisted insights.
 
