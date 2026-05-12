@@ -96,8 +96,6 @@ NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=use_your_key_here
 NEXT_PUBLIC_FIREBASE_APP_ID=use_your_key_here
 ```
 
->  Never commit your `.env.local` file. Make sure it's listed in `.gitignore`.
-
 ### Run Locally
 
 ```bash
