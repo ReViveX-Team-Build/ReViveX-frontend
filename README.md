@@ -1,36 +1,117 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# ReViveX 
+
+> A neuro-rehabilitation platform helping patients recover from Parkinson's and stroke-related disabilities through guided therapy sessions, real-time progress tracking, and AI-assisted insights.
+
+ **Live Demo:** [revivex-frontend-prod.vercel.app](https://revivex-frontend-prod.vercel.app)
+
+---
+
+## Overview
+
+ReViveX connects therapists, patients, and caregivers in a unified platform designed for neuro-rehabilitation. Patients perform prescribed therapy exercises (targeted at conditions like Parkinson's disease and post-stroke disabilities), while therapists monitor adherence, track recovery metrics, and adjust treatment plans in real time.
+
+Built by a team of 6 as a full stack collaborative project using modern web technologies.
+
+---
+
+## Screenshots
+
+### Doctor Portal
+![Doctor Dashboard](./screenshots/doctor-dashboard.png)
+*Real-time overview of patient adherence, missed sessions, and triage alerts*
+
+### Patient Portal
+![Patient Dashboard](./screenshots/patient-dashboard.png)
+*Session tracking, weekly adherence score, XP progress, and AI Companion*
+
+---
+
+## Features
+
+### Therapist Portal
+- Dashboard overview of all active patients with adherence rates and triage alerts
+- Real-time monitoring of patient performance and session completion
+- Review and update individual rehabilitation exercise plans
+- Schedule management and session tracking
+- AI Companion for decision-making insights
+- Export patient data (PDF/Excel) and view audit trails
+- Receive reminders and notifications for at-risk patients
+
+###  Patient Portal
+- View and start assigned therapy sessions
+- Weekly adherence score and streak tracking with XP gamification
+- Progress dashboard with session history
+- AI Companion for guided support during recovery
+- Direct messaging with assigned therapist
+- Hardware status monitoring for device-based input
+
+###  Caregiver Support
+- Receive reminders and notifications about patient sessions
+- Message assigned therapist on behalf of patient
+
+###  Admin Panel
+- Manage system roles and permissions
+- Add, edit, or remove therapists
+- User registration and account management
+
+---
+
+## Tech Stack
+
+| Layer | Technology |
+|-------|-----------|
+| Frontend | Next.js, React.js |
+| Language | TypeScript, JavaScript |
+| Styling | CSS, Tailwind CSS |
+| Database | Firebase (Firestore) |
+| Hosting | Vercel |
+| Version Control | Git, GitHub |
+
+---
 
 ## Getting Started
 
-First, run the development server:
+### Prerequisites
+- Node.js >= 18.x
+- npm or yarn
+
+### Installation
+
+```bash
+git clone https://github.com/ReViveX-Team-Build/ReViveX-frontend.git
+cd ReViveX-frontend
+npm install
+```
+
+### Environment Setup
+
+Create a `.env.local` file in the root directory:
+
+```
+NEXT_PUBLIC_FIREBASE_API_KEY=use_your_key_here
+NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=use_your_key_here
+NEXT_PUBLIC_FIREBASE_PROJECT_ID=use_your_key_here
+NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=use_your_key_here
+NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=use_your_key_here
+NEXT_PUBLIC_FIREBASE_APP_ID=use_your_key_here
+```
+
+### Run Locally
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000) in your browser.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+---
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Team
 
-## Learn More
+Built by a team of 6 software engineering undergraduates at the Informatics Institute of Technology (affiliated with University of Westminster, UK).
 
-To learn more about Next.js, take a look at the following resources:
+---
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## License
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+This project is for educational purposes as part of an undergraduate software engineering program.
